@@ -3,12 +3,13 @@
   "name": "hooks-judge",
   "description": "The real hook scripts in config/hooks that call judge, run against the judge build (a `judge` shim on PATH) with the fake model provider.",
   "normalize": [
-    "sandbox-path",
     "uuid",
     "iso-timestamp",
-    "epoch-ms",
     "duration-ms"
   ],
+  "outputs": "plain",
+  "inputs": {},
+  "startupBudgets": [],
   "cases": [
     {
       "name": "send-gate-empty-input",
@@ -90,9 +91,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "c6061b127ce405b8",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"send\"}}",
-          "exitCode": 0,
-          "argsDigest": "c6061b127ce405b8"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -161,9 +162,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "172fd2e38ea58419",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"batch\"}}",
-          "exitCode": 0,
-          "argsDigest": "172fd2e38ea58419"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -204,15 +205,15 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "172fd2e38ea58419",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"batch\"}}",
-          "exitCode": 0,
-          "argsDigest": "172fd2e38ea58419"
+          "exitCode": 0
         },
         {
           "bin": "claude",
+          "argsDigest": "d24233a7dd3eda26",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"send\"}}",
-          "exitCode": 0,
-          "argsDigest": "d24233a7dd3eda26"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -283,21 +284,21 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "d5540d6d50f0a654",
           "stdout": "",
-          "exitCode": 1,
-          "argsDigest": "d5540d6d50f0a654"
+          "exitCode": 1
         },
         {
           "bin": "codex",
+          "argsDigest": "1b3ded135b57c6d0",
           "stdout": "",
-          "exitCode": 1,
-          "argsDigest": "1b3ded135b57c6d0"
+          "exitCode": 1
         },
         {
           "bin": "cursor-agent",
+          "argsDigest": "64dc3e4a4b040d2d",
           "stdout": "",
-          "exitCode": 1,
-          "argsDigest": "64dc3e4a4b040d2d"
+          "exitCode": 1
         }
       ],
       "expect": {
@@ -388,9 +389,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "51ab582e44ee6093",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"ready\"}}",
-          "exitCode": 0,
-          "argsDigest": "51ab582e44ee6093"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -431,9 +432,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "0e7f6c3b3b7c5ab0",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"missing\"}}",
-          "exitCode": 0,
-          "argsDigest": "0e7f6c3b3b7c5ab0"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -466,9 +467,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "063f1bdd9fa76c9c",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"needs_design\"}}",
-          "exitCode": 0,
-          "argsDigest": "063f1bdd9fa76c9c"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -499,21 +500,21 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "77a07c8e288ca219",
           "stdout": "",
-          "exitCode": 1,
-          "argsDigest": "77a07c8e288ca219"
+          "exitCode": 1
         },
         {
           "bin": "codex",
+          "argsDigest": "68655fc9111eac0e",
           "stdout": "",
-          "exitCode": 1,
-          "argsDigest": "68655fc9111eac0e"
+          "exitCode": 1
         },
         {
           "bin": "cursor-agent",
+          "argsDigest": "767eb9d867dd76ad",
           "stdout": "",
-          "exitCode": 1,
-          "argsDigest": "767eb9d867dd76ad"
+          "exitCode": 1
         }
       ],
       "expect": {
@@ -825,9 +826,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "8a6e47b806c15caa",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"ask\"}}",
-          "exitCode": 0,
-          "argsDigest": "8a6e47b806c15caa"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -860,9 +861,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "b4fe95fe30a2f7a8",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"continue\"}}",
-          "exitCode": 0,
-          "argsDigest": "b4fe95fe30a2f7a8"
+          "exitCode": 0
         }
       ],
       "expect": {

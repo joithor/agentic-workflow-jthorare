@@ -1,0 +1,5 @@
+{
+  "judge": ["{{repo}}/artifacts/publish/Aw.Judge.Host/release/judge"],
+  "sindri": ["{{repo}}/artifacts/publish/Aw.Sindri.Host/release/sindri"],
+  "judge-redact": ["{{repo}}/artifacts/publish/Aw.Redaction.Host/release/redact", "--judge-placeholders"]
+}

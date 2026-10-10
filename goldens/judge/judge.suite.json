@@ -3,20 +3,23 @@
   "name": "judge",
   "description": "The judge CLI contract (every subcommand, its errors and exit codes), recorded from the TS build with the fake model provider.",
   "normalize": [
-    "sandbox-path",
     "uuid",
     "iso-timestamp",
-    "epoch-ms",
     "duration-ms"
   ],
-  "startupBudget": {
-    "cli": "judge",
-    "args": [
-      "health"
-    ],
-    "runs": 5,
-    "medianMsMax": 1500
-  },
+  "outputs": "plain",
+  "inputs": {},
+  "startupBudgets": [
+    {
+      "cli": "judge",
+      "args": [
+        "health"
+      ],
+      "stdin": "",
+      "runs": 5,
+      "medianMsMax": 1500
+    }
+  ],
   "cases": [
     {
       "name": "usage-no-args",
@@ -1323,9 +1326,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "9ca5d55aaf586639",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"send\"}}",
-          "exitCode": 0,
-          "argsDigest": "9ca5d55aaf586639"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -1374,9 +1377,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "2f12da380e7192fb",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"batch\"}}",
-          "exitCode": 0,
-          "argsDigest": "2f12da380e7192fb"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -1425,21 +1428,21 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "8c3e9fda9e7f5b8a",
           "stdout": "not json",
-          "exitCode": 0,
-          "argsDigest": "8c3e9fda9e7f5b8a"
+          "exitCode": 0
         },
         {
           "bin": "codex",
+          "argsDigest": "27d602e61f2890e0",
           "stdout": "",
-          "exitCode": 1,
-          "argsDigest": "27d602e61f2890e0"
+          "exitCode": 1
         },
         {
           "bin": "cursor-agent",
+          "argsDigest": "e2f9eb5321d993dc",
           "stdout": "{\"type\": \"result\", \"result\": \"{\\\"decision\\\": \\\"drop\\\"}\"}",
-          "exitCode": 0,
-          "argsDigest": "e2f9eb5321d993dc"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -1491,9 +1494,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "89fb41b71a2f9cca",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"ready\"}}",
-          "exitCode": 0,
-          "argsDigest": "89fb41b71a2f9cca"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -1542,9 +1545,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "7da40496842a485b",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"continue\"}}",
-          "exitCode": 0,
-          "argsDigest": "7da40496842a485b"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -1593,9 +1596,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "2173e9bd640973e1",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"ask\"}}",
-          "exitCode": 0,
-          "argsDigest": "2173e9bd640973e1"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -1644,9 +1647,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "1f092e3fe8ed69f6",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"violated\"}}",
-          "exitCode": 0,
-          "argsDigest": "1f092e3fe8ed69f6"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -1739,9 +1742,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "ec72728d55ff484a",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"resolved\"}}",
-          "exitCode": 0,
-          "argsDigest": "ec72728d55ff484a"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -1834,9 +1837,9 @@
       "models": [
         {
           "bin": "claude",
+          "argsDigest": "c60e45dd6c6e4b7a",
           "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"repaired\", \"chosenIndex\": 0}}",
-          "exitCode": 0,
-          "argsDigest": "c60e45dd6c6e4b7a"
+          "exitCode": 0
         }
       ],
       "expect": {
@@ -1885,9 +1888,9 @@
       "models": [
         {
           "bin": "codex",
+          "argsDigest": "eeb515fc0635a916",
           "stdout": "",
-          "exitCode": 1,
-          "argsDigest": "eeb515fc0635a916"
+          "exitCode": 1
         }
       ],
       "expect": {

@@ -81,13 +81,14 @@ function exec(file: string, args: string[], stdin: string, sb: Sandbox, timeoutM
 function dumpTable(dbFile: string, table: string, orderBy: string): string[] {
   if (!fs.existsSync(dbFile)) return ["<missing database>"];
   const db = new Database(dbFile, { readonly: true });
+  let rows: string[];
   try {
-    return db.prepare(`SELECT * FROM ${table} ORDER BY ${orderBy}`).all().map((row) => JSON.stringify(row));
+    rows = db.prepare(`SELECT * FROM ${table} ORDER BY ${orderBy}`).all().map((row) => JSON.stringify(row));
   } catch (e) {
-    return [`<error: ${(e as Error).message}>`];
-  } finally {
-    db.close();
+    rows = [`<error: ${(e as Error).message}>`];
   }
+  db.close();
+  return rows;
 }
 
 export function runCase(c: Case, rules: readonly Normalizer[], opts: RunOptions): { observed: Observed; models: ModelResponse[]; unused: ModelResponse[] } {

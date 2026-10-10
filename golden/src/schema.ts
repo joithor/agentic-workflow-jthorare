@@ -28,8 +28,8 @@ const ModelResponse = z.object({
 }).strict();
 
 const Expect = z.object({
-  stdout: z.string(),
-  stderr: z.string(),
+  stdout: Text,
+  stderr: Text,
   exitCode: z.number().int(),
   files: z.record(z.string(), z.string().nullable()),
   sqlite: z.record(z.string(), z.array(z.string())),
@@ -56,6 +56,8 @@ const Suite = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   normalize: z.array(z.enum(NORMALIZERS)),
+  // Store recorded stdout and stderr base64 (a corpus whose outputs still hold secret shapes).
+  encodeOutputs: z.boolean().optional(),
   startupBudget: z.object({ cli: z.string().min(1), args: z.array(z.string()), runs: z.number().int().min(1), medianMsMax: z.number().positive() }).strict().optional(),
   cases: z.array(Case),
 }).strict();

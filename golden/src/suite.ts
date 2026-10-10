@@ -3,7 +3,7 @@ import fs from "node:fs";
 
 import { compare, type Mismatch } from "./compare.js";
 import { makeSandbox, runCase, type RunOptions } from "./run.js";
-import { parseSuite, type Suite } from "./schema.js";
+import { parseSuite, type Suite, type Text } from "./schema.js";
 
 export interface CaseResult {
   name: string;
@@ -75,7 +75,8 @@ export function recordSuite(suite: Suite, opts: Omit<RunOptions, "mode">): Suite
     const { misses, ...expect } = observed;
     if (misses.length > 0) errors.push(`case ${c.name}: unrecorded model call(s) ${misses.join(", ")}; add a scripted response to its "models"`);
     if (unused.length > 0) errors.push(`case ${c.name}: ${unused.length} scripted model response(s) never called (${unused.map((u) => u.bin).join(", ")}); remove them`);
-    return { ...c, models, expect };
+    const enc = (t: string): Text => (suite.encodeOutputs === true ? { base64: Buffer.from(t, "utf8").toString("base64") } : t);
+    return { ...c, models, expect: { ...expect, stdout: enc(expect.stdout), stderr: enc(expect.stderr) } };
   });
   if (errors.length > 0) throw new Error(errors.join("\n"));
   return { ...suite, cases };

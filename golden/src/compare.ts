@@ -1,8 +1,8 @@
-import type { Expectation } from "./schema.js";
+import { decodeText, type Expectation } from "./schema.js";
 
-// What one run produced, already normalized: an expectation plus the fake
-// model's misses. A miss is never part of a golden: it always fails.
-export type Observed = Expectation & { misses: string[] };
+// What one run produced, already normalized, plus the fake model's misses.
+// A miss is never part of a golden: it always fails.
+export type Observed = Omit<Expectation, "stdout" | "stderr"> & { stdout: string; stderr: string; misses: string[] };
 
 export interface Mismatch {
   field: string;
@@ -35,7 +35,8 @@ const joinRows = (r: Record<string, string[]>): Record<string, string> => Object
 export function compare(expected: Expectation, actual: Observed): Mismatch[] {
   const out: Mismatch[] = [];
   for (const f of ["stdout", "stderr"] as const) {
-    if (expected[f] !== actual[f]) out.push({ field: f, diff: lineDiff(expected[f], actual[f]) });
+    const e = decodeText(expected[f]);
+    if (e !== actual[f]) out.push({ field: f, diff: lineDiff(e, actual[f]) });
   }
   if (expected.exitCode !== actual.exitCode) out.push({ field: "exitCode", diff: `- ${expected.exitCode}\n+ ${actual.exitCode}` });
   out.push(...keyed("files", expected.files, actual.files));

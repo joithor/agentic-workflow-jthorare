@@ -27,6 +27,11 @@ describe("compare", () => {
     expect(m.map((x) => x.field)).toEqual(["files[state/x]", "sqlite[t]"]);
     expect(m[0].diff).toBe("- <missing>\n+ 1");
   });
+
+  it("compares a base64-stored expectation by its decoded text", () => {
+    const { misses: _m, ...exp } = base;
+    expect(compare({ ...exp, stdout: { base64: Buffer.from("a\nb\n").toString("base64") } }, base)).toEqual([]);
+  });
 });
 
 describe("lineDiff", () => {

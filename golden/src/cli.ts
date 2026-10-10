@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { formatDiff, redactionDiff } from "./differential.js";
 import { DEFAULT_ENV_ALLOWLIST, recordCall, sindriScrub } from "./recorder.js";
 import { formatReport, loadSuite, measureStartup, recordSuite, replaySuite, saveSuite } from "./suite.js";
 import { loadTargets, parseTargetOverride } from "./targets.js";
@@ -12,7 +13,8 @@ const distDir = path.dirname(fileURLToPath(import.meta.url));
 const USAGE = `usage:
   golden record <suite.json>... [--repo DIR] [--targets FILE] [--target name=cmd]
   golden replay <suite.json>... [--repo DIR] [--targets FILE] [--target name=cmd]
-  golden record-call --name NAME [--env VAR]... -- <command> [args...]`;
+  golden record-call --name NAME [--env VAR]... -- <command> [args...]
+  golden redaction-diff <redaction.suite.json>`;
 
 function readStdin(): string {
   try {
@@ -94,6 +96,15 @@ const [, , cmd, ...rest] = process.argv;
 let code: number;
 if (cmd === "record" || cmd === "replay") code = suiteMain(cmd, rest);
 else if (cmd === "record-call") code = recordCallMain(rest);
+else if (cmd === "redaction-diff" && rest[0] !== undefined) {
+  try {
+    process.stdout.write(formatDiff(redactionDiff(loadSuite(rest[0]))));
+    code = 0;
+  } catch (e) {
+    process.stderr.write(`golden: ${(e as Error).message}\n`);
+    code = 2;
+  }
+}
 else {
   process.stderr.write(`${USAGE}\n`);
   code = 2;

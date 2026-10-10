@@ -11,7 +11,11 @@ export type Text = z.infer<typeof Text>;
 
 const Run = z.union([z.object({ cli: z.string().min(1) }).strict(), z.object({ script: z.string().min(1) }).strict()]);
 
-const Step = z.object({ cli: z.string().min(1), args: z.array(z.string()).default([]), stdin: Text.default("") }).strict();
+// A setup step runs a target CLI or a repo script (a hook) before the case.
+const Step = z.union([
+  z.object({ cli: z.string().min(1), args: z.array(z.string()).default([]), stdin: Text.default("") }).strict(),
+  z.object({ script: z.string().min(1), args: z.array(z.string()).default([]), stdin: Text.default("") }).strict(),
+]);
 
 // Rows of one table, in the declared ORDER BY, serialized one JSON object per row.
 const SqliteCapture = z.object({ db: z.string().min(1), table: z.string().regex(/^[a-z_]+$/), orderBy: z.string().regex(/^[a-z_, ]+$/) }).strict();

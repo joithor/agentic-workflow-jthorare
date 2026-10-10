@@ -106,7 +106,7 @@ export function runCase(c: Case, rules: readonly Normalizer[], opts: RunOptions)
       responses: record ? [] : c.models,
       misses: [],
     });
-    for (const step of c.setup.steps) exec(sb.shim(step.cli), step.args.map((a) => substitute(a, { repo: opts.repo, sandbox: sb.root })), decodeText(step.stdin), sb, timeoutMs);
+    for (const step of c.setup.steps) exec("cli" in step ? sb.shim(step.cli) : path.join(opts.repo, step.script), step.args.map((a) => substitute(a, { repo: opts.repo, sandbox: sb.root })), decodeText(step.stdin), sb, timeoutMs);
     for (const sql of c.setup.sql) {
       const db = new Database(path.join(sb.root, sql.db));
       try {

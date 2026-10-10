@@ -1,0 +1,992 @@
+{
+  "schema": "golden-suite/v1",
+  "name": "hooks-judge",
+  "description": "The real hook scripts in config/hooks that call judge, run against the judge build (a `judge` shim on PATH) with the fake model provider.",
+  "normalize": [
+    "sandbox-path",
+    "uuid",
+    "iso-timestamp",
+    "epoch-ms",
+    "duration-ms"
+  ],
+  "cases": [
+    {
+      "name": "send-gate-empty-input",
+      "run": {
+        "script": "config/hooks/send-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "send-gate-control-message",
+      "run": {
+        "script": "config/hooks/send-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"tool_input\": {\"message\": \"bye\", \"type\": \"shutdown_request\"}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "send-gate-judge-send",
+      "run": {
+        "script": "config/hooks/send-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"agent_type\": \"worker\", \"tool_input\": {\"message\": \"PR is up, please review #12\"}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [
+          "state/judge/outbox/s1.jsonl"
+        ],
+        "sqlite": [
+          {
+            "db": "state/judge/decisions.sqlite",
+            "table": "decisions",
+            "orderBy": "ts, id"
+          }
+        ]
+      },
+      "models": [
+        {
+          "bin": "claude",
+          "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"send\"}}",
+          "exitCode": 0,
+          "argsDigest": "c6061b127ce405b8"
+        }
+      ],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {
+          "state/judge/outbox/s1.jsonl": null
+        },
+        "sqlite": {
+          "state/judge/decisions.sqlite#decisions": [
+            "{\"id\":\"<UUID>\",\"ts\":\"<TS>\",\"question\":\"wake-gate\",\"content_class\":\"message-meta\",\"provider\":\"claude-cli\",\"decision\":\"send\",\"confidence\":1,\"reason_code\":\"claude-cli\",\"latency_ms\":<MS>,\"input_digest\":\"348582912b599a7e\",\"undone_at\":null,\"chain_position\":1,\"skipped\":\"[{\\\"provider\\\":\\\"jev\\\",\\\"reason\\\":\\\"unavailable\\\"}]\",\"outcome\":\"decided\"}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "send-gate-pure-ack-drop-by-rule",
+      "run": {
+        "script": "config/hooks/send-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"agent_type\": \"worker\", \"tool_input\": {\"message\": \"ok thanks\"}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [
+          "state/judge/outbox/s1.jsonl"
+        ],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"This was a pure ack with nothing to act on — don't send it.\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {
+          "state/judge/outbox/s1.jsonl": null
+        },
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "send-gate-judge-batch-queues",
+      "run": {
+        "script": "config/hooks/send-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"agent_type\": \"worker\", \"tool_input\": {\"message\": \"still running the suite\"}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [
+          "state/judge/outbox/s1.jsonl"
+        ],
+        "sqlite": []
+      },
+      "models": [
+        {
+          "bin": "claude",
+          "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"batch\"}}",
+          "exitCode": 0,
+          "argsDigest": "172fd2e38ea58419"
+        }
+      ],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Queued: this reads as progress with nothing to act on yet. It'll ride along on your next real send, or flush automatically before you go idle.\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {
+          "state/judge/outbox/s1.jsonl": "{\"ts\":\"<TS>\",\"agentType\":\"worker\",\"text\":\"still running the suite\"}\n"
+        },
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "send-gate-send-flushes-queue",
+      "run": {
+        "script": "config/hooks/send-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"agent_type\": \"worker\", \"tool_input\": {\"message\": \"done: all green\"}}",
+      "setup": {
+        "files": {},
+        "steps": [
+          {
+            "script": "config/hooks/send-gate.sh",
+            "args": [],
+            "stdin": "{\"session_id\": \"s1\", \"agent_type\": \"worker\", \"tool_input\": {\"message\": \"still running the suite\"}}"
+          }
+        ],
+        "sql": []
+      },
+      "capture": {
+        "files": [
+          "state/judge/outbox/s1.jsonl"
+        ],
+        "sqlite": []
+      },
+      "models": [
+        {
+          "bin": "claude",
+          "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"batch\"}}",
+          "exitCode": 0,
+          "argsDigest": "172fd2e38ea58419"
+        },
+        {
+          "bin": "claude",
+          "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"send\"}}",
+          "exitCode": 0,
+          "argsDigest": "d24233a7dd3eda26"
+        }
+      ],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\",\"updatedInput\":{\"message\":\"done: all green\\n\\n[queued progress, now attached]: still running the suite\"}}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {
+          "state/judge/outbox/s1.jsonl": ""
+        },
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "send-gate-teammate-sender",
+      "run": {
+        "script": "config/hooks/send-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"agent_type\": \"reviewer-bot\", \"tool_input\": {\"message\": \"PR is up\"}}",
+      "setup": {
+        "files": {
+          "state/judge/teammate-names.jsonl": "{\"name\": \"reviewer-bot\"}\n"
+        },
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": [
+          {
+            "db": "state/judge/decisions.sqlite",
+            "table": "decision_details",
+            "orderBy": "id"
+          }
+        ]
+      },
+      "models": [],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"This was a pure ack with nothing to act on — don't send it.\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {
+          "state/judge/decisions.sqlite#decision_details": [
+            "{\"id\":\"<UUID>\",\"input_json\":\"{\\\"text\\\":\\\"PR is up\\\",\\\"senderKind\\\":\\\"teammate\\\"}\",\"probabilities\":null,\"rules_opinion\":null,\"agreement\":null,\"session_id\":\"s1\"}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "send-gate-judge-fails-open",
+      "run": {
+        "script": "config/hooks/send-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"agent_type\": \"worker\", \"tool_input\": {\"message\": \"halfway through the refactor\"}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [
+        {
+          "bin": "claude",
+          "stdout": "",
+          "exitCode": 1,
+          "argsDigest": "d5540d6d50f0a654"
+        },
+        {
+          "bin": "codex",
+          "stdout": "",
+          "exitCode": 1,
+          "argsDigest": "1b3ded135b57c6d0"
+        },
+        {
+          "bin": "cursor-agent",
+          "stdout": "",
+          "exitCode": 1,
+          "argsDigest": "64dc3e4a4b040d2d"
+        }
+      ],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "send-gate-judge-child-short-circuit",
+      "run": {
+        "script": "config/hooks/send-gate.sh"
+      },
+      "args": [],
+      "env": {
+        "AW_JUDGE_CHILD": "1"
+      },
+      "stdin": "{\"session_id\": \"s1\", \"tool_input\": {\"message\": \"x\"}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "scope-gate-no-tool-use-id",
+      "run": {
+        "script": "config/hooks/scope-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"tool_input\": {}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "scope-gate-ready-saves-brief",
+      "run": {
+        "script": "config/hooks/scope-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"prompt_id\": \"p1\", \"tool_use_id\": \"toolu_1\", \"tool_input\": {\"subagent_type\": \"general-purpose\", \"description\": \"Add retry\", \"prompt\": \"Goal: retry 3x. Acceptance: test covers it. Proof: npm test\", \"name\": \"worker\"}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": [
+          {
+            "db": "state/judge/decisions.sqlite",
+            "table": "briefs",
+            "orderBy": "tool_use_id"
+          }
+        ]
+      },
+      "models": [
+        {
+          "bin": "claude",
+          "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"ready\"}}",
+          "exitCode": 0,
+          "argsDigest": "51ab582e44ee6093"
+        }
+      ],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {
+          "state/judge/decisions.sqlite#briefs": [
+            "{\"tool_use_id\":\"toolu_1\",\"agent_id\":null,\"session_id\":\"s1\",\"prompt_id\":\"p1\",\"dispatch_name\":\"worker\",\"subagent_type\":\"general-purpose\",\"goal\":\"Add retry\",\"acceptance_criteria\":\"Goal: retry 3x. Acceptance: test covers it. Proof: npm test\",\"proof_command\":\"Goal: retry 3x. Acceptance: test covers it. Proof: npm test\",\"saved_at\":\"<TS>\"}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "scope-gate-missing-denies",
+      "run": {
+        "script": "config/hooks/scope-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"prompt_id\": \"p1\", \"tool_use_id\": \"toolu_2\", \"tool_input\": {\"subagent_type\": \"general-purpose\", \"description\": \"x\", \"prompt\": \"do it\"}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": [
+          {
+            "db": "state/judge/decisions.sqlite",
+            "table": "briefs",
+            "orderBy": "tool_use_id"
+          }
+        ]
+      },
+      "models": [
+        {
+          "bin": "claude",
+          "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"missing\"}}",
+          "exitCode": 0,
+          "argsDigest": "0e7f6c3b3b7c5ab0"
+        }
+      ],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Dispatch brief is missing a goal or acceptance criteria — add both to the prompt before dispatching.\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {
+          "state/judge/decisions.sqlite#briefs": []
+        }
+      }
+    },
+    {
+      "name": "scope-gate-needs-design-denies",
+      "run": {
+        "script": "config/hooks/scope-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"prompt_id\": \"p1\", \"tool_use_id\": \"toolu_3\", \"tool_input\": {\"subagent_type\": \"general-purpose\", \"description\": \"Rewrite auth\", \"prompt\": \"pick an approach\"}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [
+        {
+          "bin": "claude",
+          "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"needs_design\"}}",
+          "exitCode": 0,
+          "argsDigest": "063f1bdd9fa76c9c"
+        }
+      ],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"This dispatch needs a design decision first — send it to the user instead of dispatching.\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "scope-gate-judge-fails-open",
+      "run": {
+        "script": "config/hooks/scope-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"prompt_id\": \"p1\", \"tool_use_id\": \"toolu_4\", \"tool_input\": {\"subagent_type\": \"general-purpose\", \"description\": \"y\", \"prompt\": \"z\"}}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [
+        {
+          "bin": "claude",
+          "stdout": "",
+          "exitCode": 1,
+          "argsDigest": "77a07c8e288ca219"
+        },
+        {
+          "bin": "codex",
+          "stdout": "",
+          "exitCode": 1,
+          "argsDigest": "68655fc9111eac0e"
+        },
+        {
+          "bin": "cursor-agent",
+          "stdout": "",
+          "exitCode": 1,
+          "argsDigest": "767eb9d867dd76ad"
+        }
+      ],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "done-gate-annotate-no-brief",
+      "run": {
+        "script": "config/hooks/done-gate-annotate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"tool_use_id\": \"toolu_9\", \"tool_response\": \"done\"}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "done-gate-annotate-met",
+      "run": {
+        "script": "config/hooks/done-gate-annotate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"tool_use_id\": \"toolu_1\", \"tool_response\": {\"result\": \"Finished: all tests pass (42).\"}}",
+      "setup": {
+        "files": {},
+        "steps": [
+          {
+            "cli": "judge",
+            "args": [
+              "brief",
+              "save"
+            ],
+            "stdin": "{\"toolUseId\": \"toolu_1\", \"sessionId\": \"s1\", \"promptId\": \"p1\", \"dispatchName\": \"worker\", \"subagentType\": \"general-purpose\", \"goal\": \"g\", \"acceptanceCriteria\": \"all tests pass\", \"proofCommand\": \"npm test\"}"
+          }
+        ],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"Brief acceptance criteria plausibly met: \\\"all tests pass\\\".\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "done-gate-annotate-not-met",
+      "run": {
+        "script": "config/hooks/done-gate-annotate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"tool_use_id\": \"toolu_1\", \"tool_response\": \"I gave up.\"}",
+      "setup": {
+        "files": {},
+        "steps": [
+          {
+            "cli": "judge",
+            "args": [
+              "brief",
+              "save"
+            ],
+            "stdin": "{\"toolUseId\": \"toolu_1\", \"sessionId\": \"s1\", \"promptId\": \"p1\", \"dispatchName\": \"worker\", \"subagentType\": \"general-purpose\", \"goal\": \"g\", \"acceptanceCriteria\": \"all tests pass\", \"proofCommand\": \"npm test\"}"
+          }
+        ],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"Brief acceptance criteria NOT clearly addressed in the final message: \\\"all tests pass\\\". Verify before treating this as done.\"}}\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "subagent-start-map-by-dispatch",
+      "run": {
+        "script": "config/hooks/subagent-start-map.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"agent_id\": \"agent-7\", \"agent_type\": \"general-purpose\", \"session_id\": \"s1\", \"prompt_id\": \"p1\"}",
+      "setup": {
+        "files": {},
+        "steps": [
+          {
+            "cli": "judge",
+            "args": [
+              "brief",
+              "save"
+            ],
+            "stdin": "{\"toolUseId\": \"toolu_1\", \"sessionId\": \"s1\", \"promptId\": \"p1\", \"dispatchName\": \"worker\", \"subagentType\": \"general-purpose\", \"goal\": \"g\", \"acceptanceCriteria\": \"all tests pass\", \"proofCommand\": \"npm test\"}"
+          }
+        ],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": [
+          {
+            "db": "state/judge/decisions.sqlite",
+            "table": "briefs",
+            "orderBy": "tool_use_id"
+          }
+        ]
+      },
+      "models": [],
+      "expect": {
+        "stdout": "",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {
+          "state/judge/decisions.sqlite#briefs": [
+            "{\"tool_use_id\":\"toolu_1\",\"agent_id\":\"agent-7\",\"session_id\":\"s1\",\"prompt_id\":\"p1\",\"dispatch_name\":\"worker\",\"subagent_type\":\"general-purpose\",\"goal\":\"g\",\"acceptance_criteria\":\"all tests pass\",\"proof_command\":\"npm test\",\"saved_at\":\"<TS>\"}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "subagent-start-map-by-teammate-name",
+      "run": {
+        "script": "config/hooks/subagent-start-map.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"agent_id\": \"agent-8\", \"agent_type\": \"worker\", \"session_id\": \"s1\", \"prompt_id\": \"p1\"}",
+      "setup": {
+        "files": {
+          "state/judge/teammate-names.jsonl": "{\"name\": \"worker\"}\n"
+        },
+        "steps": [
+          {
+            "cli": "judge",
+            "args": [
+              "brief",
+              "save"
+            ],
+            "stdin": "{\"toolUseId\": \"toolu_1\", \"sessionId\": \"s1\", \"promptId\": \"p1\", \"dispatchName\": \"worker\", \"subagentType\": \"general-purpose\", \"goal\": \"g\", \"acceptanceCriteria\": \"all tests pass\", \"proofCommand\": \"npm test\"}"
+          }
+        ],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": [
+          {
+            "db": "state/judge/decisions.sqlite",
+            "table": "briefs",
+            "orderBy": "tool_use_id"
+          }
+        ]
+      },
+      "models": [],
+      "expect": {
+        "stdout": "",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {
+          "state/judge/decisions.sqlite#briefs": [
+            "{\"tool_use_id\":\"toolu_1\",\"agent_id\":\"agent-8\",\"session_id\":\"s1\",\"prompt_id\":\"p1\",\"dispatch_name\":\"worker\",\"subagent_type\":\"general-purpose\",\"goal\":\"g\",\"acceptance_criteria\":\"all tests pass\",\"proof_command\":\"npm test\",\"saved_at\":\"<TS>\"}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "subagent-start-map-no-brief",
+      "run": {
+        "script": "config/hooks/subagent-start-map.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"agent_id\": \"agent-9\", \"agent_type\": \"general-purpose\", \"session_id\": \"s9\", \"prompt_id\": \"p9\"}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "judge-health-ok",
+      "run": {
+        "script": "config/hooks/judge-health.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "judge-health-degraded",
+      "run": {
+        "script": "config/hooks/judge-health.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "",
+      "setup": {
+        "files": {},
+        "steps": [
+          {
+            "cli": "judge",
+            "args": [
+              "health"
+            ],
+            "stdin": ""
+          }
+        ],
+        "sql": [
+          {
+            "db": "state/judge/decisions.sqlite",
+            "statements": [
+              "INSERT INTO failures VALUES (strftime('%Y-%m-%dT%H:%M:%fZ','now'), 'wake-gate', 'claude-cli', 'timeout')"
+            ]
+          }
+        ]
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "judge: degraded — 1 failures in the last 24h. Run: judge health\n",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "done-gate-no-claim-ask",
+      "run": {
+        "script": "config/hooks/done-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"last_assistant_message\": \"Here is the plan for tomorrow.\"}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [
+        {
+          "bin": "claude",
+          "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"ask\"}}",
+          "exitCode": 0,
+          "argsDigest": "8a6e47b806c15caa"
+        }
+      ],
+      "expect": {
+        "stdout": "",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "done-gate-no-claim-continue",
+      "run": {
+        "script": "config/hooks/done-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"last_assistant_message\": \"Next I will run step 3 of the plan.\"}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [
+          "state/judge/sessions/s1.json"
+        ],
+        "sqlite": []
+      },
+      "models": [
+        {
+          "bin": "claude",
+          "stdout": "{\"type\": \"result\", \"structured_output\": {\"decision\": \"continue\"}}",
+          "exitCode": 0,
+          "argsDigest": "b4fe95fe30a2f7a8"
+        }
+      ],
+      "expect": {
+        "stdout": "",
+        "stderr": "Next step already authorized by the brief or plan — continuing without asking.\n",
+        "exitCode": 2,
+        "files": {
+          "state/judge/sessions/s1.json": "{\"auto_continued_at\":\"<TS>\"}\n"
+        },
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "done-gate-claim-no-evidence",
+      "run": {
+        "script": "config/hooks/done-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"last_assistant_message\": \"All done.\"}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "",
+        "stderr": "Claiming done with no evidence mentioned (no command output, no PR link, no test run). Show the proof.\n",
+        "exitCode": 2,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "done-gate-claim-with-evidence",
+      "run": {
+        "script": "config/hooks/done-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"last_assistant_message\": \"All done: npm test passes (42 tests).\"}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "done-gate-claim-misses-acceptance",
+      "run": {
+        "script": "config/hooks/done-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"last_assistant_message\": \"All done, see PR #12.\"}",
+      "setup": {
+        "files": {},
+        "steps": [
+          {
+            "cli": "judge",
+            "args": [
+              "brief",
+              "save"
+            ],
+            "stdin": "{\"toolUseId\": \"task:s1\", \"sessionId\": \"s1\", \"promptId\": \"p1\", \"dispatchName\": null, \"subagentType\": \"main\", \"goal\": \"g\", \"acceptanceCriteria\": \"login works on Safari\", \"proofCommand\": \"npm test\"}"
+          }
+        ],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "",
+        "stderr": "Claiming done, but the acceptance criteria (\"login works on Safari\") doesn't appear addressed in the claim. Show how it's met.\n",
+        "exitCode": 2,
+        "files": {},
+        "sqlite": {}
+      }
+    },
+    {
+      "name": "done-gate-stop-hook-active",
+      "run": {
+        "script": "config/hooks/done-gate.sh"
+      },
+      "args": [],
+      "env": {},
+      "stdin": "{\"session_id\": \"s1\", \"stop_hook_active\": true, \"last_assistant_message\": \"All done.\"}",
+      "setup": {
+        "files": {},
+        "steps": [],
+        "sql": []
+      },
+      "capture": {
+        "files": [],
+        "sqlite": []
+      },
+      "models": [],
+      "expect": {
+        "stdout": "",
+        "stderr": "",
+        "exitCode": 0,
+        "files": {},
+        "sqlite": {}
+      }
+    }
+  ]
+}

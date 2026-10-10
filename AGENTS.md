@@ -42,6 +42,8 @@ agentic-workflow/
 ├── scorer/        # Daily cost/involvement report from provider session transcripts
 ├── judge/         # Cheap-agent-harness judge CLI (decisions, config, health)
 ├── sindri/        # Sindri core: profile, ledger, lock, scrubber, plan-file tracker, observe, doctor (CLI)
+├── golden/        # Golden contract harness: record each package's CLI/hook contract from the TS build, replay it against any build
+├── goldens/       # Recorded golden suites (judge, hooks that call judge, redaction corpus) + targets.ts.json
 ├── mods/          # Claude Code mods (in-process function hooks): aw-live /live pane. Claude-only
 ├── planning/      # Project documentation
 ├── .agents/rules/ # Glob-scoped domain rules (.claude/rules and .cursor/rules link here)
@@ -58,6 +60,8 @@ cd mcp-bridge && npm test               # Vitest, in-memory SQLite
 cd scorer && npm test                   # Vitest
 cd judge && npm test                    # Vitest
 cd sindri && npm test                   # Vitest
+cd golden && npm test                   # Vitest (builds dist/ first)
+(cd golden && npm run build) && node golden/dist/cli.js replay goldens/*/*.suite.json  # needs judge + sindri built
 (cd skills/ui-evidence && npm test)     # Vitest (skill package; includes a real-browser test)
 (cd skills/bugFixOrchestrator && npm test)  # Vitest (bugfix-state CLI)
 claude plugin validate mods/aw-live && claude plugin test mods/aw-live  # the aw-live mod (needs claude >= 2.1.289)
@@ -115,8 +119,8 @@ After installing for Codex, open `codex` and run `/hooks` to trust the `aw:*` ho
 ## Merge Gate
 
 Before merging any PR:
-1. `npm run typecheck` passes with zero errors in `mcp-bridge`, `scorer`, `judge`, `sindri`, `skills/ui-evidence`, and `skills/bugFixOrchestrator`
-2. `npm test` passes in `mcp-bridge`, `scorer`, `judge`, `sindri`, `skills/ui-evidence`, and `skills/bugFixOrchestrator`, every bash test listed above passes, and `claude plugin validate mods/aw-live` and `claude plugin test mods/aw-live` pass
+1. `npm run typecheck` passes with zero errors in `mcp-bridge`, `scorer`, `judge`, `sindri`, `golden`, `skills/ui-evidence`, and `skills/bugFixOrchestrator`
+2. `npm test` passes in `mcp-bridge`, `scorer`, `judge`, `sindri`, `golden`, `skills/ui-evidence`, and `skills/bugFixOrchestrator`, `golden replay goldens/*/*.suite.json` passes against the TS build, every bash test listed above passes, and `claude plugin validate mods/aw-live` and `claude plugin test mods/aw-live` pass
 3. `scripts/sync-rules.sh --check` passes (rule links and Rules Index match `.agents/rules/`)
 4. `./setup.sh --providers claude,codex,cursor --dry-run` runs cleanly
 5. No `/* v8 ignore */` annotations in source files (prohibited — write the test instead)

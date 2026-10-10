@@ -17,13 +17,14 @@ alwaysApply: false
 
 ## Test Infrastructure
 
-Four Vitest packages, each with v8 coverage, `testTimeout: 10_000`, and 100% line/function/branch/statement thresholds in `vitest.config.ts` (enforced by `npm run test:coverage`):
+Five Vitest packages, each with v8 coverage, `testTimeout: 10_000`, and 100% line/function/branch/statement thresholds in `vitest.config.ts` (enforced by `npm run test:coverage`):
 
 | Package | Tests | Coverage excludes |
 |---------|-------|-------------------|
 | `mcp-bridge` | in-memory SQLite via `tests/helpers.ts`; route tests in `tests/routes/` | `src/index.ts` (entry point wiring), `src/mcp.ts` (stdio transport; tool handlers covered by `tests/mcp-tools.test.ts`) |
 | `scorer` | transcript parsing, reports, probe summaries | `src/cli.ts` |
 | `judge` | judge CLI logic | `src/cli.ts` |
+| `golden` | golden harness: schema, normalization, compare, fake model provider, sandbox runner, recorder; `tests/cli.test.ts` drives the built CLI against `tests/fixtures/target.mjs` (global setup builds `dist/`) | `src/cli.ts`, `src/fake-model-bin.ts`, `src/judge-redact.ts` (thin entry points) |
 | `sindri` | in-memory SQLite ledgers, temp git repos, fake SystemProbe/GitRunner/IndexIo, tracker contract tests, evolve fixtures (`tests/evolve-fixtures.ts`: a temp repo with an approved profile and an open ledger, fake process and model runners; synthetic hook-fire transcripts under `tests/fixtures`) | `src/system-real.ts` (OS-specific branches; smoke-tested in `tests/real.test.ts`, which also covers `src/git-real.ts` and `src/index/sandbox-real.ts` in full); `src/scope/model-real.ts`, `src/scope/io-real.ts`; `src/cli.ts`, `src/gen.ts` (thin wiring; generated outputs are checked by tests) |
 
 `/* v8 ignore */` annotations are prohibited — write the test instead. (One legacy `/* v8 ignore next */` remains in `mcp-bridge/src/db/schema.ts`.)

@@ -18,7 +18,7 @@ export const GOLDEN_DIR = golden;
 
 // One parsed case (defaults filled) running CLI "t".
 export function kase(raw: Record<string, unknown>): Case {
-  const r = parseSuite({ schema: "golden-suite/v1", name: "s", normalize: [], cases: [{ name: "c", run: { cli: "t" }, ...raw }] });
+  const r = parseSuite({ schema: "golden-suite/v1", name: "s", normalize: [], inputs: { a: "", seed: "" }, cases: [{ name: "c", run: { cli: "t" }, ...raw }] });
   if (!r.ok) throw new Error(r.error);
   return r.suite.cases[0] as Case;
 }

@@ -17,12 +17,12 @@ describe("loadTargets", () => {
     expect(loadTargets(file('{"judge":["node","{{repo}}/judge/dist/cli.js"]}'))).toEqual({ judge: ["node", "{{repo}}/judge/dist/cli.js"] });
   });
 
-  it("rejects a non-object and a bad command", () => {
-    expect(() => loadTargets(file("[]"))).toThrow(/expected an object/);
-    expect(() => loadTargets(file("null"))).toThrow(/expected an object/);
-    expect(() => loadTargets(file('{"j":[]}'))).toThrow(/target j must be a non-empty string array/);
-    expect(() => loadTargets(file('{"j":"node"}'))).toThrow(/target j/);
-    expect(() => loadTargets(file('{"j":[1]}'))).toThrow(/target j/);
+  it("rejects bad JSON, a non-object, a bad name and a bad command, naming the file", () => {
+    expect(() => loadTargets(file("{"))).toThrow(/targets\.json: /);
+    expect(() => loadTargets(file("[]"))).toThrow(/targets\.json: \(root\): Expected object/);
+    expect(() => loadTargets(file('{"j":[]}'))).toThrow(/targets\.json: j: Array must contain at least 1/);
+    expect(() => loadTargets(file('{"j":"node"}'))).toThrow(/j: Expected array/);
+    expect(() => loadTargets(file('{"J K":["x"]}'))).toThrow(/J K: Invalid/);
   });
 });
 

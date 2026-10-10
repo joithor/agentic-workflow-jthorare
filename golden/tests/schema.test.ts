@@ -15,6 +15,9 @@ describe("parseSuite", () => {
     expect(c.stdin).toBe("");
     expect(c.setup).toEqual({ files: {}, steps: [], sql: [] });
     expect(c.capture).toEqual({ files: [], sqlite: [] });
+    expect(r.suite.outputs).toBe("plain");
+    expect(r.suite.inputs).toEqual({});
+    expect(r.suite.startupBudgets).toEqual([]);
     expect(c.models).toEqual([]);
     expect(c.expect).toBeUndefined();
   });
@@ -22,7 +25,7 @@ describe("parseSuite", () => {
   it("accepts a script case and a full expectation", () => {
     const r = parseSuite({
       ...minimal,
-      startupBudget: { cli: "judge", args: ["health"], runs: 3, medianMsMax: 900 },
+      startupBudgets: [{ cli: "judge", args: ["health"], runs: 3, medianMsMax: 900 }],
       cases: [{
         name: "hook", run: { script: "config/hooks/send-gate.sh" }, stdin: { base64: "aGk=" },
         models: [{ bin: "claude", argsDigest: "ab", stdout: "{}" }],
@@ -51,9 +54,41 @@ describe("parseSuite", () => {
   });
 });
 
+describe("suite confinement", () => {
+  const withCase = (c: Record<string, unknown>) => parseSuite({ ...minimal, cases: [{ name: "c", run: { cli: "judge" }, ...c }] });
+  const err = (r: ReturnType<typeof parseSuite>): string => (r.ok ? "" : r.error);
+
+  it("rejects absolute paths and '..' in every path field", () => {
+    expect(err(withCase({ capture: { files: ["../../home/u/.ssh/id_ed25519"] } }))).toContain("capture.files.0: must be a relative path without '..'");
+    expect(err(withCase({ capture: { files: ["/etc/passwd"] } }))).toContain("must be a relative path");
+    expect(err(withCase({ setup: { files: { "../x": "y" } } }))).toContain("must be a relative path");
+    expect(err(withCase({ setup: { sql: [{ db: "/tmp/x.sqlite", statements: [] }] } }))).toContain("must be a relative path");
+    expect(err(withCase({ capture: { sqlite: [{ db: "a/../../b", table: "t", orderBy: "a" }] } }))).toContain("must be a relative path");
+    expect(err(withCase({ run: { script: "../outside.sh" } }))).not.toBe("");
+    expect(err(withCase({ setup: { steps: [{ script: "/bin/sh" }] } }))).not.toBe("");
+    expect(err(withCase({ capture: { files: ["a\\b"] } }))).toContain("must be a relative path");
+  });
+
+  it("rejects env keys the sandbox owns", () => {
+    for (const k of ["HOME", "PATH", "AW_STATE_DIR", "TMPDIR", "TZ", "GOLDEN_FAKE_STORE"]) {
+      expect(err(withCase({ env: { [k]: "/real" } }))).toContain("is reserved by the sandbox");
+    }
+    expect(withCase({ env: { AW_SESSION_ID: "s" } }).ok).toBe(true);
+  });
+
+  it("rejects an unknown input reference and an input that references another", () => {
+    expect(err(withCase({ stdin: { input: "nope" } }))).toBe('case c: unknown input "nope"');
+    expect(err(parseSuite({ ...minimal, inputs: { a: { input: "b" } } }))).toBe("inputs.a: an input can't reference another input");
+    expect(err(parseSuite({ ...minimal, inputs: { a: "x" }, cases: [{ name: "c", run: { cli: "j" }, stdin: { concat: [{ input: "a" }, "y"] }, expect: { stdout: { input: "a" }, stderr: "", exitCode: 0, files: {}, sqlite: {} } }] }))).toBe("");
+  });
+});
+
 describe("decodeText", () => {
-  it("passes a plain string through and decodes base64", () => {
+  it("decodes plain, base64, input references, repeats and concatenations", () => {
     expect(decodeText("plain")).toBe("plain");
     expect(decodeText({ base64: Buffer.from("héllo", "utf8").toString("base64") })).toBe("héllo");
+    expect(decodeText({ input: "a" }, { a: { repeat: "xy", times: 3 } })).toBe("xyxyxy");
+    expect(decodeText({ input: "missing" }, {})).toBe("");
+    expect(decodeText({ concat: ["a", { repeat: "b", times: 2 }, { input: "c" }] }, { c: "C" })).toBe("abbC");
   });
 });

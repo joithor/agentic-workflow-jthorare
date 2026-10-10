@@ -1,22 +1,28 @@
 import fs from "node:fs";
 
+import { z } from "zod";
+
 import type { Targets } from "./run.js";
 
 // Targets map a CLI name in a suite to the command that runs it: the TS build
-// today (goldens/targets.ts.json), the C# build later (a second file, or
-// --target overrides). Commands may use {{repo}}.
+// today (goldens/targets.ts.json), the C# build later (goldens/targets.cs.json,
+// or --target overrides). Commands may use {{repo}}.
+const TargetsSchema = z.record(z.string().regex(/^[a-z][a-z0-9-]*$/), z.array(z.string().min(1)).min(1));
+
 export function loadTargets(file: string): Targets {
-  const raw = JSON.parse(fs.readFileSync(file, "utf8")) as unknown;
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) throw new Error(`${file}: expected an object of name -> [command, ...args]`);
-  const out: Targets = {};
-  for (const [name, cmd] of Object.entries(raw)) {
-    if (!Array.isArray(cmd) || cmd.length === 0 || !cmd.every((c) => typeof c === "string")) throw new Error(`${file}: target ${name} must be a non-empty string array`);
-    out[name] = cmd;
+  let raw: unknown;
+  try {
+    raw = JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch (e) {
+    throw new Error(`${file}: ${(e as Error).message}`);
   }
-  return out;
+  const r = TargetsSchema.safeParse(raw);
+  if (!r.success) throw new Error(`${file}: ${r.error.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join("; ")}`);
+  return r.data;
 }
 
-// --target name=cmd arg arg (split on spaces; use a targets file for anything fancier).
+// --target name=cmd arg arg — split on spaces, so a path with a space needs a
+// targets file (--targets) instead.
 export function parseTargetOverride(spec: string): [string, string[]] {
   const i = spec.indexOf("=");
   const name = i === -1 ? "" : spec.slice(0, i);

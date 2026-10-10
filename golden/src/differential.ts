@@ -22,7 +22,7 @@ export function redactionDiff(suite: Suite): DiffRow[] {
     if (m === null || c.expect === undefined) continue;
     const side = m[1] as "judge" | "sindri";
     const id = m[2] as string;
-    out.set(id, { ...out.get(id), [side]: decodeText(c.expect.stdout) });
+    out.set(id, { ...out.get(id), [side]: decodeText(c.expect.stdout, suite.inputs) });
   }
   return [...out.entries()]
     .filter(([, v]) => v.judge !== undefined && v.sindri !== undefined)

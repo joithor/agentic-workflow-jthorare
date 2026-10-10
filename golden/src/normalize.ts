@@ -15,16 +15,19 @@ const DURATION = /("[A-Za-z0-9]*(?:_ms|Ms)"\s*:\s*)\d+(?:\.\d+)?/g;
 
 // Rules apply in a fixed order, whatever order the suite lists them in:
 // the sandbox path first, so a uuid or timestamp inside it can't split it.
-export function normalize(text: string, rules: readonly Normalizer[], ctx: NormalizeContext): string {
-  let out = text;
-  if (rules.includes("sandbox-path")) {
-    for (const root of [ctx.sandboxReal, ctx.sandbox]) {
-      if (root !== undefined) out = out.replace(new RegExp(escapeRe(root), "g"), "<SANDBOX>");
-    }
-  }
-  if (rules.includes("uuid")) out = out.replace(UUID, "<UUID>");
-  if (rules.includes("iso-timestamp")) out = out.replace(ISO, "<TS>");
-  if (rules.includes("epoch-ms")) out = out.replace(EPOCH_MS, "<EPOCH_MS>");
-  if (rules.includes("duration-ms")) out = out.replace(DURATION, "$1<MS>");
-  return out;
+// `fired` collects the rules that changed something (record uses it to refuse
+// a declared rule that never applies).
+export function normalize(text: string, rules: readonly Normalizer[], ctx: NormalizeContext, fired?: Set<Normalizer>): string {
+  const apply = (rule: Normalizer, f: (s: string) => string, s: string): string => {
+    if (!rules.includes(rule)) return s;
+    const out = f(s);
+    if (out !== s) fired?.add(rule);
+    return out;
+  };
+  const roots = [ctx.sandboxReal, ctx.sandbox].filter((r): r is string => r !== undefined);
+  let out = apply("sandbox-path", (s) => roots.reduce((acc, r) => acc.replace(new RegExp(escapeRe(r), "g"), "<SANDBOX>"), s), text);
+  out = apply("uuid", (s) => s.replace(UUID, "<UUID>"), out);
+  out = apply("iso-timestamp", (s) => s.replace(ISO, "<TS>"), out);
+  out = apply("epoch-ms", (s) => s.replace(EPOCH_MS, "<EPOCH_MS>"), out);
+  return apply("duration-ms", (s) => s.replace(DURATION, "$1<MS>"), out);
 }

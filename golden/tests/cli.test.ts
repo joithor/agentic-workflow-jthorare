@@ -17,7 +17,7 @@ function workspace(): { dir: string; suite: string; targets: string } {
   const targets = path.join(dir, "targets.json");
   fs.writeFileSync(targets, JSON.stringify({ t: ["node", "{{repo}}/tests/fixtures/target.mjs"] }));
   const suite = path.join(dir, "s.json");
-  fs.writeFileSync(suite, JSON.stringify({ schema: "golden-suite/v1", name: "e2e", normalize: ["sandbox-path", "uuid", "iso-timestamp"], startupBudget: { cli: "t", args: ["echo"], runs: 1, medianMsMax: 60000 }, cases: [{ name: "echo", run: { cli: "t" }, args: ["echo", "x"] }] }));
+  fs.writeFileSync(suite, JSON.stringify({ schema: "golden-suite/v1", name: "e2e", normalize: ["sandbox-path", "uuid", "iso-timestamp"], startupBudgets: [{ cli: "t", args: ["echo"], runs: 1, medianMsMax: 60000 }], cases: [{ name: "echo", run: { cli: "t" }, args: ["echo", "x"] }] }));
   return { dir, suite, targets };
 }
 
@@ -27,7 +27,8 @@ describe("golden CLI", () => {
     const common = ["--repo", GOLDEN_DIR, "--targets", w.targets];
     const rec = golden(["record", w.suite, ...common]);
     expect(rec.status).toBe(0);
-    expect(rec.stdout).toMatch(/^recorded 1 case\(s\) -> .*s\.json \(startup t: median \d+ ms, budget 60000 ms\)\n$/);
+    expect(rec.stdout).toMatch(/^recorded 1 case\(s\) -> .*s\.json\n  PASS startup t: median \d+ ms \(budget 60000 ms, samples \d+\)\n$/);
+    expect(rec.stderr).toMatch(/^golden: isolation = (sandbox-exec \(no network, no keychain\) \+ PATH stubs|PATH stubs only)\n$/);
     const ok = golden(["replay", w.suite, ...common]);
     expect(ok.status).toBe(0);
     expect(ok.stdout).toContain("suite e2e: PASS");
@@ -43,6 +44,9 @@ describe("golden CLI", () => {
     const w = workspace();
     expect(golden([]).status).toBe(2);
     expect(golden(["replay"]).status).toBe(2);
+    expect(golden(["replay", w.suite, "--bogus"]).stderr).toContain("golden: unknown flag --bogus");
+    expect(golden(["record-call", "--", "true"]).status).toBe(2);
+    expect(golden(["redaction-diff"]).status).toBe(2);
     fs.writeFileSync(w.suite, "{}");
     const r = golden(["replay", w.suite, "--targets", w.targets]);
     expect(r.status).toBe(2);
@@ -53,8 +57,9 @@ describe("golden CLI", () => {
   it("exits 1 and names the case when recording hits an unrecorded model call", () => {
     const w = workspace();
     fs.writeFileSync(w.suite, JSON.stringify({ schema: "golden-suite/v1", name: "m", normalize: [], cases: [{ name: "needs-model", run: { cli: "t" }, args: ["model-tolerant"] }] }));
-    const r = golden(["record", w.suite, "--repo", GOLDEN_DIR, "--targets", w.targets]);
+    const r = golden(["record", w.suite, "--repo", GOLDEN_DIR, "--targets", w.targets, "--no-os-sandbox"]);
     expect(r.status).toBe(1);
+    expect(r.stderr).toContain("golden: isolation = PATH stubs only");
     expect(r.stderr).toContain("case needs-model: unrecorded model call(s) claude");
   });
 

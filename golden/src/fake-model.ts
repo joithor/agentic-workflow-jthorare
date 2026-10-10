@@ -1,19 +1,24 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 
-import type { ModelResponse } from "./schema.js";
+import { z } from "zod";
 
 // The fake model provider (spec §4c): a stub installed as claude, codex and
 // cursor-agent at the front of PATH. It replays responses keyed by a digest of
 // its argv and fails loudly on anything it hasn't seen, so a changed prompt or
 // input can never silently pass. In record mode it hands out the case's
-// scripted responses in order and keys each by the input it answered.
-export interface ModelStore {
-  mode: "record" | "replay";
-  scripted: ModelResponse[];
-  responses: ModelResponse[];
-  misses: string[];
-}
+// scripted responses in order and keys each by the input it answered. It
+// notes every response it serves, so replay can also fail a recorded call the
+// build never made.
+const Response = z.object({ bin: z.string(), argsDigest: z.string().optional(), stdout: z.string(), exitCode: z.number().int() }).strict();
+const Store = z.object({
+  mode: z.enum(["record", "replay"]),
+  scripted: z.array(Response),
+  responses: z.array(Response),
+  misses: z.array(z.string()),
+  used: z.array(z.string()),
+}).strict();
+export type ModelStore = z.infer<typeof Store>;
 
 export const MISS_EXIT = 97;
 
@@ -22,7 +27,9 @@ export function argsDigest(bin: string, args: readonly string[]): string {
 }
 
 export function readStore(file: string): ModelStore {
-  return JSON.parse(fs.readFileSync(file, "utf8")) as ModelStore;
+  const r = Store.safeParse(JSON.parse(fs.readFileSync(file, "utf8")));
+  if (!r.success) throw new Error(`${file}: ${r.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`);
+  return r.data;
 }
 
 export function writeStore(file: string, s: ModelStore): void {
@@ -51,7 +58,7 @@ export function fakeModel(bin: string, rawArgs: readonly string[], file: string,
   if (hit === undefined && s.mode === "record") {
     const i = s.scripted.findIndex((r) => r.bin === bin);
     if (i !== -1) {
-      hit = { ...s.scripted[i], argsDigest: digest };
+      hit = { ...(s.scripted[i] as ModelStore["scripted"][number]), argsDigest: digest };
       s.scripted.splice(i, 1);
       s.responses.push(hit);
     }
@@ -61,6 +68,7 @@ export function fakeModel(bin: string, rawArgs: readonly string[], file: string,
     writeStore(file, s);
     return { stdout: "", stderr: `golden-fake-model: unrecorded ${bin} input ${digest} (${s.mode} mode)`, exitCode: MISS_EXIT };
   }
+  s.used.push(`${bin} ${digest}`);
   writeStore(file, s);
   return { stdout: hit.stdout, stderr: "", exitCode: hit.exitCode };
 }

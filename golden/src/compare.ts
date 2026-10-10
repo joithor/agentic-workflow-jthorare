@@ -1,8 +1,9 @@
-import { decodeText, type Expectation } from "./schema.js";
+import { decodeText, type Expectation, type Inputs } from "./schema.js";
 
-// What one run produced, already normalized, plus the fake model's misses.
-// A miss is never part of a golden: it always fails.
-export type Observed = Omit<Expectation, "stdout" | "stderr"> & { stdout: string; stderr: string; misses: string[] };
+// What one run produced, already normalized, plus the fake model's misses and
+// the recorded responses the build never asked for. Neither is ever part of a
+// golden: both always fail (the model-call set is part of the contract).
+export type Observed = Omit<Expectation, "stdout" | "stderr"> & { stdout: string; stderr: string; misses: string[]; unusedRecorded: string[] };
 
 export interface Mismatch {
   field: string;
@@ -32,10 +33,10 @@ function keyed(field: string, expected: Record<string, string | null>, actual: R
 
 const joinRows = (r: Record<string, string[]>): Record<string, string> => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v.join("\n")]));
 
-export function compare(expected: Expectation, actual: Observed): Mismatch[] {
+export function compare(expected: Expectation, actual: Observed, inputs: Inputs = {}): Mismatch[] {
   const out: Mismatch[] = [];
   for (const f of ["stdout", "stderr"] as const) {
-    const e = decodeText(expected[f]);
+    const e = decodeText(expected[f], inputs);
     if (e !== actual[f]) out.push({ field: f, diff: lineDiff(e, actual[f]) });
   }
   if (expected.exitCode !== actual.exitCode) out.push({ field: "exitCode", diff: `- ${expected.exitCode}\n+ ${actual.exitCode}` });
@@ -46,5 +47,6 @@ export function compare(expected: Expectation, actual: Observed): Mismatch[] {
     if (e[t] !== a[t]) out.push({ field: `sqlite[${t}]`, diff: e[t] !== undefined && a[t] !== undefined ? lineDiff(e[t], a[t]) : `- ${show(e[t])}\n+ ${show(a[t])}` });
   }
   if (actual.misses.length > 0) out.push({ field: "model calls", diff: `- <none unrecorded>\n+ ${actual.misses.join("\n+ ")}` });
+  if (actual.unusedRecorded.length > 0) out.push({ field: "model calls", diff: `- ${actual.unusedRecorded.join("\n- ")}\n+ <never called>` });
   return out;
 }

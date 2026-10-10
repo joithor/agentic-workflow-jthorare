@@ -24,6 +24,12 @@ describe("normalize", () => {
     expect(normalize('{"latency_ms":412,"elapsedMs":7,"count":3}', ["duration-ms"], { sandbox: "/x" })).toBe('{"latency_ms":<MS>,"elapsedMs":<MS>,"count":3}');
   });
 
+  it("reports which declared rules changed something", () => {
+    const fired = new Set<string>();
+    normalize("2026-10-10T06:26:47Z", ["uuid", "iso-timestamp", "sandbox-path"], { sandbox: "/x" }, fired as Set<never>);
+    expect([...fired]).toEqual(["iso-timestamp"]);
+  });
+
   it("only applies the rules a suite declares", () => {
     const text = "3f2b8c1e-9a4d-4c2e-8f1a-0b9c8d7e6f5a 2026-10-10T06:26:47Z";
     expect(normalize(text, [], { sandbox: "/x" })).toBe(text);

@@ -1,88 +1,70 @@
 #!/usr/bin/env node
+// Wiring only: argument parsing lives in args.ts, everything else in the modules it calls.
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { parseRecordCallArgs, parseSuiteArgs, USAGE } from "./args.js";
 import { formatDiff, redactionDiff } from "./differential.js";
-import { DEFAULT_ENV_ALLOWLIST, recordCall, sindriScrub } from "./recorder.js";
-import { formatReport, loadSuite, measureStartup, recordSuite, replaySuite, saveSuite } from "./suite.js";
+import { recordCall, sindriScrub } from "./recorder.js";
+import { substitute, useOsSandbox, type Targets } from "./run.js";
+import { formatReport, formatStartup, loadSuite, measureStartup, recordSuite, replaySuite, saveSuite } from "./suite.js";
+import type { Suite } from "./schema.js";
 import { loadTargets, parseTargetOverride } from "./targets.js";
 
 const distDir = path.dirname(fileURLToPath(import.meta.url));
-const USAGE = `usage:
-  golden record <suite.json>... [--repo DIR] [--targets FILE] [--target name=cmd]
-  golden replay <suite.json>... [--repo DIR] [--targets FILE] [--target name=cmd]
-  golden record-call --name NAME [--env VAR]... -- <command> [args...]
-  golden redaction-diff <redaction.suite.json>`;
 
-function readStdin(): string {
-  try {
-    return fs.readFileSync(0, "utf8");
-  } catch {
-    return "";
-  }
+function fail(message: string, code = 2): number {
+  process.stderr.write(`${message}\n`);
+  return code;
 }
 
 function recordCallMain(argv: string[]): number {
-  const dash = argv.indexOf("--");
-  const own = dash === -1 ? argv : argv.slice(0, dash);
-  const cmd = dash === -1 ? [] : argv.slice(dash + 1);
-  const name = own[own.indexOf("--name") + 1] ?? "";
-  if (!own.includes("--name") || cmd.length === 0) {
-    process.stderr.write(`${USAGE}\n`);
-    return 2;
+  const a = parseRecordCallArgs(argv);
+  if ("error" in a) return fail(`golden: ${a.error}\n${USAGE}`);
+  let stdin = "";
+  try {
+    stdin = fs.readFileSync(0, "utf8");
+  } catch {
+    /* no stdin */
   }
-  const extra = own.flatMap((a, i) => (a === "--env" && own[i + 1] !== undefined ? [own[i + 1] as string] : []));
-  const stdin = readStdin();
-  const r = recordCall({ name, argv: cmd, env: process.env, stdin, allowlist: [...DEFAULT_ENV_ALLOWLIST, ...extra] }, sindriScrub(process.env.GOLDEN_SCRUBBER ?? "sindri", process.env), () => new Date());
+  const r = recordCall({ name: a.name, argv: a.command, env: process.env, stdin, allowlist: a.allowlist }, sindriScrub([process.env.GOLDEN_SCRUBBER ?? "sindri"], process.env), () => new Date());
   if (r.warning !== undefined) process.stderr.write(`${r.warning}\n`);
-  const run = spawnSync(cmd[0] as string, cmd.slice(1), { input: stdin, stdio: ["pipe", "inherit", "inherit"] });
-  if (run.error !== undefined) {
-    process.stderr.write(`golden record-call: ${run.error.message}\n`);
-    return 127;
-  }
+  const run = spawnSync(a.command[0] as string, a.command.slice(1), { input: stdin, stdio: ["pipe", "inherit", "inherit"] });
+  if (run.error !== undefined) return fail(`golden record-call: ${run.error.message}`, 127);
   return run.status ?? 1;
 }
 
 function suiteMain(cmd: "record" | "replay", argv: string[]): number {
-  const files: string[] = [];
-  let repo = path.resolve(distDir, "..", "..");
-  let targetsFile: string | undefined;
-  const overrides: string[] = [];
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i] as string;
-    if (a === "--repo") repo = path.resolve(argv[++i] ?? "");
-    else if (a === "--targets") targetsFile = argv[++i];
-    else if (a === "--target") overrides.push(argv[++i] ?? "");
-    else files.push(a);
-  }
-  if (files.length === 0) {
-    process.stderr.write(`${USAGE}\n`);
-    return 2;
-  }
-  let targets;
-  let suites;
+  const a = parseSuiteArgs(argv, path.resolve(distDir, "..", ".."));
+  if ("error" in a) return fail(`golden: ${a.error}\n${USAGE}`);
+  let targets: Targets;
+  let suites: { file: string; suite: Suite }[];
   try {
-    targets = { ...loadTargets(targetsFile ?? path.join(repo, "goldens", "targets.ts.json")), ...Object.fromEntries(overrides.map(parseTargetOverride)) };
-    suites = files.map((f) => ({ file: f, suite: loadSuite(f) }));
+    targets = { ...loadTargets(a.targetsFile), ...Object.fromEntries(a.overrides.map(parseTargetOverride)) };
+    suites = a.files.map((f) => ({ file: f, suite: loadSuite(f) }));
   } catch (e) {
-    process.stderr.write(`golden: ${(e as Error).message}\n`);
-    return 2;
+    return fail(`golden: ${(e as Error).message}`);
   }
-  const opts = { repo, targets, distDir };
+  const opts = { repo: a.repo, targets, distDir, osSandbox: a.osSandbox };
+  process.stderr.write(`golden: isolation = ${useOsSandbox(opts) ? "sandbox-exec (no network, no keychain) + PATH stubs" : "PATH stubs only"}\n`);
+  // Record stores an output base64 only when the scrubber finds a secret shape in it.
+  const scrubCmd = targets.sindri?.map((c) => substitute(c, { repo: a.repo, sandbox: "" }));
+  const scrub = scrubCmd === undefined ? undefined : sindriScrub(scrubCmd, process.env);
+  const secretShaped = scrub === undefined ? undefined : (t: string): boolean => scrub(t) !== t;
   let ok = true;
   for (const { file, suite } of suites) {
     if (cmd === "record") {
       try {
-        saveSuite(file, recordSuite(suite, opts));
+        saveSuite(file, recordSuite(suite, opts, { secretShaped }));
       } catch (e) {
-        process.stderr.write(`golden: ${file}: ${(e as Error).message}\n`);
         ok = false;
+        process.stderr.write(`golden: ${file}:\n${(e as Error).message}\n`);
         continue;
       }
-      const s = measureStartup(suite, { ...opts, mode: "record" });
-      process.stdout.write(`recorded ${suite.cases.length} case(s) -> ${file}${s === undefined ? "" : ` (startup ${s.cli}: median ${s.medianMs} ms, budget ${s.budgetMs} ms)`}\n`);
+      const budgets = suite.startupBudgets.map((b) => formatStartup(measureStartup(b, suite, { ...opts, mode: "record" })));
+      process.stdout.write(`recorded ${suite.cases.length} case(s) -> ${file}${budgets.map((b) => `\n  ${b}`).join("")}\n`);
     } else {
       const r = replaySuite(suite, opts);
       process.stdout.write(`${formatReport(r)}\n`);
@@ -92,21 +74,20 @@ function suiteMain(cmd: "record" | "replay", argv: string[]): number {
   return ok ? 0 : 1;
 }
 
-const [, , cmd, ...rest] = process.argv;
-let code: number;
-if (cmd === "record" || cmd === "replay") code = suiteMain(cmd, rest);
-else if (cmd === "record-call") code = recordCallMain(rest);
-else if (cmd === "redaction-diff" && rest[0] !== undefined) {
+function redactionDiffMain(argv: string[]): number {
+  if (argv[0] === undefined) return fail(USAGE);
   try {
-    process.stdout.write(formatDiff(redactionDiff(loadSuite(rest[0]))));
-    code = 0;
+    process.stdout.write(formatDiff(redactionDiff(loadSuite(argv[0]))));
+    return 0;
   } catch (e) {
-    process.stderr.write(`golden: ${(e as Error).message}\n`);
-    code = 2;
+    return fail(`golden: ${(e as Error).message}`);
   }
 }
-else {
-  process.stderr.write(`${USAGE}\n`);
-  code = 2;
-}
+
+const [, , cmd, ...rest] = process.argv;
+const code =
+  cmd === "record" || cmd === "replay" ? suiteMain(cmd, rest)
+  : cmd === "record-call" ? recordCallMain(rest)
+  : cmd === "redaction-diff" ? redactionDiffMain(rest)
+  : fail(USAGE);
 process.exit(code);

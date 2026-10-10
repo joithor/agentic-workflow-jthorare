@@ -18,9 +18,9 @@ export function recordingsDir(env: NodeJS.ProcessEnv): string {
   return path.join(state, "golden", "recordings");
 }
 
-// One scrubber call per record: the fields joined by a separator line no
-// pattern can match across, then split back; a changed field count means a
-// match crossed a separator, so the record is dropped.
+// One scrubber call per record: the strings joined by a separator line no
+// pattern can match across, then split back; a changed count means a match
+// crossed a separator, so the record is dropped.
 const SEP = "\n\u0000golden-record-separator\u0000\n";
 
 export function scrubFields(fields: readonly string[], scrub: Scrub): string[] | null {
@@ -30,13 +30,72 @@ export function scrubFields(fields: readonly string[], scrub: Scrub): string[] |
   return parts.length === fields.length ? parts : null;
 }
 
+// Hook input is serialized JSON, where a newline before a token is the two
+// characters "\n" and hides the word boundary the patterns anchor on. So a
+// field that parses as a JSON object or array is scrubbed by its decoded
+// string leaves and keys (as judge's redactDeep does), then re-serialized;
+// any other field is scrubbed as text.
+type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
+
+function leaves(v: Json, out: string[]): void {
+  if (typeof v === "string") out.push(v);
+  else if (Array.isArray(v)) v.forEach((x) => leaves(x, out));
+  else if (v !== null && typeof v === "object") for (const [k, x] of Object.entries(v)) (out.push(k), leaves(x, out));
+}
+
+function rebuild(v: Json, next: () => string): Json {
+  if (typeof v === "string") return next();
+  if (Array.isArray(v)) return v.map((x) => rebuild(x, next));
+  if (v !== null && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([, x]) => [next(), rebuild(x, next)]));
+  return v;
+}
+
+function parseStructured(text: string): Json | undefined {
+  try {
+    const v = JSON.parse(text) as Json;
+    return v !== null && typeof v === "object" ? v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function scrubInputs(fields: readonly string[], scrub: Scrub): string[] | null {
+  const parsed = fields.map(parseStructured);
+  const flat: string[] = [];
+  fields.forEach((f, i) => {
+    const p = parsed[i];
+    if (p === undefined) flat.push(f);
+    else leaves(p, flat);
+  });
+  const out = scrubFields(flat, scrub);
+  if (out === null) return null;
+  let at = 0;
+  const next = (): string => out[at++] as string;
+  return fields.map((f, i) => {
+    const p = parsed[i];
+    if (p === undefined) return next();
+    const start = at;
+    const rebuilt = rebuild(p, next);
+    // Unchanged leaves keep the original bytes; a scrubbed one re-serializes.
+    return out.slice(start, at).every((s, j) => s === flat[start + j]) ? f : JSON.stringify(rebuilt);
+  });
+}
+
 // The real scrubber: `sindri scrub` reads stdin and writes the scrubbed text to stdout.
-export function sindriScrub(bin: string, env: NodeJS.ProcessEnv): Scrub {
+export function sindriScrub(cmd: readonly string[], env: NodeJS.ProcessEnv): Scrub {
   return (text) => {
-    const r = spawnSync(bin, ["scrub"], { input: text, encoding: "utf8", env, timeout: 10_000 });
+    const r = spawnSync(cmd[0] as string, [...cmd.slice(1), "scrub"], { input: text, encoding: "utf8", env, timeout: 10_000 });
     return r.error === undefined && r.status === 0 ? r.stdout : null;
   };
 }
+
+const isLink = (p: string): boolean => {
+  try {
+    return fs.lstatSync(p).isSymbolicLink();
+  } catch {
+    return false;
+  }
+};
 
 export interface CallInput {
   name: string;
@@ -49,7 +108,7 @@ export interface CallInput {
 export function recordCall(input: CallInput, scrub: Scrub, now: () => Date): { recorded: boolean; file?: string; warning?: string } {
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(input.name)) return { recorded: false, warning: `golden record-call: invalid --name ${JSON.stringify(input.name)}` };
   const envKeys = input.allowlist.filter((k) => input.env[k] !== undefined);
-  const fields = scrubFields([...input.argv, ...envKeys.map((k) => input.env[k] as string), input.stdin], scrub);
+  const fields = scrubInputs([...input.argv, ...envKeys.map((k) => input.env[k] as string), input.stdin], scrub);
   if (fields === null) return { recorded: false, warning: "golden record-call: scrubber unavailable or unsafe split; call not recorded" };
   const argv = fields.slice(0, input.argv.length);
   const envOut = Object.fromEntries(envKeys.map((k, i) => [k, fields[input.argv.length + i]]));
@@ -58,7 +117,11 @@ export function recordCall(input: CallInput, scrub: Scrub, now: () => Date): { r
   const file = path.join(dir, `${input.name}.jsonl`);
   try {
     fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    // Modes hold on every write, not only on create; a symlinked dir or file is refused.
+    if (isLink(dir) || isLink(file)) throw new Error("refusing a symlink");
+    fs.chmodSync(dir, 0o700);
     fs.appendFileSync(file, `${JSON.stringify(record)}\n`, { mode: 0o600 });
+    fs.chmodSync(file, 0o600);
   } catch (e) {
     return { recorded: false, warning: `golden record-call: cannot write ${file}: ${(e as Error).message}` };
   }

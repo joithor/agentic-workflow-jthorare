@@ -1,0 +1,33 @@
+{
+  "name": "@agentic-workflow/golden",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Golden contract harness: record each package's CLI/hook contract from the TS build and replay it against any build (spec 2026-10-09 agent readiness §4c)",
+  "type": "module",
+  "bin": {
+    "golden": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.9"
+  },
+  "allowScripts": {
+    "better-sqlite3@13.0.3": true
+  }
+}

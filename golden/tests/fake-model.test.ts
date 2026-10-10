@@ -55,6 +55,18 @@ describe("fakeModel", () => {
     expect(readStore(file).misses).toHaveLength(1);
   });
 
+  it("keys an argv that names a sandbox path the same in every sandbox", () => {
+    const d = argsDigest("claude", ["read <SANDBOX>/shot.png"]);
+    const file = store({ mode: "replay", scripted: [], responses: [{ bin: "claude", argsDigest: d, stdout: "x", exitCode: 0 }], misses: [] });
+    expect(fakeModel("claude", ["read /tmp/golden-1/shot.png"], file, ["", "/tmp/golden-1"]).stdout).toBe("x");
+  });
+
+  it("keys a sandbox temp dir by its prefix, not mkdtemp's random suffix", () => {
+    const d = argsDigest("codex", ["--output-schema", "<SANDBOX>/tmp/judge-cli-XXXXXX/schema.json"]);
+    const file = store({ mode: "replay", scripted: [], responses: [{ bin: "codex", argsDigest: d, stdout: "y", exitCode: 0 }], misses: [] });
+    expect(fakeModel("codex", ["--output-schema", "/tmp/golden-2/tmp/judge-cli-a1B2c3/schema.json"], file, ["/tmp/golden-2"]).stdout).toBe("y");
+  });
+
   it("fails loudly when the store is missing", () => {
     const r = fakeModel("claude", [], "/nonexistent/models.json");
     expect(r.exitCode).toBe(97);

@@ -29,7 +29,17 @@ export function writeStore(file: string, s: ModelStore): void {
   fs.writeFileSync(file, JSON.stringify(s, null, 2));
 }
 
-export function fakeModel(bin: string, args: readonly string[], file: string): { stdout: string; stderr: string; exitCode: number } {
+// A model argv that names a sandbox path (codex's output-schema temp file) is
+// keyed with the sandbox root and mkdtemp's random 6-char suffix replaced, so
+// the key is the same in every sandbox.
+const TMP_SUFFIX = /(<SANDBOX>\/tmp\/[^/\s"]*?-)[A-Za-z0-9]{6}(?=[/\s"]|$)/g;
+
+export function sandboxFree(args: readonly string[], roots: readonly string[]): string[] {
+  return args.map((a) => roots.filter((r) => r !== "").reduce((acc, r) => acc.replaceAll(r, "<SANDBOX>"), a).replace(TMP_SUFFIX, "$1XXXXXX"));
+}
+
+export function fakeModel(bin: string, rawArgs: readonly string[], file: string, roots: readonly string[] = []): { stdout: string; stderr: string; exitCode: number } {
+  const args = sandboxFree(rawArgs, roots);
   let s: ModelStore;
   try {
     s = readStore(file);

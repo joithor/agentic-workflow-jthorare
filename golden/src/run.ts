@@ -66,6 +66,7 @@ export function makeSandbox(opts: RunOptions, caseEnv: Record<string, string> = 
     LC_ALL: "C",
     NO_COLOR: "1",
     GOLDEN_FAKE_STORE: store,
+    GOLDEN_SANDBOX_ROOTS: [rootReal, root].join(":"),
   };
   for (const [k, v] of Object.entries(caseEnv)) env[k] = substitute(v, { repo: opts.repo, sandbox: root });
   return { root, rootReal, env, store, shim: (cli) => path.join(root, "bin/shim", cli) };
@@ -89,7 +90,7 @@ function dumpTable(dbFile: string, table: string, orderBy: string): string[] {
   }
 }
 
-export function runCase(c: Case, rules: readonly Normalizer[], opts: RunOptions): { observed: Observed; models: ModelResponse[] } {
+export function runCase(c: Case, rules: readonly Normalizer[], opts: RunOptions): { observed: Observed; models: ModelResponse[]; unused: ModelResponse[] } {
   const sb = makeSandbox(opts, c.env);
   const timeoutMs = opts.timeoutMs ?? 30_000;
   try {
@@ -128,6 +129,7 @@ export function runCase(c: Case, rules: readonly Normalizer[], opts: RunOptions)
     return {
       observed: { stdout: n(out.stdout), stderr: n(out.stderr), exitCode: out.exitCode, files, sqlite, misses: store.misses },
       models: store.responses,
+      unused: store.scripted,
     };
   } finally {
     fs.rmSync(sb.root, { recursive: true, force: true });

@@ -3,7 +3,8 @@
 import { fakeModel } from "./fake-model.js";
 
 const [, , bin = "", ...args] = process.argv;
-const r = fakeModel(bin, args, process.env.GOLDEN_FAKE_STORE ?? "");
+const roots = (process.env.GOLDEN_SANDBOX_ROOTS ?? "").split(":");
+const r = fakeModel(bin, args, process.env.GOLDEN_FAKE_STORE ?? "", roots);
 process.stdout.write(r.stdout);
 process.stderr.write(r.stderr === "" ? "" : `${r.stderr}\n`);
 process.exit(r.exitCode);

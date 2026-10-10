@@ -70,9 +70,10 @@ export function measureStartup(suite: Suite, opts: RunOptions, now: () => number
 // Record: run every case against the given (TS) targets and store what they did.
 export function recordSuite(suite: Suite, opts: Omit<RunOptions, "mode">): Suite {
   const cases = suite.cases.map((c) => {
-    const { observed, models } = runCase(c, suite.normalize, { ...opts, mode: "record" });
+    const { observed, models, unused } = runCase(c, suite.normalize, { ...opts, mode: "record" });
     const { misses, ...expect } = observed;
     if (misses.length > 0) throw new Error(`case ${c.name}: unrecorded model call(s) ${misses.join(", ")}; add a scripted response to its "models"`);
+    if (unused.length > 0) throw new Error(`case ${c.name}: ${unused.length} scripted model response(s) never called (${unused.map((u) => u.bin).join(", ")}); remove them`);
     return { ...c, models, expect };
   });
   return { ...suite, cases };

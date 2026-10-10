@@ -26,7 +26,7 @@ describe("parseSuite", () => {
       cases: [{
         name: "hook", run: { script: "config/hooks/send-gate.sh" }, stdin: { base64: "aGk=" },
         models: [{ bin: "claude", argsDigest: "ab", stdout: "{}" }],
-        expect: { stdout: "x", stderr: "", exitCode: 0, files: { "state/a": null }, sqlite: { decisions: ["{}"] }, models: { misses: [] } },
+        expect: { stdout: "x", stderr: "", exitCode: 0, files: { "state/a": null }, sqlite: { decisions: ["{}"] } },
       }],
     });
     expect(r.ok).toBe(true);

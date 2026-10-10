@@ -29,7 +29,6 @@ const Expect = z.object({
   exitCode: z.number().int(),
   files: z.record(z.string(), z.string().nullable()),
   sqlite: z.record(z.string(), z.array(z.string())),
-  models: z.object({ misses: z.array(z.string()) }).strict(),
 }).strict();
 
 const Case = z.object({

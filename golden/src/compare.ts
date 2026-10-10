@@ -1,7 +1,8 @@
 import type { Expectation } from "./schema.js";
 
-// What one run produced, already normalized: the same shape as an expectation.
-export type Observed = Expectation;
+// What one run produced, already normalized: an expectation plus the fake
+// model's misses. A miss is never part of a golden: it always fails.
+export type Observed = Expectation & { misses: string[] };
 
 export interface Mismatch {
   field: string;
@@ -43,8 +44,6 @@ export function compare(expected: Expectation, actual: Observed): Mismatch[] {
   for (const t of [...new Set([...Object.keys(e), ...Object.keys(a)])].sort()) {
     if (e[t] !== a[t]) out.push({ field: `sqlite[${t}]`, diff: e[t] !== undefined && a[t] !== undefined ? lineDiff(e[t], a[t]) : `- ${show(e[t])}\n+ ${show(a[t])}` });
   }
-  const em = expected.models.misses.join("\n");
-  const am = actual.models.misses.join("\n");
-  if (em !== am) out.push({ field: "models.misses", diff: `- ${em === "" ? "<none>" : em}\n+ ${am === "" ? "<none>" : am}` });
+  if (actual.misses.length > 0) out.push({ field: "model calls", diff: `- <none unrecorded>\n+ ${actual.misses.join("\n+ ")}` });
   return out;
 }

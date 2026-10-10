@@ -1,0 +1,5 @@
+{
+  "judge": ["node", "{{repo}}/judge/dist/cli.js"],
+  "sindri": ["node", "{{repo}}/sindri/dist/cli.js"],
+  "judge-redact": ["node", "{{repo}}/golden/dist/judge-redact.js"]
+}

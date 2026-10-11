@@ -23,6 +23,7 @@ One NativeAOT binary, `sindri`, is both the control plane and its CLI.
 | `sindri profile validate [--json]` | Checks the live profile file and prints its hash | 0 valid and approved; 1 valid, not approved; 2 invalid (`SND-PROFILE-001/002`) |
 | `sindri profile approve` | Shows the live hash and the key paths changed since the latest approval; changes nothing | 1 when not approved yet, 0 when it already is |
 | `sindri profile approve <hash>` | Approves: the hash must be the live one, and you type its first 6 characters at an interactive terminal | 0; 2 on a stale hash (`SND-PROFILE-003`), no terminal or a wrong confirmation (`SND-PROFILE-004`) |
+| `sindri context query "<q>" [--sources …] [--limit N] [--json]` | Cited results from the context sources the approved profile turns on (S3, `docs/csharp/sindri-context.md`) | 0 results; 1 none or a refused question; 2 not running, not approved or no source on |
 | `sindri doctor [--json]` | One line per check, in order: `lease`, `ledger`, `profile`, `api`, each `ok` / `warn` / `fail` with a fix | 0 all ok, 1 any warn, 2 any fail |
 
 Output: state is always a word, never colour; there is no colour at all, so `NO_COLOR` and redirected output need
@@ -63,6 +64,7 @@ repos:                    # optional
 services:                 # optional: background services by name, each with a cadence
   heartbeat: { every: 30s }   # <n>s|m|h, 5s to 24h
 api: { port: 7410 }       # optional, default 7410; AW_SINDRI_PORT overrides it
+context: { notes: { path: ~/notes } }   # optional: the context engine's sources (docs/csharp/sindri-context.md)
 ```
 
 The approval hash is SHA-256 over the canonical JSON (the checked record, repos and services sorted), so comments and
@@ -114,6 +116,7 @@ foreign browser `Origin` a 403):
 | `GET /sindri/ping` | `PingProcess`: `{pid, epoch}` |
 | `POST /sindri/stop` | `StopProcess` |
 | `POST /sindri/profile/approve` | `ApproveProfile` (`{hash, confirmed}`) |
+| `POST /sindri/context/query` | `QueryContext` (S3, `docs/csharp/sindri-context.md`) |
 | `GET /sindri/events?after=N` | `StreamEvents` as server-sent events: one event per ledger row, `id` = `seq`, `event` = type; resumes from `after` or `Last-Event-ID`; polls the ledger once a second |
 
 Errors are ProblemDetails with the `SND-*` code as `title`. There is no API token in S1: the threat model guards honest
@@ -148,6 +151,7 @@ blocks.
 | `SND-CLI-001` | Unknown command |
 | `SND-CLI-002` | `sindri serve` didn't come up after starting it |
 | `SND-SCHED-001` | A background service run failed |
+| `SND-CONTEXT-001` … `-003`, `-010` | Context retrieval (S3): no source on, a source can't open, a bad query, a source didn't answer (`docs/csharp/sindri-context.md`) |
 
 ## Hook contract
 

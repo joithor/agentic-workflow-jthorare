@@ -2,7 +2,7 @@
 # NativeAOT smoke for sindri (src/Sindri/Aw.Sindri.Host): publish it with PublishAot for the host RID, fail on any
 # trim/AOT (IL2xxx/IL3xxx) warning, then drive the native binary through the S1 journeys against a temp home: doctor
 # with nothing running, start headless with an unapproved profile, a second serve refused by the lease, the approve
-# preview and its non-terminal refusal, status, stop, and doctor again. The normalized output (pids, ports, hashes, times,
+# preview and its non-terminal refusal, status, a context query with no source on (S3), stop, and doctor again. The normalized output (pids, ports, hashes, times,
 # the host name and the temp path masked) must equal expected.txt.
 # Output goes to artifacts/aot-sindri-smoke/ (gitignored). The publish runs on a copy of the files it needs: PublishAot
 # with a RID makes restore add the host RID's ILCompiler packs to the lock files, so it never runs on the checkout.
@@ -43,6 +43,7 @@ run() { echo "## sindri $*"; "$bin" "$@" </dev/null 2>&1 || echo "exit $?"; }
   hash="$({ "$bin" profile validate --json || true; } | sed -E 's/.*"hash":"([0-9a-f]{64})".*/\1/')"
   run profile approve "$hash"
   run status
+  run context query "host lease"
   run stop
   run status
   run doctor

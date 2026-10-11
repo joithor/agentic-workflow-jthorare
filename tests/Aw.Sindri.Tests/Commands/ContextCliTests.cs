@@ -1,0 +1,60 @@
+using Aw.Kernel.Testing;
+using Aw.Sindri.Core;
+using Aw.Sindri.Core.Context;
+using Aw.Sindri.Features.QueryContext;
+using Aw.Sindri.Host.Commands;
+
+namespace Aw.Sindri.Tests.Commands;
+
+public sealed class ContextCliTests
+{
+    [Fact, Trait("Lane", "unit")]
+    public void The_arguments_read_into_a_request_in_any_order()
+    {
+        var (request, json) = ContextVerbs.Parse(["--json", "host lease", "--sources", "code, notes", "--limit", "3"]).Value;
+
+        Assert.True(json);
+        Assert.Equal("host lease", request.Question);
+        Assert.Equal(["code", "notes"], request.Sources!);   // why: --sources was given
+        Assert.Equal(3, request.Limit);
+    }
+
+    [Theory, Trait("Lane", "unit")]
+    [InlineData(new string[0], "no question")]
+    [InlineData(new[] { "q", "--limit", "x" }, "'--limit' isn't a context query argument")]
+    [InlineData(new[] { "q", "--colour" }, "'--colour' isn't a context query argument")]
+    [InlineData(new[] { "q", "second" }, "'second' isn't a context query argument")]
+    public void A_bad_argument_is_refused_with_the_usage(string[] args, string expected)
+    {
+        var error = ContextVerbs.Parse(args).Error;
+
+        Assert.Equal(SindriErrors.ContextBadQuery.Code, error.Code);
+        Assert.Contains(expected, error.Message, StringComparison.Ordinal);
+        Assert.Contains("fix: sindri context query", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void The_text_names_each_result_its_citation_and_each_source_in_words()
+    {
+        var answer = new QueryContextResponse("host lease", ["host", "lease"],
+            [new ContextHit(1, "SqliteLease.cs", "class SqliteLease", 1.0 / 61, Redacted: false, new Citation(SourceKind.Code, "aw/src/SqliteLease.cs", 12, KnownInstants.Epoch)),
+             new ContextHit(2, "deploy.md", "token [REDACTED:github-token]", 1.0 / 62, Redacted: true, new Citation(SourceKind.Notes, "/n/deploy.md", 2, KnownInstants.Epoch))],
+            [new SourceReport(SourceKind.Code, SourceState.Ok, 1, Detail: null), new SourceReport(SourceKind.Notes, SourceState.Ok, 1, Detail: null),
+             new SourceReport(SourceKind.Linear, SourceState.Failed, 0, "SND-CONTEXT-010 Linear answered HTTP 401")]);
+
+        var text = ContextVerbs.Render(answer);
+
+        Assert.Equal(string.Join('\n',
+            "Context for \"host lease\" (terms: host, lease)",
+            "DEGRADED: a source didn't answer; results may miss what it holds",
+            " 1. [code] aw/src/SqliteLease.cs:12",
+            "    class SqliteLease",
+            "    retrieved 2026-01-01T00:00:00Z",
+            " 2. [notes] /n/deploy.md:2 (redacted)",
+            "    token [REDACTED:github-token]",
+            "    retrieved 2026-01-01T00:00:00Z",
+            "sources: code ok (1 hits); notes ok (1 hits); linear failed (SND-CONTEXT-010 Linear answered HTTP 401)",
+            string.Empty), text);
+        Assert.DoesNotContain('\u001b', text);
+    }
+}

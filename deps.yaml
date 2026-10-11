@@ -201,7 +201,7 @@ packages:
     bins: [sindri]
     db: [sindri/ledger.db]
     namespace: sindri
-    note: "built new in C# as an application (control plane, workflow engine, context retrieval; addendum §17.29, Q7), not ported; ts: sindri (profile, ledger, scrub, observe, index, scope, evolve) is the reference and runs until the switch; S1 (app shell: CLI and control plane, host lease, ledger, profile, API, scheduler, doctor) is in src/Sindri; reaches lower tiers only through Core contracts or CLIs"
+    note: "built new in C# as an application (control plane, workflow engine, context retrieval; addendum §17.29, Q7), not ported; ts: sindri (profile, ledger, scrub, observe, index, scope, evolve) is the reference and runs until the switch; S1 (app shell: CLI and control plane, host lease, ledger, profile, API, scheduler, doctor) and S3 (context retrieval: code via git grep, notes, Linear, ConnectAI port; no db edge to the TS index) are in src/Sindri; reaches lower tiers only through Core contracts or CLIs"
 
   # ---- outside the tiers: code that stays bash or TypeScript and calls the CLIs (§4a) ----
   - id: Hooks
@@ -420,8 +420,8 @@ edges:
   - from: Sindri
     to: Redaction
     kind: project
-    status: planned
-    note: "replaces sindri's copy of the scrubbing patterns"
+    status: current
+    note: "the context retrieval engine scrubs every result through Aw.Redaction (Infrastructure's RedactionScrubber); replaces sindri's copy of the scrubbing patterns"
   - from: Sindri
     to: Packets
     kind: cli

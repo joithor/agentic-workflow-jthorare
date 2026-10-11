@@ -34,6 +34,9 @@ exit 2
   lease     held by pid PID, epoch 1
   ready     running; the profile needs your approval
 exit 1
+## sindri context query host lease
+SND-PROFILE-005 no profile is approved (fix: sindri profile approve)
+exit 2
 ## sindri stop
 stopped (pid PID, epoch 1 released)
 ## sindri status

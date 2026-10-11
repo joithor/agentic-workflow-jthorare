@@ -15,6 +15,9 @@ public sealed class FakeContextSource(SourceKind kind, IReadOnlyList<SeedDocumen
     /// <summary>When true, a search waits until it is cancelled (a source past its deadline).</summary>
     public bool Hang { get; set; }
 
+    /// <summary>When true, a search never answers and ignores its token (a source the planner must abandon).</summary>
+    public bool HangIgnoringCancellation { get; set; }
+
     /// <summary>The queries it was asked, in order.</summary>
     public IList<SourceQuery> Asked { get; } = [];
 
@@ -25,6 +28,10 @@ public sealed class FakeContextSource(SourceKind kind, IReadOnlyList<SeedDocumen
     public async ValueTask<Result<IReadOnlyList<SourceHit>>> Search(SourceQuery query, CancellationToken cancellationToken)
     {
         Asked.Add(query);
+        if (HangIgnoringCancellation)
+        {
+            await Task.Delay(Timeout.Infinite, CancellationToken.None).ConfigureAwait(false);
+        }
         if (Hang)
         {
             try
@@ -45,6 +52,6 @@ public sealed class FakeContextSource(SourceKind kind, IReadOnlyList<SeedDocumen
         return Failure is { } failure
             ? failure
             : Results.Success<IReadOnlyList<SourceHit>>(
-                [.. FakeSearch.Run(documents, query.Terms, query.Limit).Select(m => new SourceHit(m.Document.Name, m.Line, m.Document.Title, Snippets.Line(m.Text)))]);
+                [.. FakeSearch.Run(documents, query.Terms, query.Limit).Select(m => new SourceHit(m.Document.Name, m.Line, m.Document.Title, Snippets.Raw(m.Text)))]);
     }
 }

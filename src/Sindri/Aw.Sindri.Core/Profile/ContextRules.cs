@@ -48,18 +48,24 @@ public static class ContextRules
             : Invalid("context.notes.path", $"'{notes.Path}' must be an absolute path or start with ~/");
 
     private static Error? Linear(LinearContext? linear) =>
-        linear?.Teams is { } teams && teams.Any(string.IsNullOrWhiteSpace) ? Invalid("context.linear.teams", "team keys must be non-empty text") : null;
+        linear?.Teams is { } teams && teams.Any(t => string.IsNullOrWhiteSpace(t) || t.Trim().Length != t.Length)
+            ? Invalid("context.linear.teams", "team keys must be non-empty text without surrounding spaces")
+            : null;
 
     private static Error? Mcp(McpContext? mcp) =>
         mcp is not null && (string.IsNullOrWhiteSpace(mcp.Server) || string.IsNullOrWhiteSpace(mcp.Tool))
             ? Invalid("context.connectai", "server and tool must be non-empty text")
             : null;
 
+    // Names sorted and deduplicated; an empty list means the same as none, so it hashes the same.
     private static ContextSettings Canonical(ContextSettings context) => context with
     {
-        Code = context.Code is { Repos: { } repos } code ? code with { Repos = [.. repos.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal)] } : context.Code,
-        Linear = context.Linear is { Teams: { } teams } linear ? linear with { Teams = [.. teams.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal)] } : context.Linear,
+        Code = context.Code is { } code ? code with { Repos = Sorted(code.Repos) } : null,
+        Linear = context.Linear is { } linear ? linear with { Teams = Sorted(linear.Teams) } : null,
     };
+
+    private static IReadOnlyList<string>? Sorted(IReadOnlyList<string>? names) =>
+        names is { Count: > 0 } ? [.. names.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal)] : null;
 
     private static Error Invalid(string keyPath, string problem) => SindriErrors.ProfileInvalid.With($"{keyPath}: {problem}");
 }

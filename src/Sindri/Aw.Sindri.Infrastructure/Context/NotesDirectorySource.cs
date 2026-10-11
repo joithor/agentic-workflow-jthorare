@@ -5,9 +5,10 @@ using Aw.Sindri.Core.Context;
 namespace Aw.Sindri.Infrastructure.Context;
 
 /// <summary>
-/// The notes source: Markdown and text files under one directory (hidden files and folders skipped, at most
-/// <see cref="MaxFiles"/> files of up to 1 MB each), ranked by <see cref="LineMatches"/>. A hit's document is the file's
-/// full path, so a person can open it.
+/// The notes source: Markdown and text files under one directory, ranked by <see cref="LineMatches"/>. Hidden files and
+/// folders and every symbolic link are skipped (so the walk never leaves the directory or loops), files over 1 MB are
+/// skipped, and the walk stops at <see cref="MaxFiles"/> files; it checks the deadline per file. A hit's document is
+/// the file's full path, so a person can open it.
 /// </summary>
 internal sealed class NotesDirectorySource(string directory) : IContextSource
 {
@@ -21,18 +22,15 @@ internal sealed class NotesDirectorySource(string directory) : IContextSource
     {
         try
         {
+            await Task.Yield();   // the walk runs off the caller's thread, under the query's deadline
             var matches = new LineMatches(query.Terms);
-            foreach (var file in Files())
+            foreach (var file in Files(cancellationToken))
             {
-                var lines = await File.ReadAllLinesAsync(file, cancellationToken).ConfigureAwait(false);
-                for (var i = 0; i < lines.Length; i++)
-                {
-                    matches.Add(file, i + 1, lines[i]);
-                }
+                await Read(file, matches, cancellationToken).ConfigureAwait(false);
             }
 
             return Results.Success<IReadOnlyList<SourceHit>>(
-                [.. matches.Ranked(query.Limit).Select(m => new SourceHit(m.Document, m.Line, Path.GetFileName(m.Document), Snippets.Line(m.Text)))]);
+                [.. matches.Ranked(query.Limit).Select(m => new SourceHit(m.Document, m.Line, Path.GetFileName(m.Document), Snippets.Raw(m.Text)))]);
         }
         catch (OperationCanceledException)
         {
@@ -48,18 +46,47 @@ internal sealed class NotesDirectorySource(string directory) : IContextSource
         }
     }
 
-    private IEnumerable<string> Files()
+    private static async Task Read(string file, LineMatches matches, CancellationToken cancellationToken)
+    {
+        string[] lines;
+        try
+        {
+            lines = await File.ReadAllLinesAsync(file, cancellationToken).ConfigureAwait(false);
+        }
+        catch (FileNotFoundException)
+        {
+            return;   // removed while the walk ran
+        }
+
+        for (var i = 0; i < lines.Length; i++)
+        {
+            matches.Add(file, i + 1, lines[i]);
+        }
+    }
+
+    private IEnumerable<string> Files(CancellationToken cancellationToken)
     {
         var options = new EnumerationOptions
         {
             RecurseSubdirectories = true,
             IgnoreInaccessible = true,
-            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System,
+            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System | FileAttributes.ReparsePoint,
         };
-        return Directory.EnumerateFiles(directory, "*", options)
-            .Where(f => !IsHidden(f) && _extensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase) && new FileInfo(f).Length <= MaxBytes)
-            .Order(StringComparer.Ordinal)
-            .Take(MaxFiles);
+        var found = new List<string>();
+        foreach (var file in Directory.EnumerateFiles(directory, "*", options))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!IsHidden(file) && _extensions.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase) && new FileInfo(file).Length <= MaxBytes)
+            {
+                found.Add(file);
+                if (found.Count == MaxFiles)
+                {
+                    break;
+                }
+            }
+        }
+
+        return found.Order(StringComparer.Ordinal);
     }
 
     private bool IsHidden(string file) =>

@@ -15,7 +15,7 @@ internal static class SettingsFromEnvironment
         var profile = environment("AW_SINDRI_PROFILE") is { Length: > 0 } explicitProfile
             ? explicitProfile
             : Path.Combine(home, "profile", "profile.yaml");
-        var linearKey = environment("LINEAR_API_KEY") is { Length: > 0 } key ? key : null;
+        var linearKey = environment("LINEAR_API_KEY")?.Trim() is { Length: > 0 } key ? key : null;
         return new SindriSettings(Path.GetFullPath(home), Path.GetFullPath(profile), linearKey, UserHome());
     }
 

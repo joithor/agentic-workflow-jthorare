@@ -43,6 +43,7 @@ public sealed class ContextProfileTests : IDisposable
     [InlineData("context:\n  notes: { path: notes }\n", "context.notes.path: 'notes' must be an absolute path")]
     [InlineData("context:\n  connectai: { server: '', tool: search }\n", "context.connectai: server and tool must be non-empty")]
     [InlineData("context:\n  linear: { teams: [''] }\n", "context.linear.teams: team keys must be non-empty")]
+    [InlineData("context:\n  linear: { teams: [' ENG'] }\n", "without surrounding spaces")]
     [InlineData("context:\n  slack: {}\n", "'slack' is not a profile key here (allowed: code, notes, linear, connectai, limit)")]
     public async Task A_bad_context_section_names_the_key_and_the_fix(string context, string expected)
     {
@@ -53,6 +54,42 @@ public sealed class ContextProfileTests : IDisposable
         Assert.Equal(SindriErrors.ProfileInvalid.Code, error.Code);
         Assert.Contains(expected, error.Message, StringComparison.Ordinal);
         Assert.Contains("fix:", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "integration")]
+    public async Task A_source_key_with_no_value_is_refused_with_the_fix()
+    {
+        _files.Write(Base + "context:\n  code:\n  notes: { path: /notes }\n");
+
+        var error = (await _files.Source.Load(Token)).Error;
+
+        Assert.Equal(SindriErrors.ProfileInvalid.Code, error.Code);
+        Assert.Contains("context.code: has no value; give it a mapping ({} turns the source on with its defaults)", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "integration")]
+    public async Task An_empty_list_hashes_the_same_as_none()
+    {
+        _files.Write(Base + "context:\n  code: { repos: [] }\n  linear: { teams: [] }\n");
+        var empty = (await _files.Source.Load(Token)).Value.Hash;
+        _files.Write(Base + "context:\n  code: {}\n  linear: {}\n");
+        var none = (await _files.Source.Load(Token)).Value.Hash;
+
+        Assert.Equal(none, empty);
+    }
+
+    [Fact, Trait("Lane", "integration")]
+    public async Task An_approved_context_section_reads_back_from_its_snapshot()
+    {
+        _files.Write(Base + "context:\n  notes: { path: /notes }\n");
+        var live = (await _files.Source.Load(Token)).Value;
+
+        _ = await _files.Approvals.Save(live, Token);
+        var approved = (await _files.Approvals.Latest(Token)).Value;
+
+        Assert.Equal(live.Hash, approved!.Hash);   // why: it was saved just above
+        Assert.Equal("/notes", approved.Profile.Context!.Notes!.Path);   // why: the saved profile names notes
+        Assert.Null(approved.Profile.Context.Code);
     }
 
     [Fact, Trait("Lane", "integration")]

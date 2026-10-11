@@ -18,6 +18,11 @@ internal static class ProfileReading
     /// <returns>The loaded profile, or SND-PROFILE-002 naming the file, the key path and the fix.</returns>
     internal static Result<LoadedProfile> FromJson(ReadOnlySpan<byte> json, string source, JsonSerializerOptions options)
     {
+        if (EmptyContextKey(json) is { } key)
+        {
+            return SindriErrors.ProfileInvalid.With($"{source}: context.{key}: has no value; give it a mapping ({{}} turns the source on with its defaults) ({Fix})");
+        }
+
         var typed = AwJson.Deserialize<SindriProfile>(json, options);
         if (typed.IsError)
         {
@@ -32,6 +37,27 @@ internal static class ProfileReading
 
         var canonical = Canonical(checkedProfile.Value, options);
         return new LoadedProfile(checkedProfile.Value, ProfileHashing.Of(canonical), source);
+    }
+
+    /// <summary>
+    /// A key under context: with no value ('code:' alone in YAML reads as null, which would leave the source off while the
+    /// file says it is named). Returns the first such key, or null.
+    /// </summary>
+    private static string? EmptyContextKey(ReadOnlySpan<byte> json)
+    {
+        var reader = new Utf8JsonReader(json);
+        if (!JsonDocument.TryParseValue(ref reader, out var document))
+        {
+            return null;   // AwJson reports the parse error
+        }
+
+        using (document)
+        {
+            return document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty("context", out var context) && context.ValueKind == JsonValueKind.Object
+                ? context.EnumerateObject().Where(p => p.Value.ValueKind == JsonValueKind.Null).Select(p => p.Name).FirstOrDefault()
+                : null;
+        }
     }
 
     /// <summary>The canonical JSON of a checked profile: what the hash covers and what an approval snapshot stores.</summary>

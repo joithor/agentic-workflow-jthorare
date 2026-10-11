@@ -984,3 +984,8 @@ static readonly Aw.Sindri.Core.SindriErrors.ContextBadQuery -> Aw.Kernel.ErrorDe
 static readonly Aw.Sindri.Core.SindriErrors.ContextNoSources -> Aw.Kernel.ErrorDefinition!
 static readonly Aw.Sindri.Core.SindriErrors.ContextSourceFailed -> Aw.Kernel.ErrorDefinition!
 static readonly Aw.Sindri.Core.SindriErrors.ContextSourceUnusable -> Aw.Kernel.ErrorDefinition!
+const Aw.Sindri.Core.Context.Snippets.EncodedBlob = "[REDACTED:encoded-blob]" -> string!
+const Aw.Sindri.Core.Context.Snippets.RawMaxLength = 2000 -> int
+const Aw.Sindri.Core.Context.SourceOpening.NotAskedFor = "not asked for" -> string!
+static Aw.Sindri.Core.Context.Snippets.Raw(string! line) -> string!
+static Aw.Sindri.Core.Context.Snippets.Shown(string! scrubbed) -> string!

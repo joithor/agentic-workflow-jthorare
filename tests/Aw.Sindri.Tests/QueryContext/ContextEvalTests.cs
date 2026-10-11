@@ -23,6 +23,7 @@ public sealed class ContextEvalTests : IDisposable
     internal const int K = 5;
     internal const double RecallBar = 0.9;
     internal const double PrecisionBar = 0.3;
+    internal const double TopOneBar = 0.8;
 
     private static readonly (string Question, string[] Expected)[] _cases =
     [
@@ -45,6 +46,13 @@ public sealed class ContextEvalTests : IDisposable
         _ = _repo.Write("src/Scheduler/Heartbeat.cs", "// The heartbeat service runs on the scheduler at its cadence, one slot at a time.\nclass Heartbeat { }\n");
         _ = _repo.Write("docs/runbook.md", "# Runbook\nAfter a kill -9, restart sindri: it can recover the lease at once when the holder is dead.\n");
         _ = _repo.Write("README.md", "# App\nA small app.\n");
+
+        // Distractors: each shares a term or two with a question but isn't what it asks about.
+        _ = _repo.Write("src/Lease/LeaseRenewer.cs", "// Renews the lease every twenty seconds.\nclass LeaseRenewer { }\n");
+        _ = _repo.Write("src/Ledger/LedgerReader.cs", "// Reads events from the ledger in order.\nclass LedgerReader { }\n");
+        _ = _repo.Write("src/Profile/ProfileWatcher.cs", "// Watches the profile file for changes.\nclass ProfileWatcher { }\n");
+        _ = _repo.Write("src/Scheduler/Slots.cs", "// The scheduler skips missed slots after a sleep.\nclass Slots { }\n");
+        _ = _repo.Write("docs/desktop.md", "# Desktop\nThe desktop window shows status.\n");
         _repo.GitAddAll();
         _ = _notes.Write("2026-10-01-standup.md", "# Standup\nDecided: fence ledger writes by the lease epoch.\n");
         _ = _notes.Write("ideas.md", "# Ideas\n- dark mode for the desktop window\n- a tray icon\n");
@@ -62,16 +70,21 @@ public sealed class ContextEvalTests : IDisposable
     {
         var service = await Service();
         var scores = new List<EvalScore>();
+        var topOne = 0;
         foreach (var (question, expected) in _cases)
         {
             var answer = (await service.Handle(new QueryContextRequest(question), TestContext.Current.CancellationToken)).Value;
             var score = EvalScore.Of(expected, [.. answer.Results.Select(r => r.Cite.Document)], K);
             scores.Add(score);
+            topOne += answer.Results.Count > 0 && EvalScore.Of(expected, [answer.Results[0].Cite.Document], 1).Precision == 1 ? 1 : 0;
             TestContext.Current.TestOutputHelper?.WriteLine(string.Create(CultureInfo.InvariantCulture, $"recall@{K} {score.Recall:0.00}  precision@{K} {score.Precision:0.00}  {question}"));
         }
 
         var mean = EvalScore.Mean(scores);
         TestContext.Current.TestOutputHelper?.WriteLine(string.Create(CultureInfo.InvariantCulture, $"mean recall@{K} {mean.Recall:0.00}  precision@{K} {mean.Precision:0.00} over {scores.Count} questions"));
+        var topOneShare = (double)topOne / scores.Count;
+        TestContext.Current.TestOutputHelper?.WriteLine(string.Create(CultureInfo.InvariantCulture, $"top-1 correct {topOneShare:0.00}"));
+        Assert.True(topOneShare >= TopOneBar, string.Create(CultureInfo.InvariantCulture, $"top-1 share {topOneShare:0.00} is under the bar {TopOneBar}"));
         Assert.True(mean.Recall >= RecallBar, string.Create(CultureInfo.InvariantCulture, $"mean recall@{K} {mean.Recall:0.00} is under the bar {RecallBar}"));
         Assert.True(mean.Precision >= PrecisionBar, string.Create(CultureInfo.InvariantCulture, $"mean precision@{K} {mean.Precision:0.00} is under the bar {PrecisionBar}"));
     }

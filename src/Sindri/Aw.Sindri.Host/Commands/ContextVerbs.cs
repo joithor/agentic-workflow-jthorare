@@ -10,7 +10,7 @@ namespace Aw.Sindri.Host.Commands;
 /// <summary>
 /// 'sindri context query': a client of POST /sindri/context/query. Exit 0 with results (a failed source only degrades
 /// them), 1 with none or for a refused question or option (SND-CONTEXT-003), 2 for a setup problem (not running, no
-/// approved profile, no source on).
+/// approved profile, no source on) or when nothing could be searched (no results and a source failed).
 /// </summary>
 internal sealed class ContextVerbs(ControlPlaneClient client, Output output)
 {
@@ -19,45 +19,51 @@ internal sealed class ContextVerbs(ControlPlaneClient client, Output output)
         var parsed = Parse(args);
         if (parsed.IsError)
         {
-            return await Refuse(parsed.Error).ConfigureAwait(false);
+            _ = await output.Error(parsed.Error).ConfigureAwait(false);
+            return 1;
         }
 
         var (request, json) = parsed.Value;
         var answer = await client.Post<QueryContextRequest, QueryContextResponse>("/sindri/context/query", request, ct).ConfigureAwait(false);
+        var code = ExitCode(answer);
         if (answer.IsError)
         {
-            return answer.Error.Code == SindriErrors.ContextBadQuery.Code ? await Refuse(answer.Error).ConfigureAwait(false) : await Fail(answer.Error).ConfigureAwait(false);
+            _ = await output.Error(answer.Error).ConfigureAwait(false);
+            return code;
         }
 
-        var code = answer.Value.Results.Count == 0 ? 1 : 0;
         return json ? await output.Json(answer.Value, code).ConfigureAwait(false) : await output.Text(Render(answer.Value), code).ConfigureAwait(false);
     }
+
+    /// <summary>The exit code for an answer: 0 results; 1 none, or a refused query; 2 a setup problem or nothing searchable.</summary>
+    internal static int ExitCode(Result<QueryContextResponse> answer) => answer switch
+    {
+        { IsError: true } when answer.Error.Code == SindriErrors.ContextBadQuery.Code => 1,
+        { IsError: true } => 2,
+        _ when answer.Value.Results.Count > 0 => 0,
+        _ when answer.Value.Degraded => 2,
+        _ => 1,
+    };
 
     internal static Result<(QueryContextRequest Request, bool Json)> Parse(string[] args)
     {
         string? question = null;
-        IReadOnlyList<string>? sources = null;
+        string[]? sources = null;
         int? limit = null;
         var json = false;
         for (var i = 0; i < args.Length; i++)
         {
-            switch (args[i])
+            var problem = args[i] switch
             {
-                case "--json":
-                    json = true;
-                    break;
-                case "--sources" when i + 1 < args.Length:
-                    sources = args[++i].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                    break;
-                case "--limit" when i + 1 < args.Length && int.TryParse(args[i + 1], NumberStyles.None, CultureInfo.InvariantCulture, out var n):
-                    limit = n;
-                    i++;
-                    break;
-                case var word when question is null && !word.StartsWith("--", StringComparison.Ordinal):
-                    question = word;
-                    break;
-                default:
-                    return SindriErrors.ContextBadQuery.With($"'{args[i]}' isn't a context query argument (fix: sindri context query \"<question>\" [--sources code,notes] [--limit N] [--json])");
+                "--json" => Set(() => json = true),
+                "--sources" => Value(args, ++i, SourceList, v => sources = v),
+                "--limit" => Value(args, ++i, Limit, v => limit = v),
+                var word when question is null && !word.StartsWith("--", StringComparison.Ordinal) => Set(() => question = word),
+                _ => SindriErrors.ContextBadQuery.With($"'{args[i]}' isn't a context query argument (fix: sindri context query \"<question>\" [--sources code,notes] [--limit N] [--json])"),
+            };
+            if (problem is not null)
+            {
+                return problem;
             }
         }
 
@@ -65,6 +71,34 @@ internal sealed class ContextVerbs(ControlPlaneClient client, Output output)
             ? SindriErrors.ContextBadQuery.With("no question (fix: sindri context query \"<question>\")")
             : (new QueryContextRequest(question, sources, limit), json);
     }
+
+    private static Error? Set(Action set)
+    {
+        set();
+        return null;
+    }
+
+    private static Error? Value<T>(string[] args, int at, Func<string?, Result<T>> parse, Action<T> set)
+    {
+        var parsed = parse(at < args.Length ? args[at] : null);
+        if (parsed.IsError)
+        {
+            return parsed.Error;
+        }
+
+        set(parsed.Value);
+        return null;
+    }
+
+    private static Result<string[]> SourceList(string? value) =>
+        value?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is { Length: > 0 } names
+            ? names
+            : SindriErrors.ContextBadQuery.With($"--sources needs one or more source names (fix: --sources {SourceNames.All.Replace(", ", ",", StringComparison.Ordinal)})");
+
+    private static Result<int> Limit(string? value) =>
+        int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var n)
+            ? n
+            : SindriErrors.ContextBadQuery.With($"--limit needs a whole number (fix: --limit 1 to {Core.Profile.ContextSettings.MaxLimit})");
 
     internal static string Render(QueryContextResponse answer)
     {
@@ -91,17 +125,5 @@ internal sealed class ContextVerbs(ControlPlaneClient client, Output output)
             _ => $"{SourceNames.Of(s.Source)} {s.State}",
         });
         return text.Append("sources: ").AppendJoin("; ", sources).Append('\n').ToString();
-    }
-
-    private async Task<int> Refuse(Error error)
-    {
-        _ = await output.Error(error).ConfigureAwait(false);
-        return 1;
-    }
-
-    private async Task<int> Fail(Error error)
-    {
-        _ = await output.Error(error).ConfigureAwait(false);
-        return 2;
     }
 }

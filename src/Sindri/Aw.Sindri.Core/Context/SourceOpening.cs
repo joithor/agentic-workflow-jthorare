@@ -6,6 +6,9 @@ namespace Aw.Sindri.Core.Context;
 /// <param name="Skipped">Why it was skipped, or null when opened.</param>
 public sealed record SourceOpening(SourceKind Kind, IContextSource? Source, string? Skipped)
 {
+    /// <summary>The one skip reason without a code: the source is on, but the query's --sources didn't name it.</summary>
+    public const string NotAskedFor = "not asked for";
+
     /// <summary>An opened source.</summary>
     /// <param name="source">The source.</param>
     /// <returns>The opening.</returns>

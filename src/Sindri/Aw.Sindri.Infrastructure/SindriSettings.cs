@@ -15,4 +15,8 @@ internal sealed record SindriSettings(string Home, string ProfilePath, string? L
 
     /// <summary>The control plane's endpoint record.</summary>
     public string EndpointPath => Path.Combine(Home, "control.json");
+
+    // The generated ToString would print the Linear key; this one says only whether it is set.
+    public override string ToString() =>
+        $"SindriSettings {{ Home = {Home}, ProfilePath = {ProfilePath}, LinearKey = {(LinearKey is null ? "unset" : "set")}, UserHome = {UserHome} }}";
 }

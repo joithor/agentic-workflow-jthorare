@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using Aw.Kernel;
 
 namespace Aw.Sindri.Core.Context;
@@ -6,8 +7,10 @@ namespace Aw.Sindri.Core.Context;
 /// <summary>
 /// Turns a question into search terms: words of letters, digits, '_' and '-' (so ILedgerStore and SND-LEASE-001 stay
 /// whole), lower case, without common English words and one-letter words, at most <see cref="MaxTerms"/>, in order.
+/// The engine passes the question already scrubbed, so a pasted secret never becomes a term; the [REDACTED:rule]
+/// placeholders the scrub leaves are dropped here, never searched for.
 /// </summary>
-public static class QueryTerms
+public static partial class QueryTerms
 {
     /// <summary>The most terms a question yields.</summary>
     public const int MaxTerms = 8;
@@ -31,7 +34,7 @@ public static class QueryTerms
             return SindriErrors.ContextBadQuery.With($"the question is {question.Length} characters; the most is {MaxQuestionLength}");
         }
 
-        var terms = Words(question)
+        var terms = Words(Placeholder.Replace(question, " "))
             .Select(w => w.Trim('-').ToLowerInvariant())
             .Where(w => w.Length >= 2 && !_stop.Contains(w))
             .Distinct(StringComparer.Ordinal)
@@ -44,6 +47,9 @@ public static class QueryTerms
 
         return terms;
     }
+
+    [GeneratedRegex(@"\[REDACTED:[^\]]*\]", RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex Placeholder { get; }
 
     private static IEnumerable<string> Words(string text)
     {

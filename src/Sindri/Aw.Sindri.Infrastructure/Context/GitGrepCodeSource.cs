@@ -9,7 +9,8 @@ namespace Aw.Sindri.Infrastructure.Context;
 
 /// <summary>
 /// The code source until the C# code index block exists (docs/csharp/sindri-context.md, "Code index gap"): git grep over
-/// each profile repo's tracked files (fixed strings, any term, ignoring case, binary files skipped, at most 20 lines a
+/// each profile repo's tracked files (a repo that fails is left out of the answer; the source fails only when every
+/// repo did) (fixed strings, any term, ignoring case, binary files skipped, at most 20 lines a
 /// file and <see cref="MaxLines"/> lines a repo), ranked by <see cref="LineMatches"/>. A hit's document is
 /// 'repo/path'. Terms are passed with -e and paths after --, so no term is read as an option.
 /// </summary>
@@ -22,6 +23,7 @@ internal sealed class GitGrepCodeSource(IReadOnlyList<CodeRepo> repos) : IContex
     public async ValueTask<Result<IReadOnlyList<SourceHit>>> Search(SourceQuery query, CancellationToken cancellationToken)
     {
         var matches = new LineMatches(query.Terms);
+        var failures = new List<Error>();
         foreach (var repo in repos)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -32,12 +34,18 @@ internal sealed class GitGrepCodeSource(IReadOnlyList<CodeRepo> repos) : IContex
             var grep = await Grep(repo, query.Terms, matches, cancellationToken).ConfigureAwait(false);
             if (grep.IsError)
             {
-                return grep.Error;
+                failures.Add(grep.Error);
             }
         }
 
+        // One repo that isn't a checkout doesn't blank the others: the source fails only when every repo failed.
+        if (failures.Count == repos.Count)
+        {
+            return SindriErrors.ContextSourceFailed.With(string.Join("; ", failures.Select(f => f.Message)));
+        }
+
         return Results.Success<IReadOnlyList<SourceHit>>(
-            [.. matches.Ranked(query.Limit).Select(m => new SourceHit(m.Document, m.Line, Path.GetFileName(m.Document), Snippets.Line(m.Text)))]);
+            [.. matches.Ranked(query.Limit).Select(m => new SourceHit(m.Document, m.Line, Path.GetFileName(m.Document), Snippets.Raw(m.Text)))]);
     }
 
     private static async Task<Result<Unit>> Grep(CodeRepo repo, IReadOnlyList<string> terms, LineMatches matches, CancellationToken cancellationToken)
@@ -79,7 +87,19 @@ internal sealed class GitGrepCodeSource(IReadOnlyList<CodeRepo> repos) : IContex
             RedirectStandardError = true,
             UseShellExecute = false,
         };
-        foreach (var argument in new[] { "-C", repoPath, "grep", "-n", "-I", "-i", "-F", "-z", "--no-color", "--max-count=20" })
+
+        // An inherited GIT_DIR, GIT_WORK_TREE or GIT_INDEX_FILE (sindri started from a hook) would override -C.
+        foreach (var name in start.Environment.Keys.Where(k => k.StartsWith("GIT_", StringComparison.Ordinal)).ToList())
+        {
+            _ = start.Environment.Remove(name);
+        }
+
+        // Pinned against user config: tracked files only (no fallback to untracked ones), no column field in the output.
+        string[] fixedArguments =
+        [
+            "-C", repoPath, "-c", "grep.fallbackToNoIndex=false", "grep", "-n", "--no-column", "-I", "-i", "-F", "-z", "--no-color", "--max-count=20",
+        ];
+        foreach (var argument in fixedArguments)
         {
             start.ArgumentList.Add(argument);
         }
@@ -119,6 +139,10 @@ internal sealed class GitGrepCodeSource(IReadOnlyList<CodeRepo> repos) : IContex
         catch (InvalidOperationException)
         {
             // The process already exited.
+        }
+        catch (Win32Exception)
+        {
+            // It couldn't be signalled (it is exiting); the read loop ends with its output.
         }
     }
 }

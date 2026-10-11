@@ -3,7 +3,8 @@ using System.Text.Json.Serialization;
 namespace Aw.Sindri.Core.Profile;
 
 /// <summary>
-/// The context retrieval engine's settings (factory addendum §17.29.2, docs/csharp/sindri-context.md): which sources are
+/// The context retrieval engine's settings. A source that is off is left out of the canonical JSON (never written as
+/// null), so an approval snapshot reads back the way the profile was written (factory addendum §17.29.2, docs/csharp/sindri-context.md): which sources are
 /// on (a source is on when its key is present) and how many results a query returns. An optional key of schema version 1.
 /// </summary>
 /// <param name="Code">The code source: the profile repos' tracked files.</param>
@@ -13,10 +14,10 @@ namespace Aw.Sindri.Core.Profile;
 /// <param name="Limit">How many results a query returns unless it asks for fewer or more (1 to 50).</param>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record ContextSettings(
-    CodeContext? Code = null,
-    NotesContext? Notes = null,
-    LinearContext? Linear = null,
-    [property: JsonPropertyName("connectai")] McpContext? ConnectAi = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] CodeContext? Code = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] NotesContext? Notes = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] LinearContext? Linear = null,
+    [property: JsonPropertyName("connectai"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] McpContext? ConnectAi = null,
     int Limit = ContextSettings.DefaultLimit)
 {
     /// <summary>The default result count.</summary>

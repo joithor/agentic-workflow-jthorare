@@ -65,6 +65,6 @@ internal sealed class LinearSource(HttpClient http, Uri endpoint, string key, Li
 
         var issues = answer.Value.Data?.SearchIssues.Nodes ?? [];
         return Results.Success<IReadOnlyList<SourceHit>>(
-            [.. issues.Take(query.Limit).Select(i => new SourceHit(i.Url, Line: null, Snippets.Line($"{i.Identifier} {i.Title}"), Snippets.Around(i.Description is null ? i.Title : i.Description + "\n" + i.Title, query.Terms)))]);
+            [.. issues.Take(query.Limit).Select(i => new SourceHit(i.Url, Line: null, Snippets.Raw($"{i.Identifier} {i.Title}"), Snippets.Around(i.Description is null ? i.Title : i.Description + "\n" + i.Title, query.Terms)))]);
     }
 }

@@ -21,7 +21,9 @@ public sealed class ContextCliTests
 
     [Theory, Trait("Lane", "unit")]
     [InlineData(new string[0], "no question")]
-    [InlineData(new[] { "q", "--limit", "x" }, "'--limit' isn't a context query argument")]
+    [InlineData(new[] { "q", "--limit", "x" }, "--limit needs a whole number")]
+    [InlineData(new[] { "q", "--limit" }, "--limit needs a whole number")]
+    [InlineData(new[] { "q", "--sources", "," }, "--sources needs one or more source names")]
     [InlineData(new[] { "q", "--colour" }, "'--colour' isn't a context query argument")]
     [InlineData(new[] { "q", "second" }, "'second' isn't a context query argument")]
     public void A_bad_argument_is_refused_with_the_usage(string[] args, string expected)
@@ -30,8 +32,30 @@ public sealed class ContextCliTests
 
         Assert.Equal(SindriErrors.ContextBadQuery.Code, error.Code);
         Assert.Contains(expected, error.Message, StringComparison.Ordinal);
-        Assert.Contains("fix: sindri context query", error.Message, StringComparison.Ordinal);
+        Assert.Contains("fix:", error.Message, StringComparison.Ordinal);
     }
+
+    [Theory, Trait("Lane", "unit")]
+    [InlineData(1, false, 0)]
+    [InlineData(1, true, 0)]
+    [InlineData(0, false, 1)]
+    [InlineData(0, true, 2)]
+    public void The_exit_code_is_0_with_results_1_without_and_2_when_nothing_could_be_searched(int results, bool degraded, int expected)
+    {
+        var hit = new ContextHit(1, "t", "s", 0.1, Redacted: false, new Citation(SourceKind.Code, "aw/a.cs", 1, KnownInstants.Epoch));
+        var report = new SourceReport(SourceKind.Code, degraded ? SourceState.Failed : SourceState.Ok, results, Detail: null);
+        var answer = new QueryContextResponse("q", ["q"], results == 0 ? [] : [hit], [report]);
+
+        Assert.Equal(expected, ContextVerbs.ExitCode(answer));
+    }
+
+    [Theory, Trait("Lane", "unit")]
+    [InlineData("SND-CONTEXT-003", 1)]
+    [InlineData("SND-CONTEXT-001", 2)]
+    [InlineData("SND-PROFILE-005", 2)]
+    [InlineData("SND-API-001", 2)]
+    public void A_refused_query_exits_1_and_a_setup_problem_2(string code, int expected) =>
+        Assert.Equal(expected, ContextVerbs.ExitCode(new Kernel.Error(code, Kernel.ErrorKind.Invalid, "m")));
 
     [Fact, Trait("Lane", "unit")]
     public void The_text_names_each_result_its_citation_and_each_source_in_words()

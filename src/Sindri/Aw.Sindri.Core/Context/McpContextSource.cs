@@ -23,7 +23,7 @@ public sealed class McpContextSource(IMcpToolReader reader, McpContext settings)
 
         return Results.Success<IReadOnlyList<SourceHit>>(
         [
-            .. documents.Value.Take(query.Limit).Select(d => new SourceHit(d.Uri, Line: null, Snippets.Line(d.Title), Snippets.Around(d.Text, query.Terms))),
+            .. documents.Value.Take(query.Limit).Select(d => new SourceHit(d.Uri, Line: null, Snippets.Raw(d.Title), Snippets.Around(d.Text, query.Terms))),
         ]);
     }
 }

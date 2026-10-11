@@ -51,6 +51,7 @@ public sealed class QueryContextTests
 
         var answer = (await _h.Service.Handle(new QueryContextRequest("host lease", Sources: ["NOTES"]), Token)).Value;
 
+        Assert.NotEmpty(answer.Results);
         Assert.All(answer.Results, r => Assert.Equal(SourceKind.Notes, r.Cite.Source));
         Assert.Empty(_h.CodeSource.Asked);
         var code = Assert.Single(answer.Sources, s => s.Source == SourceKind.Code);
@@ -113,19 +114,90 @@ public sealed class QueryContextTests
         await _h.Approve(ContextHarness.CodeAndNotes());
         _h.CodeSource.Hang = true;
 
+        var answer = await PastTheDeadline();
+
+        var code = Assert.Single(answer.Sources, s => s.Source == SourceKind.Code);
+        Assert.Equal(SourceState.Failed, code.State);
+        Assert.StartsWith("SND-CONTEXT-010", code.Detail, StringComparison.Ordinal);
+        Assert.NotEmpty(answer.Results);
+        Assert.All(answer.Results, r => Assert.Equal(SourceKind.Notes, r.Cite.Source));
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_source_that_ignores_its_deadline_is_abandoned_and_reported()
+    {
+        await _h.Approve(ContextHarness.CodeAndNotes());
+        _h.CodeSource.HangIgnoringCancellation = true;
+
+        var answer = await PastTheDeadline();
+
+        var code = Assert.Single(answer.Sources, s => s.Source == SourceKind.Code);
+        Assert.Equal((SourceState.Failed, "SND-CONTEXT-010 it didn't answer within 4s"), (code.State, code.Detail));
+        Assert.NotEmpty(answer.Results);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_secret_in_the_question_never_becomes_a_term()
+    {
+        await _h.Approve(ContextHarness.CodeAndNotes());
+
+        var answer = (await _h.Service.Handle(new QueryContextRequest($"why does {TextScrubberContract.PlantedToken} fail on the lease"), Token)).Value;
+
+        Assert.Equal(["fail", "lease"], answer.Terms);
+        Assert.DoesNotContain(TextScrubberContract.PlantedToken, answer.Question, StringComparison.Ordinal);
+        Assert.All(_h.CodeSource.Asked, q => Assert.DoesNotContain(q.Terms, t => t.Contains("ghp", StringComparison.Ordinal)));
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_secret_across_the_display_cut_is_scrubbed_before_the_cut()
+    {
+        var line = new string('x', 190) + " lease " + TextScrubberContract.PlantedToken + " end";
+        _ = _h.Catalog.With(new FakeContextSource(SourceKind.Notes, [new SeedDocument("notes/long.md", "long.md", line)]));
+        await _h.Approve(ContextHarness.CodeAndNotes());
+
+        var answer = (await _h.Service.Handle(new QueryContextRequest("lease", Sources: ["notes"]), Token)).Value;
+
+        var hit = Assert.Single(answer.Results);
+        Assert.True(hit.Redacted);
+        Assert.DoesNotContain("ghp_", hit.Snippet, StringComparison.Ordinal);
+        Assert.True(hit.Snippet.Length <= Snippets.MaxLength);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task An_encoded_blob_line_is_withheld()
+    {
+        _ = _h.Catalog.With(new FakeContextSource(SourceKind.Notes, [new SeedDocument("notes/key.md", "key.md", "MIIEdbAIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7")]));
+        await _h.Approve(ContextHarness.CodeAndNotes());
+
+        var answer = (await _h.Service.Handle(new QueryContextRequest("db", Sources: ["notes"]), Token)).Value;
+
+        var hit = Assert.Single(answer.Results);
+        Assert.Equal((Snippets.EncodedBlob, true), (hit.Snippet, hit.Redacted));
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Asking_for_a_source_the_profile_does_not_turn_on_says_so()
+    {
+        await _h.Approve(ContextHarness.CodeAndNotes());
+
+        var answer = (await _h.Service.Handle(new QueryContextRequest("host lease", Sources: ["linear"]), Token)).Value;
+
+        Assert.Empty(answer.Results);
+        var linear = Assert.Single(answer.Sources, s => s.Source == SourceKind.Linear);
+        Assert.Equal(SourceState.Skipped, linear.State);
+        Assert.Contains("linear is not on in the approved profile (fix: add context.linear", linear.Detail, StringComparison.Ordinal);
+    }
+
+    private async Task<QueryContextResponse> PastTheDeadline()
+    {
         var pending = _h.Service.Handle(new QueryContextRequest("host lease"), Token).AsTask();
-        while (_h.CodeSource.Asked.Count == 0)
+        while (_h.CodeSource.Asked.Count == 0 && !pending.IsCompleted)
         {
             await Task.Yield();
         }
 
         _h.Clock.Advance(ContextQueryDefaults.Deadline + TimeSpan.FromSeconds(1));
-        var answer = (await pending).Value;
-
-        var code = Assert.Single(answer.Sources, s => s.Source == SourceKind.Code);
-        Assert.Equal(SourceState.Failed, code.State);
-        Assert.StartsWith("SND-CONTEXT-010", code.Detail, StringComparison.Ordinal);
-        Assert.All(answer.Results, r => Assert.Equal(SourceKind.Notes, r.Cite.Source));
+        return (await pending.WaitAsync(TimeSpan.FromSeconds(10), TimeProvider.System, Token)).Value;
     }
 
     [Fact, Trait("Lane", "unit")]

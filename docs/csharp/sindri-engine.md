@@ -125,8 +125,10 @@ is decided by pure functions in Core (`SignalDecisions`, `GateOutcome`, `TimerDe
 
 **Event types**: `workflow.started`, `workflow.transitioned`, `workflow.parked`, `workflow.unparked`,
 `workflow.escalated`, `workflow.cancelled`, `workflow.taken-over`, `workflow.handed-back`, `workflow.retried`,
-`workflow.evidence`, `workflow.deadline-extended`. Each carries the item, and causation and correlation from the event
-that caused it (`EventFactory.Caused`).
+`workflow.evidence`, `workflow.deadline-extended`. Each carries the item and the instance (`events.instance`). Every
+event of a workflow tree shares one correlation id, derived from the root instance id (so a replay is stable); an event
+caused by another (a parent's `child.done`, a propagated park) names it as its causation, and an effect's outbox command
+names the transition event that emitted it.
 
 **Idempotency keys** (§17.20): start `wf:<recipe>:<item>:<attempt>:start`; transition
 `wf:<recipe>:<item>:<attempt>:<from>><to>:<on>@v<version>:<sha|->`; other changes `wf:<recipe>:<item>:<attempt>:<what>@v<version>:-`, so a replayed signal or command writes nothing.

@@ -3,6 +3,7 @@ using Aw.Sindri.Core.Control;
 using Aw.Sindri.Features.ApproveProfile;
 using Aw.Sindri.Features.GetStatus;
 using Aw.Sindri.Features.PingProcess;
+using Aw.Sindri.Features.QueryContext;
 using Aw.Sindri.Features.RecordHeartbeat;
 using Aw.Sindri.Features.RunDoctor;
 using Aw.Sindri.Features.StartProcess;
@@ -30,7 +31,8 @@ public static class SindriFeaturesServiceCollectionExtensions
             .AddScoped<IService<PingProcessRequest, Ping>, PingProcessService>()
             .AddScoped<IService<ValidateProfileRequest, ValidateProfileResponse>, ValidateProfileService>()
             .AddScoped<IService<ApproveProfileRequest, ApproveProfileResponse>, ApproveProfileService>()
-            .AddScoped<IService<RunDoctorRequest, RunDoctorResponse>, RunDoctorService>();
+            .AddScoped<IService<RunDoctorRequest, RunDoctorResponse>, RunDoctorService>()
+            .AddScoped<IService<QueryContextRequest, QueryContextResponse>, QueryContextService>();
         return services;
     }
 }

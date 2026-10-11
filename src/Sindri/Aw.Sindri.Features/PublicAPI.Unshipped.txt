@@ -282,3 +282,38 @@ static Aw.Sindri.Features.ValidateProfile.ValidateProfileRequest.operator !=(Aw.
 static Aw.Sindri.Features.ValidateProfile.ValidateProfileRequest.operator ==(Aw.Sindri.Features.ValidateProfile.ValidateProfileRequest? left, Aw.Sindri.Features.ValidateProfile.ValidateProfileRequest? right) -> bool
 static Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse.operator !=(Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse? left, Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse? right) -> bool
 static Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse.operator ==(Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse? left, Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse? right) -> bool
+Aw.Sindri.Features.QueryContext.QueryContextRequest
+Aw.Sindri.Features.QueryContext.QueryContextRequest.<Clone>$() -> Aw.Sindri.Features.QueryContext.QueryContextRequest!
+Aw.Sindri.Features.QueryContext.QueryContextRequest.Deconstruct(out string! Question, out System.Collections.Generic.IReadOnlyList<string!>? Sources, out int? Limit) -> void
+Aw.Sindri.Features.QueryContext.QueryContextRequest.Equals(Aw.Sindri.Features.QueryContext.QueryContextRequest? other) -> bool
+Aw.Sindri.Features.QueryContext.QueryContextRequest.Limit.get -> int?
+Aw.Sindri.Features.QueryContext.QueryContextRequest.Limit.init -> void
+Aw.Sindri.Features.QueryContext.QueryContextRequest.QueryContextRequest(string! Question, System.Collections.Generic.IReadOnlyList<string!>? Sources = null, int? Limit = null) -> void
+Aw.Sindri.Features.QueryContext.QueryContextRequest.Question.get -> string!
+Aw.Sindri.Features.QueryContext.QueryContextRequest.Question.init -> void
+Aw.Sindri.Features.QueryContext.QueryContextRequest.Sources.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Aw.Sindri.Features.QueryContext.QueryContextRequest.Sources.init -> void
+Aw.Sindri.Features.QueryContext.QueryContextResponse
+Aw.Sindri.Features.QueryContext.QueryContextResponse.<Clone>$() -> Aw.Sindri.Features.QueryContext.QueryContextResponse!
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Deconstruct(out string! Question, out System.Collections.Generic.IReadOnlyList<string!>! Terms, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.ContextHit!>! Results, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceReport!>! Sources) -> void
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Degraded.get -> bool
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Equals(Aw.Sindri.Features.QueryContext.QueryContextResponse? other) -> bool
+Aw.Sindri.Features.QueryContext.QueryContextResponse.QueryContextResponse(string! Question, System.Collections.Generic.IReadOnlyList<string!>! Terms, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.ContextHit!>! Results, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceReport!>! Sources) -> void
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Question.get -> string!
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Question.init -> void
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Results.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.ContextHit!>!
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Results.init -> void
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Sources.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceReport!>!
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Sources.init -> void
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Terms.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Features.QueryContext.QueryContextResponse.Terms.init -> void
+override Aw.Sindri.Features.QueryContext.QueryContextRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.QueryContext.QueryContextRequest.GetHashCode() -> int
+override Aw.Sindri.Features.QueryContext.QueryContextRequest.ToString() -> string!
+override Aw.Sindri.Features.QueryContext.QueryContextResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.QueryContext.QueryContextResponse.GetHashCode() -> int
+override Aw.Sindri.Features.QueryContext.QueryContextResponse.ToString() -> string!
+static Aw.Sindri.Features.QueryContext.QueryContextRequest.operator !=(Aw.Sindri.Features.QueryContext.QueryContextRequest? left, Aw.Sindri.Features.QueryContext.QueryContextRequest? right) -> bool
+static Aw.Sindri.Features.QueryContext.QueryContextRequest.operator ==(Aw.Sindri.Features.QueryContext.QueryContextRequest? left, Aw.Sindri.Features.QueryContext.QueryContextRequest? right) -> bool
+static Aw.Sindri.Features.QueryContext.QueryContextResponse.operator !=(Aw.Sindri.Features.QueryContext.QueryContextResponse? left, Aw.Sindri.Features.QueryContext.QueryContextResponse? right) -> bool
+static Aw.Sindri.Features.QueryContext.QueryContextResponse.operator ==(Aw.Sindri.Features.QueryContext.QueryContextResponse? left, Aw.Sindri.Features.QueryContext.QueryContextResponse? right) -> bool

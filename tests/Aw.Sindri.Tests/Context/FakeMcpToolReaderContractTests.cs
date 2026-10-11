@@ -1,0 +1,12 @@
+using Aw.Kernel.Testing;
+using Aw.Sindri.Core.Context;
+using Aw.Sindri.Testing.Context;
+
+namespace Aw.Sindri.Tests.Context;
+
+[Lane(TestLane.Unit)]
+public sealed class FakeMcpToolReaderContractTests : McpToolReaderContract
+{
+    protected override Task<IMcpToolReader> Create(IReadOnlyList<SeedDocument> documents) =>
+        Task.FromResult<IMcpToolReader>(new FakeMcpToolReader(documents));
+}

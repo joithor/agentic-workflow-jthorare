@@ -41,7 +41,23 @@ public static class ProfileRules
             }
         }
 
-        return Canonical(profile);
+        return WithContext(profile);
+    }
+
+    private static Result<SindriProfile> WithContext(SindriProfile profile)
+    {
+        if (profile.Context is not { } context)
+        {
+            return Canonical(profile) with { Context = null };
+        }
+
+        var checkedContext = ContextRules.Check(context, profile.Repos ?? []);
+        if (checkedContext.IsError)
+        {
+            return checkedContext.Error;
+        }
+
+        return Canonical(profile) with { Context = checkedContext.Value };
     }
 
     private static SindriProfile Canonical(SindriProfile profile) => profile with

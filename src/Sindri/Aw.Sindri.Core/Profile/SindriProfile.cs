@@ -12,6 +12,8 @@ namespace Aw.Sindri.Core.Profile;
 /// <param name="Repos">The repos in the path.</param>
 /// <param name="Services">Background services by name, each with its cadence.</param>
 /// <param name="Api">The local API's settings.</param>
+/// <param name="Context">The context retrieval engine's sources (docs/csharp/sindri-context.md). Omitted from the canonical
+/// JSON when absent, so a profile without it keeps its hash.</param>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record SindriProfile(
     int SchemaVersion,
@@ -19,7 +21,8 @@ public sealed record SindriProfile(
     string Tenant = SindriProfile.DefaultTenant,
     IReadOnlyList<RepoEntry>? Repos = null,
     IReadOnlyDictionary<string, ServiceSettings>? Services = null,
-    ApiSettings? Api = null)
+    ApiSettings? Api = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] ContextSettings? Context = null)
 {
     /// <summary>The tenant key until team mode.</summary>
     public const string DefaultTenant = "local";

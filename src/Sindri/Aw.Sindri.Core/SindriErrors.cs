@@ -53,10 +53,23 @@ public static class SindriErrors
     /// <summary>SND-SCHED-001: a background service run failed.</summary>
     public static readonly ErrorDefinition ServiceFailed = new("SND-SCHED-001", ErrorKind.Unavailable, "A background service failed");
 
+    /// <summary>SND-CONTEXT-001: the approved profile names no context source.</summary>
+    public static readonly ErrorDefinition ContextNoSources = new("SND-CONTEXT-001", ErrorKind.NotFound, "No context source is on");
+
+    /// <summary>SND-CONTEXT-002: a source the profile names can't open (no key, no directory, not wired in this build).</summary>
+    public static readonly ErrorDefinition ContextSourceUnusable = new("SND-CONTEXT-002", ErrorKind.Unavailable, "A context source can't open");
+
+    /// <summary>SND-CONTEXT-003: the question, a source name or the limit isn't valid.</summary>
+    public static readonly ErrorDefinition ContextBadQuery = new("SND-CONTEXT-003", ErrorKind.Invalid, "The context query is invalid");
+
+    /// <summary>SND-CONTEXT-010: a source didn't answer (unreachable, failed or past its deadline); the query goes on without it.</summary>
+    public static readonly ErrorDefinition ContextSourceFailed = new("SND-CONTEXT-010", ErrorKind.Unavailable, "A context source didn't answer");
+
     /// <summary>Every Sindri error, for ErrorCatalogue.Validate.</summary>
     public static IReadOnlyList<ErrorDefinition> All { get; } =
     [
         LeaseHeld, LeaseLost, LeaseStale, ProfileMissing, ProfileInvalid, ProfileHashMismatch, ProfileNeedsTerminal,
         ProfileNotApproved, LedgerSchema, LedgerUnavailable, NotRunning, ApiTimeout, PortInUse, UnknownVerb, StartFailed, ServiceFailed,
+        ContextNoSources, ContextSourceUnusable, ContextBadQuery, ContextSourceFailed,
     ];
 }

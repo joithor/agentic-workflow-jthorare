@@ -234,7 +234,6 @@ Aw.Sindri.Core.Profile.SindriProfile
 Aw.Sindri.Core.Profile.SindriProfile.<Clone>$() -> Aw.Sindri.Core.Profile.SindriProfile!
 Aw.Sindri.Core.Profile.SindriProfile.Api.get -> Aw.Sindri.Core.Profile.ApiSettings?
 Aw.Sindri.Core.Profile.SindriProfile.Api.init -> void
-Aw.Sindri.Core.Profile.SindriProfile.Deconstruct(out int SchemaVersion, out string! User, out string! Tenant, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Profile.RepoEntry!>? Repos, out System.Collections.Generic.IReadOnlyDictionary<string!, Aw.Sindri.Core.Profile.ServiceSettings!>? Services, out Aw.Sindri.Core.Profile.ApiSettings? Api) -> void
 Aw.Sindri.Core.Profile.SindriProfile.Equals(Aw.Sindri.Core.Profile.SindriProfile? other) -> bool
 Aw.Sindri.Core.Profile.SindriProfile.Repos.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Profile.RepoEntry!>?
 Aw.Sindri.Core.Profile.SindriProfile.Repos.init -> void
@@ -242,7 +241,6 @@ Aw.Sindri.Core.Profile.SindriProfile.SchemaVersion.get -> int
 Aw.Sindri.Core.Profile.SindriProfile.SchemaVersion.init -> void
 Aw.Sindri.Core.Profile.SindriProfile.Services.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Aw.Sindri.Core.Profile.ServiceSettings!>?
 Aw.Sindri.Core.Profile.SindriProfile.Services.init -> void
-Aw.Sindri.Core.Profile.SindriProfile.SindriProfile(int SchemaVersion, string! User, string! Tenant = "local", System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Profile.RepoEntry!>? Repos = null, System.Collections.Generic.IReadOnlyDictionary<string!, Aw.Sindri.Core.Profile.ServiceSettings!>? Services = null, Aw.Sindri.Core.Profile.ApiSettings? Api = null) -> void
 Aw.Sindri.Core.Profile.SindriProfile.Tenant.get -> string!
 Aw.Sindri.Core.Profile.SindriProfile.Tenant.init -> void
 Aw.Sindri.Core.Profile.SindriProfile.User.get -> string!
@@ -553,3 +551,436 @@ static Aw.Sindri.Core.Events.ProcessStopped.operator ==(Aw.Sindri.Core.Events.Pr
 static Aw.Sindri.Core.Events.ProfileApproved.operator !=(Aw.Sindri.Core.Events.ProfileApproved? left, Aw.Sindri.Core.Events.ProfileApproved? right) -> bool
 static Aw.Sindri.Core.Events.ProfileApproved.operator ==(Aw.Sindri.Core.Events.ProfileApproved? left, Aw.Sindri.Core.Events.ProfileApproved? right) -> bool
 static readonly Aw.Sindri.Core.SindriErrors.PortInUse -> Aw.Kernel.ErrorDefinition!
+Aw.Sindri.Core.Context.Citation
+Aw.Sindri.Core.Context.Citation.<Clone>$() -> Aw.Sindri.Core.Context.Citation!
+Aw.Sindri.Core.Context.Citation.Citation(Aw.Sindri.Core.Context.SourceKind Source, string! Document, int? Line, System.DateTimeOffset RetrievedAt) -> void
+Aw.Sindri.Core.Context.Citation.Deconstruct(out Aw.Sindri.Core.Context.SourceKind Source, out string! Document, out int? Line, out System.DateTimeOffset RetrievedAt) -> void
+Aw.Sindri.Core.Context.Citation.Document.get -> string!
+Aw.Sindri.Core.Context.Citation.Document.init -> void
+Aw.Sindri.Core.Context.Citation.Equals(Aw.Sindri.Core.Context.Citation? other) -> bool
+Aw.Sindri.Core.Context.Citation.Line.get -> int?
+Aw.Sindri.Core.Context.Citation.Line.init -> void
+Aw.Sindri.Core.Context.Citation.Locator.get -> string!
+Aw.Sindri.Core.Context.Citation.RetrievedAt.get -> System.DateTimeOffset
+Aw.Sindri.Core.Context.Citation.RetrievedAt.init -> void
+Aw.Sindri.Core.Context.Citation.Source.get -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.Citation.Source.init -> void
+Aw.Sindri.Core.Context.ContextHit
+Aw.Sindri.Core.Context.ContextHit.<Clone>$() -> Aw.Sindri.Core.Context.ContextHit!
+Aw.Sindri.Core.Context.ContextHit.Cite.get -> Aw.Sindri.Core.Context.Citation!
+Aw.Sindri.Core.Context.ContextHit.Cite.init -> void
+Aw.Sindri.Core.Context.ContextHit.ContextHit(int Rank, string! Title, string! Snippet, double Score, bool Redacted, Aw.Sindri.Core.Context.Citation! Cite) -> void
+Aw.Sindri.Core.Context.ContextHit.Deconstruct(out int Rank, out string! Title, out string! Snippet, out double Score, out bool Redacted, out Aw.Sindri.Core.Context.Citation! Cite) -> void
+Aw.Sindri.Core.Context.ContextHit.Equals(Aw.Sindri.Core.Context.ContextHit? other) -> bool
+Aw.Sindri.Core.Context.ContextHit.Rank.get -> int
+Aw.Sindri.Core.Context.ContextHit.Rank.init -> void
+Aw.Sindri.Core.Context.ContextHit.Redacted.get -> bool
+Aw.Sindri.Core.Context.ContextHit.Redacted.init -> void
+Aw.Sindri.Core.Context.ContextHit.Score.get -> double
+Aw.Sindri.Core.Context.ContextHit.Score.init -> void
+Aw.Sindri.Core.Context.ContextHit.Snippet.get -> string!
+Aw.Sindri.Core.Context.ContextHit.Snippet.init -> void
+Aw.Sindri.Core.Context.ContextHit.Title.get -> string!
+Aw.Sindri.Core.Context.ContextHit.Title.init -> void
+Aw.Sindri.Core.Context.ContextQueryDefaults
+Aw.Sindri.Core.Context.EvalScore
+Aw.Sindri.Core.Context.EvalScore.<Clone>$() -> Aw.Sindri.Core.Context.EvalScore!
+Aw.Sindri.Core.Context.EvalScore.Deconstruct(out double Recall, out double Precision) -> void
+Aw.Sindri.Core.Context.EvalScore.Equals(Aw.Sindri.Core.Context.EvalScore? other) -> bool
+Aw.Sindri.Core.Context.EvalScore.EvalScore(double Recall, double Precision) -> void
+Aw.Sindri.Core.Context.EvalScore.Precision.get -> double
+Aw.Sindri.Core.Context.EvalScore.Precision.init -> void
+Aw.Sindri.Core.Context.EvalScore.Recall.get -> double
+Aw.Sindri.Core.Context.EvalScore.Recall.init -> void
+Aw.Sindri.Core.Context.FusedHit
+Aw.Sindri.Core.Context.FusedHit.<Clone>$() -> Aw.Sindri.Core.Context.FusedHit!
+Aw.Sindri.Core.Context.FusedHit.Deconstruct(out Aw.Sindri.Core.Context.SourceKind Source, out Aw.Sindri.Core.Context.SourceHit! Hit, out double Score, out System.DateTimeOffset RetrievedAt) -> void
+Aw.Sindri.Core.Context.FusedHit.Equals(Aw.Sindri.Core.Context.FusedHit? other) -> bool
+Aw.Sindri.Core.Context.FusedHit.FusedHit(Aw.Sindri.Core.Context.SourceKind Source, Aw.Sindri.Core.Context.SourceHit! Hit, double Score, System.DateTimeOffset RetrievedAt) -> void
+Aw.Sindri.Core.Context.FusedHit.Hit.get -> Aw.Sindri.Core.Context.SourceHit!
+Aw.Sindri.Core.Context.FusedHit.Hit.init -> void
+Aw.Sindri.Core.Context.FusedHit.RetrievedAt.get -> System.DateTimeOffset
+Aw.Sindri.Core.Context.FusedHit.RetrievedAt.init -> void
+Aw.Sindri.Core.Context.FusedHit.Score.get -> double
+Aw.Sindri.Core.Context.FusedHit.Score.init -> void
+Aw.Sindri.Core.Context.FusedHit.Source.get -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.FusedHit.Source.init -> void
+Aw.Sindri.Core.Context.IContextSource
+Aw.Sindri.Core.Context.IContextSource.Kind.get -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.IContextSource.Search(Aw.Sindri.Core.Context.SourceQuery! query, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceHit!>!>!>
+Aw.Sindri.Core.Context.IMcpToolReader
+Aw.Sindri.Core.Context.IMcpToolReader.Call(Aw.Sindri.Core.Context.McpToolCall! call, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.McpDocument!>!>!>
+Aw.Sindri.Core.Context.ISourceCatalog
+Aw.Sindri.Core.Context.ISourceCatalog.Open(Aw.Sindri.Core.Profile.SindriProfile! profile) -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceOpening!>!
+Aw.Sindri.Core.Context.ITextScrubber
+Aw.Sindri.Core.Context.ITextScrubber.Scrub(string! text) -> Aw.Sindri.Core.Context.ScrubbedText!
+Aw.Sindri.Core.Context.LineMatches
+Aw.Sindri.Core.Context.LineMatches.Add(string! document, int line, string! text) -> void
+Aw.Sindri.Core.Context.LineMatches.LineMatches(System.Collections.Generic.IReadOnlyList<string!>! terms) -> void
+Aw.Sindri.Core.Context.LineMatches.Ranked(int limit) -> System.Collections.Generic.IReadOnlyList<(string! Document, int Line, string! Text)>!
+Aw.Sindri.Core.Context.LinearError
+Aw.Sindri.Core.Context.LinearError.<Clone>$() -> Aw.Sindri.Core.Context.LinearError!
+Aw.Sindri.Core.Context.LinearError.Deconstruct(out string! Message) -> void
+Aw.Sindri.Core.Context.LinearError.Equals(Aw.Sindri.Core.Context.LinearError? other) -> bool
+Aw.Sindri.Core.Context.LinearError.LinearError(string! Message) -> void
+Aw.Sindri.Core.Context.LinearError.Message.get -> string!
+Aw.Sindri.Core.Context.LinearError.Message.init -> void
+Aw.Sindri.Core.Context.LinearIssue
+Aw.Sindri.Core.Context.LinearIssue.<Clone>$() -> Aw.Sindri.Core.Context.LinearIssue!
+Aw.Sindri.Core.Context.LinearIssue.Deconstruct(out string! Identifier, out string! Title, out string! Url, out string? Description) -> void
+Aw.Sindri.Core.Context.LinearIssue.Description.get -> string?
+Aw.Sindri.Core.Context.LinearIssue.Description.init -> void
+Aw.Sindri.Core.Context.LinearIssue.Equals(Aw.Sindri.Core.Context.LinearIssue? other) -> bool
+Aw.Sindri.Core.Context.LinearIssue.Identifier.get -> string!
+Aw.Sindri.Core.Context.LinearIssue.Identifier.init -> void
+Aw.Sindri.Core.Context.LinearIssue.LinearIssue(string! Identifier, string! Title, string! Url, string? Description = null) -> void
+Aw.Sindri.Core.Context.LinearIssue.Title.get -> string!
+Aw.Sindri.Core.Context.LinearIssue.Title.init -> void
+Aw.Sindri.Core.Context.LinearIssue.Url.get -> string!
+Aw.Sindri.Core.Context.LinearIssue.Url.init -> void
+Aw.Sindri.Core.Context.LinearIssuePage
+Aw.Sindri.Core.Context.LinearIssuePage.<Clone>$() -> Aw.Sindri.Core.Context.LinearIssuePage!
+Aw.Sindri.Core.Context.LinearIssuePage.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.LinearIssue!>! Nodes) -> void
+Aw.Sindri.Core.Context.LinearIssuePage.Equals(Aw.Sindri.Core.Context.LinearIssuePage? other) -> bool
+Aw.Sindri.Core.Context.LinearIssuePage.LinearIssuePage(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.LinearIssue!>! Nodes) -> void
+Aw.Sindri.Core.Context.LinearIssuePage.Nodes.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.LinearIssue!>!
+Aw.Sindri.Core.Context.LinearIssuePage.Nodes.init -> void
+Aw.Sindri.Core.Context.LinearSearchAnswer
+Aw.Sindri.Core.Context.LinearSearchAnswer.<Clone>$() -> Aw.Sindri.Core.Context.LinearSearchAnswer!
+Aw.Sindri.Core.Context.LinearSearchAnswer.Data.get -> Aw.Sindri.Core.Context.LinearSearchData?
+Aw.Sindri.Core.Context.LinearSearchAnswer.Data.init -> void
+Aw.Sindri.Core.Context.LinearSearchAnswer.Deconstruct(out Aw.Sindri.Core.Context.LinearSearchData? Data, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.LinearError!>? Errors) -> void
+Aw.Sindri.Core.Context.LinearSearchAnswer.Equals(Aw.Sindri.Core.Context.LinearSearchAnswer? other) -> bool
+Aw.Sindri.Core.Context.LinearSearchAnswer.Errors.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.LinearError!>?
+Aw.Sindri.Core.Context.LinearSearchAnswer.Errors.init -> void
+Aw.Sindri.Core.Context.LinearSearchAnswer.LinearSearchAnswer(Aw.Sindri.Core.Context.LinearSearchData? Data = null, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.LinearError!>? Errors = null) -> void
+Aw.Sindri.Core.Context.LinearSearchData
+Aw.Sindri.Core.Context.LinearSearchData.<Clone>$() -> Aw.Sindri.Core.Context.LinearSearchData!
+Aw.Sindri.Core.Context.LinearSearchData.Deconstruct(out Aw.Sindri.Core.Context.LinearIssuePage! SearchIssues) -> void
+Aw.Sindri.Core.Context.LinearSearchData.Equals(Aw.Sindri.Core.Context.LinearSearchData? other) -> bool
+Aw.Sindri.Core.Context.LinearSearchData.LinearSearchData(Aw.Sindri.Core.Context.LinearIssuePage! SearchIssues) -> void
+Aw.Sindri.Core.Context.LinearSearchData.SearchIssues.get -> Aw.Sindri.Core.Context.LinearIssuePage!
+Aw.Sindri.Core.Context.LinearSearchData.SearchIssues.init -> void
+Aw.Sindri.Core.Context.LinearSearchRequest
+Aw.Sindri.Core.Context.LinearSearchRequest.<Clone>$() -> Aw.Sindri.Core.Context.LinearSearchRequest!
+Aw.Sindri.Core.Context.LinearSearchRequest.Deconstruct(out string! Query, out Aw.Sindri.Core.Context.LinearSearchVariables! Variables) -> void
+Aw.Sindri.Core.Context.LinearSearchRequest.Equals(Aw.Sindri.Core.Context.LinearSearchRequest? other) -> bool
+Aw.Sindri.Core.Context.LinearSearchRequest.LinearSearchRequest(string! Query, Aw.Sindri.Core.Context.LinearSearchVariables! Variables) -> void
+Aw.Sindri.Core.Context.LinearSearchRequest.Query.get -> string!
+Aw.Sindri.Core.Context.LinearSearchRequest.Query.init -> void
+Aw.Sindri.Core.Context.LinearSearchRequest.Variables.get -> Aw.Sindri.Core.Context.LinearSearchVariables!
+Aw.Sindri.Core.Context.LinearSearchRequest.Variables.init -> void
+Aw.Sindri.Core.Context.LinearSearchVariables
+Aw.Sindri.Core.Context.LinearSearchVariables.<Clone>$() -> Aw.Sindri.Core.Context.LinearSearchVariables!
+Aw.Sindri.Core.Context.LinearSearchVariables.Deconstruct(out string! Term, out int First, out System.Collections.Generic.IReadOnlyList<string!>? Teams) -> void
+Aw.Sindri.Core.Context.LinearSearchVariables.Equals(Aw.Sindri.Core.Context.LinearSearchVariables? other) -> bool
+Aw.Sindri.Core.Context.LinearSearchVariables.First.get -> int
+Aw.Sindri.Core.Context.LinearSearchVariables.First.init -> void
+Aw.Sindri.Core.Context.LinearSearchVariables.LinearSearchVariables(string! Term, int First, System.Collections.Generic.IReadOnlyList<string!>? Teams = null) -> void
+Aw.Sindri.Core.Context.LinearSearchVariables.Teams.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Aw.Sindri.Core.Context.LinearSearchVariables.Teams.init -> void
+Aw.Sindri.Core.Context.LinearSearchVariables.Term.get -> string!
+Aw.Sindri.Core.Context.LinearSearchVariables.Term.init -> void
+Aw.Sindri.Core.Context.McpContextSource
+Aw.Sindri.Core.Context.McpContextSource.Kind.get -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.McpContextSource.McpContextSource(Aw.Sindri.Core.Context.IMcpToolReader! reader, Aw.Sindri.Core.Profile.McpContext! settings) -> void
+Aw.Sindri.Core.Context.McpContextSource.Search(Aw.Sindri.Core.Context.SourceQuery! query, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceHit!>!>!>
+Aw.Sindri.Core.Context.McpDocument
+Aw.Sindri.Core.Context.McpDocument.<Clone>$() -> Aw.Sindri.Core.Context.McpDocument!
+Aw.Sindri.Core.Context.McpDocument.Deconstruct(out string! Uri, out string! Title, out string! Text) -> void
+Aw.Sindri.Core.Context.McpDocument.Equals(Aw.Sindri.Core.Context.McpDocument? other) -> bool
+Aw.Sindri.Core.Context.McpDocument.McpDocument(string! Uri, string! Title, string! Text) -> void
+Aw.Sindri.Core.Context.McpDocument.Text.get -> string!
+Aw.Sindri.Core.Context.McpDocument.Text.init -> void
+Aw.Sindri.Core.Context.McpDocument.Title.get -> string!
+Aw.Sindri.Core.Context.McpDocument.Title.init -> void
+Aw.Sindri.Core.Context.McpDocument.Uri.get -> string!
+Aw.Sindri.Core.Context.McpDocument.Uri.init -> void
+Aw.Sindri.Core.Context.McpToolCall
+Aw.Sindri.Core.Context.McpToolCall.<Clone>$() -> Aw.Sindri.Core.Context.McpToolCall!
+Aw.Sindri.Core.Context.McpToolCall.Deconstruct(out string! Server, out string! Tool, out string! Query, out int Limit) -> void
+Aw.Sindri.Core.Context.McpToolCall.Equals(Aw.Sindri.Core.Context.McpToolCall? other) -> bool
+Aw.Sindri.Core.Context.McpToolCall.Limit.get -> int
+Aw.Sindri.Core.Context.McpToolCall.Limit.init -> void
+Aw.Sindri.Core.Context.McpToolCall.McpToolCall(string! Server, string! Tool, string! Query, int Limit) -> void
+Aw.Sindri.Core.Context.McpToolCall.Query.get -> string!
+Aw.Sindri.Core.Context.McpToolCall.Query.init -> void
+Aw.Sindri.Core.Context.McpToolCall.Server.get -> string!
+Aw.Sindri.Core.Context.McpToolCall.Server.init -> void
+Aw.Sindri.Core.Context.McpToolCall.Tool.get -> string!
+Aw.Sindri.Core.Context.McpToolCall.Tool.init -> void
+Aw.Sindri.Core.Context.NamedSources
+Aw.Sindri.Core.Context.QueryTerms
+Aw.Sindri.Core.Context.RankFusion
+Aw.Sindri.Core.Context.ScrubbedText
+Aw.Sindri.Core.Context.ScrubbedText.<Clone>$() -> Aw.Sindri.Core.Context.ScrubbedText!
+Aw.Sindri.Core.Context.ScrubbedText.Deconstruct(out string! Text, out bool Redacted) -> void
+Aw.Sindri.Core.Context.ScrubbedText.Equals(Aw.Sindri.Core.Context.ScrubbedText? other) -> bool
+Aw.Sindri.Core.Context.ScrubbedText.Redacted.get -> bool
+Aw.Sindri.Core.Context.ScrubbedText.Redacted.init -> void
+Aw.Sindri.Core.Context.ScrubbedText.ScrubbedText(string! Text, bool Redacted) -> void
+Aw.Sindri.Core.Context.ScrubbedText.Text.get -> string!
+Aw.Sindri.Core.Context.ScrubbedText.Text.init -> void
+Aw.Sindri.Core.Context.Snippets
+Aw.Sindri.Core.Context.SourceHit
+Aw.Sindri.Core.Context.SourceHit.<Clone>$() -> Aw.Sindri.Core.Context.SourceHit!
+Aw.Sindri.Core.Context.SourceHit.Deconstruct(out string! Document, out int? Line, out string! Title, out string! Snippet) -> void
+Aw.Sindri.Core.Context.SourceHit.Document.get -> string!
+Aw.Sindri.Core.Context.SourceHit.Document.init -> void
+Aw.Sindri.Core.Context.SourceHit.Equals(Aw.Sindri.Core.Context.SourceHit? other) -> bool
+Aw.Sindri.Core.Context.SourceHit.Line.get -> int?
+Aw.Sindri.Core.Context.SourceHit.Line.init -> void
+Aw.Sindri.Core.Context.SourceHit.Locator.get -> string!
+Aw.Sindri.Core.Context.SourceHit.Snippet.get -> string!
+Aw.Sindri.Core.Context.SourceHit.Snippet.init -> void
+Aw.Sindri.Core.Context.SourceHit.SourceHit(string! Document, int? Line, string! Title, string! Snippet) -> void
+Aw.Sindri.Core.Context.SourceHit.Title.get -> string!
+Aw.Sindri.Core.Context.SourceHit.Title.init -> void
+Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.SourceKind.Code = 0 -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.SourceKind.ConnectAi = 3 -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.SourceKind.Linear = 2 -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.SourceKind.Notes = 1 -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.SourceList
+Aw.Sindri.Core.Context.SourceList.<Clone>$() -> Aw.Sindri.Core.Context.SourceList!
+Aw.Sindri.Core.Context.SourceList.Deconstruct(out Aw.Sindri.Core.Context.SourceKind Source, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceHit!>! Hits, out System.DateTimeOffset RetrievedAt) -> void
+Aw.Sindri.Core.Context.SourceList.Equals(Aw.Sindri.Core.Context.SourceList? other) -> bool
+Aw.Sindri.Core.Context.SourceList.Hits.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceHit!>!
+Aw.Sindri.Core.Context.SourceList.Hits.init -> void
+Aw.Sindri.Core.Context.SourceList.RetrievedAt.get -> System.DateTimeOffset
+Aw.Sindri.Core.Context.SourceList.RetrievedAt.init -> void
+Aw.Sindri.Core.Context.SourceList.Source.get -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.SourceList.Source.init -> void
+Aw.Sindri.Core.Context.SourceList.SourceList(Aw.Sindri.Core.Context.SourceKind Source, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceHit!>! Hits, System.DateTimeOffset RetrievedAt) -> void
+Aw.Sindri.Core.Context.SourceNames
+Aw.Sindri.Core.Context.SourceOpening
+Aw.Sindri.Core.Context.SourceOpening.<Clone>$() -> Aw.Sindri.Core.Context.SourceOpening!
+Aw.Sindri.Core.Context.SourceOpening.Deconstruct(out Aw.Sindri.Core.Context.SourceKind Kind, out Aw.Sindri.Core.Context.IContextSource? Source, out string? Skipped) -> void
+Aw.Sindri.Core.Context.SourceOpening.Equals(Aw.Sindri.Core.Context.SourceOpening? other) -> bool
+Aw.Sindri.Core.Context.SourceOpening.Kind.get -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.SourceOpening.Kind.init -> void
+Aw.Sindri.Core.Context.SourceOpening.Skipped.get -> string?
+Aw.Sindri.Core.Context.SourceOpening.Skipped.init -> void
+Aw.Sindri.Core.Context.SourceOpening.Source.get -> Aw.Sindri.Core.Context.IContextSource?
+Aw.Sindri.Core.Context.SourceOpening.Source.init -> void
+Aw.Sindri.Core.Context.SourceOpening.SourceOpening(Aw.Sindri.Core.Context.SourceKind Kind, Aw.Sindri.Core.Context.IContextSource? Source, string? Skipped) -> void
+Aw.Sindri.Core.Context.SourceQuery
+Aw.Sindri.Core.Context.SourceQuery.<Clone>$() -> Aw.Sindri.Core.Context.SourceQuery!
+Aw.Sindri.Core.Context.SourceQuery.Deconstruct(out System.Collections.Generic.IReadOnlyList<string!>! Terms, out int Limit) -> void
+Aw.Sindri.Core.Context.SourceQuery.Equals(Aw.Sindri.Core.Context.SourceQuery? other) -> bool
+Aw.Sindri.Core.Context.SourceQuery.Limit.get -> int
+Aw.Sindri.Core.Context.SourceQuery.Limit.init -> void
+Aw.Sindri.Core.Context.SourceQuery.SourceQuery(System.Collections.Generic.IReadOnlyList<string!>! Terms, int Limit) -> void
+Aw.Sindri.Core.Context.SourceQuery.Terms.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Core.Context.SourceQuery.Terms.init -> void
+Aw.Sindri.Core.Context.SourceReport
+Aw.Sindri.Core.Context.SourceReport.<Clone>$() -> Aw.Sindri.Core.Context.SourceReport!
+Aw.Sindri.Core.Context.SourceReport.Deconstruct(out Aw.Sindri.Core.Context.SourceKind Source, out Aw.Sindri.Core.Context.SourceState State, out int Hits, out string? Detail) -> void
+Aw.Sindri.Core.Context.SourceReport.Detail.get -> string?
+Aw.Sindri.Core.Context.SourceReport.Detail.init -> void
+Aw.Sindri.Core.Context.SourceReport.Equals(Aw.Sindri.Core.Context.SourceReport? other) -> bool
+Aw.Sindri.Core.Context.SourceReport.Hits.get -> int
+Aw.Sindri.Core.Context.SourceReport.Hits.init -> void
+Aw.Sindri.Core.Context.SourceReport.Source.get -> Aw.Sindri.Core.Context.SourceKind
+Aw.Sindri.Core.Context.SourceReport.Source.init -> void
+Aw.Sindri.Core.Context.SourceReport.SourceReport(Aw.Sindri.Core.Context.SourceKind Source, Aw.Sindri.Core.Context.SourceState State, int Hits, string? Detail) -> void
+Aw.Sindri.Core.Context.SourceReport.State.get -> Aw.Sindri.Core.Context.SourceState
+Aw.Sindri.Core.Context.SourceReport.State.init -> void
+Aw.Sindri.Core.Context.SourceState
+Aw.Sindri.Core.Context.SourceState.Failed = 2 -> Aw.Sindri.Core.Context.SourceState
+Aw.Sindri.Core.Context.SourceState.Ok = 0 -> Aw.Sindri.Core.Context.SourceState
+Aw.Sindri.Core.Context.SourceState.Skipped = 1 -> Aw.Sindri.Core.Context.SourceState
+Aw.Sindri.Core.Profile.CodeContext
+Aw.Sindri.Core.Profile.CodeContext.<Clone>$() -> Aw.Sindri.Core.Profile.CodeContext!
+Aw.Sindri.Core.Profile.CodeContext.CodeContext(System.Collections.Generic.IReadOnlyList<string!>? Repos = null) -> void
+Aw.Sindri.Core.Profile.CodeContext.Deconstruct(out System.Collections.Generic.IReadOnlyList<string!>? Repos) -> void
+Aw.Sindri.Core.Profile.CodeContext.Equals(Aw.Sindri.Core.Profile.CodeContext? other) -> bool
+Aw.Sindri.Core.Profile.CodeContext.Repos.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Aw.Sindri.Core.Profile.CodeContext.Repos.init -> void
+Aw.Sindri.Core.Profile.ContextRules
+Aw.Sindri.Core.Profile.ContextSettings
+Aw.Sindri.Core.Profile.ContextSettings.<Clone>$() -> Aw.Sindri.Core.Profile.ContextSettings!
+Aw.Sindri.Core.Profile.ContextSettings.Code.get -> Aw.Sindri.Core.Profile.CodeContext?
+Aw.Sindri.Core.Profile.ContextSettings.Code.init -> void
+Aw.Sindri.Core.Profile.ContextSettings.ConnectAi.get -> Aw.Sindri.Core.Profile.McpContext?
+Aw.Sindri.Core.Profile.ContextSettings.ConnectAi.init -> void
+Aw.Sindri.Core.Profile.ContextSettings.ContextSettings(Aw.Sindri.Core.Profile.CodeContext? Code = null, Aw.Sindri.Core.Profile.NotesContext? Notes = null, Aw.Sindri.Core.Profile.LinearContext? Linear = null, Aw.Sindri.Core.Profile.McpContext? ConnectAi = null, int Limit = 10) -> void
+Aw.Sindri.Core.Profile.ContextSettings.Deconstruct(out Aw.Sindri.Core.Profile.CodeContext? Code, out Aw.Sindri.Core.Profile.NotesContext? Notes, out Aw.Sindri.Core.Profile.LinearContext? Linear, out Aw.Sindri.Core.Profile.McpContext? ConnectAi, out int Limit) -> void
+Aw.Sindri.Core.Profile.ContextSettings.Equals(Aw.Sindri.Core.Profile.ContextSettings? other) -> bool
+Aw.Sindri.Core.Profile.ContextSettings.Limit.get -> int
+Aw.Sindri.Core.Profile.ContextSettings.Limit.init -> void
+Aw.Sindri.Core.Profile.ContextSettings.Linear.get -> Aw.Sindri.Core.Profile.LinearContext?
+Aw.Sindri.Core.Profile.ContextSettings.Linear.init -> void
+Aw.Sindri.Core.Profile.ContextSettings.Notes.get -> Aw.Sindri.Core.Profile.NotesContext?
+Aw.Sindri.Core.Profile.ContextSettings.Notes.init -> void
+Aw.Sindri.Core.Profile.LinearContext
+Aw.Sindri.Core.Profile.LinearContext.<Clone>$() -> Aw.Sindri.Core.Profile.LinearContext!
+Aw.Sindri.Core.Profile.LinearContext.Deconstruct(out System.Collections.Generic.IReadOnlyList<string!>? Teams) -> void
+Aw.Sindri.Core.Profile.LinearContext.Equals(Aw.Sindri.Core.Profile.LinearContext? other) -> bool
+Aw.Sindri.Core.Profile.LinearContext.LinearContext(System.Collections.Generic.IReadOnlyList<string!>? Teams = null) -> void
+Aw.Sindri.Core.Profile.LinearContext.Teams.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Aw.Sindri.Core.Profile.LinearContext.Teams.init -> void
+Aw.Sindri.Core.Profile.McpContext
+Aw.Sindri.Core.Profile.McpContext.<Clone>$() -> Aw.Sindri.Core.Profile.McpContext!
+Aw.Sindri.Core.Profile.McpContext.Deconstruct(out string! Server, out string! Tool) -> void
+Aw.Sindri.Core.Profile.McpContext.Equals(Aw.Sindri.Core.Profile.McpContext? other) -> bool
+Aw.Sindri.Core.Profile.McpContext.McpContext(string! Server, string! Tool) -> void
+Aw.Sindri.Core.Profile.McpContext.Server.get -> string!
+Aw.Sindri.Core.Profile.McpContext.Server.init -> void
+Aw.Sindri.Core.Profile.McpContext.Tool.get -> string!
+Aw.Sindri.Core.Profile.McpContext.Tool.init -> void
+Aw.Sindri.Core.Profile.NotesContext
+Aw.Sindri.Core.Profile.NotesContext.<Clone>$() -> Aw.Sindri.Core.Profile.NotesContext!
+Aw.Sindri.Core.Profile.NotesContext.Deconstruct(out string! Path) -> void
+Aw.Sindri.Core.Profile.NotesContext.Equals(Aw.Sindri.Core.Profile.NotesContext? other) -> bool
+Aw.Sindri.Core.Profile.NotesContext.NotesContext(string! Path) -> void
+Aw.Sindri.Core.Profile.NotesContext.Path.get -> string!
+Aw.Sindri.Core.Profile.NotesContext.Path.init -> void
+Aw.Sindri.Core.Profile.SindriProfile.Context.get -> Aw.Sindri.Core.Profile.ContextSettings?
+Aw.Sindri.Core.Profile.SindriProfile.Context.init -> void
+Aw.Sindri.Core.Profile.SindriProfile.Deconstruct(out int SchemaVersion, out string! User, out string! Tenant, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Profile.RepoEntry!>? Repos, out System.Collections.Generic.IReadOnlyDictionary<string!, Aw.Sindri.Core.Profile.ServiceSettings!>? Services, out Aw.Sindri.Core.Profile.ApiSettings? Api, out Aw.Sindri.Core.Profile.ContextSettings? Context) -> void
+Aw.Sindri.Core.Profile.SindriProfile.SindriProfile(int SchemaVersion, string! User, string! Tenant = "local", System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Profile.RepoEntry!>? Repos = null, System.Collections.Generic.IReadOnlyDictionary<string!, Aw.Sindri.Core.Profile.ServiceSettings!>? Services = null, Aw.Sindri.Core.Profile.ApiSettings? Api = null, Aw.Sindri.Core.Profile.ContextSettings? Context = null) -> void
+const Aw.Sindri.Core.Context.QueryTerms.MaxQuestionLength = 500 -> int
+const Aw.Sindri.Core.Context.QueryTerms.MaxTerms = 8 -> int
+const Aw.Sindri.Core.Context.RankFusion.K = 60 -> int
+const Aw.Sindri.Core.Context.Snippets.MaxLength = 200 -> int
+const Aw.Sindri.Core.Profile.ContextSettings.DefaultLimit = 10 -> int
+const Aw.Sindri.Core.Profile.ContextSettings.MaxLimit = 50 -> int
+override Aw.Sindri.Core.Context.Citation.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.Citation.GetHashCode() -> int
+override Aw.Sindri.Core.Context.Citation.ToString() -> string!
+override Aw.Sindri.Core.Context.ContextHit.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.ContextHit.GetHashCode() -> int
+override Aw.Sindri.Core.Context.ContextHit.ToString() -> string!
+override Aw.Sindri.Core.Context.EvalScore.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.EvalScore.GetHashCode() -> int
+override Aw.Sindri.Core.Context.EvalScore.ToString() -> string!
+override Aw.Sindri.Core.Context.FusedHit.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.FusedHit.GetHashCode() -> int
+override Aw.Sindri.Core.Context.FusedHit.ToString() -> string!
+override Aw.Sindri.Core.Context.LinearError.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.LinearError.GetHashCode() -> int
+override Aw.Sindri.Core.Context.LinearError.ToString() -> string!
+override Aw.Sindri.Core.Context.LinearIssue.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.LinearIssue.GetHashCode() -> int
+override Aw.Sindri.Core.Context.LinearIssue.ToString() -> string!
+override Aw.Sindri.Core.Context.LinearIssuePage.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.LinearIssuePage.GetHashCode() -> int
+override Aw.Sindri.Core.Context.LinearIssuePage.ToString() -> string!
+override Aw.Sindri.Core.Context.LinearSearchAnswer.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.LinearSearchAnswer.GetHashCode() -> int
+override Aw.Sindri.Core.Context.LinearSearchAnswer.ToString() -> string!
+override Aw.Sindri.Core.Context.LinearSearchData.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.LinearSearchData.GetHashCode() -> int
+override Aw.Sindri.Core.Context.LinearSearchData.ToString() -> string!
+override Aw.Sindri.Core.Context.LinearSearchRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.LinearSearchRequest.GetHashCode() -> int
+override Aw.Sindri.Core.Context.LinearSearchRequest.ToString() -> string!
+override Aw.Sindri.Core.Context.LinearSearchVariables.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.LinearSearchVariables.GetHashCode() -> int
+override Aw.Sindri.Core.Context.LinearSearchVariables.ToString() -> string!
+override Aw.Sindri.Core.Context.McpDocument.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.McpDocument.GetHashCode() -> int
+override Aw.Sindri.Core.Context.McpDocument.ToString() -> string!
+override Aw.Sindri.Core.Context.McpToolCall.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.McpToolCall.GetHashCode() -> int
+override Aw.Sindri.Core.Context.McpToolCall.ToString() -> string!
+override Aw.Sindri.Core.Context.ScrubbedText.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.ScrubbedText.GetHashCode() -> int
+override Aw.Sindri.Core.Context.ScrubbedText.ToString() -> string!
+override Aw.Sindri.Core.Context.SourceHit.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.SourceHit.GetHashCode() -> int
+override Aw.Sindri.Core.Context.SourceHit.ToString() -> string!
+override Aw.Sindri.Core.Context.SourceList.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.SourceList.GetHashCode() -> int
+override Aw.Sindri.Core.Context.SourceList.ToString() -> string!
+override Aw.Sindri.Core.Context.SourceOpening.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.SourceOpening.GetHashCode() -> int
+override Aw.Sindri.Core.Context.SourceOpening.ToString() -> string!
+override Aw.Sindri.Core.Context.SourceQuery.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.SourceQuery.GetHashCode() -> int
+override Aw.Sindri.Core.Context.SourceQuery.ToString() -> string!
+override Aw.Sindri.Core.Context.SourceReport.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Context.SourceReport.GetHashCode() -> int
+override Aw.Sindri.Core.Context.SourceReport.ToString() -> string!
+override Aw.Sindri.Core.Profile.CodeContext.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Profile.CodeContext.GetHashCode() -> int
+override Aw.Sindri.Core.Profile.CodeContext.ToString() -> string!
+override Aw.Sindri.Core.Profile.ContextSettings.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Profile.ContextSettings.GetHashCode() -> int
+override Aw.Sindri.Core.Profile.ContextSettings.ToString() -> string!
+override Aw.Sindri.Core.Profile.LinearContext.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Profile.LinearContext.GetHashCode() -> int
+override Aw.Sindri.Core.Profile.LinearContext.ToString() -> string!
+override Aw.Sindri.Core.Profile.McpContext.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Profile.McpContext.GetHashCode() -> int
+override Aw.Sindri.Core.Profile.McpContext.ToString() -> string!
+override Aw.Sindri.Core.Profile.NotesContext.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Profile.NotesContext.GetHashCode() -> int
+override Aw.Sindri.Core.Profile.NotesContext.ToString() -> string!
+static Aw.Sindri.Core.Context.Citation.operator !=(Aw.Sindri.Core.Context.Citation? left, Aw.Sindri.Core.Context.Citation? right) -> bool
+static Aw.Sindri.Core.Context.Citation.operator ==(Aw.Sindri.Core.Context.Citation? left, Aw.Sindri.Core.Context.Citation? right) -> bool
+static Aw.Sindri.Core.Context.ContextHit.operator !=(Aw.Sindri.Core.Context.ContextHit? left, Aw.Sindri.Core.Context.ContextHit? right) -> bool
+static Aw.Sindri.Core.Context.ContextHit.operator ==(Aw.Sindri.Core.Context.ContextHit? left, Aw.Sindri.Core.Context.ContextHit? right) -> bool
+static Aw.Sindri.Core.Context.ContextQueryDefaults.Deadline.get -> System.TimeSpan
+static Aw.Sindri.Core.Context.EvalScore.Mean(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.EvalScore!>! scores) -> Aw.Sindri.Core.Context.EvalScore!
+static Aw.Sindri.Core.Context.EvalScore.Of(System.Collections.Generic.IReadOnlyList<string!>! expected, System.Collections.Generic.IReadOnlyList<string!>! retrieved, int k) -> Aw.Sindri.Core.Context.EvalScore!
+static Aw.Sindri.Core.Context.EvalScore.operator !=(Aw.Sindri.Core.Context.EvalScore? left, Aw.Sindri.Core.Context.EvalScore? right) -> bool
+static Aw.Sindri.Core.Context.EvalScore.operator ==(Aw.Sindri.Core.Context.EvalScore? left, Aw.Sindri.Core.Context.EvalScore? right) -> bool
+static Aw.Sindri.Core.Context.FusedHit.operator !=(Aw.Sindri.Core.Context.FusedHit? left, Aw.Sindri.Core.Context.FusedHit? right) -> bool
+static Aw.Sindri.Core.Context.FusedHit.operator ==(Aw.Sindri.Core.Context.FusedHit? left, Aw.Sindri.Core.Context.FusedHit? right) -> bool
+static Aw.Sindri.Core.Context.LinearError.operator !=(Aw.Sindri.Core.Context.LinearError? left, Aw.Sindri.Core.Context.LinearError? right) -> bool
+static Aw.Sindri.Core.Context.LinearError.operator ==(Aw.Sindri.Core.Context.LinearError? left, Aw.Sindri.Core.Context.LinearError? right) -> bool
+static Aw.Sindri.Core.Context.LinearIssue.operator !=(Aw.Sindri.Core.Context.LinearIssue? left, Aw.Sindri.Core.Context.LinearIssue? right) -> bool
+static Aw.Sindri.Core.Context.LinearIssue.operator ==(Aw.Sindri.Core.Context.LinearIssue? left, Aw.Sindri.Core.Context.LinearIssue? right) -> bool
+static Aw.Sindri.Core.Context.LinearIssuePage.operator !=(Aw.Sindri.Core.Context.LinearIssuePage? left, Aw.Sindri.Core.Context.LinearIssuePage? right) -> bool
+static Aw.Sindri.Core.Context.LinearIssuePage.operator ==(Aw.Sindri.Core.Context.LinearIssuePage? left, Aw.Sindri.Core.Context.LinearIssuePage? right) -> bool
+static Aw.Sindri.Core.Context.LinearSearchAnswer.operator !=(Aw.Sindri.Core.Context.LinearSearchAnswer? left, Aw.Sindri.Core.Context.LinearSearchAnswer? right) -> bool
+static Aw.Sindri.Core.Context.LinearSearchAnswer.operator ==(Aw.Sindri.Core.Context.LinearSearchAnswer? left, Aw.Sindri.Core.Context.LinearSearchAnswer? right) -> bool
+static Aw.Sindri.Core.Context.LinearSearchData.operator !=(Aw.Sindri.Core.Context.LinearSearchData? left, Aw.Sindri.Core.Context.LinearSearchData? right) -> bool
+static Aw.Sindri.Core.Context.LinearSearchData.operator ==(Aw.Sindri.Core.Context.LinearSearchData? left, Aw.Sindri.Core.Context.LinearSearchData? right) -> bool
+static Aw.Sindri.Core.Context.LinearSearchRequest.operator !=(Aw.Sindri.Core.Context.LinearSearchRequest? left, Aw.Sindri.Core.Context.LinearSearchRequest? right) -> bool
+static Aw.Sindri.Core.Context.LinearSearchRequest.operator ==(Aw.Sindri.Core.Context.LinearSearchRequest? left, Aw.Sindri.Core.Context.LinearSearchRequest? right) -> bool
+static Aw.Sindri.Core.Context.LinearSearchVariables.operator !=(Aw.Sindri.Core.Context.LinearSearchVariables? left, Aw.Sindri.Core.Context.LinearSearchVariables? right) -> bool
+static Aw.Sindri.Core.Context.LinearSearchVariables.operator ==(Aw.Sindri.Core.Context.LinearSearchVariables? left, Aw.Sindri.Core.Context.LinearSearchVariables? right) -> bool
+static Aw.Sindri.Core.Context.McpDocument.operator !=(Aw.Sindri.Core.Context.McpDocument? left, Aw.Sindri.Core.Context.McpDocument? right) -> bool
+static Aw.Sindri.Core.Context.McpDocument.operator ==(Aw.Sindri.Core.Context.McpDocument? left, Aw.Sindri.Core.Context.McpDocument? right) -> bool
+static Aw.Sindri.Core.Context.McpToolCall.operator !=(Aw.Sindri.Core.Context.McpToolCall? left, Aw.Sindri.Core.Context.McpToolCall? right) -> bool
+static Aw.Sindri.Core.Context.McpToolCall.operator ==(Aw.Sindri.Core.Context.McpToolCall? left, Aw.Sindri.Core.Context.McpToolCall? right) -> bool
+static Aw.Sindri.Core.Context.NamedSources.In(Aw.Sindri.Core.Profile.SindriProfile! profile) -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceKind>!
+static Aw.Sindri.Core.Context.QueryTerms.From(string! question) -> Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<string!>!>!
+static Aw.Sindri.Core.Context.RankFusion.Fuse(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.SourceList!>! lists, int limit) -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Context.FusedHit!>!
+static Aw.Sindri.Core.Context.ScrubbedText.operator !=(Aw.Sindri.Core.Context.ScrubbedText? left, Aw.Sindri.Core.Context.ScrubbedText? right) -> bool
+static Aw.Sindri.Core.Context.ScrubbedText.operator ==(Aw.Sindri.Core.Context.ScrubbedText? left, Aw.Sindri.Core.Context.ScrubbedText? right) -> bool
+static Aw.Sindri.Core.Context.Snippets.Around(string! text, System.Collections.Generic.IReadOnlyList<string!>! terms) -> string!
+static Aw.Sindri.Core.Context.Snippets.Line(string! line) -> string!
+static Aw.Sindri.Core.Context.SourceHit.operator !=(Aw.Sindri.Core.Context.SourceHit? left, Aw.Sindri.Core.Context.SourceHit? right) -> bool
+static Aw.Sindri.Core.Context.SourceHit.operator ==(Aw.Sindri.Core.Context.SourceHit? left, Aw.Sindri.Core.Context.SourceHit? right) -> bool
+static Aw.Sindri.Core.Context.SourceList.operator !=(Aw.Sindri.Core.Context.SourceList? left, Aw.Sindri.Core.Context.SourceList? right) -> bool
+static Aw.Sindri.Core.Context.SourceList.operator ==(Aw.Sindri.Core.Context.SourceList? left, Aw.Sindri.Core.Context.SourceList? right) -> bool
+static Aw.Sindri.Core.Context.SourceNames.All.get -> string!
+static Aw.Sindri.Core.Context.SourceNames.Of(Aw.Sindri.Core.Context.SourceKind kind) -> string!
+static Aw.Sindri.Core.Context.SourceNames.TryParse(string! name, out Aw.Sindri.Core.Context.SourceKind kind) -> bool
+static Aw.Sindri.Core.Context.SourceOpening.Opened(Aw.Sindri.Core.Context.IContextSource! source) -> Aw.Sindri.Core.Context.SourceOpening!
+static Aw.Sindri.Core.Context.SourceOpening.Skip(Aw.Sindri.Core.Context.SourceKind kind, string! reason) -> Aw.Sindri.Core.Context.SourceOpening!
+static Aw.Sindri.Core.Context.SourceOpening.operator !=(Aw.Sindri.Core.Context.SourceOpening? left, Aw.Sindri.Core.Context.SourceOpening? right) -> bool
+static Aw.Sindri.Core.Context.SourceOpening.operator ==(Aw.Sindri.Core.Context.SourceOpening? left, Aw.Sindri.Core.Context.SourceOpening? right) -> bool
+static Aw.Sindri.Core.Context.SourceQuery.operator !=(Aw.Sindri.Core.Context.SourceQuery? left, Aw.Sindri.Core.Context.SourceQuery? right) -> bool
+static Aw.Sindri.Core.Context.SourceQuery.operator ==(Aw.Sindri.Core.Context.SourceQuery? left, Aw.Sindri.Core.Context.SourceQuery? right) -> bool
+static Aw.Sindri.Core.Context.SourceReport.operator !=(Aw.Sindri.Core.Context.SourceReport? left, Aw.Sindri.Core.Context.SourceReport? right) -> bool
+static Aw.Sindri.Core.Context.SourceReport.operator ==(Aw.Sindri.Core.Context.SourceReport? left, Aw.Sindri.Core.Context.SourceReport? right) -> bool
+static Aw.Sindri.Core.Profile.CodeContext.operator !=(Aw.Sindri.Core.Profile.CodeContext? left, Aw.Sindri.Core.Profile.CodeContext? right) -> bool
+static Aw.Sindri.Core.Profile.CodeContext.operator ==(Aw.Sindri.Core.Profile.CodeContext? left, Aw.Sindri.Core.Profile.CodeContext? right) -> bool
+static Aw.Sindri.Core.Profile.ContextRules.Check(Aw.Sindri.Core.Profile.ContextSettings! context, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Profile.RepoEntry!>! repos) -> Aw.Kernel.Result<Aw.Sindri.Core.Profile.ContextSettings!>!
+static Aw.Sindri.Core.Profile.ContextSettings.operator !=(Aw.Sindri.Core.Profile.ContextSettings? left, Aw.Sindri.Core.Profile.ContextSettings? right) -> bool
+static Aw.Sindri.Core.Profile.ContextSettings.operator ==(Aw.Sindri.Core.Profile.ContextSettings? left, Aw.Sindri.Core.Profile.ContextSettings? right) -> bool
+static Aw.Sindri.Core.Profile.LinearContext.operator !=(Aw.Sindri.Core.Profile.LinearContext? left, Aw.Sindri.Core.Profile.LinearContext? right) -> bool
+static Aw.Sindri.Core.Profile.LinearContext.operator ==(Aw.Sindri.Core.Profile.LinearContext? left, Aw.Sindri.Core.Profile.LinearContext? right) -> bool
+static Aw.Sindri.Core.Profile.McpContext.operator !=(Aw.Sindri.Core.Profile.McpContext? left, Aw.Sindri.Core.Profile.McpContext? right) -> bool
+static Aw.Sindri.Core.Profile.McpContext.operator ==(Aw.Sindri.Core.Profile.McpContext? left, Aw.Sindri.Core.Profile.McpContext? right) -> bool
+static Aw.Sindri.Core.Profile.NotesContext.operator !=(Aw.Sindri.Core.Profile.NotesContext? left, Aw.Sindri.Core.Profile.NotesContext? right) -> bool
+static Aw.Sindri.Core.Profile.NotesContext.operator ==(Aw.Sindri.Core.Profile.NotesContext? left, Aw.Sindri.Core.Profile.NotesContext? right) -> bool
+static readonly Aw.Sindri.Core.SindriErrors.ContextBadQuery -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Sindri.Core.SindriErrors.ContextNoSources -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Sindri.Core.SindriErrors.ContextSourceFailed -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Sindri.Core.SindriErrors.ContextSourceUnusable -> Aw.Kernel.ErrorDefinition!

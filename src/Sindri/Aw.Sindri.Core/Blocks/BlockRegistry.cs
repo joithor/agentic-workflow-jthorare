@@ -5,7 +5,7 @@ namespace Aw.Sindri.Core.Blocks;
 /// <summary>
 /// The registry over every <see cref="IBlock"/> in the container. A broken registration is a bug, so it throws at
 /// construction: two blocks with one id, a gate that isn't an <see cref="IGateBlock"/> or has no rung, an effect that
-/// isn't an <see cref="IEffectBlock"/> or has no command kind.
+/// isn't an <see cref="IEffectBlock"/> or whose command kind isn't on the <see cref="EffectAllowlist"/>.
 /// </summary>
 public sealed class BlockRegistry : IBlockRegistry
 {
@@ -58,9 +58,17 @@ public sealed class BlockRegistry : IBlockRegistry
 
         if (spec.Kind is BlockKind.Effect)
         {
-            return block is IEffectBlock && !string.IsNullOrWhiteSpace(spec.CommandKind) ? null : "an effect implements IEffectBlock and declares its command kind";
+            return EffectProblem(block);
         }
 
         return spec.Kind is BlockKind.Evidence && !spec.Id.Value.StartsWith("evidence.", StringComparison.Ordinal) ? "an evidence kind's id is 'evidence.<kind>'" : null;
     }
+
+    private static string? EffectProblem(IBlock block) => block.Spec.CommandKind switch
+    {
+        _ when block is not IEffectBlock => "an effect implements IEffectBlock and declares its command kind",
+        null or "" => "an effect implements IEffectBlock and declares its command kind",
+        { } kind when !EffectAllowlist.Kinds.Contains(kind) => $"command kind '{kind}' isn't allowlisted ({string.Join(", ", EffectAllowlist.Kinds.Order(StringComparer.Ordinal))})",
+        _ => null,
+    };
 }

@@ -24,7 +24,7 @@ namespace Aw.Sindri.Core.Workflow;
 /// <param name="Spend">Tokens and turns the signal reported.</param>
 /// <param name="Hold">For a park or escalation: the hold.</param>
 /// <param name="Deadline">The timer after the change.</param>
-/// <param name="Paused">For a takeover: the timer's remaining time.</param>
+/// <param name="Paused">For a takeover: the timer's remaining time; for an unpark while taken over: the state's full timeout.</param>
 /// <param name="Evidence">For 'evidence': what was registered.</param>
 /// <param name="Extra">For an unpark: budget the human granted.</param>
 /// <param name="Completed">For a transition: true when it entered a terminal state.</param>

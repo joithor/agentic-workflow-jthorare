@@ -5,6 +5,9 @@ namespace Aw.Sindri.Core.Workflow;
 /// <summary>When a state's timer fires: entry time plus its timeout; terminal states and states without a timeout have none.</summary>
 internal static class Deadlines
 {
-    internal static DateTimeOffset? For(RecipeState? state, DateTimeOffset enteredAt) =>
-        state is { Kind: not StateKind.Terminal } && RecipeDuration.Parse(state.Timeout) is { } timeout ? enteredAt + timeout : null;
+    internal static DateTimeOffset? For(RecipeState? state, DateTimeOffset enteredAt) => Timeout(state) is { } timeout ? enteredAt + timeout : null;
+
+    /// <summary>The state's full timeout, or null when it has no timer.</summary>
+    internal static TimeSpan? Timeout(RecipeState? state) =>
+        state is { Kind: not StateKind.Terminal } && RecipeDuration.Parse(state.Timeout) is { } timeout ? timeout : null;
 }

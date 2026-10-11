@@ -101,7 +101,7 @@ public sealed class RecipeValidatorTests
     private static IReadOnlyList<RecipeProblem> Problems(string yaml, bool approved = false, bool extraSizeGate = false)
     {
         var (recipe, hash) = TestRecipes.Read(yaml);
-        var blocks = extraSizeGate ? Registries.Builtin(new SizeAsTextGate(), new MailEffect()) : Registries.Builtin(new MailEffect());
+        var blocks = new UncheckedRegistry(extraSizeGate ? Registries.Builtin(new SizeAsTextGate()) : Registries.Builtin(), new MailEffect());
         return RecipeValidator.Validate(recipe, hash, approved, blocks, new HashSet<RecipeId> { recipe.Id });
     }
 }

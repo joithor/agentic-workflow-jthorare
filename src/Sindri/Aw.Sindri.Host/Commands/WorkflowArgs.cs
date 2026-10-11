@@ -1,4 +1,5 @@
 using System.Globalization;
+using Aw.Sindri.Core.Ids;
 
 namespace Aw.Sindri.Host.Commands;
 
@@ -66,7 +67,12 @@ internal sealed class WorkflowArgs
         Option(name) is { } text && long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var n) ? n : null;
 
     /// <summary>What is wrong with the start options (--attempt from 1, --base a sha), or null.</summary>
-    internal string? StartProblem() => Option("--red-stub");
+    internal string? StartProblem() => (BadNumber("--attempt") || Number("--attempt") is 0, Option("--base")) switch
+    {
+        (true, _) => "--attempt takes a whole number from 1",
+        (_, { } sha) when !HeadSha.TryFrom(sha, out _) => "--base takes 7 to 64 lower-case hex digits",
+        _ => null,
+    };
 
     /// <summary>True when a numeric option is present but isn't a whole number.</summary>
     internal bool BadNumber(string name) => Option(name) is not null && Number(name) is null;

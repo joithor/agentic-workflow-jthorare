@@ -104,6 +104,7 @@ public static class InstanceFold
             Extra = before.Extra.Plus(change.Extra ?? Spend.Zero),
             StateSpent = Spend.Zero,
             Deadline = change.Deadline,
+            Paused = before.TakenOver ? change.Paused : before.Paused,
             Retries = 0,
         };
     }

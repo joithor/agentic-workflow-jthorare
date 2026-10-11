@@ -9,7 +9,8 @@ namespace Aw.Sindri.Core.Workflow;
 /// <summary>
 /// Turns decided changes into a commit: each change becomes a ledger event (keyed, in the instance's correlation, or
 /// caused by the event that propagated it) and the folded instance row; a transition's effects become outbox commands
-/// caused by its event; entering a state with a child starts the child in the same commit.
+/// caused by its event, each of the kind its block declares (§17.28.5); entering a state with a child starts the child in
+/// the same commit.
 /// </summary>
 /// <param name="events">The event factory.</param>
 /// <param name="blocks">The block registry.</param>
@@ -55,6 +56,11 @@ internal sealed class CommitBuilder(EventFactory events, IBlockRegistry blocks, 
             if (command.IsError)
             {
                 return command.Error;
+            }
+
+            if (command.Value.Kind != effect.Spec.CommandKind)
+            {
+                return SindriErrors.RecipeInvalid.With($"effect '{id.Value}' emitted '{command.Value.Kind}', not its declared '{effect.Spec.CommandKind}'; nothing was recorded");
             }
 
             draft.Commands.Add(events.Command(cause, command.Value.Kind, command.Value.PayloadJson));

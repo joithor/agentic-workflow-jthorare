@@ -71,6 +71,6 @@ public abstract class JudgeClientContract
 
         _ = await client.Ask(input, TestContext.Current.CancellationToken);
 
-        Expect.Equal<(string, JudgeInput)>(("resolution-check", input), Received());
+        Expect.Equal(("resolution-check", input), Received());
     }
 }

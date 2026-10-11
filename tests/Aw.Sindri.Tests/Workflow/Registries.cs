@@ -3,8 +3,8 @@ using Aw.Sindri.Core.Blocks;
 using Aw.Sindri.Core.Blocks.Builtin;
 using Aw.Sindri.Core.Blocks.Evidence;
 using Aw.Sindri.Core.Blocks.Judge;
-using Aw.Sindri.Testing;
 using Aw.Sindri.Infrastructure.Recipes;
+using Aw.Sindri.Testing;
 
 namespace Aw.Sindri.Tests.Workflow;
 

@@ -26,7 +26,7 @@ public static class SindriCoreServiceCollectionExtensions
             .AddSingleton<HeldLease>();
         foreach (var block in BuiltinSteps.All.Concat(BuiltinGates.All))
         {
-            _ = services.AddSingleton<IBlock>(block);
+            _ = services.AddSingleton(block);
         }
 
         return services

@@ -148,7 +148,7 @@ public abstract class WorkflowStoreContract
 
     private static WorkflowCommit Commit(InstanceWrite write, bool withCommand = false) => new([write], withCommand ? [Command()] : []);
 
-    private static Aw.Kernel.Outbox.OutboxCommand Command() =>
+    private static Kernel.Outbox.OutboxCommand Command() =>
         EventContext.Create("host:sindri", "local", 0, new SequentialIdGenerator().NewId()).Value
             .Command("notify.human", """{"n":1}""", new FakeTimeProvider(KnownInstants.Epoch), new UniqueIds());
 

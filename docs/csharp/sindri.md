@@ -3,7 +3,7 @@
 Sindri is built new in C# as one application (factory addendum §17.29, decision Q7), not ported from the TS
 `sindri/`, which stays the reference for *what* a part does and keeps running until the switch. This page is the C#
 contract for stage S1, the app shell: the `sindri` binary, the control-plane process, the host lease, the ledger, the
-profile, the command layer and its API, the scheduler and `doctor`. The workflow engine (S2), context retrieval (S3),
+profile, the command layer and its API, the scheduler and `doctor`. The workflow engine (S2, `docs/csharp/sindri-engine.md`), context retrieval (S3),
 blocks and workflows come later and plug into it. The Avalonia UI is its own stage (S1b).
 
 Tier 3 in `deps.yaml` (`src/Sindri`, full shape: Core · Features · Infrastructure · Host). Nothing installs it before
@@ -92,7 +92,8 @@ in-memory store and the SQLite adapter). Append-only, idempotent and fenced.
 |---|---|
 | `seq` | position, every consumer's cursor |
 | `id`, `type`, `schema_version`, `occurred_at`, `actor`, `tenant`, `ring`, `correlation_id`, `causation_id`, `trace_id` | the §17.21 envelope (`Aw.Kernel.Events.EventEnvelope`) |
-| `item` | the work item, when there is one (S2+) |
+| `item` | the work item (`ItemId`), when there is one (S2+) |
+| `instance` | the workflow instance, for workflow events (S2, migration 4; `docs/csharp/sindri-engine.md`) |
 | `epoch` | the writer's lease epoch |
 | `idempotency_key` | unique: a second append with the same key writes nothing and returns the first event's position |
 | `payload_json` | the payload record, through AwJson |

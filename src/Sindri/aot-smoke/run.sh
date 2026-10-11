@@ -43,6 +43,13 @@ run() { echo "## sindri $*"; "$bin" "$@" </dev/null 2>&1 || echo "exit $?"; }
   hash="$({ "$bin" profile validate --json || true; } | sed -E 's/.*"hash":"([0-9a-f]{64})".*/\1/')"
   run profile approve "$hash"
   run status
+  run workflow recipes
+  run workflow start workflow.step SMOKE-1
+  id="$({ "$bin" workflow start workflow.step SMOKE-1 --json || true; } | sed -E 's/.*"id":"(wf-[0-9a-f]{12})".*/\1/')"
+  run workflow signal "$id" produced
+  run workflow signal "$id" passed --set checks.verdict=fail
+  run workflow show BAD
+  run workflow list
   run stop
   run status
   run doctor

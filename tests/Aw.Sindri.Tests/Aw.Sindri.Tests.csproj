@@ -25,4 +25,9 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Golden files (Aw.Kernel.Testing Golden) live in this project's source tree; the recipe schema test writes ../../schemas/sindri/. -->
+    <AssemblyMetadata Include="AwGoldenSourceRoot" Value="$(MSBuildProjectDirectory)" />
+  </ItemGroup>
 </Project>

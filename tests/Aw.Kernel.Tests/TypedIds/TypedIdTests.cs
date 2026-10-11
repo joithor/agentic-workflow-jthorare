@@ -61,6 +61,7 @@ public sealed class TypedIdTests
         Assert.True(read.IsError);
         Assert.Equal("AW-KERNEL-001", read.Error.Code);
         Assert.Contains("ItemId", read.Error.Message, StringComparison.Ordinal);
+        Assert.Contains("Path: $.item", read.Error.Message, StringComparison.Ordinal);
     }
 
     [Theory]

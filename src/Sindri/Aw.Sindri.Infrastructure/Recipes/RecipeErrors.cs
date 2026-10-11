@@ -18,9 +18,17 @@ internal static partial class RecipeErrors
             return $"{missing.Groups["names"].Value.Replace("'", string.Empty, StringComparison.Ordinal)}: required";
         }
 
-        var path = PathPart.Match(message) is { Success: true } p ? p.Groups["path"].Value.TrimStart('$').TrimStart('.') + ": " : string.Empty;
+        var at = PathPart.Match(message) is { Success: true } where ? where.Groups["path"].Value.TrimStart('$').TrimStart('.') : string.Empty;
+        if (Refused.Match(message) is { Success: true } refused && at.Length > 0)
+        {
+            return $"{at}: not a valid {Spaced(refused.Groups["type"].Value)}";
+        }
+
+        var path = at.Length > 0 ? at + ": " : string.Empty;
         return path + PathPart.Replace(Positions.Replace(message, string.Empty), string.Empty).Trim();
     }
+
+    private static string Spaced(string type) => Words.Replace(type, " $0").Trim().ToLowerInvariant();
 
     private static string Word(string type) => type switch
     {
@@ -37,6 +45,12 @@ internal static partial class RecipeErrors
 
     [GeneratedRegex(@"missing required properties including: (?<names>.+?)\.?$", RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1000)]
     private static partial Regex Missing { get; }
+
+    [GeneratedRegex(@"The value is not a valid (?<type>[A-Za-z]+)\.", RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex Refused { get; }
+
+    [GeneratedRegex("[A-Z]", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex Words { get; }
 
     [GeneratedRegex(@" ?Path: (?<path>\$[^ |]*)", RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1000)]
     private static partial Regex PathPart { get; }

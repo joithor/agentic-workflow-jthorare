@@ -73,7 +73,8 @@ public static class AwJson
         }
         catch (JsonException ex)
         {
-            return KernelErrors.Invalid.With($"Invalid JSON for {typeof(T).Name}: {ex.Message}");
+            var path = ex.Path is { Length: > 0 } where && !ex.Message.Contains("Path:", StringComparison.Ordinal) ? $" Path: {where}." : string.Empty;
+            return KernelErrors.Invalid.With($"Invalid JSON for {typeof(T).Name}: {ex.Message}{path}");
         }
     }
 

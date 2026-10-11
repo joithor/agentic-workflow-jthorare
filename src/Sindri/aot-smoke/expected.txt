@@ -34,6 +34,21 @@ exit 2
   lease     held by pid PID, epoch 1
   ready     running; the profile needs your approval
 exit 1
+## sindri workflow recipes
+workflow.item    v1  valid  approved  d49789e6  builtin:workflow.item.yaml
+workflow.step    v1  valid  approved  71d07006  builtin:workflow.step.yaml
+## sindri workflow start workflow.step SMOKE-1
+wf-e20a884da707  workflow.step  SMOKE-1#1  produce    active  v1
+## sindri workflow signal wf-e20a884da707 produced
+wf-e20a884da707  workflow.step  SMOKE-1#1  checks     active  v2
+## sindri workflow signal wf-e20a884da707 passed --set checks.verdict=fail
+SND-WF-006 gate.checks.passed: checks: fail
+exit 2
+## sindri workflow show BAD
+SND-WF-004 'BAD' is not an instance id ('wf-' and 12 hex digits; fix: sindri workflow list)
+exit 2
+## sindri workflow list
+wf-e20a884da707  workflow.step  SMOKE-1#1  checks     active  v2
 ## sindri stop
 stopped (pid PID, epoch 1 released)
 ## sindri status
@@ -41,7 +56,7 @@ SND-API-001 not running: no control plane is recorded (fix: sindri)
 exit 1
 ## sindri doctor
 ok    lease    free (last epoch 1)
-ok    ledger   schema 3/3
+ok    ledger   schema 4/4
 fail  profile  not approved (fix: sindri profile approve)
 fail  api      unreachable: no control plane is recorded (fix: sindri)
 exit 2

@@ -1,6 +1,7 @@
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Recipes;
+using Aw.Sindri.Core.Workflow;
 using Aw.Sindri.Features.ShowWorkflow;
 using Aw.Sindri.Tests.Workflow;
 
@@ -23,6 +24,22 @@ public sealed class ShowWorkflowTests
         Assert.Equal(["passed", "failed"], shown.Signals);
         _ = Assert.Single(shown.History);
         Assert.Empty(shown.Children);
+    }
+
+    [Theory, Trait("Lane", "unit")]
+    [InlineData("cancel")]
+    [InlineData("park")]
+    public async Task ShowWorkflow_of_an_instance_that_takes_no_signals_lists_none(string hold)
+    {
+        await using var h = new WorkflowHarness();
+        _ = await h.HoldLease();
+        var i = await h.Start();
+        WorkflowCommand command = hold == "cancel" ? new CancelCommand("dropped") : new ParkCommand(ParkReason.NeedsAnswer, "which API?");
+        _ = (await h.Engine.Apply(i.Id, command, Token)).Value;
+
+        var shown = (await new ShowWorkflowService(h.Store, h.Catalog).Handle(new ShowWorkflowRequest(i.Id), Token)).Value;
+
+        Assert.Empty(shown.Signals);
     }
 
     [Fact, Trait("Lane", "unit")]

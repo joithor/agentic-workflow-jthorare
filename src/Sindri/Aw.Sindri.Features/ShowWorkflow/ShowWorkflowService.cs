@@ -31,7 +31,7 @@ internal sealed class ShowWorkflowService(IWorkflowStore store, IRecipeCatalog c
     private static ShowWorkflowResponse Describe(WorkflowInstance instance, Recipe? recipe, IReadOnlyList<WorkflowInstance> children, IReadOnlyList<Core.Ledger.LedgerEvent> history)
     {
         var state = recipe?.State(instance.State);
-        var signals = recipe?.Transitions.Where(t => t.From == instance.State).Select(t => t.On).Distinct(StringComparer.Ordinal).ToList() ?? [];
+        IReadOnlyList<string> signals = recipe is null || !instance.Runs ? [] : recipe.Transitions.Where(t => t.From == instance.State).Select(t => t.On).Distinct(StringComparer.Ordinal).ToList();
         var entries = history.Select(e => new HistoryEntry(e.Sequence, e.Envelope.Type, e.Envelope.OccurredAt, e.Epoch, e.IdempotencyKey)).ToList();
         return new ShowWorkflowResponse(instance, WorkflowWords.Status(instance), state?.Kind, state?.Next, signals, children, entries);
     }

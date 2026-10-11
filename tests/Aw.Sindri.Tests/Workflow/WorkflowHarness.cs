@@ -71,8 +71,12 @@ internal sealed class WorkflowHarness : IAsyncDisposable
         return grant;
     }
 
-    public async Task<WorkflowInstance> Start(string recipe = "workflow.loop", string item = "ITEM-1") =>
-        (await Engine.Start(RecipeId.From(recipe), ItemId.From(item), 1, baseSha: null, Token)).Value.Instance;
+    public async Task<WorkflowInstance> Start(string recipe = "workflow.loop", string item = "ITEM-1", int attempt = 1) =>
+        (await Engine.Start(RecipeId.From(recipe), ItemId.From(item), attempt, baseSha: null, Token)).Value.Instance;
+
+    public async Task<WorkflowInstance> OnlyChild(InstanceId parent) => Assert.Single((await Store.Children(parent, Token)).Value);
+
+    public Task<Kernel.Result<WorkflowOutcome>> Apply(InstanceId id, WorkflowCommand command) => Engine.Apply(id, command, Token).AsTask();
 
     public Task<Kernel.Result<WorkflowOutcome>> Signal(WorkflowInstance i, string on, params (string Name, string Value)[] outputs) =>
         Signal(i.Id, new WorkflowSignal(on, ExpectedVersion: null, Sha: null, outputs.ToDictionary(o => o.Name, o => o.Value, StringComparer.Ordinal), [], EmptyDiff: false, Spend.Zero));

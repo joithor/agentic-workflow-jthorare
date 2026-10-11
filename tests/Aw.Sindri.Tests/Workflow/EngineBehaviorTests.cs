@@ -85,6 +85,22 @@ public sealed class EngineBehaviorTests
     }
 
     [Fact, Trait("Lane", "unit")]
+    public async Task Registering_the_same_evidence_again_records_nothing()
+    {
+        await using var h = new WorkflowHarness();
+        _ = await h.HoldLease();
+        var i = await h.Start();
+        var evidence = new RegisterEvidenceCommand("test", HeadSha.From("abc1234"), "sha256:one");
+
+        var first = (await h.Engine.Apply(i.Id, evidence, Token)).Value;
+        var again = (await h.Engine.Apply(i.Id, evidence, Token)).Value;
+
+        Assert.Equal((false, true), (first.AlreadyRecorded, again.AlreadyRecorded));
+        Assert.Equal(first.Instance.Version, again.Instance.Version);
+        Assert.Equal(2, (await h.Store.History(i.Id, Token)).Value.Count);
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public async Task An_output_the_step_does_not_declare_is_refused()
     {
         await using var h = new WorkflowHarness();

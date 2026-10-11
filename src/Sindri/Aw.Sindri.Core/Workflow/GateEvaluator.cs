@@ -16,7 +16,7 @@ internal sealed class GateEvaluator(IBlockRegistry blocks)
             facts[name] = value;
         }
 
-        var context = new GateContext(instance.Id, instance.Item, instance.State, facts, instance.Evidence, signal.Sha);
+        var context = new GateContext(instance.Id, instance.Recipe, instance.Item, Attempt: 0, instance.State, To: string.Empty, On: string.Empty, facts, instance.Evidence, signal.Sha);
         var records = new List<GateRecord>();
         foreach (var id in transition.Gates ?? [])
         {

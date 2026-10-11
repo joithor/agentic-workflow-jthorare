@@ -65,6 +65,9 @@ internal sealed class WorkflowArgs
     internal long? Number(string name) =>
         Option(name) is { } text && long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var n) ? n : null;
 
+    /// <summary>What is wrong with the start options (--attempt from 1, --base a sha), or null.</summary>
+    internal string? StartProblem() => Option("--red-stub");
+
     /// <summary>True when a numeric option is present but isn't a whole number.</summary>
     internal bool BadNumber(string name) => Option(name) is not null && Number(name) is null;
 

@@ -654,13 +654,11 @@ Aw.Sindri.Core.Blocks.EvidenceRef.Sha.get -> Aw.Sindri.Core.Ids.HeadSha
 Aw.Sindri.Core.Blocks.EvidenceRef.Sha.init -> void
 Aw.Sindri.Core.Blocks.GateContext
 Aw.Sindri.Core.Blocks.GateContext.<Clone>$() -> Aw.Sindri.Core.Blocks.GateContext!
-Aw.Sindri.Core.Blocks.GateContext.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out Aw.Sindri.Core.Ids.ItemId Item, out string! State, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, out Aw.Sindri.Core.Ids.HeadSha? Sha) -> void
 Aw.Sindri.Core.Blocks.GateContext.Equals(Aw.Sindri.Core.Blocks.GateContext? other) -> bool
 Aw.Sindri.Core.Blocks.GateContext.Evidence.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>!
 Aw.Sindri.Core.Blocks.GateContext.Evidence.init -> void
 Aw.Sindri.Core.Blocks.GateContext.Facts.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
 Aw.Sindri.Core.Blocks.GateContext.Facts.init -> void
-Aw.Sindri.Core.Blocks.GateContext.GateContext(Aw.Sindri.Core.Ids.InstanceId Instance, Aw.Sindri.Core.Ids.ItemId Item, string! State, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, Aw.Sindri.Core.Ids.HeadSha? Sha) -> void
 Aw.Sindri.Core.Blocks.GateContext.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
 Aw.Sindri.Core.Blocks.GateContext.Instance.init -> void
 Aw.Sindri.Core.Blocks.GateContext.Item.get -> Aw.Sindri.Core.Ids.ItemId
@@ -1600,3 +1598,13 @@ static Aw.Sindri.Core.Workflow.TimerDecisions.Stranded(Aw.Sindri.Core.Workflow.W
 static Aw.Sindri.Core.Workflow.WorkflowKeys.Child(Aw.Sindri.Core.Ids.InstanceId parent, Aw.Sindri.Core.Ids.RecipeId recipe, long parentVersion) -> Aw.Sindri.Core.Ids.InstanceId
 static Aw.Sindri.Core.Workflow.WorkflowKeys.IsSignalKey(string! key, string! suffix) -> bool
 static Aw.Sindri.Core.Workflow.WorkflowKeys.Start(Aw.Sindri.Core.Ids.InstanceId instance) -> string!
+Aw.Sindri.Core.Blocks.GateContext.Attempt.get -> int
+Aw.Sindri.Core.Blocks.GateContext.Attempt.init -> void
+Aw.Sindri.Core.Blocks.GateContext.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out Aw.Sindri.Core.Ids.RecipeId Recipe, out Aw.Sindri.Core.Ids.ItemId Item, out int Attempt, out string! State, out string! To, out string! On, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, out Aw.Sindri.Core.Ids.HeadSha? Sha) -> void
+Aw.Sindri.Core.Blocks.GateContext.GateContext(Aw.Sindri.Core.Ids.InstanceId Instance, Aw.Sindri.Core.Ids.RecipeId Recipe, Aw.Sindri.Core.Ids.ItemId Item, int Attempt, string! State, string! To, string! On, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, Aw.Sindri.Core.Ids.HeadSha? Sha) -> void
+Aw.Sindri.Core.Blocks.GateContext.On.get -> string!
+Aw.Sindri.Core.Blocks.GateContext.On.init -> void
+Aw.Sindri.Core.Blocks.GateContext.Recipe.get -> Aw.Sindri.Core.Ids.RecipeId
+Aw.Sindri.Core.Blocks.GateContext.Recipe.init -> void
+Aw.Sindri.Core.Blocks.GateContext.To.get -> string!
+Aw.Sindri.Core.Blocks.GateContext.To.init -> void

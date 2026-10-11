@@ -17,11 +17,11 @@ internal sealed class WorkflowHarness : IAsyncDisposable
 {
     private readonly ServiceProvider _provider;
 
-    public WorkflowHarness()
+    public WorkflowHarness(params IBlock[] extra)
     {
         Lease = new InMemorySindriStore(Clock, Probe);
         Store = new InMemoryWorkflowStore(Lease);
-        _provider = new ServiceCollection()
+        var services = new ServiceCollection()
             .AddSingleton<TimeProvider>(Clock)
             .AddSingleton(SliceHarness.Json)
             .AddSingleton<IIdGenerator>(new SequentialIdGenerator())
@@ -29,8 +29,13 @@ internal sealed class WorkflowHarness : IAsyncDisposable
             .AddSingleton<IBlock>(Model)
             .AddSingleton<IWorkflowStore>(Store)
             .AddSingleton<IRecipeCatalog>(static sp => sp.GetRequiredService<InMemoryRecipeCatalog>())
-            .AddSingleton<InMemoryRecipeCatalog>()
-            .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
+            .AddSingleton<InMemoryRecipeCatalog>();
+        foreach (var block in extra)
+        {
+            _ = services.AddSingleton(block);
+        }
+
+        _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
         Catalog = _provider.GetRequiredService<InMemoryRecipeCatalog>();
         Add(TestRecipes.Loop);
         Add(TestRecipes.Parent);

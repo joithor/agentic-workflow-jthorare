@@ -71,6 +71,19 @@ public sealed class WorkflowCliTests
     }
 
     [Fact, Trait("Lane", "unit")]
+    public async Task A_paused_timer_says_the_time_left_in_whole_units()
+    {
+        await using var h = new WorkflowHarness();
+        _ = await h.HoldLease();
+        var i = await h.Start();
+        h.Clock.Advance(TimeSpan.FromSeconds(75.4));
+        _ = (await h.Engine.Apply(i.Id, new TakeOverCommand(), Token)).Value;
+        var shown = (await new ShowWorkflowService(h.Store, h.Catalog).Handle(new ShowWorkflowRequest(i.Id), Token)).Value;
+
+        Assert.Contains("timer     paused, 8m 44s left\n", WorkflowText.Show(shown), StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public async Task A_block_line_gives_its_kind_ports_and_flags()
     {
         await using var h = new WorkflowHarness();

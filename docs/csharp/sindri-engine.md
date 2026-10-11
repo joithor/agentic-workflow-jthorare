@@ -56,7 +56,7 @@ way out), `timeout`, `loop` (every cycle passes through a counted loop transitio
 `effect` (allowlisted command kinds only), `hash`.
 
 **Catalog** (`IRecipeCatalog`; `FileRecipeCatalog`, fake `InMemoryRecipeCatalog`, contract `RecipeCatalogContract`):
-the built-ins `workflow.item` and `workflow.step` are embedded and **approved**; each `$AW_SINDRI_HOME/recipes/*.yaml` is
+the built-ins `workflow.item`, `workflow.step` and `workflow.ui-evidence` (`docs/csharp/sindri-blocks.md`) are embedded and **approved**; each `$AW_SINDRI_HOME/recipes/*.yaml` is
 read on every call and is **unapproved** (a config change is a new workflow, invariant 13). A file whose id is already
 registered, or that fails validation, is listed with its problems and can't run. Approving a file recipe is a later
 stage.
@@ -100,7 +100,8 @@ name it.
 Built-ins: steps `step.triage`, `step.claim`, `step.produce` (capability), `step.checks`, `step.verify`; evidence
 `evidence.test`; fact gates `gate.triage.complete`, `gate.router.startable`, `gate.claim.ref`, `gate.checks.passed`
 (deterministic), `gate.verifier.passed` (judge); effects `effect.notify.human`, `effect.pr.draft` (capability).
-`sindri workflow blocks` lists them with their ports and flags.
+`sindri workflow blocks` lists them with their ports and flags. The tool blocks (judge's decision questions as
+rung-2 gates, ui-evidence's checks and evidence providers, `IEvidenceProvider`) are in `docs/csharp/sindri-blocks.md`.
 
 ## The engine
 
@@ -151,11 +152,12 @@ validating `TryParse`, so malformed text is a 400 and a well-formed unknown id a
 | `POST /workflows/{instance}/signal` `{on, expectedVersion?, sha?, outputs?, findings?, emptyDiff?, tokens?, turns?}` | SignalWorkflow |
 | `POST /workflows/{instance}/cancel` `{reason?}` · `/park` `{reason, detail?}` · `/unpark` `{tokens?, turns?}` · `/takeover` · `/handback` | Cancel/Park/Unpark/TakeOver/HandBackWorkflow |
 | `POST /workflows/{instance}/evidence` `{kind, sha, digest}` | RegisterEvidence |
+| `POST /workflows/{instance}/evidence/collect` `{kind, sha, inputs}` | CollectEvidence (`docs/csharp/sindri-blocks.md`) |
 | `GET /recipes` · `GET /blocks` | ListRecipes · ListBlocks |
 
 `sindri workflow …` (`sindri workflow help` prints the usage): `list [--all]`, `show <id>`, `start <recipe> <item>
 [--attempt N] [--base SHA]`, `signal <id> <on> [--set name=value]… [--finding F]… [--empty-diff] [--sha SHA]
-[--expect-version N] [--tokens N] [--turns N]`, `evidence <id> <kind> <sha> <digest>`, `cancel <id> [--reason]`,
+[--expect-version N] [--tokens N] [--turns N]`, `evidence <id> <kind> <sha> <digest>`, `collect <id> <kind> <sha> [--input name=value]…`, `cancel <id> [--reason]`,
 `park <id> <reason> [--detail]`, `unpark <id> [--tokens N] [--turns N]`, `takeover <id>`, `handback <id>`, `recipes`,
 `blocks`, `validate <file.yaml>` (runs without the control plane). Every verb takes `--json`. Exit codes: 0 ok, 1
 attention needed (parked, escalated, not running), 2 error.

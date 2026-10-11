@@ -25,7 +25,7 @@ internal static class BlockText
             flags.Add("command " + kind);
         }
 
-        return $"{b.Id.Value,-24} {b.Kind.ToString().ToLowerInvariant(),-8} in [{string.Join(", ", b.Inputs)}] out [{string.Join(", ", b.Outputs)}]"
+        return $"{b.Id.Value,-27} {b.Kind.ToString().ToLowerInvariant(),-8} in [{string.Join(", ", b.Inputs)}] out [{string.Join(", ", b.Outputs)}]"
             + (flags.Count == 0 ? string.Empty : $"  {string.Join(", ", flags)}");
     }
 }

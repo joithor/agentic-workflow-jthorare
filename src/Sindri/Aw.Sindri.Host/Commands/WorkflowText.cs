@@ -69,7 +69,7 @@ internal static class WorkflowText
     }
 
     internal static string Recipes(IReadOnlyList<CatalogEntry> recipes) => string.Join('\n', recipes.Select(r =>
-        $"{r.Id?.Value ?? "?",-16} v{r.Version?.ToString(CultureInfo.InvariantCulture) ?? "?"}  {(r.Valid ? "valid" : "invalid")}  {(r.Approved ? "approved" : "unapproved")}  {r.Hash?.Abbreviated ?? "-"}  {r.Source}"
+        $"{r.Id?.Value ?? "?",-20} v{r.Version?.ToString(CultureInfo.InvariantCulture) ?? "?"}  {(r.Valid ? "valid" : "invalid")}  {(r.Approved ? "approved" : "unapproved")}  {r.Hash?.Abbreviated ?? "-"}  {r.Source}"
         + string.Concat(r.Problems.Select(p => $"\n  {p}")))) + "\n";
 
     internal static string Validation(CatalogEntry entry) => entry.Valid

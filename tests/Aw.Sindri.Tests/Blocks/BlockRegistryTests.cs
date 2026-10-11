@@ -13,7 +13,7 @@ public sealed class BlockRegistryTests
     {
         var registry = Registries.Builtin();
 
-        Assert.Equal(13, registry.List().Count);
+        Assert.Equal(24, registry.List().Count);
         Assert.NotNull(registry.Gate(BlockId.From("gate.checks.passed")));
         Assert.Null(registry.Gate(BlockId.From("step.checks")));
         Assert.Equal(EffectAllowlist.NotifyHuman, registry.Effect(BlockId.From("effect.notify.human"))?.Spec.CommandKind);

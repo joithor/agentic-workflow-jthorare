@@ -1,6 +1,8 @@
 using Aw.Kernel.Ids;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Blocks;
+using Aw.Sindri.Core.Blocks.Evidence;
+using Aw.Sindri.Core.Blocks.Judge;
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Lease;
 using Aw.Sindri.Core.Recipes;
@@ -12,7 +14,7 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace Aw.Sindri.Tests.Workflow;
 
-/// <summary>The engine as AddSindriCore composes it, over the in-memory lease, workflow store and recipe catalog, with a test gate.</summary>
+/// <summary>The engine as AddSindriCore and AddSindriToolBlocks compose it (the tools faked), over the in-memory lease, workflow store and recipe catalog, with a test gate.</summary>
 internal sealed class WorkflowHarness : IAsyncDisposable
 {
     private readonly ServiceProvider _provider;
@@ -26,6 +28,9 @@ internal sealed class WorkflowHarness : IAsyncDisposable
             .AddSingleton(SliceHarness.Json)
             .AddSingleton<IIdGenerator>(new SequentialIdGenerator())
             .AddSindriCore()
+            .AddSindriToolBlocks()
+            .AddSingleton<IJudgeClient>(Judge)
+            .AddSingleton<IUiEvidence>(UiEvidence)
             .AddSingleton<IBlock>(Model)
             .AddSingleton<IWorkflowStore>(Store)
             .AddSingleton<IRecipeCatalog>(static sp => sp.GetRequiredService<InMemoryRecipeCatalog>())
@@ -47,6 +52,12 @@ internal sealed class WorkflowHarness : IAsyncDisposable
     public InMemoryRecipeCatalog Catalog { get; }
 
     public TestGate Model { get; } = new("gate.test.model", GateRung.Model);
+
+    public FakeJudgeClient Judge { get; } = new();
+
+    public FakeUiEvidence UiEvidence { get; } = new();
+
+    public EvidenceProviders Providers => _provider.GetRequiredService<EvidenceProviders>();
 
     public IBlockRegistry Blocks => _provider.GetRequiredService<IBlockRegistry>();
 

@@ -1,0 +1,18 @@
+# UI evidence for a change (factory addendum §17.28.2, "Tools versus workflows": the ui-evidence skill's sequence as a
+# workflow, a child a feature workflow starts). The tools are blocks: ui-evidence doctor and provenance are rung-1 gates,
+# the ui-browser provider produces the run's evidence (sindri workflow collect), and judge's visual-critique is the
+# rung-2 gate on the screenshot. Publishing (ask-first) is a later effect.
+id: workflow.ui-evidence
+version: 1
+description: "UI evidence: doctor the stack, run the script headless, check provenance, judge the screenshot"
+initial: stack
+states:
+  stack: { kind: wait, timeout: 30m, onTimeout: park, next: "bring the local stack up; signal 'ready' (gate: ui-evidence doctor)" }
+  run: { kind: active, step: step.ui-run, timeout: 1h, onTimeout: park, next: "collect ui-browser evidence (sindri workflow collect <id> ui-browser <sha> --input script=... --input run-dir=... --input host=...), then signal 'ran' --sha <sha> with visual.evidence-dir and visual.screenshot" }
+  done: { kind: terminal, next: "the evidence is in, the database is seed data and judge says the screenshot looks right" }
+transitions:
+  - { from: stack, to: run, on: ready, gates: [gate.evidence.doctor] }
+  - { from: run, to: stack, on: stack-down, loop: restack }
+  - { from: run, to: done, on: ran, evidence: [ui-browser@head], gates: [gate.evidence.provenance, gate.judge.visual-critique] }
+loops:
+  restack: { cap: 3 }

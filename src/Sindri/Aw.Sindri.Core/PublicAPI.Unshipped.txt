@@ -1591,3 +1591,287 @@ Aw.Sindri.Core.Events.StopReason.Signal = 1 -> Aw.Sindri.Core.Events.StopReason
 Aw.Sindri.Core.Events.StopReason.Stop = 0 -> Aw.Sindri.Core.Events.StopReason
 Aw.Sindri.Core.Lease.HeldLease.Replace(Aw.Sindri.Core.Lease.LeaseGrant! expected, Aw.Sindri.Core.Lease.LeaseGrant! next) -> bool
 static Aw.Sindri.Core.Events.EventTypes.ServiceRun(Aw.Sindri.Core.Ids.ServiceName service) -> string!
+Aw.Sindri.Core.Blocks.Evidence.DataProvenance
+Aw.Sindri.Core.Blocks.Evidence.DataProvenance.Seeded = 1 -> Aw.Sindri.Core.Blocks.Evidence.DataProvenance
+Aw.Sindri.Core.Blocks.Evidence.DataProvenance.Unknown = 2 -> Aw.Sindri.Core.Blocks.Evidence.DataProvenance
+Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance
+Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.<Clone>$() -> Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance!
+Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.DatabaseProvenance(Aw.Sindri.Core.Blocks.Evidence.DataProvenance Provenance, string! Reason) -> void
+Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.Deconstruct(out Aw.Sindri.Core.Blocks.Evidence.DataProvenance Provenance, out string! Reason) -> void
+Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.Equals(Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance? other) -> bool
+Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.Provenance.get -> Aw.Sindri.Core.Blocks.Evidence.DataProvenance
+Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.Provenance.init -> void
+Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.Reason.get -> string!
+Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.Reason.init -> void
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.<Clone>$() -> Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument!
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.Deconstruct(out bool Passed, out string! Path, out string! Digest) -> void
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.Digest.get -> string!
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.Digest.init -> void
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.Equals(Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument? other) -> bool
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.EvidenceDocument(bool Passed, string! Path, string! Digest) -> void
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.Passed.get -> bool
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.Passed.init -> void
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.Path.get -> string!
+Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.Path.init -> void
+Aw.Sindri.Core.Blocks.Evidence.IUiEvidence
+Aw.Sindri.Core.Blocks.Evidence.IUiEvidence.Doctor(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Blocks.Evidence.StackHealth!>!>
+Aw.Sindri.Core.Blocks.Evidence.IUiEvidence.Parity(Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun! run, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument!>!>
+Aw.Sindri.Core.Blocks.Evidence.IUiEvidence.Provenance(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance!>!>
+Aw.Sindri.Core.Blocks.Evidence.IUiEvidence.Run(Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun! run, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument!>!>
+Aw.Sindri.Core.Blocks.Evidence.StackHealth
+Aw.Sindri.Core.Blocks.Evidence.StackHealth.<Clone>$() -> Aw.Sindri.Core.Blocks.Evidence.StackHealth!
+Aw.Sindri.Core.Blocks.Evidence.StackHealth.Deconstruct(out bool Healthy, out System.Collections.Generic.IReadOnlyList<string!>! Failures) -> void
+Aw.Sindri.Core.Blocks.Evidence.StackHealth.Equals(Aw.Sindri.Core.Blocks.Evidence.StackHealth? other) -> bool
+Aw.Sindri.Core.Blocks.Evidence.StackHealth.Failures.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Core.Blocks.Evidence.StackHealth.Failures.init -> void
+Aw.Sindri.Core.Blocks.Evidence.StackHealth.Healthy.get -> bool
+Aw.Sindri.Core.Blocks.Evidence.StackHealth.Healthy.init -> void
+Aw.Sindri.Core.Blocks.Evidence.StackHealth.StackHealth(bool Healthy, System.Collections.Generic.IReadOnlyList<string!>! Failures) -> void
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.<Clone>$() -> Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun!
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.AppBuild.get -> Aw.Sindri.Core.Ids.HeadSha
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.AppBuild.init -> void
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.Deconstruct(out string! Input, out string! RunDirectory, out string! Host, out Aw.Sindri.Core.Ids.HeadSha AppBuild) -> void
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.Equals(Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun? other) -> bool
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.Host.get -> string!
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.Host.init -> void
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.Input.get -> string!
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.Input.init -> void
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.RunDirectory.get -> string!
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.RunDirectory.init -> void
+Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.UiEvidenceRun(string! Input, string! RunDirectory, string! Host, Aw.Sindri.Core.Ids.HeadSha AppBuild) -> void
+Aw.Sindri.Core.Blocks.EvidenceProviders
+Aw.Sindri.Core.Blocks.EvidenceProviders.EvidenceProviders(System.Collections.Generic.IEnumerable<Aw.Sindri.Core.Blocks.IBlock!>! blocks) -> void
+Aw.Sindri.Core.Blocks.EvidenceProviders.Find(string! kind) -> Aw.Kernel.Result<Aw.Sindri.Core.Blocks.IEvidenceProvider!>!
+Aw.Sindri.Core.Blocks.EvidenceRequest
+Aw.Sindri.Core.Blocks.EvidenceRequest.<Clone>$() -> Aw.Sindri.Core.Blocks.EvidenceRequest!
+Aw.Sindri.Core.Blocks.EvidenceRequest.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out Aw.Sindri.Core.Ids.HeadSha Sha, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Inputs) -> void
+Aw.Sindri.Core.Blocks.EvidenceRequest.Equals(Aw.Sindri.Core.Blocks.EvidenceRequest? other) -> bool
+Aw.Sindri.Core.Blocks.EvidenceRequest.EvidenceRequest(Aw.Sindri.Core.Ids.InstanceId Instance, Aw.Sindri.Core.Ids.HeadSha Sha, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Inputs) -> void
+Aw.Sindri.Core.Blocks.EvidenceRequest.Inputs.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Aw.Sindri.Core.Blocks.EvidenceRequest.Inputs.init -> void
+Aw.Sindri.Core.Blocks.EvidenceRequest.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Core.Blocks.EvidenceRequest.Instance.init -> void
+Aw.Sindri.Core.Blocks.EvidenceRequest.Sha.get -> Aw.Sindri.Core.Ids.HeadSha
+Aw.Sindri.Core.Blocks.EvidenceRequest.Sha.init -> void
+Aw.Sindri.Core.Blocks.IEvidenceProvider
+Aw.Sindri.Core.Blocks.IEvidenceProvider.Provide(Aw.Sindri.Core.Blocks.EvidenceRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Blocks.ProvidedEvidence!>!>
+Aw.Sindri.Core.Blocks.Judge.AskCheckInput
+Aw.Sindri.Core.Blocks.Judge.AskCheckInput.AskCheckInput(string! TranscriptTail) -> void
+Aw.Sindri.Core.Blocks.Judge.AskCheckInput.Deconstruct(out string! TranscriptTail) -> void
+Aw.Sindri.Core.Blocks.Judge.AskCheckInput.Equals(Aw.Sindri.Core.Blocks.Judge.AskCheckInput? other) -> bool
+Aw.Sindri.Core.Blocks.Judge.AskCheckInput.TranscriptTail.get -> string!
+Aw.Sindri.Core.Blocks.Judge.AskCheckInput.TranscriptTail.init -> void
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.AcceptanceCriteria.get -> string!
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.AcceptanceCriteria.init -> void
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.AgentType.get -> string!
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.AgentType.init -> void
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.BriefScopeInput(string! AgentType, string! Goal, string! AcceptanceCriteria, string! ProofCommand) -> void
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.Deconstruct(out string! AgentType, out string! Goal, out string! AcceptanceCriteria, out string! ProofCommand) -> void
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.Equals(Aw.Sindri.Core.Blocks.Judge.BriefScopeInput? other) -> bool
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.Goal.get -> string!
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.Goal.init -> void
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.ProofCommand.get -> string!
+Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.ProofCommand.init -> void
+Aw.Sindri.Core.Blocks.Judge.IJudgeClient
+Aw.Sindri.Core.Blocks.Judge.IJudgeClient.Ask(Aw.Sindri.Core.Blocks.Judge.JudgeInput! input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Blocks.Judge.JudgeAnswer!>!>
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.<Clone>$() -> Aw.Sindri.Core.Blocks.Judge.JudgeAnswer!
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Confidence.get -> double?
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Confidence.init -> void
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Decision.get -> string?
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Decision.init -> void
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Deconstruct(out string! ReasonCode, out string? Decision, out double? Confidence, out string? Model, out Aw.Sindri.Core.Ids.JudgeDecisionId? Id, out bool Escalated) -> void
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Equals(Aw.Sindri.Core.Blocks.Judge.JudgeAnswer? other) -> bool
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Escalated.get -> bool
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Escalated.init -> void
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Id.get -> Aw.Sindri.Core.Ids.JudgeDecisionId?
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Id.init -> void
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.JudgeAnswer(string! ReasonCode, string? Decision = null, double? Confidence = null, string? Model = null, Aw.Sindri.Core.Ids.JudgeDecisionId? Id = null, bool Escalated = false) -> void
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Model.get -> string?
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Model.init -> void
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.ReasonCode.get -> string!
+Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.ReasonCode.init -> void
+Aw.Sindri.Core.Blocks.Judge.JudgeInput
+Aw.Sindri.Core.Blocks.Judge.JudgeInput.JudgeInput() -> void
+Aw.Sindri.Core.Blocks.Judge.JudgeInput.JudgeInput(Aw.Sindri.Core.Blocks.Judge.JudgeInput! original) -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Actual.get -> string!
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Actual.init -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.AfterPassed.get -> bool
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.AfterPassed.init -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.BeforePassed.get -> bool
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.BeforePassed.init -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Brief.get -> string!
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Brief.init -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.CheckKind.get -> string!
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.CheckKind.init -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.CheckSummary.get -> string!
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.CheckSummary.init -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Deconstruct(out string! Brief, out string! Expected, out string! Actual, out string! RootCause, out string! CheckKind, out string! CheckSummary, out bool BeforePassed, out bool AfterPassed, out string! DiffStat, out string? Diff) -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Diff.get -> string?
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Diff.init -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.DiffStat.get -> string!
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.DiffStat.init -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Equals(Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput? other) -> bool
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Expected.get -> string!
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Expected.init -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.ResolutionCheckInput(string! Brief, string! Expected, string! Actual, string! RootCause, string! CheckKind, string! CheckSummary, bool BeforePassed, bool AfterPassed, string! DiffStat, string? Diff = null) -> void
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.RootCause.get -> string!
+Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.RootCause.init -> void
+Aw.Sindri.Core.Blocks.Judge.RuleCheckInput
+Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.Deconstruct(out string! Rule, out string! Hunk) -> void
+Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.Equals(Aw.Sindri.Core.Blocks.Judge.RuleCheckInput? other) -> bool
+Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.Hunk.get -> string!
+Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.Hunk.init -> void
+Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.Rule.get -> string!
+Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.Rule.init -> void
+Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.RuleCheckInput(string! Rule, string! Hunk) -> void
+Aw.Sindri.Core.Blocks.Judge.TurnProgressInput
+Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.Deconstruct(out string! Problem, out string! TurnDiff) -> void
+Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.Equals(Aw.Sindri.Core.Blocks.Judge.TurnProgressInput? other) -> bool
+Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.Problem.get -> string!
+Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.Problem.init -> void
+Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.TurnDiff.get -> string!
+Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.TurnDiff.init -> void
+Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.TurnProgressInput(string! Problem, string! TurnDiff) -> void
+Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput
+Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.AfterScreenshot.get -> string!
+Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.AfterScreenshot.init -> void
+Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.BaselineScreenshot.get -> string?
+Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.BaselineScreenshot.init -> void
+Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.Deconstruct(out string! AfterScreenshot, out string! EvidenceDir, out string? BaselineScreenshot) -> void
+Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.Equals(Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput? other) -> bool
+Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.EvidenceDir.get -> string!
+Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.EvidenceDir.init -> void
+Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.VisualCritiqueInput(string! AfterScreenshot, string! EvidenceDir, string? BaselineScreenshot = null) -> void
+Aw.Sindri.Core.Blocks.ProvidedEvidence
+Aw.Sindri.Core.Blocks.ProvidedEvidence.<Clone>$() -> Aw.Sindri.Core.Blocks.ProvidedEvidence!
+Aw.Sindri.Core.Blocks.ProvidedEvidence.Deconstruct(out bool Passed, out string! Digest, out string! Document, out string! Detail) -> void
+Aw.Sindri.Core.Blocks.ProvidedEvidence.Detail.get -> string!
+Aw.Sindri.Core.Blocks.ProvidedEvidence.Detail.init -> void
+Aw.Sindri.Core.Blocks.ProvidedEvidence.Digest.get -> string!
+Aw.Sindri.Core.Blocks.ProvidedEvidence.Digest.init -> void
+Aw.Sindri.Core.Blocks.ProvidedEvidence.Document.get -> string!
+Aw.Sindri.Core.Blocks.ProvidedEvidence.Document.init -> void
+Aw.Sindri.Core.Blocks.ProvidedEvidence.Equals(Aw.Sindri.Core.Blocks.ProvidedEvidence? other) -> bool
+Aw.Sindri.Core.Blocks.ProvidedEvidence.Passed.get -> bool
+Aw.Sindri.Core.Blocks.ProvidedEvidence.Passed.init -> void
+Aw.Sindri.Core.Blocks.ProvidedEvidence.ProvidedEvidence(bool Passed, string! Digest, string! Document, string! Detail) -> void
+Aw.Sindri.Core.Ids.JudgeDecisionId
+Aw.Sindri.Core.Ids.JudgeDecisionId.Equals(Aw.Sindri.Core.Ids.JudgeDecisionId other) -> bool
+Aw.Sindri.Core.Ids.JudgeDecisionId.Equals(Aw.Sindri.Core.Ids.JudgeDecisionId other, System.Collections.Generic.IEqualityComparer<Aw.Sindri.Core.Ids.JudgeDecisionId>! comparer) -> bool
+Aw.Sindri.Core.Ids.JudgeDecisionId.GetTypeCode() -> System.TypeCode
+Aw.Sindri.Core.Ids.JudgeDecisionId.IsInitialized() -> bool
+Aw.Sindri.Core.Ids.JudgeDecisionId.JudgeDecisionId() -> void
+Aw.Sindri.Core.Ids.JudgeDecisionId.ToString(System.IFormatProvider? provider) -> string!
+Aw.Sindri.Core.Ids.JudgeDecisionId.Value.get -> string!
+Aw.Sindri.Core.Registration.SindriToolBlocksServiceCollectionExtensions
+abstract Aw.Sindri.Core.Blocks.Judge.JudgeInput.<Clone>$() -> Aw.Sindri.Core.Blocks.Judge.JudgeInput!
+abstract Aw.Sindri.Core.Blocks.Judge.JudgeInput.Question.get -> string!
+override Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Evidence.StackHealth.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Evidence.StackHealth.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Evidence.StackHealth.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.ToString() -> string!
+override Aw.Sindri.Core.Blocks.EvidenceRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.EvidenceRequest.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.EvidenceRequest.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Judge.AskCheckInput.<Clone>$() -> Aw.Sindri.Core.Blocks.Judge.AskCheckInput!
+override Aw.Sindri.Core.Blocks.Judge.AskCheckInput.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Judge.AskCheckInput.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Judge.AskCheckInput.Question.get -> string!
+override Aw.Sindri.Core.Blocks.Judge.AskCheckInput.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.<Clone>$() -> Aw.Sindri.Core.Blocks.Judge.BriefScopeInput!
+override Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.Question.get -> string!
+override Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Judge.JudgeInput.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Judge.JudgeInput.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Judge.JudgeInput.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.<Clone>$() -> Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput!
+override Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Question.get -> string!
+override Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.<Clone>$() -> Aw.Sindri.Core.Blocks.Judge.RuleCheckInput!
+override Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.Question.get -> string!
+override Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.<Clone>$() -> Aw.Sindri.Core.Blocks.Judge.TurnProgressInput!
+override Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.Question.get -> string!
+override Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.ToString() -> string!
+override Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.<Clone>$() -> Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput!
+override Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.Question.get -> string!
+override Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.ToString() -> string!
+override Aw.Sindri.Core.Blocks.ProvidedEvidence.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Blocks.ProvidedEvidence.GetHashCode() -> int
+override Aw.Sindri.Core.Blocks.ProvidedEvidence.ToString() -> string!
+override Aw.Sindri.Core.Ids.JudgeDecisionId.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Ids.JudgeDecisionId.GetHashCode() -> int
+override Aw.Sindri.Core.Ids.JudgeDecisionId.ToString() -> string!
+override sealed Aw.Sindri.Core.Blocks.Judge.AskCheckInput.Equals(Aw.Sindri.Core.Blocks.Judge.JudgeInput? other) -> bool
+override sealed Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.Equals(Aw.Sindri.Core.Blocks.Judge.JudgeInput? other) -> bool
+override sealed Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.Equals(Aw.Sindri.Core.Blocks.Judge.JudgeInput? other) -> bool
+override sealed Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.Equals(Aw.Sindri.Core.Blocks.Judge.JudgeInput? other) -> bool
+override sealed Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.Equals(Aw.Sindri.Core.Blocks.Judge.JudgeInput? other) -> bool
+override sealed Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.Equals(Aw.Sindri.Core.Blocks.Judge.JudgeInput? other) -> bool
+static Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.operator !=(Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance? left, Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance? right) -> bool
+static Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.operator ==(Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance? left, Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance? right) -> bool
+static Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.operator !=(Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument? left, Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument? right) -> bool
+static Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument.operator ==(Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument? left, Aw.Sindri.Core.Blocks.Evidence.EvidenceDocument? right) -> bool
+static Aw.Sindri.Core.Blocks.Evidence.StackHealth.operator !=(Aw.Sindri.Core.Blocks.Evidence.StackHealth? left, Aw.Sindri.Core.Blocks.Evidence.StackHealth? right) -> bool
+static Aw.Sindri.Core.Blocks.Evidence.StackHealth.operator ==(Aw.Sindri.Core.Blocks.Evidence.StackHealth? left, Aw.Sindri.Core.Blocks.Evidence.StackHealth? right) -> bool
+static Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.operator !=(Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun? left, Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun? right) -> bool
+static Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun.operator ==(Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun? left, Aw.Sindri.Core.Blocks.Evidence.UiEvidenceRun? right) -> bool
+static Aw.Sindri.Core.Blocks.EvidenceRequest.operator !=(Aw.Sindri.Core.Blocks.EvidenceRequest? left, Aw.Sindri.Core.Blocks.EvidenceRequest? right) -> bool
+static Aw.Sindri.Core.Blocks.EvidenceRequest.operator ==(Aw.Sindri.Core.Blocks.EvidenceRequest? left, Aw.Sindri.Core.Blocks.EvidenceRequest? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.AskCheckInput.operator !=(Aw.Sindri.Core.Blocks.Judge.AskCheckInput? left, Aw.Sindri.Core.Blocks.Judge.AskCheckInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.AskCheckInput.operator ==(Aw.Sindri.Core.Blocks.Judge.AskCheckInput? left, Aw.Sindri.Core.Blocks.Judge.AskCheckInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.operator !=(Aw.Sindri.Core.Blocks.Judge.BriefScopeInput? left, Aw.Sindri.Core.Blocks.Judge.BriefScopeInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.BriefScopeInput.operator ==(Aw.Sindri.Core.Blocks.Judge.BriefScopeInput? left, Aw.Sindri.Core.Blocks.Judge.BriefScopeInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.operator !=(Aw.Sindri.Core.Blocks.Judge.JudgeAnswer? left, Aw.Sindri.Core.Blocks.Judge.JudgeAnswer? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.JudgeAnswer.operator ==(Aw.Sindri.Core.Blocks.Judge.JudgeAnswer? left, Aw.Sindri.Core.Blocks.Judge.JudgeAnswer? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.JudgeInput.operator !=(Aw.Sindri.Core.Blocks.Judge.JudgeInput? left, Aw.Sindri.Core.Blocks.Judge.JudgeInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.JudgeInput.operator ==(Aw.Sindri.Core.Blocks.Judge.JudgeInput? left, Aw.Sindri.Core.Blocks.Judge.JudgeInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.operator !=(Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput? left, Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput.operator ==(Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput? left, Aw.Sindri.Core.Blocks.Judge.ResolutionCheckInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.operator !=(Aw.Sindri.Core.Blocks.Judge.RuleCheckInput? left, Aw.Sindri.Core.Blocks.Judge.RuleCheckInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.RuleCheckInput.operator ==(Aw.Sindri.Core.Blocks.Judge.RuleCheckInput? left, Aw.Sindri.Core.Blocks.Judge.RuleCheckInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.operator !=(Aw.Sindri.Core.Blocks.Judge.TurnProgressInput? left, Aw.Sindri.Core.Blocks.Judge.TurnProgressInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.TurnProgressInput.operator ==(Aw.Sindri.Core.Blocks.Judge.TurnProgressInput? left, Aw.Sindri.Core.Blocks.Judge.TurnProgressInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.operator !=(Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput? left, Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput? right) -> bool
+static Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput.operator ==(Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput? left, Aw.Sindri.Core.Blocks.Judge.VisualCritiqueInput? right) -> bool
+static Aw.Sindri.Core.Blocks.ProvidedEvidence.operator !=(Aw.Sindri.Core.Blocks.ProvidedEvidence? left, Aw.Sindri.Core.Blocks.ProvidedEvidence? right) -> bool
+static Aw.Sindri.Core.Blocks.ProvidedEvidence.operator ==(Aw.Sindri.Core.Blocks.ProvidedEvidence? left, Aw.Sindri.Core.Blocks.ProvidedEvidence? right) -> bool
+static Aw.Sindri.Core.Ids.JudgeDecisionId.From(string! value) -> Aw.Sindri.Core.Ids.JudgeDecisionId
+static Aw.Sindri.Core.Ids.JudgeDecisionId.Parse(string! s, System.IFormatProvider? provider) -> Aw.Sindri.Core.Ids.JudgeDecisionId
+static Aw.Sindri.Core.Ids.JudgeDecisionId.TryFrom(string? value, out Aw.Sindri.Core.Ids.JudgeDecisionId vo) -> bool
+static Aw.Sindri.Core.Ids.JudgeDecisionId.TryParse(string? s, System.IFormatProvider? provider, out Aw.Sindri.Core.Ids.JudgeDecisionId result) -> bool
+static Aw.Sindri.Core.Ids.JudgeDecisionId.operator !=(Aw.Sindri.Core.Ids.JudgeDecisionId left, Aw.Sindri.Core.Ids.JudgeDecisionId right) -> bool
+static Aw.Sindri.Core.Ids.JudgeDecisionId.operator ==(Aw.Sindri.Core.Ids.JudgeDecisionId left, Aw.Sindri.Core.Ids.JudgeDecisionId right) -> bool
+static Aw.Sindri.Core.Registration.SindriToolBlocksServiceCollectionExtensions.AddSindriToolBlocks(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static readonly Aw.Sindri.Core.SindriErrors.ProviderInputInvalid -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Sindri.Core.SindriErrors.ProviderUnknown -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Sindri.Core.SindriErrors.ToolUnavailable -> Aw.Kernel.ErrorDefinition!
+virtual Aw.Sindri.Core.Blocks.Judge.JudgeInput.EqualityContract.get -> System.Type!
+virtual Aw.Sindri.Core.Blocks.Judge.JudgeInput.Equals(Aw.Sindri.Core.Blocks.Judge.JudgeInput? other) -> bool
+virtual Aw.Sindri.Core.Blocks.Judge.JudgeInput.PrintMembers(System.Text.StringBuilder! builder) -> bool

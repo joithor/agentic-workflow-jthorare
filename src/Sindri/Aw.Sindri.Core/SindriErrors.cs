@@ -80,12 +80,21 @@ public static class SindriErrors
     /// <summary>SND-WF-009: a signal sets an output the current step doesn't declare, or a value of the wrong type.</summary>
     public static readonly ErrorDefinition OutputInvalid = new("SND-WF-009", ErrorKind.Invalid, "An output is not valid here");
 
+    /// <summary>SND-BLK-001: a block's tool (judge, ui-evidence) couldn't be run or answered outside its CLI contract.</summary>
+    public static readonly ErrorDefinition ToolUnavailable = new("SND-BLK-001", ErrorKind.Unavailable, "A block's tool could not be run");
+
+    /// <summary>SND-BLK-002: an evidence provider was given inputs it doesn't declare, or missed one it needs.</summary>
+    public static readonly ErrorDefinition ProviderInputInvalid = new("SND-BLK-002", ErrorKind.Invalid, "The evidence provider's inputs are not valid");
+
+    /// <summary>SND-BLK-003: no registered evidence provider produces that kind.</summary>
+    public static readonly ErrorDefinition ProviderUnknown = new("SND-BLK-003", ErrorKind.NotFound, "No evidence provider for that kind");
+
     /// <summary>Every Sindri error, for ErrorCatalogue.Validate.</summary>
     public static IReadOnlyList<ErrorDefinition> All { get; } =
     [
         LeaseHeld, LeaseLost, LeaseStale, ProfileMissing, ProfileInvalid, ProfileHashMismatch, ProfileNeedsTerminal,
         ProfileNotApproved, LedgerSchema, LedgerUnavailable, NotRunning, ApiTimeout, PortInUse, UnknownVerb, StartFailed, ServiceFailed,
         RecipeInvalid, RecipeUnknown, InstanceChanged, InstanceUnknown, TransitionNotAllowed, GateRefused, EvidenceMissing, RecipeChanged,
-        OutputInvalid,
+        OutputInvalid, ToolUnavailable, ProviderInputInvalid, ProviderUnknown,
     ];
 }

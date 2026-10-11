@@ -23,7 +23,7 @@ public abstract class RecipeCatalogContract
         var listed = (await catalog.List(Token)).Value;
         var step = (await catalog.Get(RecipeId.From("workflow.step"), Token)).Value;
 
-        Expect.Sequence(["workflow.item", "workflow.step"], listed.Select(e => e.Id?.Value ?? "?").Order(StringComparer.Ordinal));
+        Expect.Sequence(["workflow.item", "workflow.step", "workflow.ui-evidence"], listed.Select(e => e.Id?.Value ?? "?").Order(StringComparer.Ordinal));
         Expect.True(listed.All(e => e.Valid && e.Approved));
         Expect.Equal(listed.Single(e => e.Id == step.Recipe.Id).Hash, step.Hash);
     }

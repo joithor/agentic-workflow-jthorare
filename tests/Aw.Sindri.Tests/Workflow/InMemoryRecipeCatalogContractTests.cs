@@ -11,7 +11,7 @@ public sealed class InMemoryRecipeCatalogContractTests : RecipeCatalogContract
     {
         var blocks = Registries.Builtin();
         var catalog = new InMemoryRecipeCatalog(blocks);
-        foreach (var name in new[] { "workflow.item", "workflow.step" })
+        foreach (var name in new[] { "workflow.item", "workflow.step", "workflow.ui-evidence" })
         {
             var (recipe, hash) = TestRecipes.Read(Registries.BuiltinYaml(name));
             catalog.Add(recipe, hash);

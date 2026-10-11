@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using Aw.Kernel;
 using Aw.Sindri.Core.Blocks.Builtin;
+using Aw.Sindri.Core.Blocks.Evidence;
+using Aw.Sindri.Core.Blocks.Judge;
 using Aw.Sindri.Core.Control;
 using Aw.Sindri.Core.Events;
 using Aw.Sindri.Core.Profile;
@@ -56,4 +58,13 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(ParkBody))]
 [JsonSerializable(typeof(BudgetBody))]
 [JsonSerializable(typeof(EvidenceBody))]
+[JsonSerializable(typeof(JudgeAnswer))]
+[JsonSerializable(typeof(ResolutionCheckInput))]
+[JsonSerializable(typeof(RuleCheckInput))]
+[JsonSerializable(typeof(TurnProgressInput))]
+[JsonSerializable(typeof(BriefScopeInput))]
+[JsonSerializable(typeof(VisualCritiqueInput))]
+[JsonSerializable(typeof(AskCheckInput))]
+[JsonSerializable(typeof(StackHealth))]
+[JsonSerializable(typeof(DatabaseProvenance))]
 internal sealed partial class SindriJsonContext : JsonSerializerContext;

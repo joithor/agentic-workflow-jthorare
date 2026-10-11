@@ -38,7 +38,7 @@ public sealed class FileRecipeCatalogTests : IDisposable
         var listed = (await Catalog().List(Token)).Value;
         var mine = await Catalog().Get(RecipeId.From("workflow.mine"), Token);
 
-        Assert.Equal(5, listed.Count);
+        Assert.Equal(6, listed.Count);   // three built-ins and three files
         Assert.Contains(listed, e => e.Source.EndsWith("a-broken.yaml", StringComparison.Ordinal) && e.Problems[0].Check == RecipeChecks.Schema);
         Assert.Contains(listed, e => e.Source.EndsWith("b-dupe.yaml", StringComparison.Ordinal) && e.Problems.Any(p => p.Message.Contains("already registered", StringComparison.Ordinal)));
         Assert.Equal(SindriErrors.RecipeUnknown.Code, mine.Error.Code);
@@ -57,7 +57,7 @@ public sealed class FileRecipeCatalogTests : IDisposable
 
         Assert.False(entry.Valid);
         Assert.Contains(entry.Problems, p => p.Check == RecipeChecks.Capability);
-        Assert.Equal(2, (await Catalog().List(Token)).Value.Count);
+        Assert.Equal(3, (await Catalog().List(Token)).Value.Count);   // the built-ins only
         Assert.Equal(SindriErrors.RecipeUnknown.Code, missing.Error.Code);
     }
 

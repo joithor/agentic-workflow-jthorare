@@ -16,6 +16,7 @@ internal static class Composition
             .AddSingleton(AwJson.CreateOptions(SindriJsonContext.Default))
             .AddKernelTelemetry(TelemetryOptions.FromEnvironment("sindri", environment, clock))   // JSON lines on stderr (AW_LOG_LEVEL); exports off
             .AddSindriCore()
+            .AddSindriToolBlocks()
             .AddSindriFeatures()
             .AddSindriInfrastructure(environment)
             .AddSindriHost();

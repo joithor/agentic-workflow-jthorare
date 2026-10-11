@@ -2,13 +2,22 @@ using System.Text.Json.Serialization;
 using Aw.Kernel;
 using Aw.Sindri.Core.Control;
 using Aw.Sindri.Core.Events;
+using Aw.Sindri.Core.Blocks.Builtin;
 using Aw.Sindri.Core.Profile;
+using Aw.Sindri.Core.Recipes;
+using Aw.Sindri.Core.Workflow;
 using Aw.Sindri.Features.ApproveProfile;
 using Aw.Sindri.Features.GetStatus;
+using Aw.Sindri.Features.ListBlocks;
+using Aw.Sindri.Features.ListRecipes;
+using Aw.Sindri.Features.ListWorkflows;
+using Aw.Sindri.Features.ShowWorkflow;
+using Aw.Sindri.Features.StartWorkflow;
 using Aw.Sindri.Features.RunDoctor;
 using Aw.Sindri.Features.StopProcess;
 using Aw.Sindri.Features.StreamEvents;
 using Aw.Sindri.Features.ValidateProfile;
+using Aw.Sindri.Host.Bodies;
 
 namespace Aw.Sindri.Host;
 
@@ -29,4 +38,22 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(ValidateProfileResponse))]
 [JsonSerializable(typeof(RunDoctorResponse))]
 [JsonSerializable(typeof(EventView))]
+[JsonSerializable(typeof(WorkflowOutcome))]
+[JsonSerializable(typeof(WorkflowInstance))]
+[JsonSerializable(typeof(WorkflowChange))]
+[JsonSerializable(typeof(Recipe))]
+[JsonSerializable(typeof(CatalogEntry))]
+[JsonSerializable(typeof(NotifyHuman))]
+[JsonSerializable(typeof(DraftPullRequest))]
+[JsonSerializable(typeof(TickReport))]
+[JsonSerializable(typeof(StartWorkflowRequest))]
+[JsonSerializable(typeof(ListWorkflowsResponse))]
+[JsonSerializable(typeof(ShowWorkflowResponse))]
+[JsonSerializable(typeof(ListRecipesResponse))]
+[JsonSerializable(typeof(ListBlocksResponse))]
+[JsonSerializable(typeof(SignalBody))]
+[JsonSerializable(typeof(ReasonBody))]
+[JsonSerializable(typeof(ParkBody))]
+[JsonSerializable(typeof(BudgetBody))]
+[JsonSerializable(typeof(EvidenceBody))]
 internal sealed partial class SindriJsonContext : JsonSerializerContext;

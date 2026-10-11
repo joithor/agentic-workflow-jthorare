@@ -1,4 +1,5 @@
 using Aw.Kernel.Events;
+using Aw.Sindri.Core.Ids;
 
 namespace Aw.Sindri.Core.Ledger;
 
@@ -8,4 +9,4 @@ namespace Aw.Sindri.Core.Ledger;
 /// <param name="Envelope">The envelope.</param>
 /// <param name="IdempotencyKey">The idempotency key.</param>
 /// <param name="Item">The work item, if any.</param>
-public sealed record LedgerEvent(long Sequence, long Epoch, EventEnvelope<string> Envelope, string IdempotencyKey, string? Item);
+public sealed record LedgerEvent(long Sequence, long Epoch, EventEnvelope<string> Envelope, string IdempotencyKey, ItemId? Item);

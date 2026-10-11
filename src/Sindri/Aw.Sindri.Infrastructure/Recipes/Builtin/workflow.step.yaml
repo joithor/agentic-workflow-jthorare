@@ -1,0 +1,21 @@
+# The Step contract (design spec §6, factory addendum §17.28.6 step 1): produce, then the deterministic checks, then
+# the verifier; a failed check or a rejection goes back to produce with reasons, counted by the revise loop. Past the
+# cap, a round with no progress (§17.23.13) or a spent budget parks the Step.
+id: workflow.step
+version: 1
+description: "The Step contract: produce, checks, verify, revise with reasons; rounds, no-progress and budget park"
+initial: produce
+states:
+  produce: { kind: active, step: step.produce, timeout: 2h, onTimeout: park, next: "the producer works; signal 'produced' when its output is ready" }
+  checks: { kind: active, step: step.checks, timeout: 30m, onTimeout: retry, next: "run the Step's checks; signal 'passed' with checks.verdict=pass, or 'failed' with the findings" }
+  verify: { kind: active, step: step.verify, timeout: 1h, onTimeout: park, next: "the verifier judges the output; signal 'accepted' with verifier.verdict=pass, or 'rejected' with the findings" }
+  done: { kind: terminal, next: "the Step is done" }
+transitions:
+  - { from: produce, to: checks, on: produced }
+  - { from: checks, to: verify, on: passed, gates: [gate.checks.passed] }
+  - { from: checks, to: produce, on: failed, loop: revise }
+  - { from: verify, to: done, on: accepted, gates: [gate.verifier.passed], effects: [effect.notify.human] }
+  - { from: verify, to: produce, on: rejected, loop: revise }
+loops:
+  revise: { cap: 3 }
+budget: { tokens: 400000, turns: 60 }

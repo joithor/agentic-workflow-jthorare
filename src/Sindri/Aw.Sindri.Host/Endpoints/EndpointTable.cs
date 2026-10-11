@@ -22,6 +22,7 @@ internal static class EndpointTable
         _ = group.MapPost("/profile/approve", static async (ApproveProfileRequest request, IService<ApproveProfileRequest, ApproveProfileResponse> service, CancellationToken ct)
             => (await service.Handle(request, ct).ConfigureAwait(false)).ToHttpResult());
         _ = group.MapGet("/events", EventStream.Stream);
+        _ = group.MapWorkflowEndpoints();
         return app;
     }
 }

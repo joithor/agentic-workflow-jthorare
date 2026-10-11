@@ -1,4 +1,5 @@
 using Aw.Kernel.Events;
+using Aw.Sindri.Core.Ids;
 
 namespace Aw.Sindri.Core.Ledger;
 
@@ -9,4 +10,4 @@ namespace Aw.Sindri.Core.Ledger;
 /// <param name="Envelope">The §17.21 envelope; the payload is the event's JSON.</param>
 /// <param name="IdempotencyKey">The key; a second entry with the same key is not recorded again.</param>
 /// <param name="Item">The work item, when the event concerns one.</param>
-public sealed record LedgerEntry(EventEnvelope<string> Envelope, string IdempotencyKey, string? Item);
+public sealed record LedgerEntry(EventEnvelope<string> Envelope, string IdempotencyKey, ItemId? Item);

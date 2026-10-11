@@ -14,7 +14,7 @@ public sealed class LedgerFileTests : IDisposable
     public void Dispose() => _home.Dispose();
 
     [Fact, Trait("Lane", "integration")]
-    public async Task Each_migration_applies_on_the_previous_schema_and_the_outbox_table_is_last()
+    public async Task Each_migration_applies_on_the_previous_schema_and_the_outbox_table_stays_third()
     {
         var path = Path.Combine(_home.Path, "steps.db");
         var runner = new MigrationRunner(new SqliteConnectionFactory(new SqliteOptions(path)), new FakeTimeProvider(), backupBeforeUpgrade: false);
@@ -25,8 +25,35 @@ public sealed class LedgerFileTests : IDisposable
             Assert.True(step.IsSuccess, step.IsError ? step.Error.Message : null);
         }
 
-        Assert.Equal("outbox_commands", LedgerDatabase.Migrations[^1].Name);
-        Assert.Equal(["events", "lease", "outbox_commands"], Tables(path));
+        Assert.Equal(["events", "lease", "outbox_commands", "workflow"], LedgerDatabase.Migrations.Select(m => m.Name), StringComparer.Ordinal);
+        Assert.Equal(["events", "lease", "outbox_commands", "workflow_instances"], Tables(path));
+    }
+
+    [Fact, Trait("Lane", "integration")]
+    public async Task The_workflow_migration_keeps_existing_events_on_a_copy_of_the_s1_schema()
+    {
+        var path = Path.Combine(_home.Path, "s1.db");
+        var runner = new MigrationRunner(new SqliteConnectionFactory(new SqliteOptions(path)), new FakeTimeProvider(), backupBeforeUpgrade: false);
+        _ = (await runner.Migrate(LedgerDatabase.Migrations, TestContext.Current.CancellationToken, targetVersion: 3)).Value;
+        await using (var connection = new SqliteConnection($"Data Source={path}"))
+        {
+            await connection.OpenAsync(TestContext.Current.CancellationToken);
+            await using var insert = connection.CreateCommand();
+            insert.CommandText = "INSERT INTO events (id, type, schema_version, occurred_at, actor, tenant, ring, correlation_id, epoch, idempotency_key, payload_json) "
+                + "VALUES ('e1', 'process.started', 1, '2026-10-11T00:00:00Z', 'host:sindri', 'local', 0, 'c1', 1, 'k1', '{}')";
+            _ = await insert.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        }
+
+        var upgraded = await runner.Migrate(LedgerDatabase.Migrations, TestContext.Current.CancellationToken);
+
+        Assert.Equal([4], upgraded.Value.Applied);
+        await using var check = new SqliteConnection($"Data Source={path}");
+        await check.OpenAsync(TestContext.Current.CancellationToken);
+        await using var read = check.CreateCommand();
+        read.CommandText = "SELECT idempotency_key, instance IS NULL FROM events";
+        await using var reader = await read.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+        Assert.True(await reader.ReadAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(("k1", 1L), (reader.GetString(0), reader.GetInt64(1)));
     }
 
     [Fact, Trait("Lane", "integration")]

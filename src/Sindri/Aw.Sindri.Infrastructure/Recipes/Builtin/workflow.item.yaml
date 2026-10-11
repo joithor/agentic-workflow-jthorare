@@ -1,0 +1,18 @@
+# The item lifecycle (design spec §7.1, §9.2–9.4; factory addendum §17.28.6 step 1): triage, the router's startable
+# check, the claim ref, then the work itself as a Step contract child workflow; the item is done when the Step is.
+id: workflow.item
+version: 1
+description: "The item lifecycle: triaged, startable, claimed, running (a workflow.step child), done"
+initial: triaged
+states:
+  triaged: { kind: active, step: step.triage, timeout: 4h, onTimeout: park, next: "triage sizes the item; signal 'triaged' with triage.size and triage.ambiguity" }
+  startable: { kind: wait, timeout: 14d, onTimeout: escalate, next: "start it: signal 'start' (the router needs ambiguity none and size at most M)" }
+  claimed: { kind: active, step: step.claim, timeout: 10m, onTimeout: retry, next: "create the claim ref; signal 'claimed' with claim.ref=sindri/<user>/<item>" }
+  running: { kind: wait, child: workflow.step, timeout: 24h, onTimeout: park, next: "the Step runs as a child workflow; the item finishes when it does" }
+  done: { kind: terminal, next: "the item is done" }
+transitions:
+  - { from: triaged, to: startable, on: triaged, gates: [gate.triage.complete] }
+  - { from: startable, to: claimed, on: start, gates: [gate.router.startable] }
+  - { from: claimed, to: running, on: claimed, gates: [gate.claim.ref] }
+  - { from: running, to: done, on: child.done, effects: [effect.notify.human] }
+budget: { tokens: 2000000 }

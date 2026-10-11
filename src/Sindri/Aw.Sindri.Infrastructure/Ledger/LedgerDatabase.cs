@@ -100,9 +100,12 @@ internal sealed class LedgerDatabase : IDisposable
         _ => SindriErrors.LedgerUnavailable.With($"{error.Code}: {error.Message}"),
     };
 
+    // The outbox table went in as migration 3 (S1); applied migrations never move, so the embedded files skip 0003.
+    private const int OutboxVersion = 3;
+
     private static IReadOnlyList<Migration> LoadMigrations()
     {
         var own = EmbeddedMigrations.Load(typeof(LedgerDatabase).Assembly, "Aw.Sindri.Infrastructure.Ledger.Migrations.").Value;
-        return [.. own, SqliteOutboxSchema.CreateMigration(own.Count + 1)];
+        return [.. own.Where(m => m.Version < OutboxVersion), SqliteOutboxSchema.CreateMigration(OutboxVersion), .. own.Where(m => m.Version > OutboxVersion)];
     }
 }

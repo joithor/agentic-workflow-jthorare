@@ -11,6 +11,9 @@ internal sealed record SindriSettings(string Home, string ProfilePath)
     /// <summary>Approved profile snapshots, one directory per hash.</summary>
     public string ApprovalsDirectory => Path.Combine(Home, "approved");
 
+    /// <summary>Recipe files (unapproved recipes the catalog validates and registers), one YAML file per recipe.</summary>
+    public string RecipesDirectory => Path.Combine(Home, "recipes");
+
     /// <summary>The control plane's endpoint record.</summary>
     public string EndpointPath => Path.Combine(Home, "control.json");
 }

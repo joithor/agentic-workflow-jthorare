@@ -282,3 +282,283 @@ static Aw.Sindri.Features.ValidateProfile.ValidateProfileRequest.operator !=(Aw.
 static Aw.Sindri.Features.ValidateProfile.ValidateProfileRequest.operator ==(Aw.Sindri.Features.ValidateProfile.ValidateProfileRequest? left, Aw.Sindri.Features.ValidateProfile.ValidateProfileRequest? right) -> bool
 static Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse.operator !=(Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse? left, Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse? right) -> bool
 static Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse.operator ==(Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse? left, Aw.Sindri.Features.ValidateProfile.ValidateProfileResponse? right) -> bool
+Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest
+Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.<Clone>$() -> Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest!
+Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.CancelWorkflowRequest(Aw.Sindri.Core.Ids.InstanceId Instance, string? Reason = null) -> void
+Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out string? Reason) -> void
+Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.Equals(Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest? other) -> bool
+Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.Instance.init -> void
+Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.Reason.get -> string?
+Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.Reason.init -> void
+Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest
+Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.<Clone>$() -> Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest!
+Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance) -> void
+Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.Equals(Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest? other) -> bool
+Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.HandBackWorkflowRequest(Aw.Sindri.Core.Ids.InstanceId Instance) -> void
+Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.Instance.init -> void
+Aw.Sindri.Features.ListBlocks.ListBlocksRequest
+Aw.Sindri.Features.ListBlocks.ListBlocksRequest.<Clone>$() -> Aw.Sindri.Features.ListBlocks.ListBlocksRequest!
+Aw.Sindri.Features.ListBlocks.ListBlocksRequest.Equals(Aw.Sindri.Features.ListBlocks.ListBlocksRequest? other) -> bool
+Aw.Sindri.Features.ListBlocks.ListBlocksRequest.ListBlocksRequest() -> void
+Aw.Sindri.Features.ListBlocks.ListBlocksResponse
+Aw.Sindri.Features.ListBlocks.ListBlocksResponse.<Clone>$() -> Aw.Sindri.Features.ListBlocks.ListBlocksResponse!
+Aw.Sindri.Features.ListBlocks.ListBlocksResponse.Blocks.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.BlockSpec!>!
+Aw.Sindri.Features.ListBlocks.ListBlocksResponse.Blocks.init -> void
+Aw.Sindri.Features.ListBlocks.ListBlocksResponse.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.BlockSpec!>! Blocks) -> void
+Aw.Sindri.Features.ListBlocks.ListBlocksResponse.Equals(Aw.Sindri.Features.ListBlocks.ListBlocksResponse? other) -> bool
+Aw.Sindri.Features.ListBlocks.ListBlocksResponse.ListBlocksResponse(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.BlockSpec!>! Blocks) -> void
+Aw.Sindri.Features.ListRecipes.ListRecipesRequest
+Aw.Sindri.Features.ListRecipes.ListRecipesRequest.<Clone>$() -> Aw.Sindri.Features.ListRecipes.ListRecipesRequest!
+Aw.Sindri.Features.ListRecipes.ListRecipesRequest.Equals(Aw.Sindri.Features.ListRecipes.ListRecipesRequest? other) -> bool
+Aw.Sindri.Features.ListRecipes.ListRecipesRequest.ListRecipesRequest() -> void
+Aw.Sindri.Features.ListRecipes.ListRecipesResponse
+Aw.Sindri.Features.ListRecipes.ListRecipesResponse.<Clone>$() -> Aw.Sindri.Features.ListRecipes.ListRecipesResponse!
+Aw.Sindri.Features.ListRecipes.ListRecipesResponse.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Recipes.CatalogEntry!>! Recipes) -> void
+Aw.Sindri.Features.ListRecipes.ListRecipesResponse.Equals(Aw.Sindri.Features.ListRecipes.ListRecipesResponse? other) -> bool
+Aw.Sindri.Features.ListRecipes.ListRecipesResponse.ListRecipesResponse(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Recipes.CatalogEntry!>! Recipes) -> void
+Aw.Sindri.Features.ListRecipes.ListRecipesResponse.Recipes.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Recipes.CatalogEntry!>!
+Aw.Sindri.Features.ListRecipes.ListRecipesResponse.Recipes.init -> void
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.<Clone>$() -> Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest!
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.All.get -> bool
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.All.init -> void
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.Deconstruct(out bool All) -> void
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.Equals(Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest? other) -> bool
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.ListWorkflowsRequest(bool All = false) -> void
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.<Clone>$() -> Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse!
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.WorkflowInstance!>! Instances) -> void
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.Equals(Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse? other) -> bool
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.Instances.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.WorkflowInstance!>!
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.Instances.init -> void
+Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.ListWorkflowsResponse(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.WorkflowInstance!>! Instances) -> void
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.<Clone>$() -> Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest!
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out Aw.Sindri.Core.Workflow.ParkReason Reason, out string? Detail) -> void
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.Detail.get -> string?
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.Detail.init -> void
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.Equals(Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest? other) -> bool
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.Instance.init -> void
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.ParkWorkflowRequest(Aw.Sindri.Core.Ids.InstanceId Instance, Aw.Sindri.Core.Workflow.ParkReason Reason, string? Detail = null) -> void
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.Reason.get -> Aw.Sindri.Core.Workflow.ParkReason
+Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.Reason.init -> void
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.<Clone>$() -> Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest!
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out string! Kind, out Aw.Sindri.Core.Ids.HeadSha Sha, out string! Digest) -> void
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Digest.get -> string!
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Digest.init -> void
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Equals(Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest? other) -> bool
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Instance.init -> void
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Kind.get -> string!
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Kind.init -> void
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.RegisterEvidenceRequest(Aw.Sindri.Core.Ids.InstanceId Instance, string! Kind, Aw.Sindri.Core.Ids.HeadSha Sha, string! Digest) -> void
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Sha.get -> Aw.Sindri.Core.Ids.HeadSha
+Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Sha.init -> void
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.<Clone>$() -> Aw.Sindri.Features.ShowWorkflow.HistoryEntry!
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.At.get -> System.DateTimeOffset
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.At.init -> void
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Deconstruct(out long Sequence, out string! Type, out System.DateTimeOffset At, out long Epoch, out string! Key) -> void
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Epoch.get -> long
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Epoch.init -> void
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Equals(Aw.Sindri.Features.ShowWorkflow.HistoryEntry? other) -> bool
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.HistoryEntry(long Sequence, string! Type, System.DateTimeOffset At, long Epoch, string! Key) -> void
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Key.get -> string!
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Key.init -> void
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Sequence.get -> long
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Sequence.init -> void
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Type.get -> string!
+Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Type.init -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.<Clone>$() -> Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest!
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance) -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.Equals(Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest? other) -> bool
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.Instance.init -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.ShowWorkflowRequest(Aw.Sindri.Core.Ids.InstanceId Instance) -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.<Clone>$() -> Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse!
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Children.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.WorkflowInstance!>!
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Children.init -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Deconstruct(out Aw.Sindri.Core.Workflow.WorkflowInstance! Instance, out string! Status, out Aw.Sindri.Core.Recipes.StateKind? Kind, out string? Next, out System.Collections.Generic.IReadOnlyList<string!>! Signals, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.WorkflowInstance!>! Children, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.ShowWorkflow.HistoryEntry!>! History) -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Equals(Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse? other) -> bool
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.History.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.ShowWorkflow.HistoryEntry!>!
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.History.init -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Instance.get -> Aw.Sindri.Core.Workflow.WorkflowInstance!
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Instance.init -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Kind.get -> Aw.Sindri.Core.Recipes.StateKind?
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Kind.init -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Next.get -> string?
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Next.init -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.ShowWorkflowResponse(Aw.Sindri.Core.Workflow.WorkflowInstance! Instance, string! Status, Aw.Sindri.Core.Recipes.StateKind? Kind, string? Next, System.Collections.Generic.IReadOnlyList<string!>! Signals, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.WorkflowInstance!>! Children, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.ShowWorkflow.HistoryEntry!>! History) -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Signals.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Signals.init -> void
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Status.get -> string!
+Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Status.init -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.<Clone>$() -> Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest!
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out string! On, out long? ExpectedVersion, out Aw.Sindri.Core.Ids.HeadSha? Sha, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>? Outputs, out System.Collections.Generic.IReadOnlyList<string!>? Findings, out bool EmptyDiff, out long Tokens, out int Turns) -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.EmptyDiff.get -> bool
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.EmptyDiff.init -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Equals(Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest? other) -> bool
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.ExpectedVersion.get -> long?
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.ExpectedVersion.init -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Findings.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Findings.init -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Instance.init -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.On.get -> string!
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.On.init -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Outputs.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Outputs.init -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Sha.get -> Aw.Sindri.Core.Ids.HeadSha?
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Sha.init -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.SignalWorkflowRequest(Aw.Sindri.Core.Ids.InstanceId Instance, string! On, long? ExpectedVersion = null, Aw.Sindri.Core.Ids.HeadSha? Sha = null, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? Outputs = null, System.Collections.Generic.IReadOnlyList<string!>? Findings = null, bool EmptyDiff = false, long Tokens = 0, int Turns = 0) -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Tokens.get -> long
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Tokens.init -> void
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Turns.get -> int
+Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Turns.init -> void
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.<Clone>$() -> Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest!
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.Attempt.get -> int
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.Attempt.init -> void
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.BaseSha.get -> Aw.Sindri.Core.Ids.HeadSha?
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.BaseSha.init -> void
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.Deconstruct(out Aw.Sindri.Core.Ids.RecipeId Recipe, out Aw.Sindri.Core.Ids.ItemId Item, out int Attempt, out Aw.Sindri.Core.Ids.HeadSha? BaseSha) -> void
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.Equals(Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest? other) -> bool
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.Item.get -> Aw.Sindri.Core.Ids.ItemId
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.Item.init -> void
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.Recipe.get -> Aw.Sindri.Core.Ids.RecipeId
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.Recipe.init -> void
+Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.StartWorkflowRequest(Aw.Sindri.Core.Ids.RecipeId Recipe, Aw.Sindri.Core.Ids.ItemId Item, int Attempt = 1, Aw.Sindri.Core.Ids.HeadSha? BaseSha = null) -> void
+Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest
+Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.<Clone>$() -> Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest!
+Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance) -> void
+Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.Equals(Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest? other) -> bool
+Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.Instance.init -> void
+Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.TakeOverWorkflowRequest(Aw.Sindri.Core.Ids.InstanceId Instance) -> void
+Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest
+Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.<Clone>$() -> Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest!
+Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.ClockJump.get -> System.TimeSpan?
+Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.ClockJump.init -> void
+Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.Deconstruct(out System.TimeSpan? ClockJump) -> void
+Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.Equals(Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest? other) -> bool
+Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.TickWorkflowTimersRequest(System.TimeSpan? ClockJump = null) -> void
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.<Clone>$() -> Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest!
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out long Tokens, out int Turns) -> void
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.Equals(Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest? other) -> bool
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.Instance.init -> void
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.Tokens.get -> long
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.Tokens.init -> void
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.Turns.get -> int
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.Turns.init -> void
+Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.UnparkWorkflowRequest(Aw.Sindri.Core.Ids.InstanceId Instance, long Tokens = 0, int Turns = 0) -> void
+Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest
+Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.<Clone>$() -> Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest!
+Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.Deconstruct(out string! Path) -> void
+Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.Equals(Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest? other) -> bool
+Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.Path.get -> string!
+Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.Path.init -> void
+Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.ValidateRecipeRequest(string! Path) -> void
+override Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.GetHashCode() -> int
+override Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.ToString() -> string!
+override Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.GetHashCode() -> int
+override Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.ToString() -> string!
+override Aw.Sindri.Features.ListBlocks.ListBlocksRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ListBlocks.ListBlocksRequest.GetHashCode() -> int
+override Aw.Sindri.Features.ListBlocks.ListBlocksRequest.ToString() -> string!
+override Aw.Sindri.Features.ListBlocks.ListBlocksResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ListBlocks.ListBlocksResponse.GetHashCode() -> int
+override Aw.Sindri.Features.ListBlocks.ListBlocksResponse.ToString() -> string!
+override Aw.Sindri.Features.ListRecipes.ListRecipesRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ListRecipes.ListRecipesRequest.GetHashCode() -> int
+override Aw.Sindri.Features.ListRecipes.ListRecipesRequest.ToString() -> string!
+override Aw.Sindri.Features.ListRecipes.ListRecipesResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ListRecipes.ListRecipesResponse.GetHashCode() -> int
+override Aw.Sindri.Features.ListRecipes.ListRecipesResponse.ToString() -> string!
+override Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.GetHashCode() -> int
+override Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.ToString() -> string!
+override Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.GetHashCode() -> int
+override Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.ToString() -> string!
+override Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.GetHashCode() -> int
+override Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.ToString() -> string!
+override Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.GetHashCode() -> int
+override Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.ToString() -> string!
+override Aw.Sindri.Features.ShowWorkflow.HistoryEntry.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ShowWorkflow.HistoryEntry.GetHashCode() -> int
+override Aw.Sindri.Features.ShowWorkflow.HistoryEntry.ToString() -> string!
+override Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.GetHashCode() -> int
+override Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.ToString() -> string!
+override Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.GetHashCode() -> int
+override Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.ToString() -> string!
+override Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.GetHashCode() -> int
+override Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.ToString() -> string!
+override Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.GetHashCode() -> int
+override Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.ToString() -> string!
+override Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.GetHashCode() -> int
+override Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.ToString() -> string!
+override Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.GetHashCode() -> int
+override Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.ToString() -> string!
+override Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.GetHashCode() -> int
+override Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.ToString() -> string!
+override Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.GetHashCode() -> int
+override Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.ToString() -> string!
+static Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.operator !=(Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest? left, Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest.operator ==(Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest? left, Aw.Sindri.Features.CancelWorkflow.CancelWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.operator !=(Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest? left, Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest.operator ==(Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest? left, Aw.Sindri.Features.HandBackWorkflow.HandBackWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.ListBlocks.ListBlocksRequest.operator !=(Aw.Sindri.Features.ListBlocks.ListBlocksRequest? left, Aw.Sindri.Features.ListBlocks.ListBlocksRequest? right) -> bool
+static Aw.Sindri.Features.ListBlocks.ListBlocksRequest.operator ==(Aw.Sindri.Features.ListBlocks.ListBlocksRequest? left, Aw.Sindri.Features.ListBlocks.ListBlocksRequest? right) -> bool
+static Aw.Sindri.Features.ListBlocks.ListBlocksResponse.operator !=(Aw.Sindri.Features.ListBlocks.ListBlocksResponse? left, Aw.Sindri.Features.ListBlocks.ListBlocksResponse? right) -> bool
+static Aw.Sindri.Features.ListBlocks.ListBlocksResponse.operator ==(Aw.Sindri.Features.ListBlocks.ListBlocksResponse? left, Aw.Sindri.Features.ListBlocks.ListBlocksResponse? right) -> bool
+static Aw.Sindri.Features.ListRecipes.ListRecipesRequest.operator !=(Aw.Sindri.Features.ListRecipes.ListRecipesRequest? left, Aw.Sindri.Features.ListRecipes.ListRecipesRequest? right) -> bool
+static Aw.Sindri.Features.ListRecipes.ListRecipesRequest.operator ==(Aw.Sindri.Features.ListRecipes.ListRecipesRequest? left, Aw.Sindri.Features.ListRecipes.ListRecipesRequest? right) -> bool
+static Aw.Sindri.Features.ListRecipes.ListRecipesResponse.operator !=(Aw.Sindri.Features.ListRecipes.ListRecipesResponse? left, Aw.Sindri.Features.ListRecipes.ListRecipesResponse? right) -> bool
+static Aw.Sindri.Features.ListRecipes.ListRecipesResponse.operator ==(Aw.Sindri.Features.ListRecipes.ListRecipesResponse? left, Aw.Sindri.Features.ListRecipes.ListRecipesResponse? right) -> bool
+static Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.operator !=(Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest? left, Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest? right) -> bool
+static Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest.operator ==(Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest? left, Aw.Sindri.Features.ListWorkflows.ListWorkflowsRequest? right) -> bool
+static Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.operator !=(Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse? left, Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse? right) -> bool
+static Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse.operator ==(Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse? left, Aw.Sindri.Features.ListWorkflows.ListWorkflowsResponse? right) -> bool
+static Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.operator !=(Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest? left, Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest.operator ==(Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest? left, Aw.Sindri.Features.ParkWorkflow.ParkWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.operator !=(Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest? left, Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest? right) -> bool
+static Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest.operator ==(Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest? left, Aw.Sindri.Features.RegisterEvidence.RegisterEvidenceRequest? right) -> bool
+static Aw.Sindri.Features.ShowWorkflow.HistoryEntry.operator !=(Aw.Sindri.Features.ShowWorkflow.HistoryEntry? left, Aw.Sindri.Features.ShowWorkflow.HistoryEntry? right) -> bool
+static Aw.Sindri.Features.ShowWorkflow.HistoryEntry.operator ==(Aw.Sindri.Features.ShowWorkflow.HistoryEntry? left, Aw.Sindri.Features.ShowWorkflow.HistoryEntry? right) -> bool
+static Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.operator !=(Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest? left, Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest.operator ==(Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest? left, Aw.Sindri.Features.ShowWorkflow.ShowWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.operator !=(Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse? left, Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse? right) -> bool
+static Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse.operator ==(Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse? left, Aw.Sindri.Features.ShowWorkflow.ShowWorkflowResponse? right) -> bool
+static Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.operator !=(Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest? left, Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest.operator ==(Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest? left, Aw.Sindri.Features.SignalWorkflow.SignalWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.operator !=(Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest? left, Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest.operator ==(Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest? left, Aw.Sindri.Features.StartWorkflow.StartWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.operator !=(Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest? left, Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest.operator ==(Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest? left, Aw.Sindri.Features.TakeOverWorkflow.TakeOverWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.operator !=(Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest? left, Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest? right) -> bool
+static Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest.operator ==(Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest? left, Aw.Sindri.Features.TickWorkflowTimers.TickWorkflowTimersRequest? right) -> bool
+static Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.operator !=(Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest? left, Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest.operator ==(Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest? left, Aw.Sindri.Features.UnparkWorkflow.UnparkWorkflowRequest? right) -> bool
+static Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.operator !=(Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest? left, Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest? right) -> bool
+static Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest.operator ==(Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest? left, Aw.Sindri.Features.ValidateRecipe.ValidateRecipeRequest? right) -> bool

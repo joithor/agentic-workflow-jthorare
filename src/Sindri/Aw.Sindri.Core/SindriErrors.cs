@@ -53,10 +53,39 @@ public static class SindriErrors
     /// <summary>SND-SCHED-001: a background service run failed.</summary>
     public static readonly ErrorDefinition ServiceFailed = new("SND-SCHED-001", ErrorKind.Unavailable, "A background service failed");
 
+    /// <summary>SND-WF-001: a recipe fails validation (each problem names its check and path).</summary>
+    public static readonly ErrorDefinition RecipeInvalid = new("SND-WF-001", ErrorKind.Invalid, "The recipe is invalid");
+
+    /// <summary>SND-WF-002: no recipe with that id is registered, or it is invalid.</summary>
+    public static readonly ErrorDefinition RecipeUnknown = new("SND-WF-002", ErrorKind.NotFound, "No such recipe");
+
+    /// <summary>SND-WF-003: the instance's version isn't the one the caller expected (optimistic concurrency).</summary>
+    public static readonly ErrorDefinition InstanceChanged = new("SND-WF-003", ErrorKind.Conflict, "The instance changed");
+
+    /// <summary>SND-WF-004: no workflow instance with that id.</summary>
+    public static readonly ErrorDefinition InstanceUnknown = new("SND-WF-004", ErrorKind.NotFound, "No such workflow instance");
+
+    /// <summary>SND-WF-005: the instance can't take that signal or command in its current state.</summary>
+    public static readonly ErrorDefinition TransitionNotAllowed = new("SND-WF-005", ErrorKind.Conflict, "The transition isn't allowed now");
+
+    /// <summary>SND-WF-006: a gate refused the transition.</summary>
+    public static readonly ErrorDefinition GateRefused = new("SND-WF-006", ErrorKind.Forbidden, "A gate refused the transition");
+
+    /// <summary>SND-WF-007: the transition needs evidence that isn't registered for this instance and sha.</summary>
+    public static readonly ErrorDefinition EvidenceMissing = new("SND-WF-007", ErrorKind.Forbidden, "Required evidence is missing");
+
+    /// <summary>SND-WF-008: the recipe changed under a running instance (its hash isn't the one the instance started with).</summary>
+    public static readonly ErrorDefinition RecipeChanged = new("SND-WF-008", ErrorKind.Conflict, "The recipe changed under the instance");
+
+    /// <summary>SND-WF-009: a signal sets an output the current step doesn't declare, or a value of the wrong type.</summary>
+    public static readonly ErrorDefinition OutputInvalid = new("SND-WF-009", ErrorKind.Invalid, "An output is not valid here");
+
     /// <summary>Every Sindri error, for ErrorCatalogue.Validate.</summary>
     public static IReadOnlyList<ErrorDefinition> All { get; } =
     [
         LeaseHeld, LeaseLost, LeaseStale, ProfileMissing, ProfileInvalid, ProfileHashMismatch, ProfileNeedsTerminal,
         ProfileNotApproved, LedgerSchema, LedgerUnavailable, NotRunning, ApiTimeout, PortInUse, UnknownVerb, StartFailed, ServiceFailed,
+        RecipeInvalid, RecipeUnknown, InstanceChanged, InstanceUnknown, TransitionNotAllowed, GateRefused, EvidenceMissing, RecipeChanged,
+        OutputInvalid,
     ];
 }

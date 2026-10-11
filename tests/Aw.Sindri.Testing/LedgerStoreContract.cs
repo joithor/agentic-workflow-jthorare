@@ -2,6 +2,7 @@ using System.Globalization;
 using Aw.Kernel.Events;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core;
+using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Lease;
 using Aw.Sindri.Core.Ledger;
 using Microsoft.Extensions.Time.Testing;
@@ -45,7 +46,7 @@ public abstract class LedgerStoreContract
 
         Expect.True(!appended.AlreadyRecorded);
         var only = Expect.Only(read);
-        Expect.Equal(new LedgerEvent(appended.Sequence, grant.Epoch, entry.Envelope, "k1", "ITEM-1"), only);
+        Expect.Equal(new LedgerEvent(appended.Sequence, grant.Epoch, entry.Envelope, "k1", ItemId.From("ITEM-1")), only);
     }
 
     /// <summary>A replayed key is reported as already recorded, with the first event's position, and writes nothing.</summary>
@@ -113,6 +114,6 @@ public abstract class LedgerStoreContract
     {
         var context = EventContext.Create("host:sindri", "local", 0, _ids.NewId(), trace).Value;
         Clock.Advance(TimeSpan.FromMilliseconds(1));
-        return new LedgerEntry(context.Envelope(type, """{"n":1}""", Clock, _ids), key, item);
+        return new LedgerEntry(context.Envelope(type, """{"n":1}""", Clock, _ids), key, item is null ? null : ItemId.From(item));
     }
 }

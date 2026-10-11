@@ -1,5 +1,6 @@
 using Aw.Kernel.Data;
 using Aw.Kernel.Events;
+using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Ledger;
 using Microsoft.Data.Sqlite;
 
@@ -26,5 +27,5 @@ internal sealed class LedgerEventMapper : IRowMapper<LedgerEvent>
             reader.IsDBNull(11) ? null : reader.GetString(11),
             reader.GetString(12)),
         reader.GetString(13),
-        reader.IsDBNull(14) ? null : reader.GetString(14));
+        reader.IsDBNull(14) ? null : ItemId.From(reader.GetString(14)));
 }

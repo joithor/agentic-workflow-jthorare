@@ -9,6 +9,23 @@ using Aw.Sindri.Features.StartProcess;
 using Aw.Sindri.Features.StopProcess;
 using Aw.Sindri.Features.StreamEvents;
 using Aw.Sindri.Features.ValidateProfile;
+using Aw.Sindri.Features.StartWorkflow;
+using Aw.Sindri.Features.SignalWorkflow;
+using Aw.Sindri.Features.CancelWorkflow;
+using Aw.Sindri.Features.ParkWorkflow;
+using Aw.Sindri.Features.UnparkWorkflow;
+using Aw.Sindri.Features.TakeOverWorkflow;
+using Aw.Sindri.Features.HandBackWorkflow;
+using Aw.Sindri.Features.RegisterEvidence;
+using Aw.Sindri.Features.ListWorkflows;
+using Aw.Sindri.Features.ShowWorkflow;
+using Aw.Sindri.Features.TickWorkflowTimers;
+using Aw.Sindri.Features.ListRecipes;
+using Aw.Sindri.Features.ListBlocks;
+using Aw.Sindri.Features.ValidateRecipe;
+using Aw.Sindri.Core.Recipes;
+using Aw.Sindri.Core.Scheduling;
+using Aw.Sindri.Core.Workflow;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aw.Sindri.Features;
@@ -30,7 +47,23 @@ public static class SindriFeaturesServiceCollectionExtensions
             .AddScoped<IService<PingProcessRequest, Ping>, PingProcessService>()
             .AddScoped<IService<ValidateProfileRequest, ValidateProfileResponse>, ValidateProfileService>()
             .AddScoped<IService<ApproveProfileRequest, ApproveProfileResponse>, ApproveProfileService>()
-            .AddScoped<IService<RunDoctorRequest, RunDoctorResponse>, RunDoctorService>();
+            .AddScoped<IService<RunDoctorRequest, RunDoctorResponse>, RunDoctorService>()
+            .AddScoped<IService<StartWorkflowRequest, WorkflowOutcome>, StartWorkflowService>()
+            .AddScoped<IService<SignalWorkflowRequest, WorkflowOutcome>, SignalWorkflowService>()
+            .AddScoped<IService<CancelWorkflowRequest, WorkflowOutcome>, CancelWorkflowService>()
+            .AddScoped<IService<ParkWorkflowRequest, WorkflowOutcome>, ParkWorkflowService>()
+            .AddScoped<IService<UnparkWorkflowRequest, WorkflowOutcome>, UnparkWorkflowService>()
+            .AddScoped<IService<TakeOverWorkflowRequest, WorkflowOutcome>, TakeOverWorkflowService>()
+            .AddScoped<IService<HandBackWorkflowRequest, WorkflowOutcome>, HandBackWorkflowService>()
+            .AddScoped<IService<RegisterEvidenceRequest, WorkflowOutcome>, RegisterEvidenceService>()
+            .AddScoped<IService<ListWorkflowsRequest, ListWorkflowsResponse>, ListWorkflowsService>()
+            .AddScoped<IService<ShowWorkflowRequest, ShowWorkflowResponse>, ShowWorkflowService>()
+            .AddScoped<IService<TickWorkflowTimersRequest, TickReport>, TickWorkflowTimersService>()
+            .AddScoped<IService<ListRecipesRequest, ListRecipesResponse>, ListRecipesService>()
+            .AddScoped<IService<ListBlocksRequest, ListBlocksResponse>, ListBlocksService>()
+            .AddScoped<IService<ValidateRecipeRequest, CatalogEntry>, ValidateRecipeService>()
+            .AddSingleton<TickPace>()
+            .AddScoped<IScheduledService, WorkflowTimerService>();
         return services;
     }
 }

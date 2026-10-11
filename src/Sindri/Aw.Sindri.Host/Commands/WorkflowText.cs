@@ -85,7 +85,16 @@ internal static class WorkflowText
     private static string Timer(WorkflowInstance i) => (i.Deadline, i.Paused) switch
     {
         ({ } d, _) => d.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture),
-        (null, { } left) => "paused, " + left.ToString("c", CultureInfo.InvariantCulture) + " left",
+        (null, { } left) => "paused, " + Left(left) + " left",
         _ => "none",
     };
+
+    /// <summary>A duration in its two largest whole units, for example '8m 44s' or '2d 3h'.</summary>
+    private static string Left(TimeSpan left)
+    {
+        var parts = new[] { (left.Days, "d"), (left.Hours, "h"), (left.Minutes, "m"), (left.Seconds, "s") }
+            .SkipWhile(p => p.Item1 == 0).Take(2).Where(p => p.Item1 > 0)
+            .Select(p => string.Create(CultureInfo.InvariantCulture, $"{p.Item1}{p.Item2}")).ToList();
+        return parts.Count == 0 ? "under 1s" : string.Join(' ', parts);
+    }
 }

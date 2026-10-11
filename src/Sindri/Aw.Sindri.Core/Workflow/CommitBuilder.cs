@@ -22,7 +22,7 @@ internal sealed class CommitBuilder(EventFactory events, IBlockRegistry blocks, 
     {
         var after = InstanceFold.Apply(before, change);
         var entry = cause is null
-            ? events.Correlated(WorkflowKeys.Correlation(after.Parent ?? after.Id), change.EventType, change, key, after.Item)
+            ? events.Correlated(WorkflowKeys.Correlation(after.Root), change.EventType, change, key, after.Item)
             : events.Caused(cause, change.EventType, change, key, after.Item);
         draft.Writes.Add(new InstanceWrite(entry, after, before?.Version ?? 0));
         return (after, entry.Envelope);
@@ -32,9 +32,10 @@ internal sealed class CommitBuilder(EventFactory events, IBlockRegistry blocks, 
     {
         var at = clock.GetUtcNow();
         var recipe = spec.Recipe.Recipe;
-        var id = WorkflowKeys.Instance(scope.Tenant, recipe.Id, spec.Item, spec.Attempt);
+        var id = spec.Parent is { } parent ? WorkflowKeys.Child(parent, recipe.Id, spec.Attempt) : WorkflowKeys.Instance(scope.Tenant, recipe.Id, spec.Item, spec.Attempt);
         var empty = new SortedDictionary<string, string>(StringComparer.Ordinal);
-        var instance = new WorkflowInstance(id, recipe.Id, spec.Recipe.Hash, spec.Item, spec.Attempt, spec.Parent, scope.Tenant, scope.Ring,
+        var instance = new WorkflowInstance(id, recipe.Id, spec.Recipe.Hash, spec.Item, spec.Attempt, spec.Parent, spec.Root ?? id, scope.Tenant,
+            scope.Ring,
             Version: 1, recipe.Initial, Hold: null, TakenOver: false, Ended: null, empty, new SortedDictionary<string, int>(StringComparer.Ordinal),
             new SortedDictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal), Spend.Zero, Spend.Zero, Spend.Zero, [],
             Deadlines.For(recipe.State(recipe.Initial), at), Paused: null, Retries: 0, spec.BaseSha, at, at, at);

@@ -19,8 +19,10 @@ CREATE TABLE workflow_instances (
     deadline TEXT,
     started_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
-    snapshot_json TEXT NOT NULL,
-    UNIQUE (tenant, recipe, item, attempt)
+    snapshot_json TEXT NOT NULL
 );
+-- One instance per (tenant, recipe, item, attempt) among top-level instances; a child's attempt is its parent's
+-- version, so children are unique per parent.
+CREATE UNIQUE INDEX workflow_instances_attempt ON workflow_instances (tenant, recipe, item, attempt, COALESCE(parent, ''));
 CREATE INDEX workflow_instances_due ON workflow_instances (deadline) WHERE deadline IS NOT NULL;
 CREATE INDEX workflow_instances_parent ON workflow_instances (parent) WHERE parent IS NOT NULL;

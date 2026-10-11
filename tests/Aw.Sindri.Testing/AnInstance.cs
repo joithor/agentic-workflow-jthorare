@@ -19,7 +19,8 @@ public static class AnInstance
     {
         var recipeId = RecipeId.From(recipe);
         var itemId = ItemId.From(item);
-        return new WorkflowInstance(WorkflowKeys.Instance("local", recipeId, itemId, 1), recipeId, Hash, itemId, 1, Parent: null, "local", 0, 1, state,
+        var id = WorkflowKeys.Instance("local", recipeId, itemId, 1);
+        return new WorkflowInstance(id, recipeId, Hash, itemId, 1, Parent: null, Root: id, "local", 0, 1, state,
             Hold: null, TakenOver: false, Ended: null, new SortedDictionary<string, string>(StringComparer.Ordinal),
             new SortedDictionary<string, int>(StringComparer.Ordinal), new SortedDictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal),
             Spend.Zero, Spend.Zero, Spend.Zero, [], Deadline: null, Paused: null, Retries: 0, BaseSha: null, at, at, at);

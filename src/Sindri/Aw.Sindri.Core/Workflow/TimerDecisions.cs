@@ -34,6 +34,23 @@ public static class TimerDecisions
         };
     }
 
+    /// <summary>
+    /// The escalation for a running instance whose recipe changed or is gone: it can't move on its own, so it leaves the
+    /// tick's due batch and waits for the human (who can cancel it and start a new attempt).
+    /// </summary>
+    /// <param name="instance">The instance.</param>
+    /// <param name="why">The loader's message.</param>
+    /// <param name="now">The tick's time.</param>
+    /// <returns>The escalation, or null when the instance isn't running.</returns>
+    public static WorkflowChange? Stranded(WorkflowInstance instance, string why, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(instance);
+        var detail = $"recipe changed: {why}";
+        return instance.Runs
+            ? new WorkflowChange(instance.Id, ChangeKind.Escalated, instance.Version + 1, now, Hold: new InstanceHold(HoldKind.Escalated, Reason: null, detail), Detail: detail)
+            : null;
+    }
+
     /// <summary>The change that moves a running timer by <paramref name="gap"/> after a clock jump (design spec §9.2), or null when no timer runs.</summary>
     /// <param name="instance">The instance.</param>
     /// <param name="gap">The jump.</param>

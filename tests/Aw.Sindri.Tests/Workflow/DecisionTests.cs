@@ -37,8 +37,8 @@ public sealed class DecisionTests
     {
         var i = AnInstance.New("ITEM-1", KnownInstants.Epoch);
 
-        Assert.Equal("wf:workflow.test:ITEM-1:1:work>done:passed@v1:abc1234", WorkflowKeys.Transition(i, "done", "passed", Core.Ids.HeadSha.From("abc1234")));
-        Assert.Equal("wf:workflow.test:ITEM-1:1:start", WorkflowKeys.Start(i.Recipe, i.Item, 1));
+        Assert.Equal($"wf:{i.Id.Value}:work>done:passed@v1:abc1234", WorkflowKeys.Transition(i, "done", "passed", Core.Ids.HeadSha.From("abc1234")));
+        Assert.Equal($"wf:{i.Id.Value}:start", WorkflowKeys.Start(i.Id));
         Assert.Equal(i.Id, WorkflowKeys.Instance("local", i.Recipe, i.Item, 1));
         Assert.NotEqual(i.Id, WorkflowKeys.Instance("local", i.Recipe, i.Item, 2));
     }

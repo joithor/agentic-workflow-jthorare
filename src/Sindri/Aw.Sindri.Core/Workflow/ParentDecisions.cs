@@ -4,35 +4,49 @@ using Aw.Sindri.Core.Recipes;
 namespace Aw.Sindri.Core.Workflow;
 
 /// <summary>
-/// What a child's change means for its parent: completed → the parent's 'child.done' signal (gates apply); parked →
-/// parked with the child's reason; escalated → escalated; unparked → the parent's hold from that child lifts;
-/// cancelled → parked 'needs-answer'. A parent that isn't running is left alone.
+/// What a child's change means for its parent: completed → the parent's 'child.done' signal (gates apply, and a
+/// top-rung failure escalates the parent); parked → parked with the child's reason; escalated → escalated; unparked →
+/// the parent's hold from that child lifts; cancelled → parked 'needs-answer'. A parent that isn't running is left
+/// alone; when it runs again (unpark, handback) it catches up on a child that finished meanwhile (<see cref="CatchUp"/>).
+/// A parent whose recipe changed takes holds but no recipe decisions.
 /// </summary>
 /// <param name="blocks">The block registry.</param>
 /// <param name="gates">The gate evaluator.</param>
 /// <param name="clock">The clock.</param>
 internal sealed class ParentDecisions(IBlockRegistry blocks, GateEvaluator gates, TimeProvider clock)
 {
-    internal async ValueTask<ParentChange?> For(LoadedInstance parent, WorkflowInstance child, WorkflowChange change, CancellationToken ct)
+    internal async ValueTask<ParentChange?> For(WorkflowInstance parent, Recipe? recipe, WorkflowInstance child, WorkflowChange change, CancellationToken ct)
     {
-        var (p, now) = (parent.Instance, clock.GetUtcNow());
+        var now = clock.GetUtcNow();
         if (change.Kind is ChangeKind.Unparked)
         {
-            return p.Hold?.Child == child.Id ? Unpark(parent, child, now) : null;
+            return parent.Hold?.Child == child.Id && recipe is not null ? Unpark(parent, recipe, child, now) : null;
         }
 
-        if (!p.Runs)
+        if (!parent.Runs)
         {
             return null;
         }
 
         if (change.Kind is ChangeKind.Transitioned)
         {
-            return change.Completed ? await Done(parent, ct).ConfigureAwait(false) : null;
+            return change.Completed && recipe is not null ? await Done(parent, recipe, ct).ConfigureAwait(false) : null;
         }
 
         var hold = HoldFor(change, child);
-        return hold is null ? null : Hold(p, change, hold, now);
+        return hold is null ? null : Hold(parent, change, hold, now);
+    }
+
+    /// <summary>The 'child.done' a parent missed while it was held or taken over: its state waits on a child, and that state's latest child completed.</summary>
+    internal async ValueTask<ParentChange?> CatchUp(WorkflowInstance parent, Recipe recipe, IReadOnlyList<WorkflowInstance> children, CancellationToken ct)
+    {
+        if (!parent.Runs || recipe.State(parent.State)?.Child is not { } childRecipe)
+        {
+            return null;
+        }
+
+        var latest = children.Where(c => c.Recipe == childRecipe).MaxBy(c => c.Attempt);
+        return latest?.Ended is InstanceEnd.Completed ? await Done(parent, recipe, ct).ConfigureAwait(false) : null;
     }
 
     private static InstanceHold? HoldFor(WorkflowChange change, WorkflowInstance child)
@@ -56,18 +70,18 @@ internal sealed class ParentDecisions(IBlockRegistry blocks, GateEvaluator gates
         return new ParentChange(change, WorkflowKeys.Change(parent, $"child:{hold.Child?.Value}:{childChange.EventType}"), Transition: null);
     }
 
-    private static ParentChange? Unpark(LoadedInstance parent, WorkflowInstance child, DateTimeOffset now)
+    private static ParentChange? Unpark(WorkflowInstance parent, Recipe recipe, WorkflowInstance child, DateTimeOffset now)
     {
-        var unparked = CommandDecisions.Unpark(parent.Recipe.Recipe, parent.Instance, Spend.Zero, now);
+        var unparked = CommandDecisions.Unpark(recipe, parent, Spend.Zero, now);
         return unparked.IsError ? null : new ParentChange(unparked.Value with { Child = child.Id },
-            WorkflowKeys.Change(parent.Instance, $"child:{child.Id.Value}:workflow.unparked"), Transition: null);
+            WorkflowKeys.Change(parent, $"child:{child.Id.Value}:workflow.unparked"), Transition: null);
     }
 
-    private async ValueTask<ParentChange?> Done(LoadedInstance parent, CancellationToken ct)
+    // The parent's 'child.done': the first candidate whose gates pass, or the escalation a failed top rung asks for.
+    private async ValueTask<ParentChange?> Done(WorkflowInstance parent, Recipe recipe, CancellationToken ct)
     {
-        var (p, recipe) = (parent.Instance, parent.Recipe.Recipe);
         var signal = new WorkflowSignal(Recipe.ChildDone, ExpectedVersion: null, Sha: null, new Dictionary<string, string>(StringComparer.Ordinal), [], EmptyDiff: false, Spend.Zero);
-        var candidates = SignalDecisions.Candidates(recipe, p, signal, blocks);
+        var candidates = SignalDecisions.Candidates(recipe, parent, signal, blocks);
         if (candidates.IsError)
         {
             return null;
@@ -75,15 +89,31 @@ internal sealed class ParentDecisions(IBlockRegistry blocks, GateEvaluator gates
 
         foreach (var transition in candidates.Value)
         {
-            var records = await gates.Evaluate(p, transition, signal, ct).ConfigureAwait(false);
-            if (records.IsError || GateOutcome.Judge(p, records.Value, clock.GetUtcNow()) is not null)
+            var key = WorkflowKeys.Transition(parent, transition.To, transition.On, sha: null);
+            if (SignalDecisions.Missing(parent, transition, signal) is not null)
             {
                 continue;
             }
 
-            var settled = SignalDecisions.Settle(new TransitionInput(p, recipe, transition, signal, records.Value, clock.GetUtcNow()));
-            return settled.IsError ? null : new ParentChange(settled.Value, WorkflowKeys.Transition(p, transition.To, transition.On, sha: null),
-                settled.Value.Kind is ChangeKind.Transitioned ? transition : null);
+            var records = await gates.Evaluate(parent, transition, signal, ct).ConfigureAwait(false);
+            if (records.IsError)
+            {
+                continue;
+            }
+
+            var judged = GateOutcome.Judge(parent, records.Value, clock.GetUtcNow());
+            if (judged is { IsError: false } escalation)
+            {
+                return new ParentChange(escalation.Value, key, Transition: null);
+            }
+
+            if (judged is not null)
+            {
+                continue;
+            }
+
+            var settled = SignalDecisions.Settle(new TransitionInput(parent, recipe, transition, signal, records.Value, clock.GetUtcNow()));
+            return settled.IsError ? null : new ParentChange(settled.Value, key, settled.Value.Kind is ChangeKind.Transitioned ? transition : null);
         }
 
         return null;

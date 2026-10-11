@@ -26,8 +26,8 @@ internal sealed class FollowUps(CommitBuilder builder, IRecipeCatalog catalog)
 
         var parent = applied.Instance;
         var attempt = (int)Math.Min(parent.Version, int.MaxValue);
-        var start = builder.Start(new StartSpec(childRecipe.Value, parent.Item, attempt, parent.Id, parent.BaseSha));
-        _ = builder.Record(draft, before: null, start, WorkflowKeys.Start(child, parent.Item, attempt), applied.Event);
+        var start = builder.Start(new StartSpec(childRecipe.Value, parent.Item, attempt, parent.Id, parent.BaseSha, parent.Root));
+        _ = builder.Record(draft, before: null, start, WorkflowKeys.Start(start.Instance), applied.Event);
         return Unit.Value;
     }
 }

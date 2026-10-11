@@ -22,7 +22,7 @@ It is a client of the running control plane (start it with `sindri` first), like
 |---|---|
 | 0 | Results returned. A source that failed only degrades them (`DEGRADED` line, `failed` in the sources line) |
 | 1 | No results, or a refused question or option (`SND-CONTEXT-003`) |
-| 2 | Setup: the control plane isn't running (`SND-API-001`), no profile is approved (`SND-PROFILE-005`), or the profile turns on no source (`SND-CONTEXT-001`); or nothing could be searched (no results and no source answered: each failed or couldn't open) |
+| 2 | Any other error, a setup problem: for example the control plane isn't running or didn't answer (`SND-API-001`, `-002`), no profile is approved or the approvals can't be read (`SND-PROFILE-005`, `-006`), or the profile turns on no source (`SND-CONTEXT-001`). Also when nothing could be searched: no results and no source answered (each failed, couldn't open, or wasn't on) |
 
 Text output (no colour; state is always a word). This is a real run over this repo and a notes directory, cut to three
 results:
@@ -104,7 +104,7 @@ No model is called and nothing is stored: the engine reads the sources live on e
 
 | Source | Adapter | Reads | Document | Notes |
 |---|---|---|---|---|
-| `code` | `GitGrepCodeSource` | `git grep` over each profile repo's tracked files: fixed strings, any term, ignoring case, binary skipped, ≤ 20 lines a file, ≤ 20 000 lines a repo | `repo/path` (+ line) | Terms go through `-e`, paths after `--`, no shell; inherited `GIT_*` variables dropped and `grep.fallbackToNoIndex` / column output pinned off; a repo that isn't a checkout is left out (the source fails only when every repo does) |
+| `code` | `GitGrepCodeSource` | `git grep` over each profile repo's tracked files: fixed strings, any term, ignoring case (under `LC_ALL=C.UTF-8`, so non-ASCII letters fold too), binary skipped, ≤ 20 lines a file, ≤ 20 000 lines a repo | `repo/path` (+ line) | Terms go through `-e`, paths after `--`, no shell; inherited `GIT_*` variables dropped and `grep.fallbackToNoIndex` / column output pinned off; a repo that isn't a checkout is left out (the source fails only when every repo does) |
 | `notes` | `NotesDirectorySource` | `*.md`, `*.markdown`, `*.txt` under the directory; hidden files and folders and every symbolic link skipped; ≤ 5 000 files of ≤ 1 MB | the file's full path (+ line) | The walk runs under the deadline and stops at its cap |
 | `linear` | `LinearSource` | GraphQL `searchIssues` (read-only), optionally filtered to teams | the issue's permalink | Key from `LINEAR_API_KEY` (Authorization header, never in a message). Only the terms leave the machine |
 | `connectai` | `McpContextSource` over `IMcpToolReader` | a read-only MCP search tool | the document's URI | Port and fake only: the real MCP client comes when ConnectAI's read surface is wired |

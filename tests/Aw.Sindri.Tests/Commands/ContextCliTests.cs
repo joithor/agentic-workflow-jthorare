@@ -65,6 +65,7 @@ public sealed class ContextCliTests
     [InlineData("SND-CONTEXT-003", 1)]
     [InlineData("SND-CONTEXT-001", 2)]
     [InlineData("SND-PROFILE-005", 2)]
+    [InlineData("SND-PROFILE-006", 2)]
     [InlineData("SND-API-001", 2)]
     public void A_refused_query_exits_1_and_a_setup_problem_2(string code, int expected) =>
         Assert.Equal(expected, ContextVerbs.ExitCode(new Kernel.Error(code, Kernel.ErrorKind.Invalid, "m")));

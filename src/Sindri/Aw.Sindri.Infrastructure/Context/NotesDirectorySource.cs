@@ -53,7 +53,7 @@ internal sealed class NotesDirectorySource(string directory) : IContextSource
         {
             lines = await File.ReadAllLinesAsync(file, cancellationToken).ConfigureAwait(false);
         }
-        catch (FileNotFoundException)
+        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
         {
             return;   // removed while the walk ran
         }

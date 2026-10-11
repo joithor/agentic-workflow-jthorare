@@ -94,7 +94,9 @@ internal sealed class GitGrepCodeSource(IReadOnlyList<CodeRepo> repos) : IContex
             _ = start.Environment.Remove(name);
         }
 
-        start.Environment["LC_ALL"] = "C";   // git's messages in one language, so a failed repo's detail reads the same everywhere
+        // Untranslated messages (so a failed repo's detail reads the same everywhere) with UTF-8 character handling, so -i
+        // folds non-ASCII letters too (plain C folds ASCII only).
+        start.Environment["LC_ALL"] = "C.UTF-8";
 
         // Pinned against user config: tracked files only (no fallback to untracked ones), no column field in the output.
         string[] fixedArguments =

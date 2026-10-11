@@ -108,7 +108,7 @@ internal sealed class QueryContextService(IApprovals approvals, ISourceCatalog c
     {
         if (opening.Source is not { } source)
         {
-            return (null, new SourceReport(opening.Kind, SourceState.Skipped, 0, opening.Skipped));
+            return (null, new SourceReport(opening.Kind, SourceState.Skipped, 0, opening.Skipped is { } why ? scrubber.Scrub(why).Text : null));
         }
 
         using var deadline = new CancellationTokenSource(ContextQueryDefaults.Deadline, clock);

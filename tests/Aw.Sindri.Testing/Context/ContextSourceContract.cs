@@ -75,12 +75,14 @@ public abstract class ContextSourceContract
     [Fact]
     public async Task Hits_ignore_case_and_carry_document_title_and_excerpt()
     {
-        var source = await Create([new SeedDocument("upper", "Upper", "THE LEASE EPOCH IS SHOUTED")]);
+        var source = await Create([new SeedDocument("upper", "Upper", "THE LEASE EPOCH IS SHOUTED\nÆrlig talt, BLÅBÆR")]);
 
         var hit = Expect.Only((await source.Search(new SourceQuery(["lease"], 10), Token)).Value);
+        var nonAscii = Expect.Only((await source.Search(new SourceQuery(["ærlig"], 10), Token)).Value);
 
         Expect.True(hit.Document.Length > 0 && hit.Title.Length > 0);
         Expect.True(hit.Snippet.Contains("lease", StringComparison.OrdinalIgnoreCase));
+        Expect.True(nonAscii.Snippet.Contains("Ærlig", StringComparison.Ordinal));
     }
 
     /// <summary>A cancelled search returns SND-CONTEXT-010 instead of throwing.</summary>

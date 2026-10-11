@@ -100,6 +100,36 @@ public sealed class JudgeGateTests
         Assert.True(resolution is { BeforePassed: false, AfterPassed: true, Diff: null });
     }
 
+    private static readonly Dictionary<string, JudgeInput> _records = new(StringComparer.Ordinal)
+    {
+        ["resolution-check"] = new ResolutionCheckInput("resolution.brief", "resolution.expected", "resolution.actual", "resolution.root-cause",
+            "resolution.check-kind", "resolution.check-summary", BeforePassed: false, AfterPassed: true, "resolution.diff-stat", "resolution.diff"),
+        ["rule-check"] = new RuleCheckInput("rule.text", "rule.hunk"),
+        ["turn-progress"] = new TurnProgressInput("progress.problem", "progress.turn-diff"),
+        ["brief-scope"] = new BriefScopeInput("brief.agent-type", "brief.goal", "brief.acceptance-criteria", "brief.proof-command"),
+        ["visual-critique"] = new VisualCritiqueInput("visual.screenshot", "visual.evidence-dir", "visual.baseline"),
+        ["ask-check"] = new AskCheckInput("ask.transcript-tail"),
+    };
+
+    public static TheoryData<string> Questions => [.. _records.Keys];
+
+    [Theory, MemberData(nameof(Questions))]
+    public async Task Each_field_of_the_input_record_comes_from_its_own_fact(string question)
+    {
+        var expected = _records[question];
+        var judge = new FakeJudgeClient();
+        var q = JudgeQuestions.All.Single(x => x.Name == question);
+        var facts = q.Inputs.ToDictionary(i => i.Name, i => i.Type is PortType.Flag ? (i.Name.EndsWith("before-passed", StringComparison.Ordinal) ? "false" : "true") : i.Name, StringComparer.Ordinal);
+        foreach (var optional in new[] { "resolution.diff", "visual.baseline" })
+        {
+            facts[optional] = optional;
+        }
+
+        _ = await new JudgeGate(q, judge).Evaluate(Context(facts), Token);
+
+        Assert.Equal(expected, Assert.Single(judge.Asked));
+    }
+
     private static async Task<Result<GateVerdict>> Evaluate(string question, Result<JudgeAnswer> answer)
     {
         var q = JudgeQuestions.All.Single(x => x.Name == question);

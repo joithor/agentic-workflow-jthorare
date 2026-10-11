@@ -9,7 +9,7 @@ namespace Aw.Sindri.Features.CollectEvidence;
 /// <summary>
 /// Runs the kind's evidence provider outside any engine transaction (a tool run can take minutes; the ledger's write lock is
 /// never held across it), then registers a passing run through the engine. A failed run is reported and registers nothing.
-/// The instance must exist before the tool runs.
+/// The instance must exist and still be running before the tool runs.
 /// </summary>
 internal sealed class CollectEvidenceService(EvidenceProviders providers, IWorkflowStore store, IWorkflowEngine engine)
     : IService<CollectEvidenceRequest, CollectEvidenceResponse>
@@ -26,6 +26,11 @@ internal sealed class CollectEvidenceService(EvidenceProviders providers, IWorkf
         if (found.IsError || found.Value is null)
         {
             return found.IsError ? found.Error : SindriErrors.InstanceUnknown.With($"no workflow instance {request.Instance.Value} (fix: sindri workflow list)");
+        }
+
+        if (found.Value.Ended is not null)
+        {
+            return SindriErrors.TransitionNotAllowed.With($"{request.Instance.Value} is {WorkflowWords.Status(found.Value)}: it takes no more evidence");
         }
 
         var produced = await provider.Value.Provide(new EvidenceRequest(request.Instance, request.Sha, request.Inputs), cancellationToken).ConfigureAwait(false);

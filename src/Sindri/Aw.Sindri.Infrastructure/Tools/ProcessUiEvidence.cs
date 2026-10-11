@@ -20,13 +20,13 @@ internal sealed class ProcessUiEvidence(ToolSettings settings, JsonSerializerOpt
 {
     public async ValueTask<Result<StackHealth>> Doctor(CancellationToken cancellationToken)
     {
-        var run = await Call(["doctor"], ToolSettings.ProbeTimeout, cancellationToken).ConfigureAwait(false);
+        var run = await Call(["doctor"], settings.ProbeTimeout, cancellationToken).ConfigureAwait(false);
         return run.IsError ? run.Error : Document<StackHealth>("doctor", run.Value, 0, 2);
     }
 
     public async ValueTask<Result<DatabaseProvenance>> Provenance(CancellationToken cancellationToken)
     {
-        var run = await Call(["provenance"], ToolSettings.ProbeTimeout, cancellationToken).ConfigureAwait(false);
+        var run = await Call(["provenance"], settings.ProbeTimeout, cancellationToken).ConfigureAwait(false);
         return run.IsError ? run.Error : Document<DatabaseProvenance>("provenance", run.Value, 0);
     }
 
@@ -39,9 +39,15 @@ internal sealed class ProcessUiEvidence(ToolSettings settings, JsonSerializerOpt
     private async ValueTask<Result<EvidenceDocument>> Measure(string command, string file, UiEvidenceRun run, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(run);
+        if (!Path.IsPathFullyQualified(run.Input) || !Path.IsPathFullyQualified(run.RunDirectory))
+        {
+            // The control plane's working directory isn't the caller's, so a relative path would land somewhere else.
+            return SindriErrors.ProviderInputInvalid.With($"ui-evidence {command} takes absolute paths, not '{run.Input}' and '{run.RunDirectory}' (the CLI makes them absolute)");
+        }
+
         var runDirectory = Path.GetFullPath(run.RunDirectory);
-        var result = await Call([command, Path.GetFullPath(run.Input), runDirectory, "--host", run.Host, "--app-build", run.AppBuild.Value],
-            ToolSettings.RunTimeout, ct).ConfigureAwait(false);
+        var result = await Call([command, run.Input, runDirectory, "--host", run.Host, "--app-build", run.AppBuild.Value],
+            settings.RunTimeout, ct).ConfigureAwait(false);
         if (result.IsError)
         {
             return result.Error;
@@ -79,5 +85,5 @@ internal sealed class ProcessUiEvidence(ToolSettings settings, JsonSerializerOpt
         SindriErrors.ToolUnavailable.With(string.Create(CultureInfo.InvariantCulture, $"ui-evidence {command} exited {run.Exit}: {run.Message}"));
 
     private ValueTask<Result<ToolRun>> Call(IReadOnlyList<string> arguments, TimeSpan timeout, CancellationToken ct) =>
-        ToolProcess.Run(settings.UiEvidenceBin, arguments, stdin: null, timeout, ct);
+        ToolProcess.Run(new ToolCall("ui-evidence", settings.UiEvidenceBin, arguments, Stdin: null, timeout), settings, ct);
 }

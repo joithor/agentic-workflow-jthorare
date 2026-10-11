@@ -41,25 +41,43 @@ public abstract class UiEvidenceContract
     {
         var ct = TestContext.Current.CancellationToken;
         var unknown = await Create(new UiEvidenceScenario(Provenance: new(DataProvenance.Unknown, "no seed row found"))).Provenance(ct);
+        var seeded = await Create(new UiEvidenceScenario(Provenance: new(DataProvenance.Seeded, "seed row present"))).Provenance(ct);
 
         Expect.Equal(new DatabaseProvenance(DataProvenance.Unknown, "no seed row found"), unknown.Value);
+        Expect.Equal(new DatabaseProvenance(DataProvenance.Seeded, "seed row present"), seeded.Value);
     }
 
-    /// <summary>A passing run names its summary.json in the run directory with a sha256 digest; a failing run is a document too, not passed.</summary>
+    /// <summary>run and parity each name their document in the run directory with a sha256 digest, passed or not (a failed check is still a document).</summary>
+    /// <param name="parity">Parity rather than run.</param>
+    /// <param name="passes">Whether the checks pass.</param>
     /// <returns>The test.</returns>
-    [Fact]
-    public async Task A_run_names_its_document_and_digest_passed_or_not()
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    public async Task A_run_names_its_document_and_digest_passed_or_not(bool parity, bool passes)
     {
         var ct = TestContext.Current.CancellationToken;
         var dir = RunDirectory();
         var run = new UiEvidenceRun("/work/script.json", dir, "http://localhost:3000", Sha);
+        var client = Create(new UiEvidenceScenario(RunPasses: passes));
 
-        var passed = await Create(new UiEvidenceScenario(RunPasses: true)).Run(run, ct);
-        var failed = await Create(new UiEvidenceScenario(RunPasses: false)).Parity(run, ct);
+        var document = parity ? await client.Parity(run, ct) : await client.Run(run, ct);
 
-        Expect.True(passed.Value.Passed && passed.Value.Path == Path.Combine(dir, "summary.json"));
-        Expect.True(passed.Value.Digest.StartsWith("sha256:", StringComparison.Ordinal) && passed.Value.Digest.Length == 71);
-        Expect.True(!failed.Value.Passed && failed.Value.Path == Path.Combine(dir, "parity.json"));
+        Expect.Equal(passes, document.Value.Passed);
+        Expect.Equal(Path.Combine(dir, parity ? "parity.json" : "summary.json"), document.Value.Path);
+        Expect.True(document.Value.Digest.StartsWith("sha256:", StringComparison.Ordinal) && document.Value.Digest.Length == 71);
+    }
+
+    /// <summary>A relative script or run directory is refused (SND-BLK-002) before the tool runs: the control plane's working directory isn't the caller's.</summary>
+    /// <returns>The test.</returns>
+    [Fact]
+    public async Task Relative_paths_are_refused()
+    {
+        var refused = await Create(new UiEvidenceScenario()).Run(new UiEvidenceRun("script.json", "runs/r1", "http://localhost:3000", Sha), TestContext.Current.CancellationToken);
+
+        Expect.True(refused.IsError && refused.Error.Code == SindriErrors.ProviderInputInvalid.Code);
     }
 
     /// <summary>A tool that errors (ui-evidence's exit 4 and its line) is SND-BLK-001 with the line.</summary>

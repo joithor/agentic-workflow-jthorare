@@ -5,7 +5,8 @@ namespace Aw.Sindri.Testing;
 
 /// <summary>
 /// An <see cref="IUiEvidence"/> whose stack, database and runs the test sets: a run 'writes' its document at
-/// &lt;run-dir&gt;/summary.json (parity.json) with a digest derived from the run, and every call is recorded.
+/// &lt;run-dir&gt;/summary.json (parity.json) with a digest derived from the run, relative paths are refused (SND-BLK-002), and
+/// every call is recorded.
 /// </summary>
 public sealed class FakeUiEvidence : IUiEvidence
 {
@@ -50,7 +51,13 @@ public sealed class FakeUiEvidence : IUiEvidence
     private ValueTask<Result<EvidenceDocument>> Measure(string command, string file, UiEvidenceRun run)
     {
         ArgumentNullException.ThrowIfNull(run);
-        var path = Path.Combine(Path.GetFullPath(run.RunDirectory), file);
+        if (!Path.IsPathFullyQualified(run.Input) || !Path.IsPathFullyQualified(run.RunDirectory))
+        {
+            _calls.Add($"{command} refused");
+            return ValueTask.FromResult<Result<EvidenceDocument>>(Core.SindriErrors.ProviderInputInvalid.With($"ui-evidence {command} takes absolute paths"));
+        }
+
+        var path = Path.Combine(run.RunDirectory, file);
         return Answer($"{command} {run.Input} {run.RunDirectory} {run.Host} {run.AppBuild.Value}", new EvidenceDocument(RunsPass, path, DigestOf(run)));
     }
 

@@ -14,7 +14,7 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace Aw.Sindri.Tests.Workflow;
 
-/// <summary>The engine as AddSindriCore and AddSindriToolBlocks compose it (the tools faked), over the in-memory lease, workflow store and recipe catalog, with a test gate.</summary>
+/// <summary>The engine as AddSindriCore composes it (the tools faked), over the in-memory lease, workflow store and recipe catalog, with a test gate.</summary>
 internal sealed class WorkflowHarness : IAsyncDisposable
 {
     private readonly ServiceProvider _provider;
@@ -28,7 +28,6 @@ internal sealed class WorkflowHarness : IAsyncDisposable
             .AddSingleton(SliceHarness.Json)
             .AddSingleton<IIdGenerator>(new SequentialIdGenerator())
             .AddSindriCore()
-            .AddSindriToolBlocks()
             .AddSingleton<IJudgeClient>(Judge)
             .AddSingleton<IUiEvidence>(UiEvidence)
             .AddSingleton<IBlock>(Model)

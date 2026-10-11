@@ -44,8 +44,9 @@
 #           production code only with OutputItemType="Analyzer" (in a .csproj or a Directory.Build file);
 #           they need no edge and don't count as fan-out. Any other ProjectReference in a Directory.Build
 #           file fails.
-# scan      A heuristic, not a proof. It reads *.ts/*.js, *.cs (lexed like TypeScript) and *.sh under `scan`
-#           (not tests, node_modules, dist, bin or obj) and finds: spawn/exec*(…"bin…" calls, also wrapped over lines; `?? "bin"` and `|| "bin"`
+# scan      A heuristic, not a proof. It reads *.ts/*.js, *.cs (lexed like TypeScript: C# verbatim @"…" and raw """…"""
+#           strings aren't understood and can put the masking out of step) and *.sh under `scan` (not tests,
+#           node_modules, dist, bin or obj) and finds: spawn/exec*(…"bin…" calls, also wrapped over lines; `?? "bin"` and `|| "bin"`
 #           fallbacks; *Bin = "bin" and *Bin("bin"); BIN_BIN env names; shell commands after VAR=, env,
 #           sudo, xargs, nohup, exec, !, $( and backquotes, by name, path suffix, "$BIN_BIN" or
 #           ${VAR:-bin}. TS comments are blanked and string, template and regex interiors are skipped for

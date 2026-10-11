@@ -1763,7 +1763,6 @@ Aw.Sindri.Core.Ids.JudgeDecisionId.IsInitialized() -> bool
 Aw.Sindri.Core.Ids.JudgeDecisionId.JudgeDecisionId() -> void
 Aw.Sindri.Core.Ids.JudgeDecisionId.ToString(System.IFormatProvider? provider) -> string!
 Aw.Sindri.Core.Ids.JudgeDecisionId.Value.get -> string!
-Aw.Sindri.Core.Registration.SindriToolBlocksServiceCollectionExtensions
 abstract Aw.Sindri.Core.Blocks.Judge.JudgeInput.<Clone>$() -> Aw.Sindri.Core.Blocks.Judge.JudgeInput!
 abstract Aw.Sindri.Core.Blocks.Judge.JudgeInput.Question.get -> string!
 override Aw.Sindri.Core.Blocks.Evidence.DatabaseProvenance.Equals(object? obj) -> bool
@@ -1863,7 +1862,6 @@ static Aw.Sindri.Core.Ids.JudgeDecisionId.TryFrom(string? value, out Aw.Sindri.C
 static Aw.Sindri.Core.Ids.JudgeDecisionId.TryParse(string? s, System.IFormatProvider? provider, out Aw.Sindri.Core.Ids.JudgeDecisionId result) -> bool
 static Aw.Sindri.Core.Ids.JudgeDecisionId.operator !=(Aw.Sindri.Core.Ids.JudgeDecisionId left, Aw.Sindri.Core.Ids.JudgeDecisionId right) -> bool
 static Aw.Sindri.Core.Ids.JudgeDecisionId.operator ==(Aw.Sindri.Core.Ids.JudgeDecisionId left, Aw.Sindri.Core.Ids.JudgeDecisionId right) -> bool
-static Aw.Sindri.Core.Registration.SindriToolBlocksServiceCollectionExtensions.AddSindriToolBlocks(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static readonly Aw.Sindri.Core.SindriErrors.ProviderInputInvalid -> Aw.Kernel.ErrorDefinition!
 static readonly Aw.Sindri.Core.SindriErrors.ProviderUnknown -> Aw.Kernel.ErrorDefinition!
 static readonly Aw.Sindri.Core.SindriErrors.ToolUnavailable -> Aw.Kernel.ErrorDefinition!

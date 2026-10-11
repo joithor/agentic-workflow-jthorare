@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Aw.Sindri.Core.Blocks;
 using Aw.Sindri.Core.Blocks.Builtin;
+using Aw.Sindri.Core.Blocks.Evidence;
+using Aw.Sindri.Core.Blocks.Judge;
 using Aw.Sindri.Core.Events;
 using Aw.Sindri.Core.Lease;
 using Aw.Sindri.Core.Workflow;
@@ -13,7 +15,8 @@ public static class SindriCoreServiceCollectionExtensions
 {
     /// <summary>
     /// Adds the Sindri domain services: the control plane's event scope and factory, the lease this process holds, the
-    /// built-in blocks and the block registry, and the workflow engine. Another project adds its blocks as IBlock
+    /// built-in blocks, the tool blocks (judge and ui-evidence, docs/csharp/sindri-blocks.md) and the block registry, and the
+    /// workflow engine. Another project adds its blocks as IBlock
     /// singletons in its own Add…() method; the registry collects every IBlock in the container.
     /// </summary>
     /// <param name="services">The service collection.</param>
@@ -29,7 +32,7 @@ public static class SindriCoreServiceCollectionExtensions
             _ = services.AddSingleton(block);
         }
 
-        return services
+        return AddToolBlocks(services)
             .AddSingleton<IBlock>(static sp => new NotifyHumanEffect(sp.GetRequiredService<JsonSerializerOptions>()))
             .AddSingleton<IBlock>(static sp => new DraftPullRequestEffect(sp.GetRequiredService<JsonSerializerOptions>()))
             .AddSingleton<IBlockRegistry, BlockRegistry>()
@@ -44,5 +47,26 @@ public static class SindriCoreServiceCollectionExtensions
             .AddScoped<CommandApplier>()
             .AddScoped<WorkflowTicker>()
             .AddScoped<IWorkflowEngine, WorkflowRunner>();
+    }
+
+    // The tool blocks (docs/csharp/sindri-blocks.md): judge's decision questions as gates, ui-evidence's checks and
+    // providers. They reach their tools through IJudgeClient and IUiEvidence, which an Infrastructure Add…() registers.
+    private static IServiceCollection AddToolBlocks(IServiceCollection services)
+    {
+        foreach (var question in JudgeQuestions.All)
+        {
+            _ = services.AddSingleton<IBlock>(sp => new JudgeGate(question, sp.GetRequiredService<IJudgeClient>()));
+        }
+
+        foreach (var make in new Func<IUiEvidence, UiRunProvider>[] { UiRunProvider.UiBrowser, UiRunProvider.DesignParity })
+        {
+            _ = services.AddSingleton<IBlock>(sp => make(sp.GetRequiredService<IUiEvidence>()));
+        }
+
+        return services
+            .AddSingleton<IBlock>(static sp => new StackDoctorGate(sp.GetRequiredService<IUiEvidence>()))
+            .AddSingleton<IBlock>(static sp => new ProvenanceGate(sp.GetRequiredService<IUiEvidence>()))
+            .AddSingleton(UiEvidenceSteps.UiRun)
+            .AddSingleton<EvidenceProviders>();
     }
 }

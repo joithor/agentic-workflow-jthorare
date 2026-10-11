@@ -90,6 +90,7 @@ d="$(fixture cs-default-bin)"
 printf 'internal static class Tools\n{\n    // AlphaBin = "alpha" in a comment is not an edge\n    private const string AlphaBin = "alpha";\n}\n' > "$d/delta/src/Tools.cs"
 run "$d"
 expect "a C# *Bin constant naming another package's binary is a cli edge" 1 "DEPS-EDGE-001" "Delta -> Alpha (cli)" "delta/src/Tools.cs:4"
+refuse "a C# comment naming the binary is not an edge" "delta/src/Tools.cs:3"
 
 d="$(fixture stale)"
 printf 'export const dbPath = (s: string) => path.join(s, "alpha", "a.sqlite");\n' > "$d/beta/src/run.ts"

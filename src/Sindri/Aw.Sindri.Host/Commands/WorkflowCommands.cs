@@ -16,6 +16,9 @@ internal sealed class WorkflowCommands(WorkflowVerbs verbs, WorkflowArgs args)
         ["spec-conflict"] = ParkReason.SpecConflict,
     };
 
+    // The evidence providers' path inputs, made absolute against this shell's directory before they're sent.
+    private static readonly HashSet<string> _pathInputs = new(StringComparer.Ordinal) { "script", "manifest", "run-dir" };
+
     internal Task<int> Run(CancellationToken ct)
     {
         var p = args.Positionals;
@@ -82,7 +85,8 @@ internal sealed class WorkflowCommands(WorkflowVerbs verbs, WorkflowArgs args)
                 return verbs.Usage($"--input takes name=value, not '{pair}'");
             }
 
-            inputs[pair[..at]] = pair[(at + 1)..];
+            var (name, value) = (pair[..at], pair[(at + 1)..]);
+            inputs[name] = _pathInputs.Contains(name) && value.Trim().Length > 0 ? Path.GetFullPath(value) : value;   // the control plane's cwd isn't ours
         }
 
         return verbs.Collect($"/sindri/workflows/{id}/evidence/collect", new CollectBody(p[2], sha, inputs), args, ct);

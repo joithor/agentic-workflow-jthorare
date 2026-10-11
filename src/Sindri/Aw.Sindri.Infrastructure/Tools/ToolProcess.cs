@@ -7,14 +7,19 @@ using Aw.Sindri.Core;
 namespace Aw.Sindri.Infrastructure.Tools;
 
 /// <summary>
-/// Runs a tool binary once: arguments as a list (no shell), optional stdin, stdout and stderr captured, a timeout after
-/// which the process tree is killed. A binary that can't be started or a timeout is SND-BLK-001; the caller maps exit codes.
+/// Runs a tool binary once: arguments as a list (no shell), optional stdin, stdout and stderr captured. At the timeout, or
+/// when the caller cancels, the tool is stopped gracefully: SIGTERM, a grace period (ui-evidence releases its machine
+/// locks on SIGTERM), then SIGKILL of the whole tree. Once the tool exits, its output streams get a short grace to drain,
+/// so a child left holding them can't turn a finished run into a timeout. A binary that can't be started or a timeout is
+/// SND-BLK-001; a cancelled call throws OperationCanceledException after the tool is stopped; the caller maps exit codes.
 /// </summary>
 internal static class ToolProcess
 {
-    internal static async ValueTask<Result<ToolRun>> Run(string binary, IReadOnlyList<string> arguments, byte[]? stdin, TimeSpan timeout, CancellationToken ct)
+    private static readonly TimeSpan _drainGrace = TimeSpan.FromSeconds(2);
+
+    internal static async ValueTask<Result<ToolRun>> Run(ToolCall call, ToolSettings settings, CancellationToken ct)
     {
-        var info = new ProcessStartInfo(binary, arguments)
+        var info = new ProcessStartInfo(call.Binary, call.Arguments)
         {
             UseShellExecute = false,
             RedirectStandardInput = true,
@@ -29,54 +34,106 @@ internal static class ToolProcess
         }
         catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
         {
-            return SindriErrors.ToolUnavailable.With($"{Path.GetFileName(binary)} can't be started ({binary}): {ex.Message}");
+            return SindriErrors.ToolUnavailable.With($"{call.Name} can't be started ({call.Binary}): {ex.Message}");
         }
 
         using (process)
         {
-            return await Finish(process, binary, stdin, timeout, ct).ConfigureAwait(false);
+            return await Finish(process, call, settings.StopGrace, ct).ConfigureAwait(false);
         }
     }
 
-    private static async ValueTask<Result<ToolRun>> Finish(Process process, string binary, byte[]? stdin, TimeSpan timeout, CancellationToken ct)
+    private static async ValueTask<Result<ToolRun>> Finish(Process process, ToolCall call, TimeSpan stopGrace, CancellationToken ct)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        deadline.CancelAfter(timeout);
+        deadline.CancelAfter(call.Timeout);
         using var stdout = new MemoryStream();
-        var copyOut = process.StandardOutput.BaseStream.CopyToAsync(stdout, deadline.Token);
-        var readErr = process.StandardError.ReadToEndAsync(deadline.Token);
+        using var drain = new CancellationTokenSource();
+        var copyOut = process.StandardOutput.BaseStream.CopyToAsync(stdout, drain.Token);
+        var readErr = process.StandardError.ReadToEndAsync(drain.Token);
+        try
+        {
+            await Feed(process, call.Stdin, deadline.Token).ConfigureAwait(false);
+            await process.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            await Stop(process, stopGrace).ConfigureAwait(false);
+            await drain.CancelAsync().ConfigureAwait(false);
+            _ = await Observe(copyOut, readErr).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
+            return SindriErrors.ToolUnavailable.With(string.Create(CultureInfo.InvariantCulture,
+                $"{call.Name} didn't finish within {call.Timeout.TotalSeconds:0} s and was stopped"));
+        }
+
+        drain.CancelAfter(_drainGrace);
+        var stderr = await Observe(copyOut, readErr).ConfigureAwait(false);
+        return new ToolRun(process.ExitCode, stdout.ToArray(), stderr);
+    }
+
+    // Writes stdin and closes it; a tool that exits without reading it is fine (its exit code still counts).
+    private static async Task Feed(Process process, byte[]? stdin, CancellationToken ct)
+    {
         try
         {
             if (stdin is not null)
             {
-                await process.StandardInput.BaseStream.WriteAsync(stdin, deadline.Token).ConfigureAwait(false);
+                await process.StandardInput.BaseStream.WriteAsync(stdin, ct).ConfigureAwait(false);
             }
 
             process.StandardInput.Close();
-            await process.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
-            await copyOut.ConfigureAwait(false);
-            var stderr = await readErr.ConfigureAwait(false);
-            return new ToolRun(process.ExitCode, stdout.ToArray(), stderr);
         }
-        catch (Exception ex) when (ex is OperationCanceledException or IOException)
+        catch (IOException)
         {
-            Kill(process);
-            ct.ThrowIfCancellationRequested();
-            return SindriErrors.ToolUnavailable.With(ex is IOException
-                ? $"{Path.GetFileName(binary)} closed its pipes early: {ex.Message}"
-                : string.Create(CultureInfo.InvariantCulture, $"{Path.GetFileName(binary)} didn't finish within {timeout.TotalSeconds:0} s and was stopped"));
+            // the tool closed its stdin early; what it printed and its exit code decide
         }
     }
 
-    private static void Kill(Process process)
+    // Waits for both output readers; a reader cut off by the drain grace keeps what it read so far.
+    private static async Task<string> Observe(Task copyOut, Task<string> readErr)
     {
         try
         {
-            process.Kill(entireProcessTree: true);
+            await copyOut.ConfigureAwait(false);
         }
-        catch (InvalidOperationException)
+        catch (Exception ex) when (ex is OperationCanceledException or IOException)
         {
-            // it exited on its own in the meantime
+            // cut off: stdout holds what arrived
+        }
+
+        try
+        {
+            return await readErr.ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or IOException)
+        {
+            return string.Empty;
+        }
+    }
+
+    private static async Task Stop(Process process, TimeSpan grace)
+    {
+        if (process.HasExited)
+        {
+            return;
+        }
+
+        Signal.Terminate(process.Id);
+        using var wait = new CancellationTokenSource(grace);
+        try
+        {
+            await process.WaitForExitAsync(wait.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            catch (InvalidOperationException)
+            {
+                // it exited in the meantime
+            }
         }
     }
 }

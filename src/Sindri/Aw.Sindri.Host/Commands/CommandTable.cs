@@ -55,11 +55,13 @@ internal static class CommandTable
         };
     }
 
-    // A workflow call may run tool blocks on the server (a judge gate on a signal, a ui-evidence run on collect), so it
-    // waits longer than the 10 s status calls: past ui-evidence's own 20-minute run limit.
+    // signal and collect may run tool blocks on the server (judge gates on a signal, a ui-evidence run on collect), so
+    // they wait up to 25 minutes, past the 20 minutes Sindri gives a ui-evidence run (ToolSettings.RunTimeout); the other
+    // workflow verbs keep the 10 s every other call has.
     private static async Task<int> Workflow(string[] rest, Output output, IServiceProvider services, CancellationToken ct)
     {
-        using var client = new ControlPlaneClient(services.GetRequiredService<IControlPlaneProbe>(), services.GetRequiredService<JsonSerializerOptions>(), TimeSpan.FromMinutes(25));
+        TimeSpan? timeout = rest is ["signal" or "collect", ..] ? TimeSpan.FromMinutes(25) : null;
+        using var client = new ControlPlaneClient(services.GetRequiredService<IControlPlaneProbe>(), services.GetRequiredService<JsonSerializerOptions>(), timeout);
         return await new WorkflowVerbs(client, output, services).Run(rest, ct).ConfigureAwait(false);
     }
 

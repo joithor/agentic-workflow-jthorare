@@ -14,7 +14,7 @@ internal static class Registries
     internal static BlockRegistry Builtin(params IBlock[] extra) => new(
         [.. BuiltinSteps.All, .. BuiltinGates.All, new NotifyHumanEffect(SliceHarness.Json), new DraftPullRequestEffect(SliceHarness.Json), .. Tools(), .. extra]);
 
-    /// <summary>The tool blocks AddSindriToolBlocks registers, over the fakes.</summary>
+    /// <summary>The tool blocks AddSindriCore registers, over the fakes (ToolBlockRegistrationTests keeps the two lists equal).</summary>
     internal static IReadOnlyList<IBlock> Tools(IJudgeClient? judge = null, IUiEvidence? ui = null)
     {
         judge ??= new FakeJudgeClient();

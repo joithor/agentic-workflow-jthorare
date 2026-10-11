@@ -1,5 +1,6 @@
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Ids;
+using Aw.Sindri.Core.Workflow;
 using Aw.Sindri.Features.CollectEvidence;
 using Aw.Sindri.Tests.Workflow;
 
@@ -70,6 +71,20 @@ public sealed class CollectEvidenceTests
 
         Assert.Equal(SindriErrors.ToolUnavailable.Code, collected.Error.Code);
         Assert.Empty((await h.Get(i.Id)).Evidence);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task CollectEvidence_refuses_an_ended_instance_before_running_the_tool()
+    {
+        await using var h = new WorkflowHarness();
+        _ = await h.HoldLease();
+        var i = await h.Start();
+        _ = (await h.Engine.Apply(i.Id, new CancelCommand("dropped"), Token)).Value;
+
+        var refused = await Service(h).Handle(Request(i.Id), Token);
+
+        Assert.Equal(SindriErrors.TransitionNotAllowed.Code, refused.Error.Code);
+        Assert.Empty(h.UiEvidence.Calls);
     }
 
     private static CollectEvidenceService Service(WorkflowHarness h) => new(h.Providers, h.Store, h.Engine);

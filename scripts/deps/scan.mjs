@@ -1,5 +1,5 @@
-// scripts/deps/scan.mjs — finds cli, db and file edges in the TypeScript and shell source, and reads
-// C# project files. A heuristic scan, not a proof: what it can't see is listed in the deps.yaml header.
+// scripts/deps/scan.mjs — finds cli, db and file edges in the TypeScript, C# and shell source, and reads
+// C# project files. C# (*.cs) is lexed like TypeScript: comments blanked, string and char interiors masked. A heuristic scan, not a proof: what it can't see is listed in the deps.yaml header.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -7,7 +7,7 @@ import path from "node:path";
 const SKIP_SOURCE_DIRS = new Set(["node_modules", "dist", "coverage", "tests", "test", "__tests__", "fixtures", ".git", "bin", "obj"]);
 const SKIP_PROJECT_DIRS = new Set(["node_modules", ".git", "bin", "obj"]);
 const TEST_FILE = /\.(test|spec)\.([cm]?[jt]sx?|sh)$/;
-const TS_FILE = /\.[cm]?[jt]sx?$/;
+const TS_FILE = /\.[cm]?[jt]sx?$|\.cs$/;
 
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const Q = "[\"'`]";

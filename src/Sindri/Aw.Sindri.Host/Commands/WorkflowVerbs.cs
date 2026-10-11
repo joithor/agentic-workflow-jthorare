@@ -3,12 +3,14 @@ using Aw.Sindri.Core;
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Recipes;
 using Aw.Sindri.Core.Workflow;
+using Aw.Sindri.Features.CollectEvidence;
 using Aw.Sindri.Features.ListBlocks;
 using Aw.Sindri.Features.ListRecipes;
 using Aw.Sindri.Features.ListWorkflows;
 using Aw.Sindri.Features.ShowWorkflow;
 using Aw.Sindri.Features.StartWorkflow;
 using Aw.Sindri.Features.ValidateRecipe;
+using Aw.Sindri.Host.Bodies;
 
 namespace Aw.Sindri.Host.Commands;
 
@@ -49,6 +51,18 @@ internal sealed class WorkflowVerbs(ControlPlaneClient client, Output output, IS
 
         var code = answer.Value.Instance.Status is InstanceStatus.Parked or InstanceStatus.Escalated ? 1 : 0;
         return args.Json ? await output.Json(answer.Value, code).ConfigureAwait(false) : await output.Text(WorkflowText.Outcome(answer.Value), code).ConfigureAwait(false);
+    }
+
+    internal async Task<int> Collect(string route, CollectBody body, WorkflowArgs args, CancellationToken ct)
+    {
+        var answer = await client.Post<CollectBody, CollectEvidenceResponse>(route, body, ct).ConfigureAwait(false);
+        if (answer.IsError)
+        {
+            return await output.Error(answer.Error).ConfigureAwait(false);
+        }
+
+        var code = answer.Value.Registered is { Instance.Status: not (InstanceStatus.Parked or InstanceStatus.Escalated) } ? 0 : 1;
+        return args.Json ? await output.Json(answer.Value, code).ConfigureAwait(false) : await output.Text(WorkflowText.Collected(answer.Value), code).ConfigureAwait(false);
     }
 
     internal async Task<int> WithId(string text, Func<InstanceId, Task<int>> next) =>

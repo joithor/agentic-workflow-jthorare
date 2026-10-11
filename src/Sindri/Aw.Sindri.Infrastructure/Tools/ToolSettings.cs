@@ -9,6 +9,9 @@ namespace Aw.Sindri.Infrastructure.Tools;
 /// <param name="UiEvidenceBin">The ui-evidence binary.</param>
 internal sealed record ToolSettings(string JudgeBin, string UiEvidenceBin)
 {
+    private const string DefaultJudgeBin = "judge";
+    private const string DefaultUiEvidenceBin = "ui-evidence";
+
     /// <summary>How long one judge question may take: its own budget is at most 20 s, plus start-up.</summary>
     public static TimeSpan JudgeTimeout { get; } = TimeSpan.FromSeconds(60);
 
@@ -22,6 +25,6 @@ internal sealed record ToolSettings(string JudgeBin, string UiEvidenceBin)
     /// <param name="environment">Reads an environment variable.</param>
     /// <returns>The settings.</returns>
     public static ToolSettings Read(Func<string, string?> environment) =>
-        new(environment("AW_SINDRI_JUDGE_BIN") is { Length: > 0 } judge ? judge : "judge",
-            environment("AW_SINDRI_UI_EVIDENCE_BIN") is { Length: > 0 } ui ? ui : "ui-evidence");
+        new(environment("AW_SINDRI_JUDGE_BIN") is { Length: > 0 } judge ? judge : DefaultJudgeBin,
+            environment("AW_SINDRI_UI_EVIDENCE_BIN") is { Length: > 0 } ui ? ui : DefaultUiEvidenceBin);
 }

@@ -3,7 +3,7 @@ using Aw.Sindri.Host.Bodies;
 
 namespace Aw.Sindri.Host.Commands;
 
-/// <summary>The 'sindri workflow' verbs that change an instance: signal, evidence, cancel, park, unpark, takeover, handback.</summary>
+/// <summary>The 'sindri workflow' verbs that change an instance: signal, evidence, collect, cancel, park, unpark, takeover, handback.</summary>
 internal sealed class WorkflowCommands(WorkflowVerbs verbs, WorkflowArgs args)
 {
     private static readonly Dictionary<string, ParkReason> _reasons = new(StringComparer.Ordinal)
@@ -23,6 +23,7 @@ internal sealed class WorkflowCommands(WorkflowVerbs verbs, WorkflowArgs args)
         {
             ("signal", 3) => verbs.WithId(p[1], id => Signal(id.Value, p[2], ct)),
             ("evidence", 5) => verbs.WithId(p[1], id => Evidence(id.Value, ct)),
+            ("collect", 4) => verbs.WithId(p[1], id => Collect(id.Value, ct)),
             ("cancel", 2) => verbs.WithId(p[1], id => verbs.Mutate($"/sindri/workflows/{id.Value}/cancel", new ReasonBody(args.Option("--reason")), args, ct)),
             ("park", 3) => verbs.WithId(p[1], id => Park(id.Value, p[2], ct)),
             ("unpark", 2) => verbs.WithId(p[1], id => Unpark(id.Value, ct)),
@@ -62,6 +63,29 @@ internal sealed class WorkflowCommands(WorkflowVerbs verbs, WorkflowArgs args)
         return Core.Ids.HeadSha.TryFrom(p[3], out var sha)
             ? verbs.Mutate($"/sindri/workflows/{id}/evidence", new EvidenceBody(p[2], sha, p[4]), args, ct)
             : verbs.Usage($"evidence <id> <kind> <sha> <digest>: '{p[3]}' is not a commit sha");
+    }
+
+    private Task<int> Collect(string id, CancellationToken ct)
+    {
+        var p = args.Positionals;
+        if (!Core.Ids.HeadSha.TryFrom(p[3], out var sha))
+        {
+            return verbs.Usage($"collect <id> <kind> <sha>: '{p[3]}' is not a commit sha");
+        }
+
+        var inputs = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var pair in args.All("--input"))
+        {
+            var at = pair.IndexOf('=', StringComparison.Ordinal);
+            if (at < 1)
+            {
+                return verbs.Usage($"--input takes name=value, not '{pair}'");
+            }
+
+            inputs[pair[..at]] = pair[(at + 1)..];
+        }
+
+        return verbs.Collect($"/sindri/workflows/{id}/evidence/collect", new CollectBody(p[2], sha, inputs), args, ct);
     }
 
     private Task<int> Park(string id, string reason, CancellationToken ct) =>

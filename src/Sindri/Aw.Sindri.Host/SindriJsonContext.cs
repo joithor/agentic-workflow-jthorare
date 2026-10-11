@@ -9,6 +9,7 @@ using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Recipes;
 using Aw.Sindri.Core.Workflow;
 using Aw.Sindri.Features.ApproveProfile;
+using Aw.Sindri.Features.CollectEvidence;
 using Aw.Sindri.Features.GetStatus;
 using Aw.Sindri.Features.ListBlocks;
 using Aw.Sindri.Features.ListRecipes;
@@ -58,6 +59,8 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(ParkBody))]
 [JsonSerializable(typeof(BudgetBody))]
 [JsonSerializable(typeof(EvidenceBody))]
+[JsonSerializable(typeof(CollectBody))]
+[JsonSerializable(typeof(CollectEvidenceResponse))]
 [JsonSerializable(typeof(JudgeAnswer))]
 [JsonSerializable(typeof(ResolutionCheckInput))]
 [JsonSerializable(typeof(RuleCheckInput))]

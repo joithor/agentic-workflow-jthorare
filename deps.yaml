@@ -44,8 +44,8 @@
 #           production code only with OutputItemType="Analyzer" (in a .csproj or a Directory.Build file);
 #           they need no edge and don't count as fan-out. Any other ProjectReference in a Directory.Build
 #           file fails.
-# scan      A heuristic, not a proof. It reads *.ts/*.js and *.sh under `scan` (not tests, node_modules or
-#           dist) and finds: spawn/exec*(…"bin…" calls, also wrapped over lines; `?? "bin"` and `|| "bin"`
+# scan      A heuristic, not a proof. It reads *.ts/*.js, *.cs (lexed like TypeScript) and *.sh under `scan`
+#           (not tests, node_modules, dist, bin or obj) and finds: spawn/exec*(…"bin…" calls, also wrapped over lines; `?? "bin"` and `|| "bin"`
 #           fallbacks; *Bin = "bin" and *Bin("bin"); BIN_BIN env names; shell commands after VAR=, env,
 #           sudo, xargs, nohup, exec, !, $( and backquotes, by name, path suffix, "$BIN_BIN" or
 #           ${VAR:-bin}. TS comments are blanked and string, template and regex interiors are skipped for
@@ -175,6 +175,7 @@ packages:
     ts: skills/ui-evidence
     src: src/Evidence
     scan: [skills/ui-evidence/src, skills/ui-evidence/scripts]
+    bins: [ui-evidence]
     binPaths: [ui-evidence/dist/bin.js]
     files: [ui-evidence/runs, locks/heavy-job.lock, locks/qa-stack.lock]
     namespace: ui-evidence
@@ -197,7 +198,7 @@ packages:
     projectPrefix: Aw.Sindri
     ts: sindri
     src: src/Sindri
-    scan: [sindri/src]
+    scan: [sindri/src, src/Sindri]
     bins: [sindri]
     db: [sindri/ledger.db, sindri-app/ledger.db]
     namespace: sindri
@@ -422,6 +423,16 @@ edges:
     kind: project
     status: planned
     note: "replaces sindri's copy of the scrubbing patterns"
+  - from: Sindri
+    to: Judge
+    kind: cli
+    status: current
+    note: "the gate.judge.<question> blocks run judge <question> with the input record on stdin (docs/csharp/sindri-blocks.md); C# contract docs/csharp/judge.md (#156)"
+  - from: Sindri
+    to: Evidence
+    kind: cli
+    status: current
+    note: "the evidence blocks run ui-evidence doctor, provenance, run and parity out of process: Evidence is framework-dependent (Playwright) and Sindri's host is NativeAOT (docs/csharp/sindri-blocks.md)"
   - from: Sindri
     to: Packets
     kind: cli

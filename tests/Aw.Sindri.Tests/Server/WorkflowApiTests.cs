@@ -4,6 +4,7 @@ using System.Text.Json;
 using Aw.Kernel.Services;
 using Aw.Sindri.Features.StartProcess;
 using Aw.Sindri.Host;
+using Aw.Sindri.Tests.Blocks;
 using Aw.Sindri.Tests.Ledger;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Metadata;
@@ -66,14 +67,49 @@ public sealed class WorkflowApiTests : IDisposable
         var routes = ((IEndpointRouteBuilder)app).DataSources.SelectMany(s => s.Endpoints).OfType<RouteEndpoint>()
             .Where(e => e.RoutePattern.RawText?.Contains("{instance}", StringComparison.Ordinal) == true).ToList();
 
-        Assert.Equal(8, routes.Count);
+        Assert.Equal(9, routes.Count);
         Assert.All(routes, e => Assert.Contains(e.Metadata.OfType<IParameterBindingMetadata>(), m => m.Name == "instance" && m.HasTryParse));
         await app.StopAsync(Token);
     }
 
-    private async Task<WebApplication> Started()
+    [Fact, Trait("Lane", "integration")]
+    public async Task UI_evidence_runs_doctor_collect_provenance_and_judge_through_the_tool_binaries()
     {
-        var app = LoopbackBinding.Build([], n => n switch { "AW_SINDRI_HOME" => _home.Path, _ => null }, TimeProvider.System);
+        using var ui = new StubTool(_uiEvidenceStub);
+        using var judge = new StubTool("cat > \"$d/stdin\"\nprintf '%s' '{\"decision\":\"looks-right\",\"confidence\":0.9,\"model\":\"claude-cli\",\"reasonCode\":\"model-decided\",\"id\":\"d-1\"}'\n");
+        await using var app = await Started(n => n switch { "AW_SINDRI_UI_EVIDENCE_BIN" => ui.Binary, "AW_SINDRI_JUDGE_BIN" => judge.Binary, _ => null });
+        using var http = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
+        var sha = new string('a', 40);
+        var run = Path.Combine(_home.Path, "run");
+
+        using var started = await Post(http, "/sindri/workflows", """{"recipe":"workflow.ui-evidence","item":"ITEM-7"}""");
+        var id = started.RootElement.GetProperty("instance").GetProperty("id").GetString();
+        using var ready = await Post(http, $"/sindri/workflows/{id}/signal", """{"on":"ready"}""");
+        using var collected = await Post(http, $"/sindri/workflows/{id}/evidence/collect",
+            $$$"""{"kind":"ui-browser","sha":"{{{sha}}}","inputs":{"script":"/s.json","run-dir":"{{{run}}}","host":"http://localhost:3000"}}""");
+        using var ran = await Post(http, $"/sindri/workflows/{id}/signal",
+            $$$"""{"on":"ran","sha":"{{{sha}}}","outputs":{"visual.evidence-dir":"{{{run}}}","visual.screenshot":"desktop/1.png"}}""");
+
+        Assert.Equal("run", ready.RootElement.GetProperty("instance").GetProperty("state").GetString());
+        Assert.True(collected.RootElement.GetProperty("passed").GetBoolean());
+        Assert.Equal("done", ran.RootElement.GetProperty("instance").GetProperty("state").GetString());
+        Assert.Equal(["gate.evidence.provenance", "gate.judge.visual-critique"], ran.RootElement.GetProperty("gates").EnumerateArray().Select(g => g.GetProperty("gate").GetString()), StringComparer.Ordinal);
+        Assert.Contains("\"afterScreenshot\":\"desktop/1.png\"", judge.Read("stdin"), StringComparison.Ordinal);
+        await app.StopAsync(Token);
+    }
+
+    private static readonly string _uiEvidenceStub = string.Join(
+        '\n',
+        "case \"$1\" in",
+        "  doctor) printf '%s' '{\"healthy\":true,\"failures\":[]}' ;;",
+        "  provenance) printf '%s' '{\"provenance\":\"seeded\",\"reason\":\"seed row present\"}' ;;",
+        "  run) mkdir -p \"$3\"; printf '%s' '{\"steps\":[]}' > \"$3/summary.json\" ;;",
+        "esac",
+        string.Empty);
+
+    private async Task<WebApplication> Started(Func<string, string?>? more = null)
+    {
+        var app = LoopbackBinding.Build([], n => n switch { "AW_SINDRI_HOME" => _home.Path, _ => more?.Invoke(n) }, TimeProvider.System);
         _ = Pipeline.Configure(app);
         await using (var scope = app.Services.CreateAsyncScope())
         {

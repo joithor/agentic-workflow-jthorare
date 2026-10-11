@@ -21,6 +21,7 @@ internal static class Usage
         "       sindri workflow signal <id> <on> [--set name=value]… [--finding F]… [--empty-diff] [--sha SHA]",
         "                              [--expect-version N] [--tokens N] [--turns N] [--json]",
         "       sindri workflow evidence <id> <kind> <sha> <digest> [--json]",
+        "       sindri workflow collect <id> <kind> <sha> [--input name=value]… [--json]   run an evidence provider; a passing run is registered",
         "       sindri workflow cancel <id> [--reason TEXT] [--json]",
         "       sindri workflow park <id> <rounds|budget|no-progress|timeout|needs-answer|spec-conflict> [--detail TEXT] [--json]",
         "       sindri workflow unpark <id> [--tokens N] [--turns N] [--json]",

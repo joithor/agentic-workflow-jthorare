@@ -6,7 +6,7 @@ namespace Aw.Sindri.Host.Commands;
 internal sealed class WorkflowArgs
 {
     private static readonly HashSet<string> _flags = new(StringComparer.Ordinal) { "--json", "--all", "--empty-diff" };
-    private static readonly HashSet<string> _repeatable = new(StringComparer.Ordinal) { "--set", "--finding" };
+    private static readonly HashSet<string> _repeatable = new(StringComparer.Ordinal) { "--set", "--finding", "--input" };
     private static readonly HashSet<string> _single = new(StringComparer.Ordinal)
     {
         "--attempt", "--base", "--expect-version", "--sha", "--tokens", "--turns", "--reason", "--detail",

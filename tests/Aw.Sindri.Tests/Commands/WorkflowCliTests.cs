@@ -1,5 +1,6 @@
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Workflow;
+using Aw.Sindri.Features.CollectEvidence;
 using Aw.Sindri.Features.ShowWorkflow;
 using Aw.Sindri.Host.Commands;
 using Aw.Sindri.Tests.Workflow;
@@ -36,6 +37,31 @@ public sealed class WorkflowCliTests
     [InlineData("lots")]
     public void A_numeric_option_that_is_not_a_whole_number_is_flagged(string value) =>
         Assert.True(WorkflowArgs.Parse(["--tokens", value]).Args!.BadNumber("--tokens"));
+
+    [Fact, Trait("Lane", "unit")]
+    public void Collect_takes_repeated_inputs()
+    {
+        var (args, problem) = WorkflowArgs.Parse(["collect", "wf-0123456789ab", "ui-browser", "abcdef1", "--input", "script=/s.json", "--input", "host=http://localhost:3000"]);
+
+        Assert.Null(problem);
+        Assert.Equal(["script=/s.json", "host=http://localhost:3000"], args!.All("--input"));
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Collect_text_says_passed_and_registered_or_failed_and_nothing_registered()
+    {
+        await using var h = new WorkflowHarness();
+        _ = await h.HoldLease();
+        var i = await h.Start();
+        var registered = (await h.Engine.Apply(i.Id, new RegisterEvidenceCommand("ui-browser", HeadSha.From("abcdef1"), "sha256:00"), Token)).Value;
+
+        var passed = WorkflowText.Collected(new CollectEvidenceResponse("ui-browser", Passed: true, "evidence.ui-browser: every step passed (/r/summary.json)", "sha256:00", "/r/summary.json", registered));
+        var failed = WorkflowText.Collected(new CollectEvidenceResponse("ui-browser", Passed: false, "evidence.ui-browser: a check failed, see /r/summary.json", "sha256:01", "/r/summary.json", Registered: null));
+
+        Assert.StartsWith("ui-browser: passed, registered sha256:00\n  evidence.ui-browser: every step passed", passed, StringComparison.Ordinal);
+        Assert.Contains($"{i.Id.Value}  workflow.loop", passed, StringComparison.Ordinal);
+        Assert.Equal("ui-browser: failed, nothing registered\n  evidence.ui-browser: a check failed, see /r/summary.json\n", failed);
+    }
 
     [Fact, Trait("Lane", "unit")]
     public void An_empty_list_says_so() =>

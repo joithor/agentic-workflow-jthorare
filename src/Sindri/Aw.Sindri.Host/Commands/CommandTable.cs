@@ -49,10 +49,18 @@ internal static class CommandTable
             ["profile", "approve", var hash] => await verbs.Approve(hash, Interactive(), Console.In, ct).ConfigureAwait(false),
             ["doctor", .. var rest] when Json(rest) is { } json => await verbs.Doctor(json, ct).ConfigureAwait(false),
             ["workflow", "help"] => await output.Text(Usage.Workflow + "\n", 0).ConfigureAwait(false),
-            ["workflow", .. var rest] => await new WorkflowVerbs(client, output, services).Run(rest, ct).ConfigureAwait(false),
+            ["workflow", .. var rest] => await Workflow(rest, output, services, ct).ConfigureAwait(false),
             ["help" or "--help" or "-h"] => await output.Text(Usage.Text + "\n", 0).ConfigureAwait(false),
             _ => await UnknownVerb(args, output).ConfigureAwait(false),
         };
+    }
+
+    // A workflow call may run tool blocks on the server (a judge gate on a signal, a ui-evidence run on collect), so it
+    // waits longer than the 10 s status calls: past ui-evidence's own 20-minute run limit.
+    private static async Task<int> Workflow(string[] rest, Output output, IServiceProvider services, CancellationToken ct)
+    {
+        using var client = new ControlPlaneClient(services.GetRequiredService<IControlPlaneProbe>(), services.GetRequiredService<JsonSerializerOptions>(), TimeSpan.FromMinutes(25));
+        return await new WorkflowVerbs(client, output, services).Run(rest, ct).ConfigureAwait(false);
     }
 
     private static Task<int> Start(IServiceProvider services, ControlPlaneClient client, Output output, bool headless) =>

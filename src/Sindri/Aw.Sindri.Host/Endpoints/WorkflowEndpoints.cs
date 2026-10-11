@@ -2,6 +2,7 @@ using Aw.Kernel.Services;
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Workflow;
 using Aw.Sindri.Features.CancelWorkflow;
+using Aw.Sindri.Features.CollectEvidence;
 using Aw.Sindri.Features.HandBackWorkflow;
 using Aw.Sindri.Features.ListBlocks;
 using Aw.Sindri.Features.ListRecipes;
@@ -42,6 +43,8 @@ internal static class WorkflowEndpoints
             => (await service.Handle(new HandBackWorkflowRequest(instance), ct).ConfigureAwait(false)).ToHttpResult());
         _ = group.MapPost("/workflows/{instance}/evidence", static async (InstanceId instance, EvidenceBody b, IService<RegisterEvidenceRequest, WorkflowOutcome> service, CancellationToken ct)
             => (await service.Handle(new RegisterEvidenceRequest(instance, b.Kind, b.Sha, b.Digest), ct).ConfigureAwait(false)).ToHttpResult());
+        _ = group.MapPost("/workflows/{instance}/evidence/collect", static async (InstanceId instance, CollectBody b, IService<CollectEvidenceRequest, CollectEvidenceResponse> service, CancellationToken ct)
+            => (await service.Handle(new CollectEvidenceRequest(instance, b.Kind, b.Sha, b.Inputs ?? new Dictionary<string, string>(StringComparer.Ordinal)), ct).ConfigureAwait(false)).ToHttpResult());
         _ = group.MapGet("/recipes", static async (IService<ListRecipesRequest, ListRecipesResponse> service, CancellationToken ct)
             => (await service.Handle(new ListRecipesRequest(), ct).ConfigureAwait(false)).ToHttpResult());
         _ = group.MapGet("/blocks", static async (IService<ListBlocksRequest, ListBlocksResponse> service, CancellationToken ct)

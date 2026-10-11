@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using Aw.Sindri.Core.Recipes;
 using Aw.Sindri.Core.Workflow;
+using Aw.Sindri.Features.CollectEvidence;
 using Aw.Sindri.Features.ShowWorkflow;
 
 namespace Aw.Sindri.Host.Commands;
@@ -31,6 +32,11 @@ internal static class WorkflowText
 
         return text.ToString();
     }
+
+    internal static string Collected(CollectEvidenceResponse r) =>
+        r.Registered is { } registered
+            ? $"{r.Kind}: passed, registered {r.Digest}\n  {r.Detail}\n" + Outcome(registered)
+            : $"{r.Kind}: failed, nothing registered\n  {r.Detail}\n";
 
     internal static string Show(ShowWorkflowResponse r)
     {

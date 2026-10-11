@@ -66,7 +66,7 @@ public sealed class WorkflowCliTests
 
         var rows = WorkflowText.Show(shown).Split('\n').Select(l => l.Split(' ')[0]).Where(w => w.Length > 0).ToList();
 
-        Assert.Equal(["instance", "recipe", "item", "state", "status", "timer", "loops", "spent", "facts", "evidence", "signals", "next", "history"], rows.Take(13));
+        Assert.Equal(["instance", "recipe", "item", "state", "status", "timer", "loops", "spent", "facts", "evidence", "signals", "next", "history"], rows.Take(13), StringComparer.Ordinal);
         Assert.Contains("signals   passed, failed", WorkflowText.Show(shown), StringComparison.Ordinal);
     }
 

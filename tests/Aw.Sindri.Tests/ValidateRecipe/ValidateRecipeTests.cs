@@ -27,7 +27,7 @@ public sealed class ValidateRecipeTests : IDisposable
 
         Assert.Equal(RecipeId.From("workflow.mine"), entry.Id);
         Assert.False(entry.Approved);
-        Assert.NotNull(entry.Hash);
+        _ = Assert.NotNull(entry.Hash);
     }
 
     [Fact, Trait("Lane", "integration")]

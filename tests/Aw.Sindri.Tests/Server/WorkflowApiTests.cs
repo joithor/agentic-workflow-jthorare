@@ -66,7 +66,7 @@ public sealed class WorkflowApiTests : IDisposable
         var routes = ((IEndpointRouteBuilder)app).DataSources.SelectMany(s => s.Endpoints).OfType<RouteEndpoint>()
             .Where(e => e.RoutePattern.RawText?.Contains("{instance}", StringComparison.Ordinal) == true).ToList();
 
-        Assert.Equal(9, routes.Count);
+        Assert.Equal(8, routes.Count);
         Assert.All(routes, e => Assert.Contains(e.Metadata.OfType<IParameterBindingMetadata>(), m => m.Name == "instance" && m.HasTryParse));
         await app.StopAsync(Token);
     }

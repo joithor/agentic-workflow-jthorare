@@ -21,7 +21,7 @@ public sealed class ShowWorkflowTests
 
         Assert.Equal(("active", StateKind.Active), (shown.Status, shown.Kind));
         Assert.Equal(["passed", "failed"], shown.Signals);
-        Assert.Single(shown.History);
+        _ = Assert.Single(shown.History);
         Assert.Empty(shown.Children);
     }
 

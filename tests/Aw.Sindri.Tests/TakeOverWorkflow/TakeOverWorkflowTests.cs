@@ -19,6 +19,6 @@ public sealed class TakeOverWorkflowTests
 
         Assert.Equal(InstanceStatus.TakenOver, taken.Status);
         Assert.Null(taken.Deadline);
-        Assert.NotNull(taken.Paused);
+        _ = Assert.NotNull(taken.Paused);
     }
 }

@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jthorare/agentic-workflow/schemas/sindri/recipe.schema.json",
+  "title": "Sindri workflow recipe (docs/csharp/sindri-engine.md)",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9][a-z0-9-]*)+$"
+    },
+    "version": {
+      "type": "integer"
+    },
+    "initial": {
+      "type": "string"
+    },
+    "states": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "active",
+              "wait",
+              "terminal"
+            ]
+          },
+          "step": {
+            "default": null
+          },
+          "timeout": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "onTimeout": {
+            "enum": [
+              "park",
+              "escalate",
+              "retry",
+              null
+            ],
+            "default": null
+          },
+          "budget": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "tokens": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              },
+              "turns": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              }
+            },
+            "additionalProperties": false,
+            "default": null
+          },
+          "child": {
+            "default": null
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "on": {
+            "type": "string"
+          },
+          "gates": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "default": null,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9][a-z0-9-]*)+$"
+            }
+          },
+          "evidence": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "default": null
+          },
+          "effects": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "default": null,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9][a-z0-9-]*)+$"
+            }
+          },
+          "loop": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "on"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "loops": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "cap": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cap"
+        ],
+        "additionalProperties": false
+      },
+      "default": null
+    },
+    "budget": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null
+        },
+        "turns": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "default": null
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
+    "hash": {
+      "default": null
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "initial",
+    "states",
+    "transitions"
+  ],
+  "additionalProperties": false
+}

@@ -1,4 +1,3 @@
-using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Features.ListRecipes;
 using Aw.Sindri.Tests.Workflow;
 
@@ -13,7 +12,7 @@ public sealed class ListRecipesTests
 
         var listed = (await new ListRecipesService(h.Catalog).Handle(new ListRecipesRequest(), WorkflowHarness.Token)).Value.Recipes;
 
-        Assert.Equal([RecipeId.From("workflow.loop"), RecipeId.From("workflow.parent")], listed.Select(r => r.Id!.Value).Order());
+        Assert.Equal(["workflow.loop", "workflow.parent"], listed.Select(r => r.Id!.Value.Value).Order(StringComparer.Ordinal), StringComparer.Ordinal);
         Assert.All(listed, r => Assert.True(r.Valid && r.Hash is not null));
     }
 }

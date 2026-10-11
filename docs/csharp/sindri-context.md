@@ -22,19 +22,27 @@ It is a client of the running control plane (start it with `sindri` first), like
 |---|---|
 | 0 | Results returned. A source that failed only degrades them (`DEGRADED` line, `failed` in the sources line) |
 | 1 | No results, or a refused question or option (`SND-CONTEXT-003`) |
-| 2 | Setup: the control plane isn't running (`SND-API-001`), no profile is approved (`SND-PROFILE-005`), or the profile turns on no source (`SND-CONTEXT-001`) |
+| 2 | Setup: the control plane isn't running (`SND-API-001`), no profile is approved (`SND-PROFILE-005`), or the profile turns on no source (`SND-CONTEXT-001`); or nothing could be searched (no results and a source failed) |
 
-Text output (no colour; state is always a word):
+Text output (no colour; state is always a word). This is a real run over this repo and a notes directory, cut to three
+results:
 
 ```
 Context for "host lease fencing epoch" (terms: host, lease, fencing, epoch)
- 1. [code] agentic-workflow/src/Sindri/Aw.Sindri.Infrastructure/Ledger/SqliteLease.cs:12
-    // Acquire, renew and release the host lease, fenced by its epoch.
-    retrieved 2026-10-11T07:10:02Z
- 2. [notes] /Users/thor/notes/lease.md:3 (redacted)
-    …
-sources: code ok (10 hits); notes ok (2 hits); linear skipped (SND-CONTEXT-002 LINEAR_API_KEY is not set (fix: …))
+ 1. [code] agentic-workflow/docs/csharp/sindri.md:76
+    (host, pid, pid start time to the second, boot id), epoch, acquired and expiry times, released flag. TTL 60 s, renewed
+    retrieved 2026-10-11T06:58:00Z
+ 2. [notes] /Users/thor/notes/lease.md:2
+    If the host lease looks stuck, check the epoch with sindri doctor.
+    retrieved 2026-10-11T06:58:00Z
+ 3. [code] agentic-workflow/src/Sindri/Aw.Sindri.Core/SindriErrors.cs:14
+    /// <summary>SND-LEASE-003: a write carried an epoch that isn't the current one (fencing).</summary>
+    retrieved 2026-10-11T06:58:00Z
+sources: code ok (10 hits); notes ok (1 hits); linear skipped (SND-CONTEXT-002 LINEAR_API_KEY is not set (fix: …))
 ```
+
+The code source searches every tracked file, so docs, plans and tests rank beside code for prose questions; a hit
+marked `(redacted)` had something replaced or withheld. `DEGRADED` heads the output when a source failed.
 
 `--json` prints `QueryContextResponse`: `question`, `terms`, `results[]` (`rank`, `title`, `snippet`, `score`,
 `redacted`, `cite: { source, document, line, locator, retrievedAt }`), `sources[]` (`source`, `state` ok / skipped /
@@ -47,13 +55,15 @@ ProblemDetails with the `SND-*` code as `title`; a bad question is 400.
 ## Profile
 
 An optional `context:` key joins schema version 1. A profile without it serializes to the same canonical JSON as before,
-so its approval hash doesn't change. A source is **on** when its key is present.
+so its approval hash doesn't change. A source is **on** when its key is present with a mapping: `code: {}` turns it on
+with its defaults, while `code:` with no value is refused (`SND-PROFILE-002 context.code: has no value …`), because YAML
+reads it as null. Sources that are off, and empty lists, leave the canonical JSON (and so the hash) unchanged.
 
 ```yaml
 repos:
   - { name: agentic-workflow, path: /Users/thor/repos/agentic-workflow }
 context:
-  code: { repos: [agentic-workflow] }    # optional list; omitted: every profile repo. Needs at least one repo
+  code: { repos: [agentic-workflow] }    # optional list; omitted: every profile repo. Needs at least one repo; ~/ paths expand
   notes: { path: ~/notes }               # absolute, or starting with ~/
   linear: { teams: [ENG] }               # optional teams; the key comes from LINEAR_API_KEY, never the profile
   connectai: { server: connectai, tool: search }   # a port in this build: always skipped, with the reason
@@ -65,18 +75,26 @@ profile repo`, …), like every other profile key. A changed `context:` needs `s
 
 ## How a query runs
 
-1. **Terms** (`QueryTerms`): words of letters, digits, `_` and `-` (so `ILedgerStore` and `SND-LEASE-001` stay whole),
+1. **Terms** (`QueryTerms`): the question is scrubbed first, so a pasted secret never becomes a term (and never reaches
+   Linear); the `[REDACTED:…]` placeholders are dropped. Then words of letters, digits, `_` and `-` (so `ILedgerStore` and `SND-LEASE-001` stay whole),
    lower case, without common English words and one-letter words, at most 8; a question over 500 characters or without
    a searchable word is `SND-CONTEXT-003`.
 2. **Sources** (`ISourceCatalog`): one opening per source the approved profile names, in source order. One that can't
    open is reported `skipped` with `SND-CONTEXT-002` and the fix; `--sources` marks the others `skipped (not asked
-   for)`.
+   for)` (the one uncoded reason), and an asked source the profile doesn't turn on is reported `skipped` with the fix,
+   never silently absent.
 3. **Fan-out**: every opened source is searched in parallel with the terms and the limit, each with its own 4 s
-   deadline. A source that errors or runs late is reported `failed` (`SND-CONTEXT-010`); the rest still answer.
-4. **Fusion** (`RankFusion`): reciprocal rank fusion, k = 60, over each source's ranks (never its scores); the same
-   locator from one source counts once; ties go to source order, then locator.
-5. **Scrub** (`ITextScrubber`, adapter over `Aw.Redaction`'s built-in rules): every title, excerpt and document is
-   scrubbed before it leaves; `redacted` marks a result where something was replaced or withheld.
+   deadline (a source that ignores it is abandoned at the deadline). A source that errors, throws or runs late is
+   reported `failed` (`SND-CONTEXT-010`, its detail scrubbed); the rest still answer. Every opened source sits behind
+   `GuardedSource`, so an exception an adapter didn't expect degrades the answer instead of failing the query.
+4. **Fusion** (`RankFusion`): reciprocal rank fusion, k = 60, over each source's ranks (never its scores). Items are
+   keyed by source and locator and no two sources share a locator yet, so today it interleaves the sources by rank
+   (ties to source order: code, notes, linear, connectai); it starts fusing when the context graph gives records shared
+   entity keys (§17.3).
+5. **Scrub** (`ITextScrubber`, adapter over `Aw.Redaction`'s built-in rules): sources hand over whole raw lines (up to
+   2 000 characters); every title, excerpt and document is scrubbed **before** it is cut to 200 characters for display,
+   so no secret is cut short of what its rule needs. A line that is one long encoded run (a key body, a blob no rule
+   names) is shown as `[REDACTED:encoded-blob]`. `redacted` marks a result where something was replaced or withheld.
 6. **Cite**: every result carries `Citation(source, document, line, retrievedAt)`, `retrievedAt` being when its source
    answered.
 
@@ -86,8 +104,8 @@ No model is called and nothing is stored: the engine reads the sources live on e
 
 | Source | Adapter | Reads | Document | Notes |
 |---|---|---|---|---|
-| `code` | `GitGrepCodeSource` | `git grep` over each profile repo's tracked files: fixed strings, any term, ignoring case, binary skipped, ≤ 20 lines a file, ≤ 20 000 lines a repo | `repo/path` (+ line) | Terms go through `-e`, paths after `--`, no shell |
-| `notes` | `NotesDirectorySource` | `*.md`, `*.markdown`, `*.txt` under the directory; hidden files and folders skipped; ≤ 5 000 files of ≤ 1 MB | the file's full path (+ line) | |
+| `code` | `GitGrepCodeSource` | `git grep` over each profile repo's tracked files: fixed strings, any term, ignoring case, binary skipped, ≤ 20 lines a file, ≤ 20 000 lines a repo | `repo/path` (+ line) | Terms go through `-e`, paths after `--`, no shell; inherited `GIT_*` variables dropped and `grep.fallbackToNoIndex` / column output pinned off; a repo that isn't a checkout is left out (the source fails only when every repo does) |
+| `notes` | `NotesDirectorySource` | `*.md`, `*.markdown`, `*.txt` under the directory; hidden files and folders and every symbolic link skipped; ≤ 5 000 files of ≤ 1 MB | the file's full path (+ line) | The walk runs under the deadline and stops at its cap |
 | `linear` | `LinearSource` | GraphQL `searchIssues` (read-only), optionally filtered to teams | the issue's permalink | Key from `LINEAR_API_KEY` (Authorization header, never in a message). Only the terms leave the machine |
 | `connectai` | `McpContextSource` over `IMcpToolReader` | a read-only MCP search tool | the document's URI | Port and fake only: the real MCP client comes when ConnectAI's read surface is wired |
 
@@ -103,9 +121,13 @@ step 4) replaces it behind the same `IContextSource` port; graphify joins with t
 
 ## Privacy
 
-Retrieved text never leaves the machine in S3: the API is loopback only, no model is called, nothing is written to
-disk. The one outbound call is Linear's API, when the profile names `linear` and a key is set, and it carries only the
-search terms. The profile names which sources are on.
+Sindri itself sends nothing off the machine but the Linear search terms (when the profile names `linear` and a key is
+set), and those are cut from the scrubbed question. The API is loopback only, no model is called and nothing is written
+to disk. Whatever runs the CLI or calls the API gets the scrubbed excerpts and decides where they go: an agent session
+passes them to its model provider, which is why every field is scrubbed. The profile names which sources are on.
+
+Linear's GraphQL request and answer records sit in Core (`LinearSearch*`, `LinearIssue`) because the package's one JSON
+context is in Host and can't name an Infrastructure type; they are wire shapes, not domain types.
 
 ## Ports and their contracts
 
@@ -122,11 +144,13 @@ with that reason otherwise; nothing is recorded from it.
 ## Evals
 
 `ContextEvalTests` (integration lane) runs a fixed question set through the real planner and the real code and notes
-adapters over a fixture corpus (a git repo and a notes directory built by the test), scores each answer with
-`EvalScore` (recall@5 and precision@5 against the documents a good answer cites; a result matches an expected document
-when its document ends with it) and gates the means: recall ≥ 0.9, precision ≥ 0.3. The per-question numbers print in
-the test output (`--output Detailed`). The bars are starting values; the backtest arms of §17.3 replace them when the
-context graph lands.
+adapters over a fixture corpus (a git repo and a notes directory built by the test, with distractor files that share
+terms with the questions), scores each answer with `EvalScore` (recall@5 and precision@5 against the documents a good
+answer cites; a result matches an expected document when its document ends with it) and gates the means: recall ≥ 0.9,
+precision ≥ 0.3, and the top result is an expected document for ≥ 80% of questions (today 1.00, 0.40 and 0.83).
+Precision@5 is low by construction when a question expects one or two documents, so the top-1 gate is the one that
+catches ranking regressions. The per-question numbers print in the test output (`--output Detailed`). The bars are
+starting values; the backtest arms of §17.3 replace them when the context graph lands.
 
 ## Errors
 

@@ -2,8 +2,9 @@ namespace Aw.Sindri.Core.Context;
 
 /// <summary>
 /// Reciprocal rank fusion across sources (factory addendum §17.3: fusion by RRF): an item scores 1/(k + rank) in each
-/// source list it appears in, with k = 60; only ranks count, never a source's own scores. The same locator from one
-/// source counts once (its best rank). Ties go to source order, then locator.
+/// list it appears in, with k = 60; only ranks count, never a source's own scores. Items are keyed by source and
+/// locator, and no two sources share a locator yet, so today this interleaves the sources by rank (ties go to source
+/// order, then locator); it starts fusing when the context graph gives records shared entity keys.
 /// </summary>
 public static class RankFusion
 {

@@ -62,6 +62,7 @@ public sealed class QueryContextTests
     [InlineData("a", null, null)]
     [InlineData("   ", null, null)]
     [InlineData("host lease", "bogus", null)]
+    [InlineData("host lease", "  ", null)]
     [InlineData("host lease", null, 0)]
     [InlineData("host lease", null, 51)]
     public async Task QueryContext_refuses_a_bad_question_source_or_limit(string question, string? source, int? limit)
@@ -72,6 +73,16 @@ public sealed class QueryContextTests
 
         Assert.Equal(SindriErrors.ContextBadQuery.Code, answer.Error.Code);
         Assert.Contains("fix:", answer.Error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_null_source_name_from_the_api_is_a_refused_query_not_a_crash()
+    {
+        await _h.Approve(ContextHarness.CodeAndNotes());
+
+        var answer = await _h.Service.Handle(new QueryContextRequest("host lease", [null!]), Token);   // why: JSON can carry a null element the binder lets through
+
+        Assert.Equal(SindriErrors.ContextBadQuery.Code, answer.Error.Code);
     }
 
     [Fact, Trait("Lane", "unit")]

@@ -50,7 +50,9 @@ failed, `hits`, `detail`) and `degraded`.
 
 API: `POST /sindri/context/query` with `{ "question": "…", "sources": ["notes"], "limit": 5 }` (sources and limit
 optional), behind S1's loopback guard (a foreign `Host` is 400, a foreign browser `Origin` 403). Errors are
-ProblemDetails with the `SND-*` code as `title`; a bad question is 400.
+ProblemDetails with the `SND-*` code as `title`: a question or option that reads but is refused is 400 `SND-CONTEXT-003`;
+a body that doesn't read as the request (not JSON, a missing or null `question`, a `limit` that isn't a number) is 400
+`SND-CLI-003`; an internal error is 500 `SND-API-005`.
 
 ## Profile
 

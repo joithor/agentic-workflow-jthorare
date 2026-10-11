@@ -956,7 +956,6 @@ static Aw.Sindri.Core.Context.SourceList.operator !=(Aw.Sindri.Core.Context.Sour
 static Aw.Sindri.Core.Context.SourceList.operator ==(Aw.Sindri.Core.Context.SourceList? left, Aw.Sindri.Core.Context.SourceList? right) -> bool
 static Aw.Sindri.Core.Context.SourceNames.All.get -> string!
 static Aw.Sindri.Core.Context.SourceNames.Of(Aw.Sindri.Core.Context.SourceKind kind) -> string!
-static Aw.Sindri.Core.Context.SourceNames.TryParse(string! name, out Aw.Sindri.Core.Context.SourceKind kind) -> bool
 static Aw.Sindri.Core.Context.SourceOpening.Opened(Aw.Sindri.Core.Context.IContextSource! source) -> Aw.Sindri.Core.Context.SourceOpening!
 static Aw.Sindri.Core.Context.SourceOpening.Skip(Aw.Sindri.Core.Context.SourceKind kind, string! reason) -> Aw.Sindri.Core.Context.SourceOpening!
 static Aw.Sindri.Core.Context.SourceOpening.operator !=(Aw.Sindri.Core.Context.SourceOpening? left, Aw.Sindri.Core.Context.SourceOpening? right) -> bool
@@ -1018,3 +1017,4 @@ override Aw.Sindri.Core.Events.RecordedApproval.ToString() -> string!
 static Aw.Sindri.Core.Events.RecordedApproval.Latest(Aw.Sindri.Core.Ledger.ILedgerStore! ledger, Aw.Sindri.Core.Events.EventFactory! events, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Sindri.Core.Events.RecordedApproval?>
 static Aw.Sindri.Core.Events.RecordedApproval.operator !=(Aw.Sindri.Core.Events.RecordedApproval? left, Aw.Sindri.Core.Events.RecordedApproval? right) -> bool
 static Aw.Sindri.Core.Events.RecordedApproval.operator ==(Aw.Sindri.Core.Events.RecordedApproval? left, Aw.Sindri.Core.Events.RecordedApproval? right) -> bool
+static Aw.Sindri.Core.Context.SourceNames.TryParse(string? name, out Aw.Sindri.Core.Context.SourceKind kind) -> bool

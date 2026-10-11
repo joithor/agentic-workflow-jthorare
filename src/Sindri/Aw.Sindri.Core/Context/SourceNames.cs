@@ -17,11 +17,17 @@ public static class SourceNames
     public static string Of(SourceKind kind) => _names.First(n => n.Kind == kind).Name;
 
     /// <summary>Reads a source name, ignoring case.</summary>
-    /// <param name="name">The name.</param>
+    /// <param name="name">The name (null or blank is no source).</param>
     /// <param name="kind">The source, when the name is known.</param>
     /// <returns>True when the name is a source.</returns>
-    public static bool TryParse(string name, out SourceKind kind)
+    public static bool TryParse(string? name, out SourceKind kind)
     {
+        kind = default;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
         foreach (var (k, n) in _names)
         {
             if (string.Equals(n, name.Trim(), StringComparison.OrdinalIgnoreCase))
@@ -31,7 +37,6 @@ public static class SourceNames
             }
         }
 
-        kind = default;
         return false;
     }
 }

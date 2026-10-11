@@ -70,7 +70,7 @@ internal sealed class QueryContextService(IApprovals approvals, ISourceCatalog c
         return (Narrow(catalog.Open(approved.Profile), named, asked.Value), limit);
     }
 
-    private static Result<IReadOnlySet<SourceKind>?> Asked(IReadOnlyList<string>? names)
+    private Result<IReadOnlySet<SourceKind>?> Asked(IReadOnlyList<string>? names)
     {
         if (names is null || names.Count == 0)
         {
@@ -82,7 +82,7 @@ internal sealed class QueryContextService(IApprovals approvals, ISourceCatalog c
         {
             if (!SourceNames.TryParse(name, out var kind))
             {
-                return SindriErrors.ContextBadQuery.With($"'{name}' is not a context source (fix: use {SourceNames.All})");
+                return SindriErrors.ContextBadQuery.With(scrubber.Scrub($"'{name}' is not a context source (fix: use {SourceNames.All})").Text);
             }
 
             _ = kinds.Add(kind);

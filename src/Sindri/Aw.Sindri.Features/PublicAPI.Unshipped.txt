@@ -564,3 +564,43 @@ Aw.Sindri.Features.GetStatus.ProfileStatus.ProfileStatus(Aw.Sindri.Core.Ids.Prof
 Aw.Sindri.Features.StopProcess.StopProcessRequest.Deconstruct(out Aw.Sindri.Core.Events.StopReason Reason) -> void
 Aw.Sindri.Features.StopProcess.StopProcessRequest.Reason.get -> Aw.Sindri.Core.Events.StopReason
 Aw.Sindri.Features.StopProcess.StopProcessRequest.StopProcessRequest(Aw.Sindri.Core.Events.StopReason Reason) -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.<Clone>$() -> Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest!
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.CollectEvidenceRequest(Aw.Sindri.Core.Ids.InstanceId Instance, string! Kind, Aw.Sindri.Core.Ids.HeadSha Sha, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Inputs) -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out string! Kind, out Aw.Sindri.Core.Ids.HeadSha Sha, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Inputs) -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Equals(Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest? other) -> bool
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Inputs.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Inputs.init -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Instance.init -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Kind.get -> string!
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Kind.init -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Sha.get -> Aw.Sindri.Core.Ids.HeadSha
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Sha.init -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.<Clone>$() -> Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse!
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.CollectEvidenceResponse(string! Kind, bool Passed, string! Detail, string! Digest, string! Document, Aw.Sindri.Core.Workflow.WorkflowOutcome? Registered) -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Deconstruct(out string! Kind, out bool Passed, out string! Detail, out string! Digest, out string! Document, out Aw.Sindri.Core.Workflow.WorkflowOutcome? Registered) -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Detail.get -> string!
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Detail.init -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Digest.get -> string!
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Digest.init -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Document.get -> string!
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Document.init -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Equals(Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse? other) -> bool
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Kind.get -> string!
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Kind.init -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Passed.get -> bool
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Passed.init -> void
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Registered.get -> Aw.Sindri.Core.Workflow.WorkflowOutcome?
+Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Registered.init -> void
+override Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.GetHashCode() -> int
+override Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.ToString() -> string!
+override Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.GetHashCode() -> int
+override Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.ToString() -> string!
+static Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.operator !=(Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest? left, Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest? right) -> bool
+static Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest.operator ==(Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest? left, Aw.Sindri.Features.CollectEvidence.CollectEvidenceRequest? right) -> bool
+static Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.operator !=(Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse? left, Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse? right) -> bool
+static Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse.operator ==(Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse? left, Aw.Sindri.Features.CollectEvidence.CollectEvidenceResponse? right) -> bool

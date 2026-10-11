@@ -4,6 +4,7 @@ using Aw.Sindri.Core.Recipes;
 using Aw.Sindri.Core.Scheduling;
 using Aw.Sindri.Core.Workflow;
 using Aw.Sindri.Features.ApproveProfile;
+using Aw.Sindri.Features.CollectEvidence;
 using Aw.Sindri.Features.CancelWorkflow;
 using Aw.Sindri.Features.GetStatus;
 using Aw.Sindri.Features.HandBackWorkflow;
@@ -56,6 +57,7 @@ public static class SindriFeaturesServiceCollectionExtensions
             .AddScoped<IService<TakeOverWorkflowRequest, WorkflowOutcome>, TakeOverWorkflowService>()
             .AddScoped<IService<HandBackWorkflowRequest, WorkflowOutcome>, HandBackWorkflowService>()
             .AddScoped<IService<RegisterEvidenceRequest, WorkflowOutcome>, RegisterEvidenceService>()
+            .AddScoped<IService<CollectEvidenceRequest, CollectEvidenceResponse>, CollectEvidenceService>()
             .AddScoped<IService<ListWorkflowsRequest, ListWorkflowsResponse>, ListWorkflowsService>()
             .AddScoped<IService<ShowWorkflowRequest, ShowWorkflowResponse>, ShowWorkflowService>()
             .AddScoped<IService<TickWorkflowTimersRequest, TickReport>, TickWorkflowTimersService>()

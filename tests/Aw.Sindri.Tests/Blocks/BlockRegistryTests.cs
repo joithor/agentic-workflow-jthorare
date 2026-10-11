@@ -30,6 +30,14 @@ public sealed class BlockRegistryTests
         _ = Assert.Throws<InvalidOperationException>(() => Registries.Builtin(gateWithoutRung));
     }
 
+    [Fact, Trait("Lane", "unit")]
+    public void An_effect_whose_command_kind_is_not_allowlisted_throws_at_construction()
+    {
+        var thrown = Assert.Throws<InvalidOperationException>(() => Registries.Builtin(new Recipes.MailEffect()));
+
+        Assert.Contains("mail.send", thrown.Message, StringComparison.Ordinal);
+    }
+
     [Theory, Trait("Lane", "unit")]
     [InlineData(PortType.Verdict, "pass", true)]
     [InlineData(PortType.Verdict, "ok", false)]

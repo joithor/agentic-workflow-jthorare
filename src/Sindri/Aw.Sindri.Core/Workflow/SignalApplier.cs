@@ -4,7 +4,10 @@ using Aw.Sindri.Core.Blocks;
 
 namespace Aw.Sindri.Core.Workflow;
 
-/// <summary>Applies a signal: version check (an exact retry is a no-op), candidates, gates, then the transition or the park or escalation in its place.</summary>
+/// <summary>
+/// Applies a signal: version check (an exact retry is a no-op), candidates (outputs checked), then per candidate the
+/// cheap preconditions (required evidence) before the gate ladder, then the transition or the park or escalation in its place.
+/// </summary>
 /// <param name="store">The workflow store (for the history an exact retry is found in).</param>
 /// <param name="gates">The gate evaluator.</param>
 /// <param name="builder">The commit builder.</param>
@@ -36,6 +39,12 @@ internal sealed class SignalApplier(IWorkflowStore store, GateEvaluator gates, C
         Error? refused = null;
         foreach (var transition in candidates)
         {
+            if (SignalDecisions.Missing(instance, transition, signal) is { } missing)
+            {
+                refused = missing;
+                continue;
+            }
+
             var records = await gates.Evaluate(instance, transition, signal, ct).ConfigureAwait(false);
             if (records.IsError)
             {
@@ -88,6 +97,6 @@ internal sealed class SignalApplier(IWorkflowStore store, GateEvaluator gates, C
 
         var history = await store.History(instance.Id, ct).ConfigureAwait(false);
         var suffix = WorkflowKeys.SignalSuffix(signal.On, expected, signal.Sha);
-        return history.IsSuccess && history.Value.Any(e => e.IdempotencyKey.EndsWith(suffix, StringComparison.Ordinal));
+        return history.IsSuccess && history.Value.Any(e => WorkflowKeys.IsSignalKey(e.IdempotencyKey, suffix));
     }
 }

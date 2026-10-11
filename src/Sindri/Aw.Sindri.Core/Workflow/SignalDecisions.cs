@@ -51,13 +51,24 @@ public static class SignalDecisions
     public static Result<WorkflowChange> Settle(TransitionInput input)
     {
         ArgumentNullException.ThrowIfNull(input);
-        var missing = MissingEvidence(input);
-        if (missing.Count > 0)
-        {
-            return SindriErrors.EvidenceMissing.With($"'{input.Transition.From}' -> '{input.Transition.To}' needs {string.Join(", ", missing)} registered for this instance");
-        }
+        return Missing(input.Instance, input.Transition, input.Signal) is { } missing ? missing : Budget(input) ?? Loop(input) ?? Transitioned(input);
+    }
 
-        return Budget(input) ?? Loop(input) ?? Transitioned(input);
+    /// <summary>
+    /// The evidence check, made before any gate runs (§17.28.1: evidence first, then the gate ladder): SND-WF-007 when
+    /// <paramref name="transition"/> needs evidence that isn't registered for the instance and the signal's sha.
+    /// </summary>
+    /// <param name="instance">The instance.</param>
+    /// <param name="transition">The candidate transition.</param>
+    /// <param name="signal">The signal (its sha binds 'kind@head').</param>
+    /// <returns>Null when every requirement is registered; otherwise the refusal.</returns>
+    public static Error? Missing(WorkflowInstance instance, RecipeTransition transition, WorkflowSignal signal)
+    {
+        ArgumentNullException.ThrowIfNull(instance);
+        ArgumentNullException.ThrowIfNull(transition);
+        ArgumentNullException.ThrowIfNull(signal);
+        var missing = (transition.Evidence ?? []).Where(requirement => !Registered(instance, requirement, signal.Sha)).ToList();
+        return missing.Count == 0 ? null : SindriErrors.EvidenceMissing.With($"'{transition.From}' -> '{transition.To}' needs {string.Join(", ", missing)} registered for this instance");
     }
 
     private static Error? OutputProblem(Recipe recipe, WorkflowInstance instance, WorkflowSignal signal, IBlockRegistry blocks)
@@ -75,12 +86,6 @@ public static class SignalDecisions
         }
 
         return null;
-    }
-
-    private static List<string> MissingEvidence(TransitionInput input)
-    {
-        var sha = input.Signal.Sha;
-        return [.. (input.Transition.Evidence ?? []).Where(requirement => !Registered(input.Instance, requirement, sha))];
     }
 
     private static bool Registered(WorkflowInstance instance, string requirement, Ids.HeadSha? head)

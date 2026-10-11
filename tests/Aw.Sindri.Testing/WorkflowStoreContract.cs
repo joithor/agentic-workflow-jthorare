@@ -125,6 +125,42 @@ public abstract class WorkflowStoreContract
         Expect.Equal(2, (await commands()).Count);
     }
 
+    /// <summary>One commit may change an instance twice (an unpark and the 'child.done' it lets through): each write expects the version the one before it left.</summary>
+    /// <returns>The test.</returns>
+    [Fact]
+    public async Task A_commit_may_change_one_instance_twice_in_order()
+    {
+        var (lease, store, _) = await Create(Clock, Probe);
+        var grant = (await lease.Acquire(Probe.Self(), Token)).Value;
+        var a = AnInstance.New("ITEM-A", Clock.GetUtcNow());
+        _ = (await store.Commit(Commit(Write(a, "a-start", expected: 0)), grant, Token)).Value;
+        var second = Write(a with { Version = 2, State = "next" }, "a-next", expected: 1);
+        var third = Write(a with { Version = 3, State = "last" }, "a-last", expected: 2);
+
+        var outcome = (await store.Commit(new WorkflowCommit([second, third], []), grant, Token)).Value;
+
+        Expect.Equal(2, outcome.Sequences.Count);
+        Expect.Equal("last", (await store.Get(a.Id, Token)).Value?.State);
+    }
+
+    /// <summary>Two parents' children may share recipe, item and attempt: an attempt is unique per parent, not across parents.</summary>
+    /// <returns>The test.</returns>
+    [Fact]
+    public async Task Children_of_two_parents_may_share_recipe_item_and_attempt()
+    {
+        var (lease, store, _) = await Create(Clock, Probe);
+        var grant = (await lease.Acquire(Probe.Self(), Token)).Value;
+        var first = AnInstance.New("ITEM-1", Clock.GetUtcNow());
+        var second = AnInstance.New("ITEM-1", Clock.GetUtcNow()) with { Id = InstanceId.From("wf-00000000000b"), Attempt = 2 };
+        var one = AnInstance.New("ITEM-1", Clock.GetUtcNow(), recipe: "workflow.child") with { Id = InstanceId.From("wf-0000000000c1"), Parent = first.Id };
+        var two = one with { Id = InstanceId.From("wf-0000000000c2"), Parent = second.Id };
+
+        var outcome = await store.Commit(new WorkflowCommit([Write(first, "p1", 0), Write(second, "p2", 0), Write(one, "c1", 0), Write(two, "c2", 0)], []), grant, Token);
+
+        Expect.True(outcome.IsSuccess);
+        Expect.Equal(two.Id, Expect.Only((await store.Children(second.Id, Token)).Value).Id);
+    }
+
     /// <summary>Due lists running instances whose deadline has come, earliest first; held, taken-over and ended ones never.</summary>
     /// <returns>The test.</returns>
     [Fact]

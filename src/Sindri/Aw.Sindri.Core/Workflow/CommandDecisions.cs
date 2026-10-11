@@ -31,7 +31,10 @@ public static class CommandDecisions
             : new WorkflowChange(instance.Id, ChangeKind.Parked, instance.Version + 1, at, Hold: hold, Detail: hold.Detail));
     }
 
-    /// <summary>Unpark: lift a park or escalation; the state's timer restarts and the loop that parked it is reset.</summary>
+    /// <summary>
+    /// Unpark: lift a park or escalation; the state's timer restarts and the loop that parked it is reset. While the
+    /// instance is taken over the restarted timer stays paused at the state's full timeout, and runs from handback.
+    /// </summary>
     /// <param name="recipe">The recipe.</param>
     /// <param name="instance">The instance.</param>
     /// <param name="extra">Budget the human grants on top.</param>
@@ -43,7 +46,8 @@ public static class CommandDecisions
         return Ended(instance) is { } ended ? ended : (instance.Hold is null
             ? Refused(instance, "isn't parked or escalated")
             : new WorkflowChange(instance.Id, ChangeKind.Unparked, instance.Version + 1, at, Extra: extra,
-                Deadline: instance.TakenOver ? null : Deadlines.For(recipe.State(instance.State), at)));
+                Deadline: instance.TakenOver ? null : Deadlines.For(recipe.State(instance.State), at),
+                Paused: instance.TakenOver ? Deadlines.Timeout(recipe.State(instance.State)) : null));
     }
 
     /// <summary>Take over: the human works the item; timers pause with their remaining time kept.</summary>

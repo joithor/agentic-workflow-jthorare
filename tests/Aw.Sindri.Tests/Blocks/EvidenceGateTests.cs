@@ -11,7 +11,8 @@ namespace Aw.Sindri.Tests.Blocks;
 [Lane(TestLane.Unit)]
 public sealed class EvidenceGateTests
 {
-    private static readonly GateContext _context = new(InstanceId.From("wf-000000000001"), ItemId.From("ITEM-1"), "stack", new Dictionary<string, string>(StringComparer.Ordinal), [], Sha: null);
+    private static readonly GateContext _context = new(InstanceId.From("wf-000000000001"), RecipeId.From("workflow.ui-evidence"), ItemId.From("ITEM-1"), 1, "stack", "run", "ready",
+        new Dictionary<string, string>(StringComparer.Ordinal), [], Sha: null);
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 

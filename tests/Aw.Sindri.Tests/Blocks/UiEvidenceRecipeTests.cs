@@ -79,7 +79,7 @@ public sealed class UiEvidenceRecipeTests
     }
 
     [Fact]
-    public async Task Ran_without_collected_evidence_is_refused_even_when_judge_passes()
+    public async Task Ran_without_collected_evidence_is_refused_before_the_judge_or_provenance_runs()
     {
         await using var h = await Started();
         _ = h.Harness.Judge.Answer("visual-critique", new JudgeAnswer("model-decided", "looks-right", 0.93, "claude-cli", JudgeDecisionId.From("d-8")));
@@ -88,6 +88,8 @@ public sealed class UiEvidenceRecipeTests
         var refused = await h.Harness.Signal(h.Instance.Id, Ran());
 
         Assert.Equal(SindriErrors.EvidenceMissing.Code, refused.Error.Code);
+        Assert.Empty(h.Harness.Judge.Asked);
+        Assert.DoesNotContain("provenance", h.Harness.UiEvidence.Calls, StringComparer.Ordinal);
         Assert.Equal(("run", ready.Version), ((await h.Harness.Get(h.Instance.Id)).State, (await h.Harness.Get(h.Instance.Id)).Version));
     }
 

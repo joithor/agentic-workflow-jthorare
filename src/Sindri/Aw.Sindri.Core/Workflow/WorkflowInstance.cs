@@ -16,6 +16,7 @@ namespace Aw.Sindri.Core.Workflow;
 /// <param name="Item">The work item.</param>
 /// <param name="Attempt">The attempt, from 1.</param>
 /// <param name="Parent">The parent instance, for a child workflow.</param>
+/// <param name="Root">The root of its workflow tree (itself for a top-level instance): every event of the tree shares the root's correlation.</param>
 /// <param name="Tenant">The tenant key.</param>
 /// <param name="Ring">The ring.</param>
 /// <param name="Version">Rises by one per event.</param>
@@ -44,6 +45,7 @@ public sealed record WorkflowInstance(
     ItemId Item,
     int Attempt,
     InstanceId? Parent,
+    InstanceId Root,
     string Tenant,
     int Ring,
     long Version,

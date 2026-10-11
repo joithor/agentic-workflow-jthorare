@@ -40,6 +40,20 @@ internal static class TestRecipes
         "  - { from: prepare, to: running, on: go }",
         "  - { from: running, to: done, on: child.done }");
 
+    /// <summary>A grandparent whose 'running' state runs workflow.parent, which runs workflow.loop: a tree two levels deep.</summary>
+    internal static readonly string Grand = string.Join(
+        '\n',
+        "id: workflow.grand",
+        "version: 1",
+        "initial: prepare",
+        "states:",
+        "  prepare: { kind: wait, timeout: 1h }",
+        "  running: { kind: wait, child: workflow.parent, timeout: 2d }",
+        "  done: { kind: terminal }",
+        "transitions:",
+        "  - { from: prepare, to: running, on: go }",
+        "  - { from: running, to: done, on: child.done }");
+
     internal static (Recipe Recipe, RecipeHash Hash) Read(string yaml)
     {
         var read = RecipeReading.Read(yaml, SliceHarness.Json);

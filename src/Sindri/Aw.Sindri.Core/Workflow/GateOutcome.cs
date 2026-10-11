@@ -3,7 +3,10 @@ using Aw.Sindri.Core.Blocks;
 
 namespace Aw.Sindri.Core.Workflow;
 
-/// <summary>What failed gates mean (§17.28.1, invariant 4): a failure on the top rung escalates; any other failure refuses the transition and records nothing.</summary>
+/// <summary>
+/// What a failed gate means (§17.28.1, invariant 4). The ladder stops at the first failure, so a top-rung failure means
+/// every cheaper gate passed: it escalates. A failure on a lower rung refuses the transition and records nothing.
+/// </summary>
 public static class GateOutcome
 {
     /// <summary>Null when every gate passed; otherwise the escalation, or SND-WF-006 naming the failed gates.</summary>

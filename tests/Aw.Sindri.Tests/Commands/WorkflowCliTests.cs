@@ -38,6 +38,18 @@ public sealed class WorkflowCliTests
     public void A_numeric_option_that_is_not_a_whole_number_is_flagged(string value) =>
         Assert.True(WorkflowArgs.Parse(["--tokens", value]).Args!.BadNumber("--tokens"));
 
+    [Theory, Trait("Lane", "unit")]
+    [InlineData("--attempt 0", "--attempt")]
+    [InlineData("--attempt x", "--attempt")]
+    [InlineData("--base XYZ", "--base")]
+    [InlineData("--base abc", "--base")]
+    public void A_bad_start_option_is_a_usage_problem_not_dropped(string line, string named) =>
+        Assert.Contains(named, WorkflowArgs.Parse(line.Split(' ')).Args!.StartProblem(), StringComparison.Ordinal);
+
+    [Fact, Trait("Lane", "unit")]
+    public void Good_start_options_are_no_problem() =>
+        Assert.Null(WorkflowArgs.Parse(["--attempt", "2", "--base", "abc1234"]).Args!.StartProblem());
+
     [Fact, Trait("Lane", "unit")]
     public void Collect_takes_repeated_inputs()
     {

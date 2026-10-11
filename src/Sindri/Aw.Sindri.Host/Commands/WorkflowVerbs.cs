@@ -88,13 +88,18 @@ internal sealed class WorkflowVerbs(ControlPlaneClient client, Output output, IS
 
     private async Task<int> Start(string recipeText, string itemText, WorkflowArgs args, CancellationToken ct)
     {
-        if (!RecipeId.TryFrom(recipeText, out var recipe) || !ItemId.TryFrom(itemText, out var item) || args.BadNumber("--attempt"))
+        if (!RecipeId.TryFrom(recipeText, out var recipe) || !ItemId.TryFrom(itemText, out var item))
         {
-            return await Usage($"start <recipe> <item> [--attempt N] [--base SHA]: '{recipeText}' or '{itemText}' or the attempt isn't valid").ConfigureAwait(false);
+            return await Usage($"start <recipe> <item> [--attempt N] [--base SHA]: '{recipeText}' or '{itemText}' isn't valid").ConfigureAwait(false);
         }
 
-        HeadSha? baseSha = args.Option("--base") is { } b && HeadSha.TryFrom(b, out var sha) ? sha : null;
-        var attempt = (int)Math.Clamp(args.Number("--attempt") ?? 1, 0, int.MaxValue);
+        if (args.StartProblem() is { } problem)
+        {
+            return await Usage($"start <recipe> <item> [--attempt N] [--base SHA]: {problem}").ConfigureAwait(false);
+        }
+
+        HeadSha? baseSha = args.Option("--base") is { } b ? HeadSha.From(b) : null;
+        var attempt = (int)Math.Min(args.Number("--attempt") ?? 1, int.MaxValue);
         return await Mutate("/sindri/workflows", new StartWorkflowRequest(recipe, item, attempt, baseSha), args, ct).ConfigureAwait(false);
     }
 

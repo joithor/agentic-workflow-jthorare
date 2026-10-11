@@ -110,5 +110,5 @@ public sealed class JudgeGateTests
         question.Inputs.ToDictionary(i => i.Name, i => i.Type is PortType.Flag ? (i.Name.EndsWith("before-passed", StringComparison.Ordinal) ? "false" : "true") : "some text", StringComparer.Ordinal);
 
     private static GateContext Context(IReadOnlyDictionary<string, string> facts) =>
-        new(InstanceId.From("wf-000000000001"), ItemId.From("ITEM-1"), "run", facts, [], Sha: null);
+        new(InstanceId.From("wf-000000000001"), RecipeId.From("workflow.ui-evidence"), ItemId.From("ITEM-1"), 1, "run", "done", "ran", facts, [], Sha: null);
 }

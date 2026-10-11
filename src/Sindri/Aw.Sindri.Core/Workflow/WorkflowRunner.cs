@@ -30,7 +30,7 @@ internal sealed class WorkflowRunner(IRecipeCatalog catalog, InstanceLoader load
 
         var draft = new CommitDraft();
         var change = builder.Start(new StartSpec(found.Value, item, attempt, Parent: null, baseSha));
-        var (after, recorded) = builder.Record(draft, before: null, change, WorkflowKeys.Start(recipe, item, attempt));
+        var (after, recorded) = builder.Record(draft, before: null, change, WorkflowKeys.Start(change.Instance));
         return await committer.Finish(draft, new AppliedChange(after, change, recorded), [], cancellationToken).ConfigureAwait(false);
     }
 
@@ -55,17 +55,37 @@ internal sealed class WorkflowRunner(IRecipeCatalog catalog, InstanceLoader load
 
     public async ValueTask<Result<WorkflowOutcome>> Apply(InstanceId id, WorkflowCommand command, CancellationToken cancellationToken)
     {
-        var loaded = await loader.Load(id, cancellationToken).ConfigureAwait(false);
-        if (loaded.IsError)
+        var found = await loader.Find(id, cancellationToken).ConfigureAwait(false);
+        if (found.IsError)
         {
-            return loaded.Error;
+            return found.Error;
         }
 
-        var decided = await commands.Decide(loaded.Value, command, cancellationToken).ConfigureAwait(false);
-        return decided.IsError
-            ? decided.Error
-            : await committer.Finish(decided.Value.Draft, decided.Value.Trigger, [], cancellationToken).ConfigureAwait(false);
+        // Only unpark needs the recipe; the other commands apply to a stranded instance too (it can always be cancelled).
+        var recipe = command is UnparkCommand
+            ? await Required(found.Value, cancellationToken).ConfigureAwait(false)
+            : await loader.Optional(found.Value, cancellationToken).ConfigureAwait(false);
+        if (recipe.IsError)
+        {
+            return recipe.Error;
+        }
+
+        var decided = await commands.Decide(found.Value, recipe.Value?.Recipe, command, cancellationToken).ConfigureAwait(false);
+        if (decided.IsError)
+        {
+            return decided.Error;
+        }
+
+        return decided.Value is { } d
+            ? await committer.Finish(d.Draft, d.Changes, [], cancellationToken).ConfigureAwait(false)
+            : new WorkflowOutcome(found.Value, AlreadyRecorded: true, []);
     }
 
     public ValueTask<Result<TickReport>> Tick(TimeSpan? clockJump, CancellationToken cancellationToken) => ticker.Tick(clockJump, cancellationToken);
+
+    private async ValueTask<Result<ValidatedRecipe?>> Required(WorkflowInstance instance, CancellationToken ct)
+    {
+        var loaded = await loader.WithRecipe(instance, ct).ConfigureAwait(false);
+        return loaded.IsError ? loaded.Error : loaded.Value.Recipe;
+    }
 }

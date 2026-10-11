@@ -654,13 +654,11 @@ Aw.Sindri.Core.Blocks.EvidenceRef.Sha.get -> Aw.Sindri.Core.Ids.HeadSha
 Aw.Sindri.Core.Blocks.EvidenceRef.Sha.init -> void
 Aw.Sindri.Core.Blocks.GateContext
 Aw.Sindri.Core.Blocks.GateContext.<Clone>$() -> Aw.Sindri.Core.Blocks.GateContext!
-Aw.Sindri.Core.Blocks.GateContext.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out Aw.Sindri.Core.Ids.ItemId Item, out string! State, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, out Aw.Sindri.Core.Ids.HeadSha? Sha) -> void
 Aw.Sindri.Core.Blocks.GateContext.Equals(Aw.Sindri.Core.Blocks.GateContext? other) -> bool
 Aw.Sindri.Core.Blocks.GateContext.Evidence.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>!
 Aw.Sindri.Core.Blocks.GateContext.Evidence.init -> void
 Aw.Sindri.Core.Blocks.GateContext.Facts.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
 Aw.Sindri.Core.Blocks.GateContext.Facts.init -> void
-Aw.Sindri.Core.Blocks.GateContext.GateContext(Aw.Sindri.Core.Ids.InstanceId Instance, Aw.Sindri.Core.Ids.ItemId Item, string! State, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, Aw.Sindri.Core.Ids.HeadSha? Sha) -> void
 Aw.Sindri.Core.Blocks.GateContext.Instance.get -> Aw.Sindri.Core.Ids.InstanceId
 Aw.Sindri.Core.Blocks.GateContext.Instance.init -> void
 Aw.Sindri.Core.Blocks.GateContext.Item.get -> Aw.Sindri.Core.Ids.ItemId
@@ -1172,7 +1170,6 @@ Aw.Sindri.Core.Workflow.WorkflowInstance.BaseSha.get -> Aw.Sindri.Core.Ids.HeadS
 Aw.Sindri.Core.Workflow.WorkflowInstance.BaseSha.init -> void
 Aw.Sindri.Core.Workflow.WorkflowInstance.Deadline.get -> System.DateTimeOffset?
 Aw.Sindri.Core.Workflow.WorkflowInstance.Deadline.init -> void
-Aw.Sindri.Core.Workflow.WorkflowInstance.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Id, out Aw.Sindri.Core.Ids.RecipeId Recipe, out Aw.Sindri.Core.Ids.RecipeHash RecipeHash, out Aw.Sindri.Core.Ids.ItemId Item, out int Attempt, out Aw.Sindri.Core.Ids.InstanceId? Parent, out string! Tenant, out int Ring, out long Version, out string! State, out Aw.Sindri.Core.Workflow.InstanceHold? Hold, out bool TakenOver, out Aw.Sindri.Core.Workflow.InstanceEnd? Ended, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, out System.Collections.Generic.IReadOnlyDictionary<string!, int>! Loops, out System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! Findings, out Aw.Sindri.Core.Workflow.Spend! Spent, out Aw.Sindri.Core.Workflow.Spend! StateSpent, out Aw.Sindri.Core.Workflow.Spend! Extra, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, out System.DateTimeOffset? Deadline, out System.TimeSpan? Paused, out int Retries, out Aw.Sindri.Core.Ids.HeadSha? BaseSha, out System.DateTimeOffset StartedAt, out System.DateTimeOffset EnteredAt, out System.DateTimeOffset UpdatedAt) -> void
 Aw.Sindri.Core.Workflow.WorkflowInstance.Ended.get -> Aw.Sindri.Core.Workflow.InstanceEnd?
 Aw.Sindri.Core.Workflow.WorkflowInstance.Ended.init -> void
 Aw.Sindri.Core.Workflow.WorkflowInstance.EnteredAt.get -> System.DateTimeOffset
@@ -1224,7 +1221,6 @@ Aw.Sindri.Core.Workflow.WorkflowInstance.UpdatedAt.get -> System.DateTimeOffset
 Aw.Sindri.Core.Workflow.WorkflowInstance.UpdatedAt.init -> void
 Aw.Sindri.Core.Workflow.WorkflowInstance.Version.get -> long
 Aw.Sindri.Core.Workflow.WorkflowInstance.Version.init -> void
-Aw.Sindri.Core.Workflow.WorkflowInstance.WorkflowInstance(Aw.Sindri.Core.Ids.InstanceId Id, Aw.Sindri.Core.Ids.RecipeId Recipe, Aw.Sindri.Core.Ids.RecipeHash RecipeHash, Aw.Sindri.Core.Ids.ItemId Item, int Attempt, Aw.Sindri.Core.Ids.InstanceId? Parent, string! Tenant, int Ring, long Version, string! State, Aw.Sindri.Core.Workflow.InstanceHold? Hold, bool TakenOver, Aw.Sindri.Core.Workflow.InstanceEnd? Ended, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, System.Collections.Generic.IReadOnlyDictionary<string!, int>! Loops, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! Findings, Aw.Sindri.Core.Workflow.Spend! Spent, Aw.Sindri.Core.Workflow.Spend! StateSpent, Aw.Sindri.Core.Workflow.Spend! Extra, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, System.DateTimeOffset? Deadline, System.TimeSpan? Paused, int Retries, Aw.Sindri.Core.Ids.HeadSha? BaseSha, System.DateTimeOffset StartedAt, System.DateTimeOffset EnteredAt, System.DateTimeOffset UpdatedAt) -> void
 Aw.Sindri.Core.Workflow.WorkflowKeys
 Aw.Sindri.Core.Workflow.WorkflowOutcome
 Aw.Sindri.Core.Workflow.WorkflowOutcome.<Clone>$() -> Aw.Sindri.Core.Workflow.WorkflowOutcome!
@@ -1558,7 +1554,6 @@ static Aw.Sindri.Core.Workflow.WorkflowInstance.operator ==(Aw.Sindri.Core.Workf
 static Aw.Sindri.Core.Workflow.WorkflowKeys.Change(Aw.Sindri.Core.Workflow.WorkflowInstance! instance, string! what) -> string!
 static Aw.Sindri.Core.Workflow.WorkflowKeys.Instance(string! tenant, Aw.Sindri.Core.Ids.RecipeId recipe, Aw.Sindri.Core.Ids.ItemId item, int attempt) -> Aw.Sindri.Core.Ids.InstanceId
 static Aw.Sindri.Core.Workflow.WorkflowKeys.SignalSuffix(string! on, long version, Aw.Sindri.Core.Ids.HeadSha? sha) -> string!
-static Aw.Sindri.Core.Workflow.WorkflowKeys.Start(Aw.Sindri.Core.Ids.RecipeId recipe, Aw.Sindri.Core.Ids.ItemId item, int attempt) -> string!
 static Aw.Sindri.Core.Workflow.WorkflowKeys.Transition(Aw.Sindri.Core.Workflow.WorkflowInstance! instance, string! to, string! on, Aw.Sindri.Core.Ids.HeadSha? sha) -> string!
 static Aw.Sindri.Core.Workflow.WorkflowOutcome.operator !=(Aw.Sindri.Core.Workflow.WorkflowOutcome? left, Aw.Sindri.Core.Workflow.WorkflowOutcome? right) -> bool
 static Aw.Sindri.Core.Workflow.WorkflowOutcome.operator ==(Aw.Sindri.Core.Workflow.WorkflowOutcome? left, Aw.Sindri.Core.Workflow.WorkflowOutcome? right) -> bool
@@ -1875,3 +1870,25 @@ static readonly Aw.Sindri.Core.SindriErrors.ToolUnavailable -> Aw.Kernel.ErrorDe
 virtual Aw.Sindri.Core.Blocks.Judge.JudgeInput.EqualityContract.get -> System.Type!
 virtual Aw.Sindri.Core.Blocks.Judge.JudgeInput.Equals(Aw.Sindri.Core.Blocks.Judge.JudgeInput? other) -> bool
 virtual Aw.Sindri.Core.Blocks.Judge.JudgeInput.PrintMembers(System.Text.StringBuilder! builder) -> bool
+static Aw.Sindri.Core.Profile.ProfileRules.NeedsApproval(Aw.Sindri.Core.Ids.ProfileHash? approved, Aw.Sindri.Core.Ids.ProfileHash? live) -> bool
+static readonly Aw.Sindri.Core.SindriErrors.ApprovalsUnavailable -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Sindri.Core.SindriErrors.InvalidInput -> Aw.Kernel.ErrorDefinition!
+Aw.Sindri.Core.Workflow.WorkflowInstance.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Id, out Aw.Sindri.Core.Ids.RecipeId Recipe, out Aw.Sindri.Core.Ids.RecipeHash RecipeHash, out Aw.Sindri.Core.Ids.ItemId Item, out int Attempt, out Aw.Sindri.Core.Ids.InstanceId? Parent, out Aw.Sindri.Core.Ids.InstanceId Root, out string! Tenant, out int Ring, out long Version, out string! State, out Aw.Sindri.Core.Workflow.InstanceHold? Hold, out bool TakenOver, out Aw.Sindri.Core.Workflow.InstanceEnd? Ended, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, out System.Collections.Generic.IReadOnlyDictionary<string!, int>! Loops, out System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! Findings, out Aw.Sindri.Core.Workflow.Spend! Spent, out Aw.Sindri.Core.Workflow.Spend! StateSpent, out Aw.Sindri.Core.Workflow.Spend! Extra, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, out System.DateTimeOffset? Deadline, out System.TimeSpan? Paused, out int Retries, out Aw.Sindri.Core.Ids.HeadSha? BaseSha, out System.DateTimeOffset StartedAt, out System.DateTimeOffset EnteredAt, out System.DateTimeOffset UpdatedAt) -> void
+Aw.Sindri.Core.Workflow.WorkflowInstance.Root.get -> Aw.Sindri.Core.Ids.InstanceId
+Aw.Sindri.Core.Workflow.WorkflowInstance.Root.init -> void
+Aw.Sindri.Core.Workflow.WorkflowInstance.WorkflowInstance(Aw.Sindri.Core.Ids.InstanceId Id, Aw.Sindri.Core.Ids.RecipeId Recipe, Aw.Sindri.Core.Ids.RecipeHash RecipeHash, Aw.Sindri.Core.Ids.ItemId Item, int Attempt, Aw.Sindri.Core.Ids.InstanceId? Parent, Aw.Sindri.Core.Ids.InstanceId Root, string! Tenant, int Ring, long Version, string! State, Aw.Sindri.Core.Workflow.InstanceHold? Hold, bool TakenOver, Aw.Sindri.Core.Workflow.InstanceEnd? Ended, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, System.Collections.Generic.IReadOnlyDictionary<string!, int>! Loops, System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! Findings, Aw.Sindri.Core.Workflow.Spend! Spent, Aw.Sindri.Core.Workflow.Spend! StateSpent, Aw.Sindri.Core.Workflow.Spend! Extra, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, System.DateTimeOffset? Deadline, System.TimeSpan? Paused, int Retries, Aw.Sindri.Core.Ids.HeadSha? BaseSha, System.DateTimeOffset StartedAt, System.DateTimeOffset EnteredAt, System.DateTimeOffset UpdatedAt) -> void
+static Aw.Sindri.Core.Workflow.SignalDecisions.Missing(Aw.Sindri.Core.Workflow.WorkflowInstance! instance, Aw.Sindri.Core.Recipes.RecipeTransition! transition, Aw.Sindri.Core.Workflow.WorkflowSignal! signal) -> Aw.Kernel.Error?
+static Aw.Sindri.Core.Workflow.TimerDecisions.Stranded(Aw.Sindri.Core.Workflow.WorkflowInstance! instance, string! why, System.DateTimeOffset now) -> Aw.Sindri.Core.Workflow.WorkflowChange?
+static Aw.Sindri.Core.Workflow.WorkflowKeys.Child(Aw.Sindri.Core.Ids.InstanceId parent, Aw.Sindri.Core.Ids.RecipeId recipe, long parentVersion) -> Aw.Sindri.Core.Ids.InstanceId
+static Aw.Sindri.Core.Workflow.WorkflowKeys.IsSignalKey(string! key, string! suffix) -> bool
+static Aw.Sindri.Core.Workflow.WorkflowKeys.Start(Aw.Sindri.Core.Ids.InstanceId instance) -> string!
+Aw.Sindri.Core.Blocks.GateContext.Attempt.get -> int
+Aw.Sindri.Core.Blocks.GateContext.Attempt.init -> void
+Aw.Sindri.Core.Blocks.GateContext.Deconstruct(out Aw.Sindri.Core.Ids.InstanceId Instance, out Aw.Sindri.Core.Ids.RecipeId Recipe, out Aw.Sindri.Core.Ids.ItemId Item, out int Attempt, out string! State, out string! To, out string! On, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, out Aw.Sindri.Core.Ids.HeadSha? Sha) -> void
+Aw.Sindri.Core.Blocks.GateContext.GateContext(Aw.Sindri.Core.Ids.InstanceId Instance, Aw.Sindri.Core.Ids.RecipeId Recipe, Aw.Sindri.Core.Ids.ItemId Item, int Attempt, string! State, string! To, string! On, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Facts, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Blocks.EvidenceRef!>! Evidence, Aw.Sindri.Core.Ids.HeadSha? Sha) -> void
+Aw.Sindri.Core.Blocks.GateContext.On.get -> string!
+Aw.Sindri.Core.Blocks.GateContext.On.init -> void
+Aw.Sindri.Core.Blocks.GateContext.Recipe.get -> Aw.Sindri.Core.Ids.RecipeId
+Aw.Sindri.Core.Blocks.GateContext.Recipe.init -> void
+Aw.Sindri.Core.Blocks.GateContext.To.get -> string!
+Aw.Sindri.Core.Blocks.GateContext.To.init -> void

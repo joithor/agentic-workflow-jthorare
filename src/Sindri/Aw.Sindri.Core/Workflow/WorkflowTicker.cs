@@ -64,17 +64,26 @@ internal sealed class WorkflowTicker(IWorkflowStore store, InstanceLoader loader
         return moved;
     }
 
-    // One instance, one commit: a failure (a stale version, a changed recipe) skips it until the next tick.
+    // One instance, one commit: a failure (a stale version) skips it until the next tick. A stranded instance (its recipe
+    // changed or is gone) is escalated once instead, so it leaves the due batch rather than blocking it every round.
     private async ValueTask<Result<bool>> Apply(WorkflowInstance instance, Func<LoadedInstance, WorkflowChange?> decide, string what, CancellationToken ct)
     {
         var loaded = await loader.WithRecipe(instance, ct).ConfigureAwait(false);
-        if (loaded.IsError || decide(loaded.Value) is not { } change)
+        if (loaded.IsError && !InstanceLoader.Stranded(loaded.Error))
         {
-            return loaded.IsError ? loaded.Error : false;
+            return loaded.Error;
+        }
+
+        var (change, key) = loaded.IsError
+            ? (TimerDecisions.Stranded(instance, loaded.Error.Message, clock.GetUtcNow()), "recipe-changed")
+            : (decide(loaded.Value), what);
+        if (change is null)
+        {
+            return false;
         }
 
         var draft = new CommitDraft();
-        var (after, recorded) = builder.Record(draft, instance, change, WorkflowKeys.Change(instance, what));
+        var (after, recorded) = builder.Record(draft, instance, change, WorkflowKeys.Change(instance, key));
         var done = await committer.Finish(draft, new AppliedChange(after, change, recorded), [], ct).ConfigureAwait(false);
         return done.IsError ? done.Error : !done.Value.AlreadyRecorded;
     }

@@ -43,7 +43,15 @@ public sealed class InMemoryWorkflowStore(ILease lease) : IWorkflowStore
                 return new CommitOutcome(AlreadyRecorded: true, [earlier.Sequence]);
             }
 
-            var stale = commit.Writes.FirstOrDefault(w => (_instances.TryGetValue(w.After.Id, out var now) ? now.Version : 0) != w.ExpectedVersion);
+            // Write by write, as the SQL store checks them: a commit may change one instance twice (an unpark and the
+            // 'child.done' it lets through), each write expecting the version the one before it left.
+            var versions = new Dictionary<InstanceId, long>();
+            var stale = commit.Writes.FirstOrDefault(w =>
+            {
+                var now = versions.TryGetValue(w.After.Id, out var v) ? v : _instances.TryGetValue(w.After.Id, out var stored) ? stored.Version : 0;
+                versions[w.After.Id] = w.After.Version;
+                return now != w.ExpectedVersion;
+            });
             if (stale is not null)
             {
                 return SindriErrors.InstanceChanged.With($"{stale.After.Id.Value} changed; nothing was recorded");

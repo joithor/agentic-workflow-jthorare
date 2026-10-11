@@ -1,5 +1,6 @@
 using Aw.Kernel.Services;
 using Aw.Sindri.Core.Control;
+using Aw.Sindri.Core.Scheduling;
 using Aw.Sindri.Features.ApproveProfile;
 using Aw.Sindri.Features.GetStatus;
 using Aw.Sindri.Features.PingProcess;
@@ -17,7 +18,7 @@ namespace Aw.Sindri.Features;
 /// <summary>Registers Aw.Sindri.Features's slices: the command layer every client (CLI, API, UI) calls (factory addendum §17.27.1).</summary>
 public static class SindriFeaturesServiceCollectionExtensions
 {
-    /// <summary>Adds every Sindri use case as an IService.</summary>
+    /// <summary>Adds every Sindri use case as an IService, and the background services as IScheduledService.</summary>
     /// <param name="services">The service collection.</param>
     /// <returns>The same collection.</returns>
     public static IServiceCollection AddSindriFeatures(this IServiceCollection services)
@@ -32,7 +33,8 @@ public static class SindriFeaturesServiceCollectionExtensions
             .AddScoped<IService<ValidateProfileRequest, ValidateProfileResponse>, ValidateProfileService>()
             .AddScoped<IService<ApproveProfileRequest, ApproveProfileResponse>, ApproveProfileService>()
             .AddScoped<IService<RunDoctorRequest, RunDoctorResponse>, RunDoctorService>()
-            .AddScoped<IService<QueryContextRequest, QueryContextResponse>, QueryContextService>();
+            .AddScoped<IService<QueryContextRequest, QueryContextResponse>, QueryContextService>()
+            .AddScoped<IScheduledService, HeartbeatService>();
         return services;
     }
 }

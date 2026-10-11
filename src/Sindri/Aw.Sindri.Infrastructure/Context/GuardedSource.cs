@@ -6,7 +6,9 @@ namespace Aw.Sindri.Infrastructure.Context;
 
 /// <summary>
 /// The boundary every opened source sits behind: an exception an adapter didn't expect becomes SND-CONTEXT-010 (that
-/// source failed, the answer is degraded), never a failed query. The caller's own cancellation still propagates.
+/// source failed, the answer is degraded), never a failed query. A cancellation, the deadline's or the caller's, becomes
+/// SND-CONTEXT-010 too, as the IContextSource contract asks; the planner tells the two apart and ends the query on the
+/// caller's.
 /// </summary>
 internal sealed class GuardedSource(IContextSource inner) : IContextSource
 {

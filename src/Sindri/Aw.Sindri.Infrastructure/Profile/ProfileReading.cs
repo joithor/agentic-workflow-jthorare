@@ -20,7 +20,7 @@ internal static class ProfileReading
     {
         if (EmptyContextKey(json) is { } key)
         {
-            return SindriErrors.ProfileInvalid.With($"{source}: context.{key}: has no value; give it a mapping ({{}} turns the source on with its defaults) ({Fix})");
+            return SindriErrors.ProfileInvalid.With($"{source}: context.{key}: has no value; {EmptyKeyFix(key)} ({Fix})");
         }
 
         var typed = AwJson.Deserialize<SindriProfile>(json, options);
@@ -38,6 +38,14 @@ internal static class ProfileReading
         var canonical = Canonical(checkedProfile.Value, options);
         return new LoadedProfile(checkedProfile.Value, ProfileHashing.Of(canonical), source);
     }
+
+    private static string EmptyKeyFix(string key) => key switch
+    {
+        "notes" => "give it a path, for example notes: { path: ~/notes }",
+        "connectai" => "give it a server and a tool, for example connectai: { server: connectai, tool: search }",
+        "limit" => "give it a number from 1 to 50, or remove it",
+        _ => $"give it a mapping ({key}: {{}} turns the source on with its defaults)",
+    };
 
     /// <summary>
     /// A key under context: with no value ('code:' alone in YAML reads as null, which would leave the source off while the

@@ -10,7 +10,8 @@ namespace Aw.Sindri.Host.Commands;
 /// <summary>
 /// 'sindri context query': a client of POST /sindri/context/query. Exit 0 with results (a failed source only degrades
 /// them), 1 with none or for a refused question or option (SND-CONTEXT-003), 2 for a setup problem (not running, no
-/// approved profile, no source on) or when nothing could be searched (no results and a source failed).
+/// approved profile, no source on) or when nothing could be searched (no results and no source answered: each failed or
+/// couldn't open).
 /// </summary>
 internal sealed class ContextVerbs(ControlPlaneClient client, Output output)
 {
@@ -35,13 +36,13 @@ internal sealed class ContextVerbs(ControlPlaneClient client, Output output)
         return json ? await output.Json(answer.Value, code).ConfigureAwait(false) : await output.Text(Render(answer.Value), code).ConfigureAwait(false);
     }
 
-    /// <summary>The exit code for an answer: 0 results; 1 none, or a refused query; 2 a setup problem or nothing searchable.</summary>
+    /// <summary>The exit code for an answer: 0 results; 1 none (some source answered), or a refused query; 2 a setup problem, or no source answered.</summary>
     internal static int ExitCode(Result<QueryContextResponse> answer) => answer switch
     {
         { IsError: true } when answer.Error.Code == SindriErrors.ContextBadQuery.Code => 1,
         { IsError: true } => 2,
         _ when answer.Value.Results.Count > 0 => 0,
-        _ when answer.Value.Degraded => 2,
+        _ when !answer.Value.Sources.Any(s => s.State == SourceState.Ok) => 2,
         _ => 1,
     };
 

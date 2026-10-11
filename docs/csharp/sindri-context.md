@@ -22,7 +22,7 @@ It is a client of the running control plane (start it with `sindri` first), like
 |---|---|
 | 0 | Results returned. A source that failed only degrades them (`DEGRADED` line, `failed` in the sources line) |
 | 1 | No results, or a refused question or option (`SND-CONTEXT-003`) |
-| 2 | Setup: the control plane isn't running (`SND-API-001`), no profile is approved (`SND-PROFILE-005`), or the profile turns on no source (`SND-CONTEXT-001`); or nothing could be searched (no results and a source failed) |
+| 2 | Setup: the control plane isn't running (`SND-API-001`), no profile is approved (`SND-PROFILE-005`), or the profile turns on no source (`SND-CONTEXT-001`); or nothing could be searched (no results and no source answered: each failed or couldn't open) |
 
 Text output (no colour; state is always a word). This is a real run over this repo and a notes directory, cut to three
 results:
@@ -56,8 +56,8 @@ ProblemDetails with the `SND-*` code as `title`; a bad question is 400.
 
 An optional `context:` key joins schema version 1. A profile without it serializes to the same canonical JSON as before,
 so its approval hash doesn't change. A source is **on** when its key is present with a mapping: `code: {}` turns it on
-with its defaults, while `code:` with no value is refused (`SND-PROFILE-002 context.code: has no value …`), because YAML
-reads it as null. Sources that are off, and empty lists, leave the canonical JSON (and so the hash) unchanged.
+with its defaults, while `code:` with no value is refused (`SND-PROFILE-002 context.code: has no value …`, with the fix
+for that key), because YAML reads it as null. Sources that are off, and empty lists, leave the canonical JSON (and so the hash) unchanged.
 
 ```yaml
 repos:

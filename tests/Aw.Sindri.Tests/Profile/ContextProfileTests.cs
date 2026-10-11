@@ -64,7 +64,7 @@ public sealed class ContextProfileTests : IDisposable
         var error = (await _files.Source.Load(Token)).Error;
 
         Assert.Equal(SindriErrors.ProfileInvalid.Code, error.Code);
-        Assert.Contains("context.code: has no value; give it a mapping ({} turns the source on with its defaults)", error.Message, StringComparison.Ordinal);
+        Assert.Contains("context.code: has no value; give it a mapping (code: {} turns the source on with its defaults)", error.Message, StringComparison.Ordinal);
     }
 
     [Fact, Trait("Lane", "integration")]

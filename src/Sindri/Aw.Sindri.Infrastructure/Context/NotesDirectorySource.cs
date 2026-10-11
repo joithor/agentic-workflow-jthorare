@@ -76,7 +76,7 @@ internal sealed class NotesDirectorySource(string directory) : IContextSource
         foreach (var file in Directory.EnumerateFiles(directory, "*", options))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (!IsHidden(file) && _extensions.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase) && new FileInfo(file).Length <= MaxBytes)
+            if (!IsHidden(file) && _extensions.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase) && Size(file) <= MaxBytes)
             {
                 found.Add(file);
                 if (found.Count == MaxFiles)
@@ -87,6 +87,13 @@ internal sealed class NotesDirectorySource(string directory) : IContextSource
         }
 
         return found.Order(StringComparer.Ordinal);
+    }
+
+    // A file removed between the listing and this check is skipped (long.MaxValue), not a failed walk.
+    private static long Size(string file)
+    {
+        var info = new FileInfo(file);
+        return info.Exists ? info.Length : long.MaxValue;
     }
 
     private bool IsHidden(string file) =>

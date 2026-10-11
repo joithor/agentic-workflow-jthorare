@@ -124,6 +124,9 @@ internal sealed class QueryContextService(IApprovals approvals, ISourceCatalog c
             answer = SindriErrors.ContextSourceFailed.With($"it didn't answer within {_seconds}");
         }
 
+        // A source turns any cancellation into a failed result (its contract); the caller's own cancellation ends the query.
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (answer.IsError)
         {
             var late = deadline.IsCancellationRequested && !answer.Error.Message.Contains(_seconds, StringComparison.Ordinal) ? $" (past the {_seconds} deadline)" : string.Empty;

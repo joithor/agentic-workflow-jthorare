@@ -39,6 +39,11 @@ public sealed class TempTree : IDisposable
     private void Git(params string[] args)
     {
         var start = new ProcessStartInfo("git") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+        foreach (var name in start.Environment.Keys.Where(k => k.StartsWith("GIT_", StringComparison.Ordinal)).ToList())
+        {
+            _ = start.Environment.Remove(name);
+        }
+
         start.ArgumentList.Add("-C");
         start.ArgumentList.Add(Path);
         foreach (var a in args)

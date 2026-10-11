@@ -50,6 +50,18 @@ public sealed class ContextCliTests
     }
 
     [Theory, Trait("Lane", "unit")]
+    [InlineData(SourceState.Ok, SourceState.Failed, 1)]
+    [InlineData(SourceState.Skipped, SourceState.Skipped, 2)]
+    [InlineData(SourceState.Skipped, SourceState.Failed, 2)]
+    public void No_results_exit_1_when_a_source_answered_and_2_when_none_did(SourceState notes, SourceState linear, int expected)
+    {
+        var answer = new QueryContextResponse("q", ["q"], [],
+            [new SourceReport(SourceKind.Notes, notes, 0, Detail: null), new SourceReport(SourceKind.Linear, linear, 0, Detail: null)]);
+
+        Assert.Equal(expected, ContextVerbs.ExitCode(answer));
+    }
+
+    [Theory, Trait("Lane", "unit")]
     [InlineData("SND-CONTEXT-003", 1)]
     [InlineData("SND-CONTEXT-001", 2)]
     [InlineData("SND-PROFILE-005", 2)]

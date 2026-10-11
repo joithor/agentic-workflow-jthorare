@@ -23,7 +23,7 @@ One NativeAOT binary, `sindri`, is both the control plane and its CLI.
 | `sindri profile validate [--json]` | Checks the live profile file and prints its hash | 0 valid and approved; 1 valid, not approved; 2 invalid (`SND-PROFILE-001/002`) |
 | `sindri profile approve` | Shows the live hash and the key paths changed since the latest approval; changes nothing | 1 when not approved yet, 0 when it already is |
 | `sindri profile approve <hash>` | Approves: the hash must be the live one, and you type its first 6 characters at an interactive terminal | 0; 2 on a stale hash (`SND-PROFILE-003`), no terminal or a wrong confirmation (`SND-PROFILE-004`) |
-| `sindri context query "<q>" [--sources …] [--limit N] [--json]` | Cited results from the context sources the approved profile turns on (S3, `docs/csharp/sindri-context.md`) | 0 results; 1 none or a refused question; 2 not running, not approved or no source on |
+| `sindri context query "<q>" [--sources …] [--limit N] [--json]` | Cited results from the context sources the approved profile turns on (S3, `docs/csharp/sindri-context.md`) | 0 results; 1 none or a refused question; 2 not running, not approved, no source on, or no source answered |
 | `sindri doctor [--json]` | One line per check, in order: `lease`, `ledger`, `profile`, `api`, each `ok` / `warn` / `fail` with a fix | 0 all ok, 1 any warn, 2 any fail |
 
 Output: state is always a word, never colour; there is no colour at all, so `NO_COLOR` and redirected output need

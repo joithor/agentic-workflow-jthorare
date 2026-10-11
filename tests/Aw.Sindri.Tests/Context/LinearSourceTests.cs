@@ -32,7 +32,7 @@ public sealed class LinearSourceTests : IDisposable
         var (body, authorization) = Assert.Single(_linear.Requests);
         Assert.Equal("lin_api_key", authorization);
         Assert.Equal(("lease epoch", 5), (body.Variables.Term, body.Variables.First));
-        Assert.Equal(["ENG"], body.Variables.Teams!);   // why: the source was given teams
+        Assert.Equal(["ENG"], body.Variables.Teams);
         Assert.Contains("$teams", body.Query, StringComparison.Ordinal);
         Assert.Equal(("https://linear.app/team/issue/eng-1", "ENG-1 Lease epoch fencing"), (hit.Document, hit.Title));
         Assert.Null(hit.Line);

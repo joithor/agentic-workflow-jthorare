@@ -13,7 +13,7 @@ public sealed class LinearLiveTests
         var key = Environment.GetEnvironmentVariable("LINEAR_API_KEY");
         Assert.SkipWhen(string.IsNullOrEmpty(key), "LINEAR_API_KEY is not set: the live Linear check needs a read-only key in the environment");
         using var linear = new LinearHttp();
-        var source = new LinearSource(linear.Client, LinearSource.Api, key!, new LinearContext(), SliceHarness.Json);   // why: SkipWhen returned, so key is set
+        var source = new LinearSource(linear.Client, LinearSource.Api, key, new LinearContext(), SliceHarness.Json);
 
         var hits = await source.Search(new SourceQuery(["the"], 3), TestContext.Current.CancellationToken);
 

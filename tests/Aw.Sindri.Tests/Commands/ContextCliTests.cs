@@ -15,7 +15,7 @@ public sealed class ContextCliTests
 
         Assert.True(json);
         Assert.Equal("host lease", request.Question);
-        Assert.Equal(["code", "notes"], request.Sources!);   // why: --sources was given
+        Assert.Equal(["code", "notes"], request.Sources);
         Assert.Equal(3, request.Limit);
     }
 

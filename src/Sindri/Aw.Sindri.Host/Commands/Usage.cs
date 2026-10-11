@@ -11,5 +11,7 @@ internal static class Usage
         "       sindri profile validate [--json]",
         "       sindri profile approve [<hash>]   without a hash: show the hash and what changed; with it: approve (needs a terminal)",
         "       sindri doctor [--json]        lease, ledger, profile and api checks; runs without the control plane",
+        "       sindri context query \"<question>\" [--sources code,notes,linear,connectai] [--limit N] [--json]",
+        "                                     cited results from the context sources the approved profile turns on",
         "exit codes: 0 ok, 1 attention needed, 2 error");
 }

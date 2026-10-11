@@ -3,6 +3,7 @@ using Aw.Sindri.Core.Control;
 using Aw.Sindri.Features.ApproveProfile;
 using Aw.Sindri.Features.GetStatus;
 using Aw.Sindri.Features.PingProcess;
+using Aw.Sindri.Features.QueryContext;
 using Aw.Sindri.Features.StopProcess;
 
 namespace Aw.Sindri.Host.Endpoints;
@@ -22,6 +23,8 @@ internal static class EndpointTable
         _ = group.MapPost("/profile/approve", static async (ApproveProfileRequest request, IService<ApproveProfileRequest, ApproveProfileResponse> service, CancellationToken ct)
             => (await service.Handle(request, ct).ConfigureAwait(false)).ToHttpResult());
         _ = group.MapGet("/events", EventStream.Stream);
+        _ = group.MapPost("/context/query", static async (QueryContextRequest request, IService<QueryContextRequest, QueryContextResponse> service, CancellationToken ct)
+            => (await service.Handle(request, ct).ConfigureAwait(false)).ToHttpResult());
         return app;
     }
 }

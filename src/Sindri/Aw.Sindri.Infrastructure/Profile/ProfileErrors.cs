@@ -77,7 +77,11 @@ internal static partial class ProfileErrors
     };
 
     private static IEnumerable<JsonTypeInfo> Known(JsonSerializerOptions options) =>
-        new[] { typeof(SindriProfile), typeof(RepoEntry), typeof(ServiceSettings), typeof(ApiSettings) }.Select(options.GetTypeInfo);
+        new[]
+        {
+            typeof(SindriProfile), typeof(RepoEntry), typeof(ServiceSettings), typeof(ApiSettings), typeof(ContextSettings), typeof(CodeContext),
+            typeof(NotesContext), typeof(LinearContext), typeof(McpContext),
+        }.Select(options.GetTypeInfo);
 
     [GeneratedRegex(@"The JSON property '(?<name>[^']+)' could not be mapped to any \.NET member contained in type '(?<type>[^']+)'", RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1000)]
     private static partial Regex Unmapped { get; }

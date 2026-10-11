@@ -42,7 +42,7 @@ internal sealed class ContextHarness
 
     public FakeSourceCatalog Catalog { get; }
 
-    public QueryContextService Service { get; } = new();
+    public QueryContextService Service => new(Profiles, Catalog, new FakeTextScrubber(), Clock);
 
     /// <summary>Approves a profile whose context section is <paramref name="context"/> (null: none).</summary>
     public async Task Approve(ContextSettings? context)

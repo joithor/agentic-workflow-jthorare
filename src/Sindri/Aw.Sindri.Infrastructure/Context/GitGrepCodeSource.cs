@@ -1,0 +1,124 @@
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Globalization;
+using Aw.Kernel;
+using Aw.Sindri.Core;
+using Aw.Sindri.Core.Context;
+
+namespace Aw.Sindri.Infrastructure.Context;
+
+/// <summary>
+/// The code source until the C# code index block exists (docs/csharp/sindri-context.md, "Code index gap"): git grep over
+/// each profile repo's tracked files (fixed strings, any term, ignoring case, binary files skipped, at most 20 lines a
+/// file and <see cref="MaxLines"/> lines a repo), ranked by <see cref="LineMatches"/>. A hit's document is
+/// 'repo/path'. Terms are passed with -e and paths after --, so no term is read as an option.
+/// </summary>
+internal sealed class GitGrepCodeSource(IReadOnlyList<CodeRepo> repos) : IContextSource
+{
+    internal const int MaxLines = 20_000;
+
+    public SourceKind Kind => SourceKind.Code;
+
+    public async ValueTask<Result<IReadOnlyList<SourceHit>>> Search(SourceQuery query, CancellationToken cancellationToken)
+    {
+        var matches = new LineMatches(query.Terms);
+        foreach (var repo in repos)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return SindriErrors.ContextSourceFailed.With("the code search was cancelled");
+            }
+
+            var grep = await Grep(repo, query.Terms, matches, cancellationToken).ConfigureAwait(false);
+            if (grep.IsError)
+            {
+                return grep.Error;
+            }
+        }
+
+        return Results.Success<IReadOnlyList<SourceHit>>(
+            [.. matches.Ranked(query.Limit).Select(m => new SourceHit(m.Document, m.Line, Path.GetFileName(m.Document), Snippets.Line(m.Text)))]);
+    }
+
+    private static async Task<Result<Unit>> Grep(CodeRepo repo, IReadOnlyList<string> terms, LineMatches matches, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var process = Process.Start(Command(repo.Path, terms))
+                ?? throw new InvalidOperationException("git didn't start");
+            await using var kill = cancellationToken.Register(() => Kill(process)).ConfigureAwait(false);
+            var errors = process.StandardError.ReadToEndAsync(cancellationToken);
+            var read = await Read(process.StandardOutput, repo.Name, matches, cancellationToken).ConfigureAwait(false);
+            if (read >= MaxLines)
+            {
+                Kill(process);
+            }
+
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            var stderr = await errors.ConfigureAwait(false);
+            return process.ExitCode is 0 or 1 || read >= MaxLines
+                ? Results.Ok()
+                : SindriErrors.ContextSourceFailed.With(string.Create(CultureInfo.InvariantCulture,
+                    $"git grep in {repo.Path} exited {process.ExitCode}: {stderr.Split('\n')[0].Trim()}"));
+        }
+        catch (OperationCanceledException)
+        {
+            return SindriErrors.ContextSourceFailed.With("the code search was cancelled");
+        }
+        catch (Win32Exception e)
+        {
+            return SindriErrors.ContextSourceFailed.With($"can't run git (fix: install git and put it on PATH): {e.Message}");
+        }
+    }
+
+    private static ProcessStartInfo Command(string repoPath, IReadOnlyList<string> terms)
+    {
+        var start = new ProcessStartInfo("git")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        foreach (var argument in new[] { "-C", repoPath, "grep", "-n", "-I", "-i", "-F", "-z", "--no-color", "--max-count=20" })
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        foreach (var term in terms)
+        {
+            start.ArgumentList.Add("-e");
+            start.ArgumentList.Add(term);
+        }
+
+        start.ArgumentList.Add("--");
+        return start;
+    }
+
+    private static async Task<int> Read(StreamReader output, string repoName, LineMatches matches, CancellationToken cancellationToken)
+    {
+        var count = 0;
+        while (count < MaxLines && await output.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
+        {
+            var parts = line.Split('\0', 3);
+            if (parts.Length == 3 && int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var number))
+            {
+                matches.Add($"{repoName}/{parts[0]}", number, parts[2]);
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static void Kill(Process process)
+    {
+        try
+        {
+            process.Kill(entireProcessTree: true);
+        }
+        catch (InvalidOperationException)
+        {
+            // The process already exited.
+        }
+    }
+}

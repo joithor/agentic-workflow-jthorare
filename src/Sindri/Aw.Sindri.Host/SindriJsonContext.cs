@@ -1,10 +1,12 @@
 using System.Text.Json.Serialization;
 using Aw.Kernel;
+using Aw.Sindri.Core.Context;
 using Aw.Sindri.Core.Control;
 using Aw.Sindri.Core.Events;
 using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Features.ApproveProfile;
 using Aw.Sindri.Features.GetStatus;
+using Aw.Sindri.Features.QueryContext;
 using Aw.Sindri.Features.RunDoctor;
 using Aw.Sindri.Features.StopProcess;
 using Aw.Sindri.Features.StreamEvents;
@@ -29,4 +31,8 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(ValidateProfileResponse))]
 [JsonSerializable(typeof(RunDoctorResponse))]
 [JsonSerializable(typeof(EventView))]
+[JsonSerializable(typeof(QueryContextRequest))]
+[JsonSerializable(typeof(QueryContextResponse))]
+[JsonSerializable(typeof(LinearSearchRequest))]
+[JsonSerializable(typeof(LinearSearchAnswer))]
 internal sealed partial class SindriJsonContext : JsonSerializerContext;

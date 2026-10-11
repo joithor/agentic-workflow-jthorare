@@ -43,6 +43,16 @@ public sealed class ProcessUiEvidenceContractTests : UiEvidenceContract, IDispos
     }
 
     [Fact]
+    public async Task Parity_passes_its_manifest_run_directory_host_and_build()
+    {
+        var dir = RunDirectory();
+
+        _ = (await Create(new UiEvidenceScenario()).Parity(new UiEvidenceRun("/work/manifest.json", dir, "http://localhost:4000", Sha), TestContext.Current.CancellationToken)).Value;
+
+        Assert.Equal(["parity", "/work/manifest.json", dir, "--host", "http://localhost:4000", "--app-build", Sha.Value], _tool.Read("argv").TrimEnd('\n').Split('\n'));
+    }
+
+    [Fact]
     public async Task A_run_that_writes_no_document_is_tool_unavailable()
     {
         await File.WriteAllTextAsync(_tool.Binary, "#!/bin/sh\nexit 0\n", TestContext.Current.CancellationToken);

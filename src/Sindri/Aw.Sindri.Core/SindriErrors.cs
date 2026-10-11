@@ -89,7 +89,7 @@ public static class SindriErrors
     /// <summary>SND-BLK-001: a block's tool (judge, ui-evidence) couldn't be run or answered outside its CLI contract.</summary>
     public static readonly ErrorDefinition ToolUnavailable = new("SND-BLK-001", ErrorKind.Unavailable, "A block's tool could not be run");
 
-    /// <summary>SND-BLK-002: an evidence provider was given inputs it doesn't declare, or missed one it needs.</summary>
+    /// <summary>SND-BLK-002: an evidence provider was given inputs it doesn't declare, missed one it needs, or a run or parity path that isn't absolute.</summary>
     public static readonly ErrorDefinition ProviderInputInvalid = new("SND-BLK-002", ErrorKind.Invalid, "The evidence provider's inputs are not valid");
 
     /// <summary>SND-BLK-003: no registered evidence provider produces that kind.</summary>

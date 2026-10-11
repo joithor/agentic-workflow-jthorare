@@ -85,5 +85,5 @@ internal sealed class ProcessUiEvidence(ToolSettings settings, JsonSerializerOpt
         SindriErrors.ToolUnavailable.With(string.Create(CultureInfo.InvariantCulture, $"ui-evidence {command} exited {run.Exit}: {run.Message}"));
 
     private ValueTask<Result<ToolRun>> Call(IReadOnlyList<string> arguments, TimeSpan timeout, CancellationToken ct) =>
-        ToolProcess.Run(new ToolCall("ui-evidence", settings.UiEvidenceBin, arguments, Stdin: null, timeout), settings, ct);
+        ToolProcess.Run(new ToolCall("ui-evidence", settings.UiEvidenceBin, arguments, Stdin: null, timeout, Graceful: true), settings, ct);
 }

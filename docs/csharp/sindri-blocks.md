@@ -27,8 +27,9 @@ contract this binding doesn't speak, so a run of the C# blocks sets `AW_SINDRI_J
 (`UI_EVIDENCE_APP_TITLE`, `UI_EVIDENCE_SEED_*`, the lock variables, `AW_JUDGE_PROVIDERS`, a parity manifest's credentials),
 are read from the **control plane's** environment when it starts, and the tools inherit it (with `AW_LOG_LEVEL=warning`):
 set them for `sindri` / `sindri serve`, and restart the control plane to change them; exporting them in the shell that runs
-`sindri workflow …` changes nothing. `sindri workflow signal` and `collect` wait up to 25 minutes for an answer, because a
-signal may run judge gates and `collect` runs ui-evidence; every other call waits 10 s.
+`sindri workflow …` changes nothing. `sindri workflow signal`, `collect`, `unpark` and `handback` wait up to 25 minutes for an
+answer, because they may run judge gates (a signal, or a parent's `child.done`) and `collect` runs ui-evidence; every other
+call waits 10 s.
 
 The binding was checked against #156 head `fabba31e` (a read-only export, built in a scratch directory): `judge
 visual-critique --providers rules` escalates `no-provider-decided` (exit 2), `brief-scope` with an `Explore` agent decides
@@ -50,14 +51,15 @@ read, a run that writes no document.
 **Mapping the CLI contracts.** `ToolProcess` runs the binary with an argument list (no shell) and captures stdout and stderr.
 At Sindri's timeout (`ToolSettings`: judge 120 s, since judge's budget is per provider and a chain tries up to four; doctor
 and provenance 60 s; run and parity 20 minutes, past ui-evidence's two 120 s lock waits), or when the caller cancels (Ctrl-C
-on `collect` aborts the request), the tool is stopped gracefully: SIGTERM, 10 s for it to exit (ui-evidence releases its
-machine locks on SIGTERM), then SIGKILL of the tree. Once the tool exits, its output streams get 2 s to drain, so a child
+on `collect` aborts the request), the tool is stopped. ui-evidence gets SIGTERM and 30 s to exit (it closes the browser,
+which can take its own 10 s bound, and then releases its machine locks), then whatever is left of its tree is killed. judge
+handles no signal, so its tree (with any agent CLI it started) is killed at once. Once the tool exits, its output streams get 2 s to drain, so a child
 left holding them can't turn a finished run into a timeout. An error message is the tool's last stderr line that isn't a
 JSON log line (both tools end with their error, after lines such as ui-evidence's `waiting on lock`).
 
 | Tool | Exit codes read as an answer | Everything else |
 |---|---|---|
-| judge | 0 and 2 both carry the envelope on stdout (decided or escalated; `ask-check` swaps them: 0 is `ask` or an escalation, 2 is `continue`), so the envelope's own fields decide. It is read into `JudgeAnswer` through AwJson (the question's extra fields, `chosenIndex` and `reasons`, are ignored). An envelope with neither a decision nor `escalated: true` is refused | 1 (judge's error line), 64 (usage), any other exit, a binary that can't start, a timeout: SND-BLK-001 with judge's first stderr line |
+| judge | 0 and 2 both carry the envelope on stdout (decided or escalated; `ask-check` swaps them: 0 is `ask` or an escalation, 2 is `continue`), so the envelope's own fields decide. It is read into `JudgeAnswer` through AwJson (the question's extra fields, `chosenIndex` and `reasons`, are ignored). An envelope with neither a decision nor `escalated: true` is refused | 1 (judge's error line), 64 (usage), any other exit, a binary that can't start, a timeout: SND-BLK-001 with judge's error line |
 | ui-evidence | `doctor` 0 or 2 and `provenance` 0: the document on stdout. `run` and `parity` 0 or 2: the document written to the run directory (`summary.json`, `parity.json`), whose bytes are hashed for the digest (`sha256:<hex>`). `run` and `parity` take absolute paths only (a relative one is SND-BLK-002: the control plane's working directory isn't the caller's) | 1, 4, 75, 130 or any other exit, no document, a document that doesn't read: SND-BLK-001 with ui-evidence's line |
 
 ## The blocks
@@ -141,14 +143,14 @@ sindri workflow signal <id> ran --sha <sha> --set visual.evidence-dir=$PWD/runs/
 | Code | Kind | When |
 |---|---|---|
 | SND-BLK-001 | unavailable | a block's tool couldn't be run (missing binary, timeout) or answered outside its CLI contract |
-| SND-BLK-002 | invalid | an evidence provider was given inputs it doesn't declare, or missed one, or one of the wrong type |
+| SND-BLK-002 | invalid | an evidence provider was given inputs it doesn't declare, or missed one, or one of the wrong type, or a `run`/`parity` path that isn't absolute |
 | SND-BLK-003 | not found | no registered evidence provider produces that kind |
 
 ## Checks
 
 `tests/Aw.Sindri.Tests/Blocks/`: `JudgeGateTests` (each question's pass and fail decisions, escalation, missing facts, every
 field of every input record from its own fact), `JudgeInputWireTests` (the exact JSON each record writes, the field names judge
-reads), `ToolProcessTests` (SIGTERM before SIGKILL on a timeout or a cancel, an early stdin close, the error line),
+reads), `ToolProcessTests` (SIGTERM first on a timeout or a cancel, SIGKILL after the grace for a tool that ignores it, an immediate tree kill for a non-graceful call, the drain grace, an early stdin close, the error line),
 `ToolBlockRegistrationTests`, `EvidenceGateTests`, `UiRunProviderTests`, the two contract suites against the fakes and the process
 adapters, and `UiEvidenceRecipeTests` (the recipe validates approved and is refused unapproved; doctor, collect,
 provenance and judge take an instance to done; an unsure judge refuses; missing evidence refuses before judge or

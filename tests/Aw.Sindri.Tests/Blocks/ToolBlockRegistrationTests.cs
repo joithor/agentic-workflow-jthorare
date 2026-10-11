@@ -12,8 +12,8 @@ public sealed class ToolBlockRegistrationTests
     {
         await using var h = new WorkflowHarness();
 
-        var registered = h.Blocks.List().Select(s => s.Id.Value).Where(id => id != "gate.test.model");
+        var registered = h.Blocks.List().Select(s => s.Id.Value).Where(id => id != "gate.test.model").Order(StringComparer.Ordinal);
 
-        Assert.Equal(Registries.Builtin().List().Select(s => s.Id.Value), registered, StringComparer.Ordinal);
+        Assert.Equal(Registries.Builtin().List().Select(s => s.Id.Value).Order(StringComparer.Ordinal), registered, StringComparer.Ordinal);
     }
 }

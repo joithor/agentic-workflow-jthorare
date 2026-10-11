@@ -25,8 +25,12 @@ internal sealed record ToolSettings(string JudgeBin, string UiEvidenceBin)
     /// <summary>A run or parity measurement, its two lock waits (120 s each) included.</summary>
     public TimeSpan RunTimeout { get; init; } = TimeSpan.FromMinutes(20);
 
-    /// <summary>How long a stopped tool gets to exit after SIGTERM (ui-evidence releases its machine locks then) before SIGKILL.</summary>
-    public TimeSpan StopGrace { get; init; } = TimeSpan.FromSeconds(10);
+    /// <summary>
+    /// How long a stopped ui-evidence gets to exit after SIGTERM before SIGKILL. On SIGTERM it closes the browser context (its
+    /// own bound is 10 s, PlaywrightSession's close limit: a wedged browser can take all of it) and only then releases its
+    /// machine locks, so the grace is well past that.
+    /// </summary>
+    public TimeSpan StopGrace { get; init; } = TimeSpan.FromSeconds(30);
 
     /// <summary>Reads the settings.</summary>
     /// <param name="environment">Reads an environment variable.</param>

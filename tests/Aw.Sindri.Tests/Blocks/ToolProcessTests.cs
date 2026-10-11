@@ -1,40 +1,86 @@
+using System.Text;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core;
 using Aw.Sindri.Infrastructure.Tools;
 
 namespace Aw.Sindri.Tests.Blocks;
 
-/// <summary>The tool runner against scripted binaries: a timeout stops the tool gracefully, an early stdin close still counts, a cancel propagates.</summary>
+/// <summary>
+/// The tool runner against scripted binaries: a graceful call is sent SIGTERM first and killed after the grace, a
+/// non-graceful one is killed at once, a cancel propagates, output drains after exit, an early stdin close still counts.
+/// Each stub writes 'ready' once its TERM trap is installed, and the tests wait for it, so load can't race the trap.
+/// </summary>
 [Lane(TestLane.Integration)]
 public sealed class ToolProcessTests : IDisposable
 {
     private static readonly ToolSettings _settings = new("judge", "ui-evidence") { StopGrace = TimeSpan.FromSeconds(5) };
 
-    private readonly StubTool _tool = new("trap 'echo stopped > \"$d/marker\"; exit 130' TERM\nsleep 30 &\nwait $!\n");
+    private readonly StubTool _tool = new("trap 'kill $! 2>/dev/null; echo stopped > \"$d/marker\"; exit 130' TERM\necho ready > \"$d/ready\"\nsleep 30 &\nwait $!\n");
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
     public void Dispose() => _tool.Dispose();
 
     [Fact]
-    public async Task A_timeout_sends_SIGTERM_first_so_the_tool_can_clean_up_and_is_tool_unavailable()
+    public async Task A_cancelled_graceful_call_sends_SIGTERM_so_the_tool_can_clean_up_and_throws()
     {
-        var run = await ToolProcess.Run(Call(TimeSpan.FromMilliseconds(500)), _settings, Token);
+        using var cancel = CancellationTokenSource.CreateLinkedTokenSource(Token);
+        var run = ToolProcess.Run(Call(_tool, TimeSpan.FromSeconds(60), graceful: true), _settings, cancel.Token).AsTask();
+        await Ready(_tool);
+        await cancel.CancelAsync();
 
-        Assert.Equal(SindriErrors.ToolUnavailable.Code, run.Error.Code);
-        Assert.Contains("didn't finish within", run.Error.Message, StringComparison.Ordinal);
+        _ = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run);
+
         Assert.Equal("stopped", _tool.Read("marker").Trim());
     }
 
     [Fact]
-    public async Task A_cancelled_call_stops_the_tool_and_throws()
+    public async Task A_graceful_call_past_its_timeout_is_tool_unavailable_after_SIGTERM()
+    {
+        var run = await ToolProcess.Run(Call(_tool, TimeSpan.FromSeconds(3), graceful: true), _settings, Token);
+
+        Assert.Equal(SindriErrors.ToolUnavailable.Code, run.Error.Code);
+        Assert.Contains("didn't finish within 3 s", run.Error.Message, StringComparison.Ordinal);
+        Assert.Equal("stopped", _tool.Read("marker").Trim());
+    }
+
+    [Fact]
+    public async Task A_tool_that_ignores_SIGTERM_is_killed_when_the_grace_runs_out()
+    {
+        using var stubborn = new StubTool("trap '' TERM\necho ready > \"$d/ready\"\nsleep 30\n");
+        var settings = _settings with { StopGrace = TimeSpan.FromMilliseconds(300) };
+        using var cancel = CancellationTokenSource.CreateLinkedTokenSource(Token);
+        var run = ToolProcess.Run(Call(stubborn, TimeSpan.FromSeconds(60), graceful: true), settings, cancel.Token).AsTask();
+        await Ready(stubborn);
+        var started = TimeProvider.System.GetTimestamp();
+        await cancel.CancelAsync();
+
+        _ = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run);
+
+        Assert.True(TimeProvider.System.GetElapsedTime(started) < TimeSpan.FromSeconds(20));
+    }
+
+    [Fact]
+    public async Task A_non_graceful_call_is_killed_at_once_without_SIGTERM()
     {
         using var cancel = CancellationTokenSource.CreateLinkedTokenSource(Token);
-        cancel.CancelAfter(TimeSpan.FromMilliseconds(500));
+        var run = ToolProcess.Run(Call(_tool, TimeSpan.FromSeconds(60), graceful: false), _settings, cancel.Token).AsTask();
+        await Ready(_tool);
+        await cancel.CancelAsync();
 
-        _ = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await ToolProcess.Run(Call(TimeSpan.FromSeconds(30)), _settings, cancel.Token));
+        _ = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run);
 
-        Assert.Equal("stopped", _tool.Read("marker").Trim());
+        Assert.False(File.Exists(Path.Combine(_tool.Directory, "marker")));
+    }
+
+    [Fact]
+    public async Task A_child_left_holding_the_output_doesnt_turn_a_finished_run_into_a_timeout()
+    {
+        using var leaky = new StubTool("sleep 30 &\nprintf ok\nexit 0\n");
+
+        var run = await ToolProcess.Run(new ToolCall("tool", leaky.Binary, [], Stdin: null, TimeSpan.FromSeconds(20)), _settings, Token);
+
+        Assert.Equal((0, "ok"), (run.Value.Exit, Encoding.UTF8.GetString(run.Value.Stdout)));
     }
 
     [Fact]
@@ -44,7 +90,7 @@ public sealed class ToolProcessTests : IDisposable
 
         var run = await ToolProcess.Run(new ToolCall("tool", early.Binary, [], new byte[1 << 20], TimeSpan.FromSeconds(10)), _settings, Token);
 
-        Assert.Equal((3, "ok"), (run.Value.Exit, System.Text.Encoding.UTF8.GetString(run.Value.Stdout)));
+        Assert.Equal((3, "ok"), (run.Value.Exit, Encoding.UTF8.GetString(run.Value.Stdout)));
     }
 
     [Fact]
@@ -57,5 +103,16 @@ public sealed class ToolProcessTests : IDisposable
         Assert.Equal("ui-evidence: AW-EVIDENCE-009 busy", run.Value.Message);
     }
 
-    private ToolCall Call(TimeSpan timeout) => new("tool", _tool.Binary, [], Stdin: null, timeout);
+    private static ToolCall Call(StubTool tool, TimeSpan timeout, bool graceful) => new("tool", tool.Binary, [], Stdin: null, timeout, graceful);
+
+    private static async Task Ready(StubTool tool)
+    {
+        var ready = Path.Combine(tool.Directory, "ready");
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(Token);
+        deadline.CancelAfter(TimeSpan.FromSeconds(30));
+        while (!File.Exists(ready))
+        {
+            await Task.Delay(20, deadline.Token);
+        }
+    }
 }

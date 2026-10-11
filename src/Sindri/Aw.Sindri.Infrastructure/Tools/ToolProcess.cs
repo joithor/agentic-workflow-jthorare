@@ -9,9 +9,9 @@ namespace Aw.Sindri.Infrastructure.Tools;
 /// <summary>
 /// Runs a tool binary once: arguments as a list (no shell), optional stdin, stdout and stderr captured. At the timeout, or
 /// when the caller cancels, the tool is stopped: a graceful call gets SIGTERM and a grace period first (ui-evidence releases
-/// its machine locks on SIGTERM), then whatever is left of its tree is killed; any other call's tree is killed at once.
-/// Once the tool exits, its output streams get a short grace to drain,
-/// so a child left holding them can't turn a finished run into a timeout. A binary that can't be started or a timeout is
+/// its machine locks on SIGTERM), and its tree is killed only if it is still running after the grace; any other call's tree
+/// is killed at once. Once the tool exits, its output streams get a short grace to drain, so a child left holding them
+/// can't turn a finished run into a timeout. A binary that can't be started or a timeout is
 /// SND-BLK-001; a cancelled call throws OperationCanceledException after the tool is stopped; the caller maps exit codes.
 /// </summary>
 internal static class ToolProcess

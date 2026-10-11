@@ -8,7 +8,8 @@ namespace Aw.Sindri.Tests.Blocks;
 /// <summary>
 /// The tool runner against scripted binaries: a graceful call is sent SIGTERM first and killed after the grace, a
 /// non-graceful one is killed at once, a cancel propagates, output drains after exit, an early stdin close still counts.
-/// Each stub writes 'ready' once its TERM trap is installed, and the tests wait for it, so load can't race the trap.
+/// Each trapping stub writes 'ready' once its TERM trap is installed, and the stop tests wait for it, so load can't race
+/// the trap.
 /// </summary>
 [Lane(TestLane.Integration)]
 public sealed class ToolProcessTests : IDisposable
@@ -37,7 +38,10 @@ public sealed class ToolProcessTests : IDisposable
     [Fact]
     public async Task A_graceful_call_past_its_timeout_is_tool_unavailable_after_SIGTERM()
     {
-        var run = await ToolProcess.Run(Call(_tool, TimeSpan.FromSeconds(3), graceful: true), _settings, Token);
+        var running = ToolProcess.Run(Call(_tool, TimeSpan.FromSeconds(3), graceful: true), _settings, Token).AsTask();
+        await Ready(_tool);   // the timeout still fires on its own; this only makes sure the trap was in place by then
+
+        var run = await running;
 
         Assert.Equal(SindriErrors.ToolUnavailable.Code, run.Error.Code);
         Assert.Contains("didn't finish within 3 s", run.Error.Message, StringComparison.Ordinal);
@@ -76,7 +80,7 @@ public sealed class ToolProcessTests : IDisposable
     [Fact]
     public async Task A_child_left_holding_the_output_doesnt_turn_a_finished_run_into_a_timeout()
     {
-        using var leaky = new StubTool("sleep 30 &\nprintf ok\nexit 0\n");
+        using var leaky = new StubTool("sleep 5 &\nprintf ok\nexit 0\n");
 
         var run = await ToolProcess.Run(new ToolCall("tool", leaky.Binary, [], Stdin: null, TimeSpan.FromSeconds(20)), _settings, Token);
 

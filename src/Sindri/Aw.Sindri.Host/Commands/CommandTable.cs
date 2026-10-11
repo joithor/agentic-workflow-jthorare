@@ -56,8 +56,8 @@ internal static class CommandTable
     }
 
     // signal, collect, unpark and handback may run tool blocks on the server (judge gates on a signal or on a parent's
-    // child.done, a ui-evidence run on collect), so they wait up to 25 minutes, past the 20 minutes Sindri gives a ui-evidence run (ToolSettings.RunTimeout); the other
-    // workflow verbs keep the 10 s every other call has.
+    // child.done, a ui-evidence run on collect), so they wait up to 25 minutes, past the 20 minutes Sindri gives a
+    // ui-evidence run (ToolSettings.RunTimeout); the other workflow verbs keep the 10 s every other call has.
     private static async Task<int> Workflow(string[] rest, Output output, IServiceProvider services, CancellationToken ct)
     {
         TimeSpan? timeout = WorkflowArgs.Parse(rest).Args?.Positionals is ["signal" or "collect" or "unpark" or "handback", ..] ? TimeSpan.FromMinutes(25) : null;

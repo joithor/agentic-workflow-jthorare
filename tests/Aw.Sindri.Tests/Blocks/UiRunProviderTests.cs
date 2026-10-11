@@ -59,7 +59,8 @@ public sealed class UiRunProviderTests
 
         Assert.Equal(["evidence.ui-browser", "evidence.design-parity"], specs.Select(s => s.Id.Value), StringComparer.Ordinal);
         Assert.All(specs, s => Assert.True(s is { Kind: BlockKind.Evidence, Capability: false, Rung: null }));
-        Assert.Equal("ui-browser.verdict:verdict, ui-browser.document:text", string.Join(", ", specs[0].Outputs));
+        Assert.Equal("script:text, run-dir:text, host:text", string.Join(", ", specs[0].Inputs));
+        Assert.All(specs, s => Assert.Empty(s.Outputs));
     }
 
     private static EvidenceRequest Request(params (string Name, string Value)[] inputs) =>

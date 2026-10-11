@@ -60,5 +60,5 @@ internal sealed class UiRunProvider : IEvidenceProvider
     private static BlockSpec Declare(string kind, string input, string summary) =>
         new(BlockId.From($"evidence.{kind}"), BlockKind.Evidence, summary,
             [new(input, PortType.Text), new("run-dir", PortType.Text), new("host", PortType.Text)],
-            [new($"{kind}.verdict", PortType.Verdict), new($"{kind}.document", PortType.Text)]);
+            []);   // no facts: an evidence block's outputs mean nothing to the engine; collect returns the verdict and document
 }

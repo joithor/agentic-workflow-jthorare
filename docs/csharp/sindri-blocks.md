@@ -52,8 +52,8 @@ read, a run that writes no document.
 At Sindri's timeout (`ToolSettings`: judge 120 s, since judge's budget is per provider and a chain tries up to four; doctor
 and provenance 60 s; run and parity 20 minutes, past ui-evidence's two 120 s lock waits), or when the caller cancels (Ctrl-C
 on `collect` aborts the request), the tool is stopped. ui-evidence gets SIGTERM and 30 s to exit (it closes the browser,
-which can take its own 10 s bound, and then releases its machine locks), then whatever is left of its tree is killed. judge
-handles no signal, so its tree (with any agent CLI it started) is killed at once. Once the tool exits, its output streams get 2 s to drain, so a child
+which can take its own 10 s bound, and then releases its machine locks); if it is still running then, its whole tree is
+killed. judge handles no signal, so its tree (with any agent CLI it started) is killed at once. Once the tool exits, its output streams get 2 s to drain, so a child
 left holding them can't turn a finished run into a timeout. An error message is the tool's last stderr line that isn't a
 JSON log line (both tools end with their error, after lines such as ui-evidence's `waiting on lock`).
 
@@ -70,8 +70,8 @@ JSON log line (both tools end with their error, after lines such as ui-evidence'
 |---|---|---|---|---|---|---|
 | `gate.evidence.doctor` | gate | deterministic | no | — | — | `ui-evidence doctor` says healthy; otherwise the detail lists its failures |
 | `gate.evidence.provenance` | gate | deterministic | no | — | — | `ui-evidence provenance` says `seeded`; otherwise the detail gives its reason |
-| `evidence.ui-browser` | evidence (provider) | — | no | `script`, `run-dir`, `host` (text) | `ui-browser.verdict`, `ui-browser.document` | every step of the run passed |
-| `evidence.design-parity` | evidence (provider) | — | no | `manifest`, `run-dir`, `host` (text) | `design-parity.verdict`, `design-parity.document` | every geometry check passed |
+| `evidence.ui-browser` | evidence (provider) | — | no | `script`, `run-dir`, `host` (text) | — (the verdict and document come back from `collect`) | every step of the run passed |
+| `evidence.design-parity` | evidence (provider) | — | no | `manifest`, `run-dir`, `host` (text) | — (as above) | every geometry check passed |
 | `gate.judge.resolution-check` | gate | judge | yes | `resolution.brief`, `.expected`, `.actual`, `.root-cause`, `.check-kind`, `.check-summary`, `.diff-stat` (text), `.before-passed`, `.after-passed` (flag); optional `resolution.diff` | — | `resolved` |
 | `gate.judge.rule-check` | gate | judge | yes | `rule.text`, `rule.hunk` | — | `fine` or `n/a` |
 | `gate.judge.turn-progress` | gate | judge | yes | `progress.problem`, `progress.turn-diff` | — | `progressing` |

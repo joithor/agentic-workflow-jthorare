@@ -192,4 +192,42 @@ public sealed class OnyxSettingsTests
         Assert.DoesNotContain("\n", error.Message, StringComparison.Ordinal);
         Assert.True(error.Message.Length < 400, error.Message);
     }
+
+    [Fact, Trait("Lane", "unit")]
+    public void Managed_defaults_to_false_and_unmanaged_localhost_still_passes()
+    {
+        var settings = OnyxSettings.Create("http://localhost:3000", Pointer, "v4.9.0");
+
+        Assert.True(settings.IsSuccess);
+        Assert.False(settings.Value.Managed);
+    }
+
+    [Theory, Trait("Lane", "unit")]
+    [InlineData("http://127.0.0.1:3000")]
+    [InlineData("http://127.0.0.1:3000/")]
+    [InlineData("http://127.0.0.1:65535")]
+    public void A_managed_source_on_127_0_0_1_with_a_port_is_accepted_and_reports_managed(string url)
+    {
+        var settings = OnyxSettings.Create(url, Pointer, "v4.9.0", managed: true);
+
+        Assert.True(settings.IsSuccess, settings.IsError ? settings.Error.Message : "");
+        Assert.True(settings.Value.Managed);
+    }
+
+    [Theory, Trait("Lane", "unit")]
+    [InlineData("https://127.0.0.1:3000")]
+    [InlineData("http://localhost:3000")]
+    [InlineData("http://[::1]:3000")]
+    [InlineData("http://127.0.0.2:3000")]
+    [InlineData("http://127.0.0.1:3000/onyx")]
+    [InlineData("http://127.0.0.1")]
+    public void Managed_requires_http_127_0_0_1_with_a_port(string url)
+    {
+        var error = OnyxSettings.Create(url, Pointer, "v4.9.0", managed: true).Error;
+
+        Assert.Equal(ContextErrors.OnyxNotPinnedOrLoopback.Code, error.Code);
+        Assert.StartsWith("context.sources.onyx.url: ", error.Message, StringComparison.Ordinal);
+        Assert.Contains("managed", error.Message, StringComparison.Ordinal);
+        Assert.Contains("http://127.0.0.1:", error.Message, StringComparison.Ordinal);
+    }
 }

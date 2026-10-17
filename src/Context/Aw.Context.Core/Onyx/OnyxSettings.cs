@@ -23,6 +23,9 @@ public sealed partial record OnyxSettings
         Version = version;
     }
 
+    /// <summary>Whether Sindri runs this Onyx (`sindri onyx up` wrote the entry): its URL is then exactly http://127.0.0.1:&lt;port&gt; and its version is the release Sindri pins. False when the profile doesn't say.</summary>
+    public bool Managed { get; }
+
     /// <summary>Onyx's base URL (http or https on a loopback host), ending in '/'.</summary>
     public Uri Url { get; }
 
@@ -39,9 +42,11 @@ public sealed partial record OnyxSettings
     /// <param name="url">'context.sources.onyx.url'.</param>
     /// <param name="token">'context.sources.onyx.token', a secret pointer.</param>
     /// <param name="version">'context.sources.onyx.version', a release tag.</param>
+    /// <param name="managed">'context.sources.onyx.managed': Sindri runs this Onyx.</param>
     /// <returns>The settings, SND-CONTEXT-055 for a URL or version that breaks the rules, or SND-CONTEXT-002 for no token or one that isn't a secret pointer (never repeated).</returns>
-    public static Result<OnyxSettings> Create(string? url, string? token, string? version)
+    public static Result<OnyxSettings> Create(string? url, string? token, string? version, bool managed = false)
     {
+        _ = managed;
         var baseUrl = CheckUrl(url);
         if (baseUrl.IsError)
         {

@@ -35,6 +35,33 @@ public sealed class SourcesSettingsTests
         Assert.Equal(["SPL", "APP"], settings.LinearTeams, StringComparer.Ordinal);
     }
 
+    [Fact, Trait("Lane", "unit")]
+    public void A_managed_true_onyx_entry_is_read_with_its_flag()
+    {
+        var settings = Read("""{"sources":{"onyx":{"url":"http://127.0.0.1:3000","token":"keychain:onyx/sindri-onyx","version":"v4.9.0","managed":true}}}""");
+
+        Assert.True(settings.IsSuccess, settings.IsError ? settings.Error.Message : "");
+        Assert.True(settings.Value.Onyx!.Managed);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void A_managed_key_that_is_not_a_bool_is_SND_CONTEXT_001_naming_the_path()
+    {
+        var read = Read("""{"sources":{"onyx":{"url":"http://127.0.0.1:3000","token":"env:K","version":"v4.9.0","managed":"yes"}}}""");
+
+        Assert.Equal("SND-CONTEXT-001", read.Error.Code);
+        Assert.Contains("managed", read.Error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void A_managed_entry_off_127_0_0_1_is_055_naming_the_url_key()
+    {
+        var read = Read("""{"sources":{"onyx":{"url":"http://localhost:3000","token":"env:K","version":"v4.9.0","managed":true}}}""");
+
+        Assert.Equal("SND-CONTEXT-055", read.Error.Code);
+        Assert.StartsWith("context.sources.onyx.url:", read.Error.Message, StringComparison.Ordinal);
+    }
+
     [Theory, Trait("Lane", "unit")]
     [InlineData("""{"sources":{"slack":{}}}""", "SND-CONTEXT-001", "context.sources.slack:")]
     [InlineData("""{"sources":{"onyx":{"url":"http://127.0.0.1:3000","token":"env:K","version":"v4.9.0","apiKey":"x"}}}""", "SND-CONTEXT-001", "context.sources.onyx.apiKey:")]

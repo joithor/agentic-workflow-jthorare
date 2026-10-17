@@ -1,5 +1,6 @@
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Onyx;
+using Aw.Sindri.Features.OnyxUp;
 using Aw.Sindri.Testing;
 
 namespace Aw.Sindri.Tests.OnyxUp;
@@ -209,6 +210,21 @@ public sealed class OnyxUpResumeTests
         Assert.Equal(over, rig.Workspace.Files[rig.Paths.Override], StringComparer.Ordinal);
         Assert.Equal(env, rig.Workspace.Files[rig.Paths.Env], StringComparer.Ordinal);
         Assert.Equal(1, rig.Random.Calls);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_repaired_config_file_restarts_a_running_stack()
+    {
+        var rig = new OnyxUpRig();
+        _ = await rig.Up(Token);
+        rig.Workspace.Files[rig.Paths.Override] += "    ports: [\"0.0.0.0:80:80\"]\n";
+
+        var rerun = (await rig.Up(Token)).Value;
+
+        Assert.Equal(
+            [new OnyxStepResult("config", OnyxStepOutcome.Rewrote), new OnyxStepResult("start", OnyxStepOutcome.Ran)],
+            rerun.Steps.Where(static s => s.Outcome != OnyxStepOutcome.Skipped));
+        Assert.Equal(["config", "start"], rerun.Ran, StringComparer.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]

@@ -18,7 +18,8 @@ internal interface IOnyxUpStep
     /// <param name="context">The run's shared facts.</param>
     /// <param name="stamp">The step's current stamp (see <see cref="Stamp"/>).</param>
     /// <param name="recorded">The stamp state.json holds for the step, or null.</param>
+    /// <param name="upstreamRewrote">True when an earlier step of this run returned <see cref="OnyxStepOutcome.Rewrote"/>: a file the running stack reads was replaced.</param>
     /// <param name="cancellationToken">Cancels the step.</param>
     /// <returns>What it did, or the error that stops `onyx up` (nothing is recorded for the step).</returns>
-    public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, CancellationToken cancellationToken);
+    public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, bool upstreamRewrote, CancellationToken cancellationToken);
 }

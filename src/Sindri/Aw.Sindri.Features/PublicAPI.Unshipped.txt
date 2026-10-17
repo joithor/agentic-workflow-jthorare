@@ -2476,6 +2476,7 @@ Aw.Sindri.Features.OnyxUp.OnyxUpResponse.NeedsHuman.get -> System.Collections.Ge
 Aw.Sindri.Features.OnyxUp.OnyxUpResponse.OnyxUpResponse(int Port, string! Url, string! Version, System.Collections.Generic.IReadOnlyList<string!>! Warnings, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.OnyxUp.OnyxStepResult!>! Steps) -> void
 Aw.Sindri.Features.OnyxUp.OnyxStepOutcome
 Aw.Sindri.Features.OnyxUp.OnyxStepOutcome.NeedsHuman = 2 -> Aw.Sindri.Features.OnyxUp.OnyxStepOutcome
+Aw.Sindri.Features.OnyxUp.OnyxStepOutcome.Rewrote = 3 -> Aw.Sindri.Features.OnyxUp.OnyxStepOutcome
 Aw.Sindri.Features.OnyxUp.OnyxStepOutcome.Ran = 0 -> Aw.Sindri.Features.OnyxUp.OnyxStepOutcome
 Aw.Sindri.Features.OnyxUp.OnyxStepOutcome.Skipped = 1 -> Aw.Sindri.Features.OnyxUp.OnyxStepOutcome
 Aw.Sindri.Features.OnyxUp.OnyxStepResult

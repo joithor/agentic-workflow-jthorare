@@ -16,7 +16,7 @@ public sealed class OnyxUpStepsTests
 
         public string Stamp(OnyxUpContext context, string? upstream) => name + ":" + upstream;
 
-        public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, CancellationToken cancellationToken)
+        public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, bool upstreamRewrote, CancellationToken cancellationToken)
             => ValueTask.FromResult<Result<OnyxStepOutcome>>(outcome);
     }
 
@@ -108,7 +108,7 @@ public sealed class OnyxUpStepsTests
             return name + ":" + upstream;
         }
 
-        public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, CancellationToken cancellationToken)
+        public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, bool upstreamRewrote, CancellationToken cancellationToken)
             => ValueTask.FromResult<Result<OnyxStepOutcome>>(OnyxStepOutcome.Ran);
     }
 
@@ -137,4 +137,33 @@ public sealed class OnyxUpStepsTests
         Assert.Equal(OnyxStepOutcome.NeedsHuman, response.Steps[^1].Outcome);
         Assert.Contains("start", response.NeedsHuman, StringComparer.Ordinal);
     }
+
+    private sealed class Probing(string name, OnyxStepOutcome outcome, List<(string Step, bool Told)> told) : IOnyxUpStep
+    {
+        public string Name => name;
+
+        public string Stamp(OnyxUpContext context, string? upstream) => name + ":" + upstream;
+
+        public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, bool upstreamRewrote, CancellationToken cancellationToken)
+        {
+            told.Add((name, upstreamRewrote));
+            return ValueTask.FromResult<Result<OnyxStepOutcome>>(outcome);
+        }
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_step_after_a_rewrite_is_told_upstreamRewrote()
+    {
+        var rewrote = new List<(string Step, bool Told)>();
+        var ran = new List<(string Step, bool Told)>();
+
+        _ = await Service(new OnyxUpRig(), Chain("fetch", OnyxStepOutcome.Rewrote, rewrote)).Handle(new OnyxUpRequest(), Token);
+        _ = await Service(new OnyxUpRig(), Chain("fetch", OnyxStepOutcome.Ran, ran)).Handle(new OnyxUpRequest(), Token);
+
+        Assert.Equal([("fetch", false), ("config", true), ("pull", true), ("start", true)], rewrote);
+        Assert.Equal([("fetch", false), ("config", false), ("pull", false), ("start", false)], ran);
+    }
+
+    private static IOnyxUpStep[] Chain(string first, OnyxStepOutcome firstOutcome, List<(string Step, bool Told)> told)
+        => [new Probing(first, firstOutcome, told), new Probing("config", OnyxStepOutcome.Skipped, told), new Probing("pull", OnyxStepOutcome.Skipped, told), new Probing("start", OnyxStepOutcome.Skipped, told)];
 }

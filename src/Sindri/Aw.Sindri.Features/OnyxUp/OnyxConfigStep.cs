@@ -19,7 +19,7 @@ internal sealed class OnyxConfigStep(IOnyxWorkspace workspace, IComposeServices 
     private static string ImageRows(OnyxUpContext context)
         => string.Join('\n', context.Pins.Images.Where(i => i.Platform == context.Platform).Select(static i => i.Repository + "@" + i.Digest).Order(StringComparer.Ordinal));
 
-    public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, CancellationToken cancellationToken)
+    public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, bool upstreamRewrote, CancellationToken cancellationToken)
     {
         var files = ReadFiles(context.Paths);
         return Done(files.IsError ? files.Error : Render(context, stamp, recorded, files.Value));

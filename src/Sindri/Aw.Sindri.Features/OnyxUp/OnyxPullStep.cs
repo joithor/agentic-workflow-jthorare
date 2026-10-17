@@ -11,7 +11,7 @@ internal sealed class OnyxPullStep(IContainerRuntime runtime, IOnyxWorkspace wor
 
     public string Stamp(OnyxUpContext context, string? upstream) => OnyxSteps.Stamp(OnyxUpPlan.Upstream(Name, upstream));
 
-    public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, CancellationToken cancellationToken)
+    public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, bool upstreamRewrote, CancellationToken cancellationToken)
     {
         if (string.Equals(recorded, stamp, StringComparison.Ordinal))
         {

@@ -97,7 +97,7 @@ internal sealed class OnyxUpService(IOnyxWorkspace workspace, OnyxFacts facts, I
     private async ValueTask<Result<OnyxStepOutcome>> RunStep(IOnyxUpStep step, string stamp, OnyxUpContext context, Dictionary<string, string> recorded, CancellationToken cancellationToken)
     {
         _ = recorded.TryGetValue(step.Name, out var before);
-        var outcome = await step.Execute(context, stamp, before, cancellationToken).ConfigureAwait(false);
+        var outcome = await step.Execute(context, stamp, before, upstreamRewrote: false, cancellationToken).ConfigureAwait(false);
         if (outcome.IsError)
         {
             return outcome.Error;

@@ -17,4 +17,8 @@ public enum OnyxStepOutcome
     /// <summary>The step needs the human before it can go on. Reserved for P3's account setup: no step produces it yet, and the CLI, the JSON and the tests only know the shape.</summary>
     [JsonStringEnumMemberName("needs-human")]
     NeedsHuman,
+
+    /// <summary>The step ran and replaced a file the running stack reads (an existing file whose content differed), so a stack that is up still runs with the old one; counts as ran.</summary>
+    [JsonStringEnumMemberName("rewrote")]
+    Rewrote,
 }

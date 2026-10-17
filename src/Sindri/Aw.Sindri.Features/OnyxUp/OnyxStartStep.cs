@@ -14,7 +14,7 @@ internal sealed class OnyxStartStep(IContainerRuntime runtime, IOnyxHealth healt
 
     public string Stamp(OnyxUpContext context, string? upstream) => OnyxSteps.Stamp(OnyxUpPlan.Upstream(Name, upstream), "start");
 
-    public async ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, CancellationToken cancellationToken)
+    public async ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, bool upstreamRewrote, CancellationToken cancellationToken)
     {
         if (await IsDone(context, stamp, recorded, cancellationToken).ConfigureAwait(false))
         {

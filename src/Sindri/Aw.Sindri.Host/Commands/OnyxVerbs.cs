@@ -50,7 +50,7 @@ internal sealed class OnyxVerbs(IServiceProvider services, Output output, AgentS
     private async Task<int> Waiting(OnyxUpResponse up, bool json)
     {
         var needs = string.Join('\n', up.Steps.Where(static s => s.Outcome == OnyxStepOutcome.NeedsHuman).Select(static s => s.Hint is null ? $"needs you: {s.Step}" : $"needs you: {s.Step} ({s.Hint})"));
-        return json ? await output.Json(up, 0).ConfigureAwait(false) : await output.Text($"{Summary(up)}{needs}\n", 0).ConfigureAwait(false);
+        return json ? await output.Json(up, 1).ConfigureAwait(false) : await output.Text($"{Summary(up)}{needs}\n", 1).ConfigureAwait(false);
     }
 
     // Step 10: approve the profile, read doctor's onyx row, open the connectors page, print what is left.

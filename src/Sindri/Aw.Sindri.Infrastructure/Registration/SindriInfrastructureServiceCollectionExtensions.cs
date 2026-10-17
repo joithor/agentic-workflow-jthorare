@@ -109,6 +109,7 @@ public static class SindriInfrastructureServiceCollectionExtensions
             .AddSingleton<IComposeServices, YamlComposeServices>()                                       // the compose file's services, read only
             .AddSingleton<IRandomHex, OsRandomHex>()                                                      // the OS random source, for the auth key
             .AddSingleton<IOnyxHealth>(static _ => new HttpOnyxHealth(HttpOnyxHealth.CreateClient()))                 // readiness, http://127.0.0.1 only
+            .AddSingleton<IOnyxProvisioning>(static _ => new HttpOnyxProvisioning(HttpOnyxProvisioning.CreateClient()))   // owner login and the admin key, http://127.0.0.1 only, its own allowlist
             .AddSingleton<IHostProbes>(static _ => new HostProbes());                                     // free disk and loopback ports
 
     /// <summary>

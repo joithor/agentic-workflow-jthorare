@@ -8815,3 +8815,11 @@ static Aw.Sindri.Core.Onyx.OnyxAccount.operator !=(Aw.Sindri.Core.Onyx.OnyxAccou
 static Aw.Sindri.Core.Onyx.OnyxAccount.operator ==(Aw.Sindri.Core.Onyx.OnyxAccount? left, Aw.Sindri.Core.Onyx.OnyxAccount? right) -> bool
 static Aw.Sindri.Core.Onyx.OnyxMintedKey.operator !=(Aw.Sindri.Core.Onyx.OnyxMintedKey? left, Aw.Sindri.Core.Onyx.OnyxMintedKey? right) -> bool
 static Aw.Sindri.Core.Onyx.OnyxMintedKey.operator ==(Aw.Sindri.Core.Onyx.OnyxMintedKey? left, Aw.Sindri.Core.Onyx.OnyxMintedKey? right) -> bool
+Aw.Sindri.Core.Onyx.OnyxKeyPointers
+Aw.Sindri.Core.Secrets.ISecretWriter
+Aw.Sindri.Core.Secrets.ISecretWriter.Store(string! value) -> Aw.Kernel.Result<Aw.Sindri.Core.Secrets.SecretPointer!>!
+const Aw.Sindri.Core.Onyx.OnyxKeyPointers.Account = "sindri-onyx" -> string!
+const Aw.Sindri.Core.Onyx.OnyxKeyPointers.Service = "onyx" -> string!
+static Aw.Sindri.Core.Onyx.OnyxKeyPointers.FileFor(string! sindriHome) -> Aw.Sindri.Core.Secrets.SecretPointer!
+static Aw.Sindri.Core.Onyx.OnyxKeyPointers.FilePath(string! sindriHome) -> string!
+static Aw.Sindri.Core.Onyx.OnyxKeyPointers.Keychain.get -> Aw.Sindri.Core.Secrets.SecretPointer!

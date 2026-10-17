@@ -40,10 +40,14 @@ internal sealed class FakeToolRunner : IToolRunner
 
     public List<(string FileName, IReadOnlyList<string> Arguments, TimeSpan Timeout, bool HadStderrCallback, IReadOnlyDictionary<string, string?>? Environment)> Calls { get; } = [];
 
+    /// <summary>Gets the standard input each call was given, in call order (null for none). Held apart from <see cref="Calls"/> so a test can look at it, and it never reaches a log.</summary>
+    public List<string?> StandardInputs { get; } = [];
+
     public ToolRun Run(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout, ToolRunOptions? options = null, CancellationToken cancellationToken = default)
     {
         var standardErrorLine = options?.StandardErrorLine;
         Calls.Add((fileName, [.. arguments], timeout, standardErrorLine is not null, options?.Environment));
+        StandardInputs.Add(options?.StandardInput);
         if (cancellationToken.IsCancellationRequested)
         {
             return ToolRun.Cancelled;

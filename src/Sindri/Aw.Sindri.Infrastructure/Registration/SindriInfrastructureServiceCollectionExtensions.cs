@@ -72,6 +72,7 @@ public static class SindriInfrastructureServiceCollectionExtensions
             .AddSingleton<IRecipeReader, YamlRecipeReader>()
             .AddSingleton<IRecipeFiles, FileRecipeFiles>()
             .AddSingleton(CreateSecretPointers(environment))
+            .AddSingleton<ISecretWriter>(static sp => new SecretWriter(new ProcessToolRunner(), sp.GetRequiredService<ISecretPointers>(), sp.GetRequiredService<ISindriHome>().Path))   // Onyx P3: onyx/sindri-onyx only
             .AddSingleton<IRecipeWake, NoOpRecipeWake>()
             .AddSingleton<IRecipeStore, SqliteRecipeStore>()
             .AddSingleton<IRecipeApprovals, SqliteRecipeApprovals>()

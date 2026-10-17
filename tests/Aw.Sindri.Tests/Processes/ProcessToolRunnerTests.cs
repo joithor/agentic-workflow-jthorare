@@ -17,6 +17,14 @@ public sealed class ProcessToolRunnerTests
     }
 
     [Fact, Trait("Lane", "integration")]
+    public void Standard_input_reaches_the_child_and_is_then_closed()
+    {
+        var run = _runner.Run("cat", [], TimeSpan.FromSeconds(5), new ToolRunOptions(StandardInput: "add-generic-password -w \"value\"\n"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ToolRun(ToolOutcome.Exited, 0, "add-generic-password -w \"value\"\n"), run);
+    }
+
+    [Fact, Trait("Lane", "integration")]
     public void A_non_zero_exit_is_reported()
         => Assert.Equal(3, _runner.Run("sh", ["-c", "exit 3"], TimeSpan.FromSeconds(5), cancellationToken: TestContext.Current.CancellationToken).ExitCode);
 

@@ -102,10 +102,29 @@ internal sealed class OnyxVerbs(IServiceProvider services, Output output, AgentS
         _ => throw new ArgumentOutOfRangeException(nameof(state), state, "unknown check state"),
     };
 
-    internal Task<int> Open(bool json, CancellationToken ct)
+    /// <summary>Opens the page `onyx open` names: the sign-up page until Onyx has an account, then the connectors page. The address is printed whether or not a browser opens.</summary>
+    /// <param name="json">Print `{ url, page }`.</param>
+    /// <param name="ct">Cancels the call.</param>
+    /// <returns>0; 1 when Onyx isn't set up or the caller is a session.</returns>
+    internal async Task<int> Open(bool json, CancellationToken ct)
     {
-        _ = (json, ct, typeof(OnyxOpenRequest), session);
-        throw new NotSupportedException();
+        if (!session.Human)
+        {
+            return await Refused("open", "opens a page in the browser").ConfigureAwait(false);
+        }
+
+        var answer = await services.GetRequiredService<IService<OnyxOpenRequest, OnyxOpenResponse>>().Handle(new OnyxOpenRequest(), ct).ConfigureAwait(false);
+        if (answer.IsError)
+        {
+            _ = await output.Error(answer.Error).ConfigureAwait(false);
+            return 1;
+        }
+
+        var page = answer.Value;
+        var opened = services.GetRequiredService<IBrowser>().Open(page.Url);
+        return json
+            ? await output.Json(page, 0).ConfigureAwait(false)
+            : await output.Text($"{(opened ? "Opened" : "Open")} Onyx's {page.Page} page{(opened ? string.Empty : " yourself")}: {page.Url}\n", 0).ConfigureAwait(false);
     }
 
     internal async Task<int> Down(bool json, CancellationToken ct)

@@ -13,9 +13,9 @@ namespace Aw.Sindri.Features.OnyxUp;
 /// <param name="Steps">What each step did, in order.</param>
 public sealed record OnyxUpResponse(int Port, string Url, string Version, IReadOnlyList<string> Warnings, IReadOnlyList<OnyxStepResult> Steps)
 {
-    /// <summary>Gets the names of the steps that did work this run.</summary>
+    /// <summary>Gets the names of the steps that did work this run (a step that rewrote a file counts as ran).</summary>
     [JsonIgnore]
-    public IReadOnlyList<string> Ran => Named(OnyxStepOutcome.Ran);
+    public IReadOnlyList<string> Ran => [.. Steps.Where(static s => s.Outcome is OnyxStepOutcome.Ran or OnyxStepOutcome.Rewrote).Select(static s => s.Step)];
 
     /// <summary>Gets the names of the steps whose inputs and results were already as needed.</summary>
     [JsonIgnore]

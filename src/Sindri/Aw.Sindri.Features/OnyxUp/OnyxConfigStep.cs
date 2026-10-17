@@ -48,18 +48,31 @@ internal sealed class OnyxConfigStep(IOnyxWorkspace workspace, IComposeServices 
         }
 
         var env = OnyxConfig.RenderEnv(files.Template, settings);
-        var stale = !string.Equals(recorded, stamp, StringComparison.Ordinal)
-            || !string.Equals(files.Env, env, StringComparison.Ordinal)
-            || !string.Equals(files.Override, rendered.Value, StringComparison.Ordinal);
+        var stale = IsStale(recorded, stamp, files, env, rendered.Value);
         if (stale)
         {
             progress.Line($"{Name}: running");
         }
 
-        var wrote = workspace.WriteIfChanged(context.Paths.Env, env, secret: true);
-        wrote |= workspace.WriteIfChanged(context.Paths.Override, rendered.Value, secret: false);
-        context.ConfigRewritten = wrote;
-        return stale || wrote ? OnyxStepOutcome.Ran : OnyxStepOutcome.Skipped;
+        var wrote = Write(context.Paths, env, rendered.Value);
+        return Outcome(stale, wrote, inUse: recorded is not null || files.Env is not null || files.Override is not null);
+    }
+
+    // A write over a config that was in use (a recorded step, or a file that was there) is a rewrite: a running stack still holds the old one.
+    private static OnyxStepOutcome Outcome(bool stale, bool wrote, bool inUse)
+        => wrote && inUse ? OnyxStepOutcome.Rewrote : stale || wrote ? OnyxStepOutcome.Ran : OnyxStepOutcome.Skipped;
+
+    private static bool IsStale(string? recorded, string stamp, Files files, string env, string over)
+        => !string.Equals(recorded, stamp, StringComparison.Ordinal)
+            || !string.Equals(files.Env, env, StringComparison.Ordinal)
+            || !string.Equals(files.Override, over, StringComparison.Ordinal);
+
+    // Both files are written when they differ.
+    private bool Write(OnyxPaths paths, string env, string over)
+    {
+        var wroteEnv = workspace.WriteIfChanged(paths.Env, env, secret: true);
+        var wroteOver = workspace.WriteIfChanged(paths.Override, over, secret: false);
+        return wroteEnv || wroteOver;
     }
 
     private static ValueTask<Result<OnyxStepOutcome>> Done(Result<OnyxStepOutcome> result) => ValueTask.FromResult(result);

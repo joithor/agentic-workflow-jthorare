@@ -76,16 +76,18 @@ internal sealed class OnyxUpService(IOnyxWorkspace workspace, OnyxFacts facts, I
     {
         List<OnyxStepResult> results = [];
         string? upstream = null;
+        var rewrote = false;
         foreach (var step in _steps)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var stamp = step.Stamp(context, upstream);
-            var outcome = await RunStep(step, stamp, context, recorded, cancellationToken).ConfigureAwait(false);
+            var outcome = await RunStep(step, new StepInput(stamp, rewrote), context, recorded, cancellationToken).ConfigureAwait(false);
             if (outcome.IsError)
             {
                 return outcome.Error;
             }
 
+            rewrote |= outcome.Value == OnyxStepOutcome.Rewrote;
             results.Add(new OnyxStepResult(step.Name, outcome.Value));
             upstream = stamp;
         }
@@ -94,10 +96,10 @@ internal sealed class OnyxUpService(IOnyxWorkspace workspace, OnyxFacts facts, I
     }
 
     // The step makes its result hold; its stamp is recorded once it does.
-    private async ValueTask<Result<OnyxStepOutcome>> RunStep(IOnyxUpStep step, string stamp, OnyxUpContext context, Dictionary<string, string> recorded, CancellationToken cancellationToken)
+    private async ValueTask<Result<OnyxStepOutcome>> RunStep(IOnyxUpStep step, StepInput input, OnyxUpContext context, Dictionary<string, string> recorded, CancellationToken cancellationToken)
     {
         _ = recorded.TryGetValue(step.Name, out var before);
-        var outcome = await step.Execute(context, stamp, before, upstreamRewrote: false, cancellationToken).ConfigureAwait(false);
+        var outcome = await step.Execute(context, input.Stamp, before, input.UpstreamRewrote, cancellationToken).ConfigureAwait(false);
         if (outcome.IsError)
         {
             return outcome.Error;
@@ -108,9 +110,9 @@ internal sealed class OnyxUpService(IOnyxWorkspace workspace, OnyxFacts facts, I
             progress.Line($"{step.Name}: already done");
         }
 
-        if (!string.Equals(before, stamp, StringComparison.Ordinal))
+        if (!string.Equals(before, input.Stamp, StringComparison.Ordinal))
         {
-            recorded[step.Name] = stamp;
+            recorded[step.Name] = input.Stamp;
             workspace.WriteState(new OnyxSetupState(context.Port, new Dictionary<string, string>(recorded, StringComparer.Ordinal), context.Project.Name));
         }
 
@@ -156,4 +158,7 @@ internal sealed class OnyxUpService(IOnyxWorkspace workspace, OnyxFacts facts, I
         var containers = facts.Containers(picked.Value.Project, cancellationToken);
         return Results.Success(containers.IsSuccess ? OnyxFacts.OwnPort(containers.Value) : null);
     }
+
+    // What a step is handed besides the context: its stamp and whether an earlier step of this run replaced a file the running stack reads.
+    private readonly record struct StepInput(string Stamp, bool UpstreamRewrote);
 }

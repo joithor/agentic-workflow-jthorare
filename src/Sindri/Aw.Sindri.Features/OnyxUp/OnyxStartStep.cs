@@ -16,7 +16,7 @@ internal sealed class OnyxStartStep(IContainerRuntime runtime, IOnyxHealth healt
 
     public async ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, bool upstreamRewrote, CancellationToken cancellationToken)
     {
-        if (await IsDone(context, stamp, recorded, cancellationToken).ConfigureAwait(false))
+        if (await IsDone(context, stamp, recorded, upstreamRewrote, cancellationToken).ConfigureAwait(false))
         {
             return OnyxStepOutcome.Skipped;
         }
@@ -26,9 +26,9 @@ internal sealed class OnyxStartStep(IContainerRuntime runtime, IOnyxHealth healt
         return ran.IsError ? ran.Error : OnyxStepOutcome.Ran;
     }
 
-    private async ValueTask<bool> IsDone(OnyxUpContext context, string stamp, string? recorded, CancellationToken cancellationToken)
+    private async ValueTask<bool> IsDone(OnyxUpContext context, string stamp, string? recorded, bool upstreamRewrote, CancellationToken cancellationToken)
     {
-        if (context.ConfigRewritten || !string.Equals(recorded, stamp, StringComparison.Ordinal))
+        if (upstreamRewrote || !string.Equals(recorded, stamp, StringComparison.Ordinal))
         {
             return false;   // a rewritten config file means the running services still have the old one: `up -d` recreates what changed
         }

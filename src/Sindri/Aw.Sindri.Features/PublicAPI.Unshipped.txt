@@ -2481,9 +2481,7 @@ Aw.Sindri.Features.OnyxUp.OnyxStepOutcome.Ran = 0 -> Aw.Sindri.Features.OnyxUp.O
 Aw.Sindri.Features.OnyxUp.OnyxStepOutcome.Skipped = 1 -> Aw.Sindri.Features.OnyxUp.OnyxStepOutcome
 Aw.Sindri.Features.OnyxUp.OnyxStepResult
 Aw.Sindri.Features.OnyxUp.OnyxStepResult.<Clone>$() -> Aw.Sindri.Features.OnyxUp.OnyxStepResult!
-Aw.Sindri.Features.OnyxUp.OnyxStepResult.Deconstruct(out string! Step, out Aw.Sindri.Features.OnyxUp.OnyxStepOutcome Outcome) -> void
 Aw.Sindri.Features.OnyxUp.OnyxStepResult.Equals(Aw.Sindri.Features.OnyxUp.OnyxStepResult? other) -> bool
-Aw.Sindri.Features.OnyxUp.OnyxStepResult.OnyxStepResult(string! Step, Aw.Sindri.Features.OnyxUp.OnyxStepOutcome Outcome) -> void
 Aw.Sindri.Features.OnyxUp.OnyxStepResult.Outcome.get -> Aw.Sindri.Features.OnyxUp.OnyxStepOutcome
 Aw.Sindri.Features.OnyxUp.OnyxStepResult.Outcome.init -> void
 Aw.Sindri.Features.OnyxUp.OnyxStepResult.Step.get -> string!
@@ -2536,3 +2534,7 @@ Aw.Sindri.Features.OnyxDown.OnyxDownResponse.Deconstruct(out bool WasRunning, ou
 Aw.Sindri.Features.OnyxDown.OnyxDownResponse.OnyxDownResponse(bool WasRunning, System.Collections.Generic.IReadOnlyList<string!>! Stopped, System.Collections.Generic.IReadOnlyList<string!>! Warnings) -> void
 Aw.Sindri.Features.OnyxDown.OnyxDownResponse.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Aw.Sindri.Features.OnyxDown.OnyxDownResponse.Warnings.init -> void
+Aw.Sindri.Features.OnyxUp.OnyxStepResult.Deconstruct(out string! Step, out Aw.Sindri.Features.OnyxUp.OnyxStepOutcome Outcome, out string? Hint) -> void
+Aw.Sindri.Features.OnyxUp.OnyxStepResult.Hint.get -> string?
+Aw.Sindri.Features.OnyxUp.OnyxStepResult.Hint.init -> void
+Aw.Sindri.Features.OnyxUp.OnyxStepResult.OnyxStepResult(string! Step, Aw.Sindri.Features.OnyxUp.OnyxStepOutcome Outcome, string? Hint = null) -> void

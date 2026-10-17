@@ -146,6 +146,15 @@ public static class SindriErrors
     /// <summary>SND-ONYX-012: Sindri can't use its Onyx directory under the Sindri home (no permission to create or lock a file in it); the message names the directory.</summary>
     public static readonly ErrorDefinition OnyxWorkspaceUnusable = new("SND-ONYX-012", ErrorKind.Unavailable, "Sindri can't use its Onyx directory");
 
+    /// <summary>SND-ONYX-007: the account that logged in isn't an Onyx admin.</summary>
+    public static readonly ErrorDefinition OnyxLoginNotAdmin = new("SND-ONYX-007", ErrorKind.Invalid, string.Empty);
+
+    /// <summary>SND-ONYX-008: logging in, minting or verifying Sindri's key failed.</summary>
+    public static readonly ErrorDefinition OnyxKeyFailed = new("SND-ONYX-008", ErrorKind.Unavailable, string.Empty);
+
+    /// <summary>SND-ONYX-009: Sindri's key couldn't be written to the secret store or the file fallback.</summary>
+    public static readonly ErrorDefinition OnyxSecretWriteFailed = new("SND-ONYX-009", ErrorKind.Unavailable, string.Empty);
+
     /// <summary>SND-JOB-404: no job has that id, or a session caller may not see it (API spec §9).</summary>
     public static readonly ErrorDefinition JobNotFound = new("SND-JOB-404", ErrorKind.NotFound, "No such job");
 

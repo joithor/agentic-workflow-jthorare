@@ -1,4 +1,5 @@
 using Aw.Kernel;
+using Aw.Sindri.Core;
 using Aw.Sindri.Core.Onyx;
 using Aw.Sindri.Features.OnyxUp;
 using Aw.Sindri.Testing;
@@ -24,13 +25,13 @@ public sealed class OnyxUpStepsTests
         => new(rig.Workspace, new OnyxFacts(rig.Runtime, rig.Probes, new FakeSindriHome(OnyxUpRig.Home)), rig.Pins, rig.Progress, steps: steps);
 
     [Fact, Trait("Lane", "unit")]
-    public void The_steps_are_fetch_config_pull_start()
+    public void The_steps_are_fetch_config_pull_start_signup_key_profile()
     {
         var rig = new OnyxUpRig();
 
         _ = rig.Service();   // composes, so the order is validated
 
-        Assert.Equal(["fetch", "config", "pull", "start"], OnyxSteps.Order, StringComparer.Ordinal);
+        Assert.Equal(["fetch", "config", "pull", "start", "signup", "key", "profile"], OnyxSteps.Order, StringComparer.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -126,16 +127,57 @@ public sealed class OnyxUpStepsTests
         Assert.All(second.Steps, static s => Assert.Equal(OnyxStepOutcome.Skipped, s.Outcome));
     }
 
+    private sealed class Human(string name, string hint) : IOnyxUpStep
+    {
+        public string Name => name;
+
+        public string Stamp(OnyxUpContext context, string? upstream) => name + ":" + upstream;
+
+        public ValueTask<Result<OnyxStepOutcome>> Execute(OnyxUpContext context, string stamp, string? recorded, bool upstreamRewrote, CancellationToken cancellationToken)
+        {
+            context.Hint = hint;
+            return ValueTask.FromResult<Result<OnyxStepOutcome>>(OnyxStepOutcome.NeedsHuman);
+        }
+    }
+
     [Fact, Trait("Lane", "unit")]
-    public async Task A_step_that_needs_the_human_is_reported_as_such_and_is_recorded()
+    public async Task A_needs_human_step_stops_the_run_and_records_nothing()
     {
         var rig = new OnyxUpRig();
-        var service = Service(rig, new StubStep("fetch"), new StubStep("config"), new StubStep("pull"), new StubStep("start", outcome: OnyxStepOutcome.NeedsHuman));
+        var told = new List<(string Step, bool Told)>();
+        var service = Service(rig, new StubStep("fetch"), new Human("config", "do the thing"), new Probing("pull", OnyxStepOutcome.Ran, told), new Probing("start", OnyxStepOutcome.Ran, told));
 
         var response = (await service.Handle(new OnyxUpRequest(), Token)).Value;
 
-        Assert.Equal(OnyxStepOutcome.NeedsHuman, response.Steps[^1].Outcome);
-        Assert.Contains("start", response.NeedsHuman, StringComparer.Ordinal);
+        Assert.Empty(told);
+        Assert.Equal([new OnyxStepResult("fetch", OnyxStepOutcome.Ran), new OnyxStepResult("config", OnyxStepOutcome.NeedsHuman, "do the thing")], response.Steps);
+        Assert.Equal(["fetch"], rig.Workspace.State!.Steps.Keys, StringComparer.Ordinal);
+        Assert.Equal(["config"], response.NeedsHuman, StringComparer.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void Errors_007_to_009_are_registered_with_fixes()
+    {
+        (ErrorDefinition Definition, string Code, ErrorKind Kind, string Fix)[] expected =
+        [
+            (SindriErrors.OnyxLoginNotAdmin, "SND-ONYX-007", ErrorKind.Invalid, OnyxFixes.LoginNotAdmin),
+            (SindriErrors.OnyxKeyFailed, "SND-ONYX-008", ErrorKind.Unavailable, OnyxFixes.KeyFailed),
+            (SindriErrors.OnyxSecretWriteFailed, "SND-ONYX-009", ErrorKind.Unavailable, OnyxFixes.SecretWriteFailed),
+        ];
+
+        foreach (var (definition, code, kind, fix) in expected)
+        {
+            Assert.Equal((code, kind), (definition.Code, definition.Kind));
+            Assert.Contains(definition, SindriErrors.All);
+            Assert.NotEmpty(definition.Title);
+            Assert.NotEmpty(fix);
+            Assert.Equal("x", definition.With("x").Message);
+        }
+
+        Assert.Contains("admin", OnyxFixes.LoginNotAdmin, StringComparison.Ordinal);
+        Assert.Contains("sindri onyx up", OnyxFixes.KeyFailed, StringComparison.Ordinal);
+        Assert.Contains("keychain", OnyxFixes.SecretWriteFailed, StringComparison.Ordinal);
+        Assert.True(ErrorCatalogue.Validate(SindriErrors.All).IsSuccess);
     }
 
     private sealed class Probing(string name, OnyxStepOutcome outcome, List<(string Step, bool Told)> told) : IOnyxUpStep

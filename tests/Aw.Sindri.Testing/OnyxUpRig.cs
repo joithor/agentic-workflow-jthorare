@@ -80,6 +80,9 @@ public sealed class OnyxUpRig
             new OnyxConfigStep(Workspace, compose, Random, Progress),
             new OnyxPullStep(Runtime, Workspace, compose, Progress),
             new OnyxStartStep(Runtime, Health, readiness, Progress, Clock),
+            new OnyxSignupStep(),
+            new OnyxKeyStep(),
+            new OnyxProfileStep(),
         ];
         return new OnyxUpService(Workspace, new OnyxFacts(Runtime, Probes, new FakeSindriHome(Home)), Pins, Progress, steps);
     }

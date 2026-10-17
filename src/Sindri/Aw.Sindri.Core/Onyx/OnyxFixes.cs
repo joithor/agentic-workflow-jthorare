@@ -4,11 +4,11 @@ namespace Aw.Sindri.Core.Onyx;
 public static class OnyxFixes
 {
     /// <summary>Gets the fix for SND-ONYX-007.</summary>
-    public const string LoginNotAdmin = "";
+    public const string LoginNotAdmin = "make that Onyx account an admin in Onyx's Users page, or log in as the first user";
 
     /// <summary>Gets the fix for SND-ONYX-008.</summary>
-    public const string KeyFailed = "";
+    public const string KeyFailed = "run `sindri onyx up` again; if it repeats, check Onyx at the printed url";
 
     /// <summary>Gets the fix for SND-ONYX-009.</summary>
-    public const string SecretWriteFailed = "";
+    public const string SecretWriteFailed = "unlock the keychain or install libsecret-tools, or free the file fallback's directory, then run `sindri onyx up` again";
 }

@@ -78,7 +78,7 @@ public sealed class OnyxUpCommandTests : IDisposable
                 "url       http://127.0.0.1:3000",
                 "version   v4.9.0",
                 "ran       fetch, config, pull, start",
-                "skipped   none",
+                "skipped   signup, key, profile",
                 HandOver,
             ],
             lines,
@@ -97,7 +97,7 @@ public sealed class OnyxUpCommandTests : IDisposable
         _ = await Verbs(Human).Up(json: false, TestContext.Current.CancellationToken);
 
         Assert.Contains("ran       none", _out.ToString(), StringComparison.Ordinal);
-        Assert.Contains("skipped   fetch, config, pull, start", _out.ToString(), StringComparison.Ordinal);
+        Assert.Contains("skipped   fetch, config, pull, start, signup, key, profile", _out.ToString(), StringComparison.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -118,7 +118,7 @@ public sealed class OnyxUpCommandTests : IDisposable
 
         using var document = JsonDocument.Parse(_out.ToString());
         var steps = document.RootElement.GetProperty("steps").EnumerateArray().Select(static e => (e.GetProperty("step").GetString(), e.GetProperty("outcome").GetString())).ToArray();
-        Assert.Equal([("fetch", "ran"), ("config", "ran"), ("pull", "ran"), ("start", "ran")], steps);
+        Assert.Equal([("fetch", "ran"), ("config", "ran"), ("pull", "ran"), ("start", "ran"), ("signup", "skipped"), ("key", "skipped"), ("profile", "skipped")], steps);
         Assert.False(document.RootElement.TryGetProperty("ran", out _));
         Assert.False(document.RootElement.TryGetProperty("skipped", out _));
     }

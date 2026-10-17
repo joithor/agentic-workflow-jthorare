@@ -147,13 +147,13 @@ public static class SindriErrors
     public static readonly ErrorDefinition OnyxWorkspaceUnusable = new("SND-ONYX-012", ErrorKind.Unavailable, "Sindri can't use its Onyx directory");
 
     /// <summary>SND-ONYX-007: the account that logged in isn't an Onyx admin.</summary>
-    public static readonly ErrorDefinition OnyxLoginNotAdmin = new("SND-ONYX-007", ErrorKind.Invalid, string.Empty);
+    public static readonly ErrorDefinition OnyxLoginNotAdmin = new("SND-ONYX-007", ErrorKind.Invalid, "The Onyx login isn't an admin");
 
     /// <summary>SND-ONYX-008: logging in, minting or verifying Sindri's key failed.</summary>
-    public static readonly ErrorDefinition OnyxKeyFailed = new("SND-ONYX-008", ErrorKind.Unavailable, string.Empty);
+    public static readonly ErrorDefinition OnyxKeyFailed = new("SND-ONYX-008", ErrorKind.Unavailable, "Sindri's Onyx key couldn't be created or verified");
 
     /// <summary>SND-ONYX-009: Sindri's key couldn't be written to the secret store or the file fallback.</summary>
-    public static readonly ErrorDefinition OnyxSecretWriteFailed = new("SND-ONYX-009", ErrorKind.Unavailable, string.Empty);
+    public static readonly ErrorDefinition OnyxSecretWriteFailed = new("SND-ONYX-009", ErrorKind.Unavailable, "Sindri's Onyx key couldn't be stored");
 
     /// <summary>SND-JOB-404: no job has that id, or a session caller may not see it (API spec §9).</summary>
     public static readonly ErrorDefinition JobNotFound = new("SND-JOB-404", ErrorKind.NotFound, "No such job");
@@ -176,6 +176,6 @@ public static class SindriErrors
         LeaseHeld, LeaseLost, LeaseStale, ProfileMissing, ProfileInvalid, ProfileHashMismatch, ProfileNeedsTerminal,
         ProfileNotApproved, ApprovalsUnavailable, LedgerSchema, LedgerUnavailable, NotRunning, ApiTimeout, PortInUse, ApiNoCode, ApiInternal,
         CallerUnknown, OriginRefused, CommandBusy, AuthTokenRequired, AuthRefused, UnknownVerb, StartFailed,
-        InvalidInput, ServiceFailed, ViewsRebuilding, ViewsBehind, StreamsFull, ViewsStalled, ItemNotFound, ItemConflict, RequestInvalid, RequestsRateLimited, DecisionNotFound, DecisionInvalid, JobNotFound, JobConflict, JobInterrupted, JobsRateLimited, ServiceNotFound, OnyxDockerUnavailable, OnyxComposeMissing, OnyxNotEnoughResources, OnyxPinsMalformed, OnyxPortTaken, OnyxNotReady, OnyxRemoteDocker, OnyxComposeFailed, OnyxWorkspaceUnusable, SecretPointerInvalid, SecretUnresolved, SecretFileUnsafe,
+        InvalidInput, ServiceFailed, ViewsRebuilding, ViewsBehind, StreamsFull, ViewsStalled, ItemNotFound, ItemConflict, RequestInvalid, RequestsRateLimited, DecisionNotFound, DecisionInvalid, JobNotFound, JobConflict, JobInterrupted, JobsRateLimited, ServiceNotFound, OnyxDockerUnavailable, OnyxComposeMissing, OnyxNotEnoughResources, OnyxPinsMalformed, OnyxPortTaken, OnyxNotReady, OnyxRemoteDocker, OnyxComposeFailed, OnyxWorkspaceUnusable, OnyxLoginNotAdmin, OnyxKeyFailed, OnyxSecretWriteFailed, SecretPointerInvalid, SecretUnresolved, SecretFileUnsafe,
     ];
 }

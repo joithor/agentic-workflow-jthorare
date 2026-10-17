@@ -28,7 +28,7 @@ public static class OnyxSteps
     public const string Profile = "profile";
 
     /// <summary>Gets the steps in the order they run; each one's stamp is built from the one before.</summary>
-    public static IReadOnlyList<string> Order { get; } = [Fetch, Config, Pull, Start];
+    public static IReadOnlyList<string> Order { get; } = [Fetch, Config, Pull, Start, Signup, Key, Profile];
 
     /// <summary>Hashes a step's inputs, so a rerun can tell whether the step ran with the same ones.</summary>
     /// <param name="parts">The inputs, in a fixed order.</param>

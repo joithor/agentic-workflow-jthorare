@@ -8761,12 +8761,12 @@ Aw.Sindri.Core.Onyx.IContainerRuntime.MemoryUsedOutside(Aw.Sindri.Core.Onyx.Comp
 Aw.Sindri.Core.Onyx.OnyxFacts.MemoryUsedByOthers(System.Threading.CancellationToken cancellationToken) -> Aw.Kernel.Result<long>!
 static Aw.Sindri.Core.Onyx.OnyxPreflight.Evaluate(Aw.Sindri.Core.Onyx.ContainerRuntimeFacts! docker, Aw.Sindri.Core.Onyx.HostFacts! host, Aw.Sindri.Core.Onyx.OnyxPins! pins, int? ownPort = null, Aw.Kernel.Result<long>? usedByOthers = null) -> Aw.Sindri.Core.Onyx.PreflightReport!
 Aw.Sindri.Core.Onyx.OnyxFixes
-const Aw.Sindri.Core.Onyx.OnyxFixes.KeyFailed = "" -> string!
-const Aw.Sindri.Core.Onyx.OnyxFixes.LoginNotAdmin = "" -> string!
-const Aw.Sindri.Core.Onyx.OnyxFixes.SecretWriteFailed = "" -> string!
 const Aw.Sindri.Core.Onyx.OnyxSteps.Key = "key" -> string!
 const Aw.Sindri.Core.Onyx.OnyxSteps.Profile = "profile" -> string!
 const Aw.Sindri.Core.Onyx.OnyxSteps.Signup = "signup" -> string!
 static readonly Aw.Sindri.Core.SindriErrors.OnyxKeyFailed -> Aw.Kernel.ErrorDefinition!
 static readonly Aw.Sindri.Core.SindriErrors.OnyxLoginNotAdmin -> Aw.Kernel.ErrorDefinition!
 static readonly Aw.Sindri.Core.SindriErrors.OnyxSecretWriteFailed -> Aw.Kernel.ErrorDefinition!
+const Aw.Sindri.Core.Onyx.OnyxFixes.KeyFailed = "run `sindri onyx up` again; if it repeats, check Onyx at the printed url" -> string!
+const Aw.Sindri.Core.Onyx.OnyxFixes.LoginNotAdmin = "make that Onyx account an admin in Onyx's Users page, or log in as the first user" -> string!
+const Aw.Sindri.Core.Onyx.OnyxFixes.SecretWriteFailed = "unlock the keychain or install libsecret-tools, or free the file fallback's directory, then run `sindri onyx up` again" -> string!

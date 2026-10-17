@@ -2,7 +2,7 @@ using Aw.Sindri.Core.Onyx;
 
 namespace Aw.Sindri.Features.OnyxUp;
 
-// The steps of `onyx up` in the one order they run, checked when the service is composed: exactly fetch, config, pull, start. The service chains the stamps in this order: each step is given the stamp of the one before it.
+// The steps of `onyx up` in the one order they run, checked when the service is composed: exactly fetch, config, pull, start, signup, key, profile. The service chains the stamps in this order: each step is given the stamp of the one before it.
 internal static class OnyxUpPlan
 {
     internal static IReadOnlyList<IOnyxUpStep> Validate(IEnumerable<IOnyxUpStep> steps)

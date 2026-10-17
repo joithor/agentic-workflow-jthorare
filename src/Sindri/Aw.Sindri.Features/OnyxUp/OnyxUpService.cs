@@ -88,6 +88,12 @@ internal sealed class OnyxUpService(IOnyxWorkspace workspace, OnyxFacts facts, I
             }
 
             rewrote |= outcome.Value == OnyxStepOutcome.Rewrote;
+            if (outcome.Value == OnyxStepOutcome.NeedsHuman)
+            {
+                results.Add(new OnyxStepResult(step.Name, outcome.Value, context.Hint));
+                break;   // the human is needed: nothing is recorded for this step and no later step runs
+            }
+
             results.Add(new OnyxStepResult(step.Name, outcome.Value));
             upstream = stamp;
         }
@@ -103,6 +109,11 @@ internal sealed class OnyxUpService(IOnyxWorkspace workspace, OnyxFacts facts, I
         if (outcome.IsError)
         {
             return outcome.Error;
+        }
+
+        if (outcome.Value == OnyxStepOutcome.NeedsHuman)
+        {
+            return outcome;
         }
 
         if (outcome.Value == OnyxStepOutcome.Skipped)

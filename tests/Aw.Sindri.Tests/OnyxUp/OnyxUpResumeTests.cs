@@ -11,7 +11,12 @@ public sealed class OnyxUpResumeTests
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
-    private static IEnumerable<string> Recorded(OnyxUpRig rig) => (rig.Workspace.State?.Steps.Keys ?? []).Order(StringComparer.Ordinal);
+    // These scenarios are about the stack steps; the account steps after them are covered by their own tests.
+    private static readonly string[] _stack = ["fetch", "config", "pull", "start"];
+
+    private static IEnumerable<string> Stack(IEnumerable<string> names) => names.Where(_stack.Contains);
+
+    private static IEnumerable<string> Recorded(OnyxUpRig rig) => Stack(rig.Workspace.State?.Steps.Keys ?? []).Order(StringComparer.Ordinal);
 
     [Fact, Trait("Lane", "unit")]
     public async Task A_hash_mismatch_stops_at_fetch_with_004_and_the_rerun_retries_fetch()
@@ -45,7 +50,7 @@ public sealed class OnyxUpResumeTests
         Assert.Equal(["config", "fetch"], Recorded(rig), StringComparer.Ordinal);
         var rerun = (await rig.Up(Token)).Value;
         Assert.Equal(["pull", "start"], rerun.Ran, StringComparer.Ordinal);
-        Assert.Equal(["fetch", "config"], rerun.Skipped, StringComparer.Ordinal);
+        Assert.Equal(["fetch", "config"], Stack(rerun.Skipped), StringComparer.Ordinal);
         Assert.Equal(2, rig.Files.Fetches);   // verified again, nothing downloaded
         Assert.Equal(rig.Pins.Pins.Files.Count, rig.Files.Requested.Count);
     }
@@ -95,7 +100,7 @@ public sealed class OnyxUpResumeTests
         rig.Health.Default = new OnyxProbe(Healthy: true, BackendVersion: "v4.9.0");
         var rerun = (await rig.Up(Token)).Value;
         Assert.Equal(["start"], rerun.Ran, StringComparer.Ordinal);
-        Assert.Equal(["fetch", "config", "pull"], rerun.Skipped, StringComparer.Ordinal);
+        Assert.Equal(["fetch", "config", "pull"], Stack(rerun.Skipped), StringComparer.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -149,7 +154,7 @@ public sealed class OnyxUpResumeTests
         var rerun = (await rig.Up(Token)).Value;
 
         Assert.Equal(["config", "pull", "start"], rerun.Ran, StringComparer.Ordinal);
-        Assert.Equal(["fetch"], rerun.Skipped, StringComparer.Ordinal);
+        Assert.Equal(["fetch"], Stack(rerun.Skipped), StringComparer.Ordinal);
         Assert.Contains(moved.Digest, rig.Workspace.Files[rig.Paths.Override], StringComparison.Ordinal);
     }
 
@@ -165,7 +170,7 @@ public sealed class OnyxUpResumeTests
         var rerun = (await rig.Up(Token)).Value;
 
         Assert.Equal(["fetch"], rerun.Ran, StringComparer.Ordinal);
-        Assert.Equal(["config", "pull", "start"], rerun.Skipped, StringComparer.Ordinal);
+        Assert.Equal(["config", "pull", "start"], Stack(rerun.Skipped), StringComparer.Ordinal);
         Assert.Equal(2, rig.Files.Fetches);
         Assert.Contains(nginx, rig.Files.Requested.Skip(1), StringComparer.Ordinal);
         Assert.True(rig.Workspace.Files.ContainsKey(rig.Paths.DeployDir + "/" + nginx));
@@ -237,7 +242,7 @@ public sealed class OnyxUpResumeTests
         var rerun = (await rig.Up(Token)).Value;
 
         Assert.Equal(3000, rerun.Port);
-        Assert.Equal(["fetch", "config", "pull", "start"], rerun.Skipped, StringComparer.Ordinal);
+        Assert.Equal(["fetch", "config", "pull", "start"], Stack(rerun.Skipped), StringComparer.Ordinal);
         Assert.Equal(3000, rig.Workspace.State!.Port);
     }
 
@@ -327,7 +332,7 @@ public sealed class OnyxUpResumeTests
         var rerun = (await rig.Up(Token)).Value;
 
         Assert.Equal(["start"], rerun.Ran, StringComparer.Ordinal);
-        Assert.Equal(["fetch", "config", "pull"], rerun.Skipped, StringComparer.Ordinal);
+        Assert.Equal(["fetch", "config", "pull"], Stack(rerun.Skipped), StringComparer.Ordinal);
         Assert.Equal(2, rig.Runtime.Calls.Count(static c => c == "Up"));
     }
 
@@ -344,7 +349,7 @@ public sealed class OnyxUpResumeTests
 
         Assert.Equal(["config", "start"], second.Ran, StringComparer.Ordinal);
         Assert.Equal(new string('0', 63) + "2", regenerated);
-        Assert.Equal(["fetch", "config", "pull", "start"], third.Skipped, StringComparer.Ordinal);
+        Assert.Equal(["fetch", "config", "pull", "start"], Stack(third.Skipped), StringComparer.Ordinal);
         Assert.Equal(regenerated, OnyxConfig.ReadSecret(rig.Workspace.Files[rig.Paths.Env]));
         Assert.Equal(2, rig.Random.Calls);
     }
@@ -390,7 +395,7 @@ public sealed class OnyxUpResumeTests
         Assert.Equal(["fetch", "config", "pull", "start"], rerun.Ran, StringComparer.Ordinal);
         Assert.Contains(rig.Progress.Lines, static l => l.Contains("state.json is unreadable", StringComparison.Ordinal));
         Assert.False(rig.Workspace.StateIsCorrupt);
-        Assert.Equal(4, rig.Workspace.State!.Steps.Count);
+        Assert.Equal(OnyxSteps.Order.Count, rig.Workspace.State!.Steps.Count);
         Assert.Equal(key, OnyxConfig.ReadSecret(rig.Workspace.Files[rig.Paths.Env]));
     }
 

@@ -21,8 +21,12 @@ public sealed class OnyxUpStepsTests
             => ValueTask.FromResult<Result<OnyxStepOutcome>>(outcome);
     }
 
+    // The four stack steps are what a test varies; the account steps after them are quiet stubs unless a test says otherwise.
+    private static IOnyxUpStep[] WithTail(IOnyxUpStep[] steps)
+        => steps.Length >= OnyxSteps.Order.Count ? steps : [.. steps, .. OnyxSteps.Order.Skip(steps.Length).Select(static n => (IOnyxUpStep)new StubStep(n, OnyxStepOutcome.Skipped))];
+
     private static OnyxUpService Service(OnyxUpRig rig, params IOnyxUpStep[] steps)
-        => new(rig.Workspace, new OnyxFacts(rig.Runtime, rig.Probes, new FakeSindriHome(OnyxUpRig.Home)), rig.Pins, rig.Progress, steps: steps);
+        => new(rig.Workspace, new OnyxFacts(rig.Runtime, rig.Probes, new FakeSindriHome(OnyxUpRig.Home)), rig.Pins, rig.Progress, steps: WithTail(steps));
 
     [Fact, Trait("Lane", "unit")]
     public void The_steps_are_fetch_config_pull_start_signup_key_profile()
@@ -123,7 +127,7 @@ public sealed class OnyxUpStepsTests
 
         Assert.Equal(
             [new OnyxStepResult("fetch", OnyxStepOutcome.Ran), new OnyxStepResult("config", OnyxStepOutcome.Ran), new OnyxStepResult("pull", OnyxStepOutcome.Ran), new OnyxStepResult("start", OnyxStepOutcome.Ran)],
-            first.Steps);
+            first.Steps.Take(4));   // the account steps after them are covered by their own tests
         Assert.All(second.Steps, static s => Assert.Equal(OnyxStepOutcome.Skipped, s.Outcome));
     }
 

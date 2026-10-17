@@ -232,6 +232,9 @@ public static class SindriFeaturesServiceCollectionExtensions
         .AddSingleton<IOnyxUpStep, OnyxConfigStep>()
         .AddSingleton<IOnyxUpStep, OnyxPullStep>()
         .AddSingleton<IOnyxUpStep, OnyxStartStep>()
+        .AddSingleton<IOnyxUpStep, OnyxSignupStep>()                                        // Onyx P3: account setup, in this order
+        .AddSingleton<IOnyxUpStep, OnyxKeyStep>()
+        .AddSingleton<IOnyxUpStep, OnyxProfileStep>()
         .AddScoped<IService<OnyxUpRequest, OnyxUpResponse>, OnyxUpService>()
         .AddScoped<IService<OnyxDownRequest, OnyxDownResponse>, OnyxDownService>();
 

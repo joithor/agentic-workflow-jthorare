@@ -4,7 +4,7 @@ namespace Aw.Sindri.Core.Onyx;
 
 /// <summary>
 /// What `onyx up` asks of the Onyx it started, to turn the owner's login into Sindri's own admin service-account key. It has its own request allowlist
-/// (<see cref="OnyxProvisioningRoutes"/>), never the query adapter's. No call registers an account (spec O3). None of the secrets it handles (password,
+/// (`OnyxProvisioningRoutes` in the Infrastructure package, seven routes), never the query adapter's. No call registers an account (spec O3). None of the secrets it handles (password,
 /// cookie, key) appears in an error or a description.
 /// </summary>
 public interface IOnyxProvisioning

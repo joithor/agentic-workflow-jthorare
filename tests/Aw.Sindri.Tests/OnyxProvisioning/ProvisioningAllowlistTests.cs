@@ -1,5 +1,4 @@
 using Aw.Kernel.Testing;
-using Aw.Sindri.Core.Onyx;
 using Aw.Sindri.Infrastructure.Onyx;
 
 namespace Aw.Sindri.Tests.OnyxProvisioning;

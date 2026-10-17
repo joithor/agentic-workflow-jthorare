@@ -8799,7 +8799,6 @@ Aw.Sindri.Core.Onyx.OnyxMintedKey.Equals(Aw.Sindri.Core.Onyx.OnyxMintedKey? othe
 Aw.Sindri.Core.Onyx.OnyxMintedKey.Key.get -> string!
 Aw.Sindri.Core.Onyx.OnyxMintedKey.Key.init -> void
 Aw.Sindri.Core.Onyx.OnyxMintedKey.OnyxMintedKey(string! Key, int ApiKeyId) -> void
-Aw.Sindri.Core.Onyx.OnyxProvisioningRoutes
 Aw.Sindri.Core.Onyx.OwnerSession
 Aw.Sindri.Core.Onyx.OwnerSession.Cookie.get -> string!
 Aw.Sindri.Core.Onyx.OwnerSession.Dispose() -> void
@@ -8816,5 +8815,3 @@ static Aw.Sindri.Core.Onyx.OnyxAccount.operator !=(Aw.Sindri.Core.Onyx.OnyxAccou
 static Aw.Sindri.Core.Onyx.OnyxAccount.operator ==(Aw.Sindri.Core.Onyx.OnyxAccount? left, Aw.Sindri.Core.Onyx.OnyxAccount? right) -> bool
 static Aw.Sindri.Core.Onyx.OnyxMintedKey.operator !=(Aw.Sindri.Core.Onyx.OnyxMintedKey? left, Aw.Sindri.Core.Onyx.OnyxMintedKey? right) -> bool
 static Aw.Sindri.Core.Onyx.OnyxMintedKey.operator ==(Aw.Sindri.Core.Onyx.OnyxMintedKey? left, Aw.Sindri.Core.Onyx.OnyxMintedKey? right) -> bool
-static Aw.Sindri.Core.Onyx.OnyxProvisioningRoutes.Allowed(System.Net.Http.HttpMethod! method, string! pathAndQuery) -> bool
-static Aw.Sindri.Core.Onyx.OnyxProvisioningRoutes.Allowlist.get -> System.Collections.Generic.IReadOnlyList<(System.Net.Http.HttpMethod! Method, string! Path)>!

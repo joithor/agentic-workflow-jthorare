@@ -77,8 +77,8 @@ public sealed class OnyxUpCommandTests : IDisposable
             [
                 "url       http://127.0.0.1:3000",
                 "version   v4.9.0",
-                "ran       fetch, config, pull, start, signup, key",
-                "skipped   profile",
+                "ran       fetch, config, pull, start, signup, key, profile",
+                "skipped   none",
                 HandOver,
             ],
             lines,
@@ -118,7 +118,7 @@ public sealed class OnyxUpCommandTests : IDisposable
 
         using var document = JsonDocument.Parse(_out.ToString());
         var steps = document.RootElement.GetProperty("steps").EnumerateArray().Select(static e => (e.GetProperty("step").GetString(), e.GetProperty("outcome").GetString())).ToArray();
-        Assert.Equal([("fetch", "ran"), ("config", "ran"), ("pull", "ran"), ("start", "ran"), ("signup", "ran"), ("key", "ran"), ("profile", "skipped")], steps);
+        Assert.Equal([("fetch", "ran"), ("config", "ran"), ("pull", "ran"), ("start", "ran"), ("signup", "ran"), ("key", "ran"), ("profile", "ran")], steps);
         Assert.False(document.RootElement.TryGetProperty("ran", out _));
         Assert.False(document.RootElement.TryGetProperty("skipped", out _));
     }

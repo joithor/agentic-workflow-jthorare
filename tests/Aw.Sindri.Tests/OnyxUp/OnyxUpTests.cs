@@ -7,7 +7,6 @@ namespace Aw.Sindri.Tests.OnyxUp;
 public sealed class OnyxUpTests
 {
     private const long Gib = 1L << 30;
-    private static readonly string[] _allSteps = ["fetch", "config", "pull", "start"];
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
@@ -19,8 +18,8 @@ public sealed class OnyxUpTests
         var response = (await rig.Up(Token)).Value;
 
         Assert.Equal(["Inspect", "Ps", "MemoryUsedOutside", "ServerPlatform", "Pull", "RepoDigests", "RenderedConfig", "Up"], rig.Runtime.Calls, StringComparer.Ordinal);
-        Assert.Equal([.. _allSteps, "signup", "key"], response.Ran, StringComparer.Ordinal);
-        Assert.Equal(["profile"], response.Skipped, StringComparer.Ordinal);   // the profile step does nothing yet
+        Assert.Equal(OnyxSteps.Order, response.Ran, StringComparer.Ordinal);
+        Assert.Empty(response.Skipped);
         Assert.Equal("http://127.0.0.1:3000", response.Url);
         Assert.Equal(3000, response.Port);
         Assert.Equal("v4.9.0", response.Version);
@@ -125,7 +124,7 @@ public sealed class OnyxUpTests
         var warning = Assert.Single(response.Warnings);
         Assert.StartsWith("memory: ", warning, StringComparison.Ordinal);
         Assert.Contains(warning, rig.Progress.Lines, StringComparer.Ordinal);
-        Assert.Equal([.. _allSteps, "signup", "key"], response.Ran, StringComparer.Ordinal);
+        Assert.Equal(OnyxSteps.Order, response.Ran, StringComparer.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]

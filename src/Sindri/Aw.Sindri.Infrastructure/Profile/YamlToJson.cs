@@ -31,6 +31,10 @@ internal static class YamlToJson
         {
             return string.Create(CultureInfo.InvariantCulture, $"line {e.Start.Line}, column {e.Start.Column}: {Inner(e).Message}");
         }
+        catch (InvalidOperationException)
+        {
+            return "the YAML can't be parsed (an unterminated flow sequence or map?)";   // YamlDotNet's scanner throws this, not a YamlException, for some unterminated flow collections
+        }
 
         if (stream.Documents.Count != 1)
         {

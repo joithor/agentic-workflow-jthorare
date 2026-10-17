@@ -23,7 +23,7 @@ public sealed class OnyxProfileTests
     public async Task Validate_refuses_an_onyx_key_written_into_the_profile_without_repeating_it()
     {
         _h.Profiles.Live = With("""{"sources":{"onyx":{"url":"http://127.0.0.1:3000","token":"on_live-key-0123","version":"v4.9.0"}}}""");
-        var service = new ValidateProfileService(_h.Profiles, _h.Profiles, _h.Store, _h.Events, FakeContextEngine.Instance);
+        var service = new ValidateProfileService(_h.Profiles, _h.Profiles, _h.Store, _h.Events, ProfileContextChecks.Default);
 
         var validated = await service.Handle(new ValidateProfileRequest(), Token);
 
@@ -36,7 +36,7 @@ public sealed class OnyxProfileTests
     public async Task Validate_reports_an_onyx_url_off_loopback_with_its_key_path()
     {
         _h.Profiles.Live = With("""{"sources":{"onyx":{"url":"http://onyx.example:3000","token":"env:ONYX_KEY","version":"v4.9.0"}}}""");
-        var service = new ValidateProfileService(_h.Profiles, _h.Profiles, _h.Store, _h.Events, FakeContextEngine.Instance);
+        var service = new ValidateProfileService(_h.Profiles, _h.Profiles, _h.Store, _h.Events, ProfileContextChecks.Default);
 
         var validated = await service.Handle(new ValidateProfileRequest(), Token);
 

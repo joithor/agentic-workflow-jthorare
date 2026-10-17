@@ -105,6 +105,7 @@ public static class SindriFeaturesServiceCollectionExtensions
             .AddScoped<IService<RecordHeartbeatRequest, RecordHeartbeatResponse>, RecordHeartbeatService>()
             .AddRecordServiceRun()
             .AddScoped<IService<CheckProfileRequest, CheckProfileResponse>, CheckProfileService>()
+            .AddScoped<ProfileContextCheck>()
             .AddScoped<IService<ValidateProfileRequest, ValidateProfileResponse>, ValidateProfileService>()
             .AddDoctor()
             .AddOnyxStatus()

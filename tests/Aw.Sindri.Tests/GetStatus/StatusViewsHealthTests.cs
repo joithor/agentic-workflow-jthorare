@@ -1,4 +1,3 @@
-using Aw.Context.Testing.Engine;
 using Aw.Kernel.Ids;
 using Aw.Kernel.Json;
 using Aw.Sindri.Core.Events;
@@ -27,7 +26,7 @@ public sealed class StatusViewsHealthTests
         var approved = SliceHarness.Profile("5s");
         H.Profiles.Live = approved;
         _ = await H.HoldLease();
-        _ = await new ApproveProfileService(H.Profiles, H.Profiles, H.Held, H.Store, H.Events, H.Challenges, FakeContextEngine.Instance).Handle(new ApproveProfileRequest(approved.Hash, H.Confirm(approved.Hash)), Token);
+        _ = await new ApproveProfileService(H.Profiles, H.Profiles, H.Held, H.Store, H.Events, H.Challenges, ProfileContextChecks.Default).Handle(new ApproveProfileRequest(approved.Hash, H.Confirm(approved.Hash)), Token);
     }
 
     [Fact, Trait("Lane", "unit")]

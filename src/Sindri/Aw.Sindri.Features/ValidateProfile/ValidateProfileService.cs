@@ -1,5 +1,4 @@
 using Aw.Context.Core.Engine;
-using Aw.Context.Core.Facade;
 using Aw.Kernel;
 using Aw.Kernel.Services;
 using Aw.Sindri.Core.Events;
@@ -8,7 +7,7 @@ using Aw.Sindri.Core.Profile;
 
 namespace Aw.Sindri.Features.ValidateProfile;
 
-internal sealed class ValidateProfileService(IProfileSource live, IApprovals approvals, ILedgerStore ledger, EventFactory events, IContextEngine context)
+internal sealed class ValidateProfileService(IProfileSource live, IApprovals approvals, ILedgerStore ledger, EventFactory events, ProfileContextCheck context)
     : IService<ValidateProfileRequest, ValidateProfileResponse>
 {
     public async ValueTask<Result<ValidateProfileResponse>> Handle(ValidateProfileRequest request, CancellationToken cancellationToken)
@@ -41,6 +40,5 @@ internal sealed class ValidateProfileService(IProfileSource live, IApprovals app
     }
 
     /// <summary>The context section checked by the engine, and its 'repos' against the profile's repos (SND-CONTEXT-001).</summary>
-    private Result<ContextSettings> Checked(SindriProfile profile) =>
-        context.CheckSettings(profile.Context, [.. (profile.Repos ?? []).Select(r => new ProfileRepoEntry(r.Name, r.Path))]);
+    private Result<ContextSettings> Checked(SindriProfile profile) => context.Check(profile);
 }

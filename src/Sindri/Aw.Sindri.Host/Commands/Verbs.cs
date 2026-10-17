@@ -142,20 +142,37 @@ internal sealed class Verbs(ControlPlaneClient client, Core.Control.IControlPlan
 
     internal async Task<int> Approve(string? hashText, bool interactive, TextReader input, CancellationToken ct)
     {
+        var approved = await Decide(hashText, interactive, input, ct).ConfigureAwait(false);
+        return approved.IsError
+            ? await output.Error(approved.Error).ConfigureAwait(false)
+            : await output.Text(ApprovalText(approved.Value, hashText is null), approved.Value.Approved ? 0 : 1).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// 'profile approve' without the printing: the preview (no hash) or the approval (the hash and what the human types at the terminal), as the control plane answers it.
+    /// A caller that approves as one step of something larger (`onyx up`) uses this and words the result itself.
+    /// </summary>
+    /// <param name="hashText">The hash to approve, or null for the preview.</param>
+    /// <param name="interactive">Whether a terminal can answer the challenge.</param>
+    /// <param name="input">Where the typed answer is read.</param>
+    /// <param name="ct">Cancels the call.</param>
+    /// <returns>The control plane's answer, or its error (SND-PROFILE-004 when the human didn't type the challenge's text).</returns>
+    internal async Task<Kernel.Result<ApproveProfileResponse>> Decide(string? hashText, bool interactive, TextReader input, CancellationToken ct)
+    {
         ProfileHash? hash = hashText is not null && ProfileHash.TryFrom(hashText, out var parsed) ? parsed : null;
         if (Precheck(hashText, hash, interactive) is { } refused)
         {
-            return await output.Error(refused).ConfigureAwait(false);
+            return refused;
         }
 
         var answer = await BeforeTheCall(hash, input, ct).ConfigureAwait(false);
         if (answer.IsError)
         {
-            return await output.Error(answer.Error).ConfigureAwait(false);
+            return answer.Error;
         }
 
         var approved = await client.Post<ApproveProfileRequest, ApproveProfileResponse>("/sindri/profile/approve", new ApproveProfileRequest(hash, answer.Value), ct).ConfigureAwait(false);
-        return approved.IsError ? await output.Error(approved.Error).ConfigureAwait(false) : await output.Text(ApprovalText(approved.Value.Value, hash is null), approved.Value.Value.Approved ? 0 : 1).ConfigureAwait(false);
+        return approved.IsError ? approved.Error : approved.Value.Value;
     }
 
     /// <summary>A malformed hash, or a hash without a terminal: refused before any call, and before starting anything.</summary>
@@ -196,7 +213,7 @@ internal sealed class Verbs(ControlPlaneClient client, Core.Control.IControlPlan
         return new ChallengeAnswer(issued.Value.Value.Challenge, typed);
     }
 
-    private static string ApprovalText(ApproveProfileResponse a, bool preview) => (preview, a.Approved) switch
+    internal static string ApprovalText(ApproveProfileResponse a, bool preview) => (preview, a.Approved) switch
     {
         (_, true) when preview => $"Approved already: {a.Hash.Value}\n",
         (true, _) => $"hash {a.Hash.Value}\nchanged since the last approval: {(a.Changes.Count == 0 ? "nothing" : string.Join(", ", a.Changes))}\nto approve: sindri profile approve {a.Hash.Value}\n",

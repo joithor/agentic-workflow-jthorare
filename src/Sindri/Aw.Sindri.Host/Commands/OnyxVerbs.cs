@@ -19,8 +19,6 @@ namespace Aw.Sindri.Host.Commands;
 /// <param name="approver">Approves the profile at the terminal once `onyx up` has written it.</param>
 internal sealed class OnyxVerbs(IServiceProvider services, Output output, AgentSession session, IProfileApprover approver)
 {
-    private const string HandOver = "Onyx is running. Account setup (sign-up and Sindri's key) comes next: `sindri onyx up` will continue it once that stage lands.";
-
     internal async Task<int> Up(bool json, CancellationToken ct)
     {
         if (!session.Human)
@@ -44,13 +42,64 @@ internal sealed class OnyxVerbs(IServiceProvider services, Output output, AgentS
             return await Fail(output, answer.Error).ConfigureAwait(false);
         }
 
-        _ = (approver, typeof(OnyxHandOver));
-        var up = answer.Value;
-        var next = up.NeedsHuman is { Count: > 0 } waiting ? $"needs you: {string.Join(", ", waiting)}" : HandOver;
-        return json
-            ? await output.Json(up, 0).ConfigureAwait(false)
-            : await output.Text($"{"url",-10}{up.Url}\n{"version",-10}{up.Version}\n{"ran",-10}{Steps(up.Ran)}\n{"skipped",-10}{Steps(up.Skipped)}\n{next}\n", 0).ConfigureAwait(false);
+        return answer.Value.NeedsHuman.Count > 0 ? await Waiting(answer.Value, json).ConfigureAwait(false) : await HandOver(answer.Value, json, ct).ConfigureAwait(false);
     }
+
+    // A step needs the person (no terminal, end of input, Ctrl-C): say which and what to do; nothing is approved or opened.
+    private async Task<int> Waiting(OnyxUpResponse up, bool json)
+    {
+        var needs = string.Join('\n', up.Steps.Where(static s => s.Outcome == OnyxStepOutcome.NeedsHuman).Select(static s => s.Hint is null ? $"needs you: {s.Step}" : $"needs you: {s.Step} ({s.Hint})"));
+        return json ? await output.Json(up, 0).ConfigureAwait(false) : await output.Text($"{Summary(up)}{needs}\n", 0).ConfigureAwait(false);
+    }
+
+    // Step 10: approve the profile, read doctor's onyx row, open the connectors page, print what is left.
+    private async Task<int> HandOver(OnyxUpResponse up, bool json, CancellationToken ct)
+    {
+        HandOverResult result;
+        try
+        {
+            result = await new OnyxHandOver(approver, services, services.GetRequiredService<IBrowser>()).Run(up, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Interrupted("interrupted before the profile was approved; run `sindri profile approve` to finish");
+        }
+
+        if (result.Failure is { } failed)
+        {
+            _ = await output.Error(failed).ConfigureAwait(false);
+            return 1;
+        }
+
+        return json ? await output.Json(result.Response, 0).ConfigureAwait(false) : await output.Text(Summary(result.Response) + result.Text, 0).ConfigureAwait(false);
+    }
+
+    private static string Summary(OnyxUpResponse up)
+    {
+        var rows = new List<string> { $"{"url",-10}{up.Url}", $"{"version",-10}{up.Version}" };
+        if (up.Key is not null)
+        {
+            rows.Add($"{"key",-10}{up.Key}");
+        }
+
+        if (up.Profile is not null)
+        {
+            rows.Add($"{"profile",-10}{(up.Profile == "approved" ? "approved" : "written, not approved (approve later: sindri profile approve)")}");
+            rows.Add($"{"doctor",-10}{(up.Doctor is { } check ? $"{DoctorWord(check.State)} {check.Detail}" : "not checked")}");
+        }
+
+        rows.Add($"{"ran",-10}{Steps(up.Ran)}");
+        rows.Add($"{"skipped",-10}{Steps(up.Skipped)}");
+        return string.Join('\n', rows) + "\n";
+    }
+
+    private static string DoctorWord(Aw.Sindri.Core.Doctor.CheckState state) => state switch
+    {
+        Aw.Sindri.Core.Doctor.CheckState.Ok => "ok",
+        Aw.Sindri.Core.Doctor.CheckState.Warn => "warn",
+        Aw.Sindri.Core.Doctor.CheckState.Fail => "fail",
+        _ => throw new ArgumentOutOfRangeException(nameof(state), state, "unknown check state"),
+    };
 
     internal async Task<int> Down(bool json, CancellationToken ct)
     {

@@ -65,7 +65,7 @@ internal sealed class OnyxUpService(IOnyxWorkspace workspace, OnyxFacts facts, I
             return results.Error;
         }
 
-        return new OnyxUpResponse(port, string.Create(CultureInfo.InvariantCulture, $"http://127.0.0.1:{port}"), context.Version ?? pins.Version, warnings, results.Value);
+        return new OnyxUpResponse(port, string.Create(CultureInfo.InvariantCulture, $"http://127.0.0.1:{port}"), context.Version ?? pins.Version, warnings, results.Value, Key: context.KeyPointer?.ToString());
     }
 
     // A state another home wrote vouches for nothing here: start from step 1 like an unreadable one (each step still re-verifies what is on disk).

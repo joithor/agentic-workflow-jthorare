@@ -14,6 +14,9 @@ public sealed class OnyxUpRig
     /// <summary>Initializes the rig with healthy defaults.</summary>
     public OnyxUpRig()
     {
+        var owner = Provisioning;
+        Console = new FakeOwnerConsole { DefaultLine = owner.OwnerEmail, DefaultHidden = owner.OwnerPassword };
+        Writer = new FakeSecretWriter { Into = Pointers };
         Pins = new FakeOnyxPins(new EmbeddedOnyxPins().Pins);
         Runtime = new FakeContainerRuntime(FakeContainerRuntime.Healthy);
         Health = new FakeOnyxHealth { Default = new OnyxProbe(Healthy: true, Pins.Pins.Version) };
@@ -63,7 +66,16 @@ public sealed class OnyxUpRig
     public RigClock Clock { get; }
 
     /// <summary>Gets the owner's terminal (interactive; Enter is pressed unless a test feeds something else).</summary>
-    public FakeOwnerConsole Console { get; } = new();
+    public FakeOwnerConsole Console { get; }
+
+    /// <summary>Gets Onyx's owner-side API, with the owner the Console types in.</summary>
+    public FakeOnyxProvisioning Provisioning { get; } = new();
+
+    /// <summary>Gets what the key step can read back (what Writer stored).</summary>
+    public FakeSecretPointers Pointers { get; } = new();
+
+    /// <summary>Gets the secret writer; it also makes what it stores readable through <see cref="Pointers"/>.</summary>
+    public FakeSecretWriter Writer { get; }
 
     /// <summary>Gets the browser.</summary>
     public FakeBrowser Browser { get; } = new();
@@ -87,7 +99,7 @@ public sealed class OnyxUpRig
             new OnyxPullStep(Runtime, Workspace, compose, Progress),
             new OnyxStartStep(Runtime, Health, readiness, Progress, Clock),
             new OnyxSignupStep(Console, Browser, Progress),
-            new OnyxKeyStep(),
+            new OnyxKeyStep(Provisioning, Writer, Pointers, Console, Progress),
             new OnyxProfileStep(),
         ];
         return new OnyxUpService(Workspace, new OnyxFacts(Runtime, Probes, new FakeSindriHome(Home)), Pins, Progress, steps);

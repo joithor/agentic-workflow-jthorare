@@ -15,6 +15,12 @@ public sealed class FakeOwnerConsole : IOwnerConsole
     /// <summary>Gets or sets a value indicating whether a person can answer.</summary>
     public bool Interactive { get; set; } = true;
 
+    /// <summary>Gets or sets what ReadLine answers once nothing is queued; null (the default) is end of input.</summary>
+    public string? DefaultLine { get; set; }
+
+    /// <summary>Gets or sets what the hidden read answers once nothing is queued; null (the default) is end of input.</summary>
+    public string? DefaultHidden { get; set; }
+
     /// <summary>Gets the prompts shown, in order.</summary>
     public IList<string> Prompts { get; } = [];
 
@@ -44,7 +50,7 @@ public sealed class FakeOwnerConsole : IOwnerConsole
     public string? ReadLine(string prompt)
     {
         Show(prompt);
-        var answer = _answers.Count > 0 ? _answers.Dequeue() : null;
+        var answer = _answers.Count > 0 ? _answers.Dequeue() : DefaultLine;
         _ = _terminal.AppendLine(answer);   // echoed, as a terminal does
         return answer;
     }
@@ -53,7 +59,7 @@ public sealed class FakeOwnerConsole : IOwnerConsole
     public string? ReadPassword(string prompt)
     {
         Show(prompt);
-        var answer = _answers.Count > 0 ? _answers.Dequeue() : null;
+        var answer = _answers.Count > 0 ? _answers.Dequeue() : DefaultHidden;
         _ = _terminal.AppendLine();   // the Enter, with nothing typed shown
         return answer;
     }

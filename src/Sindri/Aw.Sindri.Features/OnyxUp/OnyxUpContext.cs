@@ -1,4 +1,5 @@
 using Aw.Sindri.Core.Onyx;
+using Aw.Sindri.Core.Secrets;
 
 namespace Aw.Sindri.Features.OnyxUp;
 
@@ -11,6 +12,9 @@ internal sealed record OnyxUpContext(OnyxPins Pins, OnyxPaths Paths, int Port, s
 {
     /// <summary>Gets or sets what the human has to do, set by a step that returns <see cref="OnyxStepOutcome.NeedsHuman"/>.</summary>
     public string? Hint { get; set; }
+
+    /// <summary>Gets or sets where Sindri's Onyx key lives once the key step has made sure of one (the keychain pointer or the file fallback); holds no secret.</summary>
+    public SecretPointer? KeyPointer { get; set; }
 
     /// <summary>Gets or sets the release the running Onyx reported once the start step finished.</summary>
     public string? Version { get; set; }

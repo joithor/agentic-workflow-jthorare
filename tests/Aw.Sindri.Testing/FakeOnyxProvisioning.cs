@@ -30,6 +30,9 @@ public sealed class FakeOnyxProvisioning : IOnyxProvisioning
     /// <summary>Gets or sets the id the next mint returns.</summary>
     public int MintedKeyId { get; set; } = 41;
 
+    /// <summary>Gets or sets a value indicating whether a minted key is an admin service account (false: the verification then fails).</summary>
+    public bool MintedKeyIsAdmin { get; set; } = true;
+
     /// <summary>Gets or sets an error every login returns instead of the scripted behavior.</summary>
     public Error? LoginError { get; set; }
 
@@ -40,7 +43,7 @@ public sealed class FakeOnyxProvisioning : IOnyxProvisioning
     public Error? LogoutError { get; set; }
 
     /// <summary>Gets the calls made, in order: `login`, `me:session`, `me:key`, `mint`, `logout`.</summary>
-    public IList<string> Calls { get; } = [];
+    public IList<string> Calls { get; init; } = [];
 
     /// <summary>Gets the names the keys were minted under.</summary>
     public IList<string> MintedNames { get; } = [];
@@ -102,7 +105,7 @@ public sealed class FakeOnyxProvisioning : IOnyxProvisioning
         }
 
         MintedNames.Add(name);
-        _keys[MintedKey] = (Admin: true, ServiceAccount: true);
+        _keys[MintedKey] = (Admin: MintedKeyIsAdmin, ServiceAccount: true);
         return Ok(new OnyxMintedKey(MintedKey, MintedKeyId));
     }
 

@@ -10,6 +10,9 @@ namespace Aw.Sindri.Core.Onyx;
 /// <param name="ProjectName">The compose project name of this Sindri home (see <see cref="ComposeProject.NameFor"/>).</param>
 public sealed record OnyxPaths(string Root, string State, string DeployDir, string Compose, string Env, string Override, string ProjectName)
 {
+    /// <summary>Gets the Sindri home these paths are under (the onyx directory's parent).</summary>
+    public string SindriHome => Root[..^"/onyx".Length];
+
     /// <summary>Gets the fetched env.template the .env is rendered from.</summary>
     public string EnvTemplate => DeployDir + "/docker_compose/env.template";
 

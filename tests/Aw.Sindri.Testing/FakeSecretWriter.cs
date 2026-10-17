@@ -14,6 +14,12 @@ public sealed class FakeSecretWriter : ISecretWriter
     /// <summary>Gets or sets an error every store returns instead (nothing is kept).</summary>
     public Error? Error { get; set; }
 
+    /// <summary>Gets or sets a list this writer adds "store" to on each successful store, to order it against other fakes' calls.</summary>
+    public IList<string> Journal { get; init; } = [];
+
+    /// <summary>Gets or sets the pointer fake the stored value is also made readable through, under the returned pointer's text; null for none.</summary>
+    public FakeSecretPointers? Into { get; init; }
+
     /// <summary>Gets the values stored, in order.</summary>
     public IList<string> Stored { get; } = [];
 
@@ -32,6 +38,12 @@ public sealed class FakeSecretWriter : ISecretWriter
         }
 
         Stored.Add(value);
+        Journal.Add("store");
+        if (Into is { } readable)
+        {
+            readable.Values[Answer.ToString()] = value;
+        }
+
         return Answer;
     }
 }

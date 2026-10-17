@@ -8833,3 +8833,4 @@ Aw.Sindri.Core.Onyx.IOwnerConsole.WaitForEnter(string! prompt) -> bool
 Aw.Sindri.Core.Onyx.OnyxPages
 static Aw.Sindri.Core.Onyx.OnyxPages.Connectors(int port) -> System.Uri!
 static Aw.Sindri.Core.Onyx.OnyxPages.SignUp(int port) -> System.Uri!
+Aw.Sindri.Core.Onyx.OnyxPaths.SindriHome.get -> string!

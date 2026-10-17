@@ -8834,3 +8834,9 @@ Aw.Sindri.Core.Onyx.OnyxPages
 static Aw.Sindri.Core.Onyx.OnyxPages.Connectors(int port) -> System.Uri!
 static Aw.Sindri.Core.Onyx.OnyxPages.SignUp(int port) -> System.Uri!
 Aw.Sindri.Core.Onyx.OnyxPaths.SindriHome.get -> string!
+Aw.Sindri.Core.Profile.IProfileWriter
+Aw.Sindri.Core.Profile.IProfileWriter.SetOnyxSource(int port, Aw.Sindri.Core.Secrets.SecretPointer! token, string! version) -> Aw.Kernel.Result<Aw.Sindri.Core.Profile.ProfileWriteOutcome>!
+Aw.Sindri.Core.Profile.ProfileWriteOutcome
+Aw.Sindri.Core.Profile.ProfileWriteOutcome.Changed = 1 -> Aw.Sindri.Core.Profile.ProfileWriteOutcome
+Aw.Sindri.Core.Profile.ProfileWriteOutcome.Created = 0 -> Aw.Sindri.Core.Profile.ProfileWriteOutcome
+Aw.Sindri.Core.Profile.ProfileWriteOutcome.Unchanged = 2 -> Aw.Sindri.Core.Profile.ProfileWriteOutcome

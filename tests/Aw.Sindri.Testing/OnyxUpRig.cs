@@ -77,6 +77,9 @@ public sealed class OnyxUpRig
     /// <summary>Gets the secret writer; it also makes what it stores readable through <see cref="Pointers"/>.</summary>
     public FakeSecretWriter Writer { get; }
 
+    /// <summary>Gets the live profile as text, kept in memory.</summary>
+    public FakeProfileWriter Profile { get; } = new();
+
     /// <summary>Gets the browser.</summary>
     public FakeBrowser Browser { get; } = new();
 
@@ -100,7 +103,7 @@ public sealed class OnyxUpRig
             new OnyxStartStep(Runtime, Health, readiness, Progress, Clock),
             new OnyxSignupStep(Console, Browser, Progress),
             new OnyxKeyStep(Provisioning, Writer, Pointers, Console, Progress),
-            new OnyxProfileStep(),
+            new OnyxProfileStep(Profile, Pins, Pointers, Progress),
         ];
         return new OnyxUpService(Workspace, new OnyxFacts(Runtime, Probes, new FakeSindriHome(Home)), Pins, Progress, steps);
     }

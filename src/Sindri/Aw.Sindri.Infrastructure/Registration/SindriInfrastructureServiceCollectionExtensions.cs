@@ -110,6 +110,7 @@ public static class SindriInfrastructureServiceCollectionExtensions
             .AddSingleton<IRandomHex, OsRandomHex>()                                                      // the OS random source, for the auth key
             .AddSingleton<IOnyxHealth>(static _ => new HttpOnyxHealth(HttpOnyxHealth.CreateClient()))                 // readiness, http://127.0.0.1 only
             .AddSingleton<IOnyxProvisioning>(static _ => new HttpOnyxProvisioning(HttpOnyxProvisioning.CreateClient()))   // owner login and the admin key, http://127.0.0.1 only, its own allowlist
+            .AddSingleton<IProfileWriter>(static sp => new FileProfileWriter(sp.GetRequiredService<SindriSettings>(), Environment.UserName))   // context.sources.onyx in the live profile, nothing else
             .AddSingleton<IBrowser>(static _ => new SystemBrowser(new ProcessToolRunner()))   // `open` or `xdg-open`, for the sign-up and connectors pages
             .AddSingleton<ISecretWriter>(static sp => new SecretWriter(new ProcessToolRunner(), sp.GetRequiredService<ISecretPointers>(), sp.GetRequiredService<ISindriHome>().Path))   // Onyx P3: onyx/sindri-onyx only
             .AddSingleton<IHostProbes>(static _ => new HostProbes());                                     // free disk and loopback ports

@@ -23,6 +23,7 @@ internal sealed class ProcessToolRunner : IToolRunner
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            StandardInputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
         };
         ApplyEnvironment(start, options?.Environment);
         Process? process;
@@ -42,7 +43,7 @@ internal sealed class ProcessToolRunner : IToolRunner
 
         using (process)
         {
-            return Wait(process, timeout, options?.StandardErrorLine, cancellationToken);
+            return Wait(process, new Limits(timeout, options?.StandardErrorLine, options?.StandardInput), cancellationToken);
         }
     }
 
@@ -66,11 +67,15 @@ internal sealed class ProcessToolRunner : IToolRunner
         }
     }
 
-    private static ToolRun Wait(Process process, TimeSpan timeout, Action<string>? standardErrorLine, CancellationToken cancellationToken)
+    // How long the tool may run and what is handed to it besides its arguments.
+    private sealed record Limits(TimeSpan Timeout, Action<string>? StandardErrorLine, string? StandardInput);
+
+    private static ToolRun Wait(Process process, Limits limits, CancellationToken cancellationToken)
     {
-        process.StandardInput.Close();   // a tool that prompts reads end of input instead of waiting for a terminal
+        var (timeout, standardErrorLine, standardInput) = limits;
         var output = process.StandardOutput.ReadToEndAsync(CancellationToken.None);
         var error = DrainLines(process.StandardError, standardErrorLine);
+        FeedAndClose(process, standardInput);
         var killedByCancel = false;
         using var registration = cancellationToken.Register(() =>
         {
@@ -93,6 +98,24 @@ internal sealed class ProcessToolRunner : IToolRunner
         var errorText = error.GetAwaiter().GetResult();
         var text = output.GetAwaiter().GetResult();
         return Volatile.Read(ref killedByCancel) ? ToolRun.Cancelled : new ToolRun(ToolOutcome.Exited, process.ExitCode, text, errorText);
+    }
+
+    // The text goes in on standard input (never in the argument list), then input ends: a tool that prompts reads end of input instead of waiting for a terminal.
+    private static void FeedAndClose(Process process, string? text)
+    {
+        try
+        {
+            if (text is not null)
+            {
+                process.StandardInput.Write(text);
+            }
+
+            process.StandardInput.Close();
+        }
+        catch (IOException)
+        {
+            // the tool stopped reading before the end: its exit code says how it went
+        }
     }
 
     private static async Task<string> DrainLines(StreamReader reader, Action<string>? onLine)

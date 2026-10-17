@@ -62,11 +62,7 @@ public sealed class SecretWriterTests : IDisposable
         var script = Path.Combine(bin, "security");
         File.WriteAllText(script, "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$AW_STUB_OUT/argv\"\ncat > \"$AW_STUB_OUT/stdin\"\n");
         File.SetUnixFileMode(script, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-        var runner = new EnvRunner(new ProcessToolRunner(), new Dictionary<string, string?>(StringComparer.Ordinal)
-        {
-            ["PATH"] = bin + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH"),
-            ["AW_STUB_OUT"] = capture,
-        });
+        var runner = new StubDirectoryRunner(new ProcessToolRunner(), bin, new Dictionary<string, string?>(StringComparer.Ordinal) { ["AW_STUB_OUT"] = capture });
         _pointers.Values["keychain:onyx/sindri-onyx"] = Key;
 
         var stored = new SecretWriter(runner, _pointers, _home, KeychainPlatform.MacOS).Store(Key);
@@ -163,10 +159,12 @@ public sealed class SecretWriterTests : IDisposable
         Assert.False(Directory.Exists(Path.Combine(_home, "secrets")));
     }
 
-    // Puts a PATH and a capture directory in front of the real runner so a stand-in `security` is the one that runs.
-    private sealed class EnvRunner(IToolRunner inner, IReadOnlyDictionary<string, string?> environment) : IToolRunner
+    // Runs a tool only from the stand-in directory, by its full path, so the real `security` and the user's keychain are never reached (PATH is not consulted: a missing stand-in is a missing tool).
+    private sealed class StubDirectoryRunner(IToolRunner inner, string directory, IReadOnlyDictionary<string, string?> environment) : IToolRunner
     {
         public ToolRun Run(string fileName, IReadOnlyList<string> arguments, TimeSpan timeout, ToolRunOptions? options = null, CancellationToken cancellationToken = default)
-            => inner.Run(fileName, arguments, timeout, (options ?? new ToolRunOptions()) with { Environment = environment }, cancellationToken);
+            => File.Exists(Path.Combine(directory, fileName))
+                ? inner.Run(Path.Combine(directory, fileName), arguments, timeout, (options ?? new ToolRunOptions()) with { Environment = environment }, cancellationToken)
+                : ToolRun.Missing;
     }
 }

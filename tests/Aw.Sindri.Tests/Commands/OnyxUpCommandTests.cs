@@ -198,18 +198,30 @@ public sealed class OnyxUpCommandTests : IDisposable
     }
 
     [Fact, Trait("Lane", "unit")]
-    public async Task Up_with_NeedsHuman_prints_the_hint_and_does_not_approve_or_hand_over()
+    public async Task Up_with_NeedsHuman_prints_the_hint_exits_1_and_does_not_approve_or_hand_over()
     {
         var needsYou = new OnyxUpResponse(3000, "http://127.0.0.1:3000", "v4.9.0", [], [new OnyxStepResult("fetch", OnyxStepOutcome.Ran), new OnyxStepResult("signup", OnyxStepOutcome.NeedsHuman, "run `sindri onyx up` in a terminal")]);
         await using var provider = new ServiceCollection().AddSingleton<IService<OnyxUpRequest, OnyxUpResponse>>(new StubUp(needsYou)).AddSingleton<Core.Onyx.IBrowser>(_browser).BuildServiceProvider();
 
         var code = await new OnyxVerbs(provider, new Output(_out, _error, _json), Human, _approver).Up(json: false, TestContext.Current.CancellationToken);
 
-        Assert.Equal(0, code);
+        Assert.Equal(1, code);
         Assert.Contains("needs you: signup (run `sindri onyx up` in a terminal)", _out.ToString(), StringComparison.Ordinal);
         Assert.Equal(0, _approver.Calls);
         Assert.Empty(_browser.Opened);
         Assert.DoesNotContain("connectors", _out.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Up_json_with_NeedsHuman_exits_1_and_still_prints_the_response()
+    {
+        var needsYou = new OnyxUpResponse(3000, "http://127.0.0.1:3000", "v4.9.0", [], [new OnyxStepResult("signup", OnyxStepOutcome.NeedsHuman, "run `sindri onyx up` in a terminal")]);
+        await using var provider = new ServiceCollection().AddSingleton<IService<OnyxUpRequest, OnyxUpResponse>>(new StubUp(needsYou)).AddSingleton<Core.Onyx.IBrowser>(_browser).BuildServiceProvider();
+
+        var code = await new OnyxVerbs(provider, new Output(_out, _error, _json), Human, _approver).Up(json: true, TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, code);
+        Assert.Contains("needs-human", _out.ToString(), StringComparison.Ordinal);
     }
 
     private sealed class StubUp(OnyxUpResponse response) : IService<OnyxUpRequest, OnyxUpResponse>

@@ -16,14 +16,15 @@ public sealed partial record OnyxSettings
     private const int MaxShown = 64;
     private static readonly HashSet<string> _schemes = new(StringComparer.Ordinal) { "env", "file", "keychain", "op" };
 
-    private OnyxSettings(Uri url, string token, string version)
+    private OnyxSettings(Uri url, string token, string version, bool managed)
     {
         Url = url;
         Token = token;
         Version = version;
+        Managed = managed;
     }
 
-    /// <summary>Whether Sindri runs this Onyx (`sindri onyx up` wrote the entry): its URL is then exactly http://127.0.0.1:&lt;port&gt; and its version is the release Sindri pins. False when the profile doesn't say.</summary>
+    /// <summary>Gets a value indicating whether Sindri runs this Onyx (`sindri onyx up` wrote the entry): its URL is then exactly http://127.0.0.1:&lt;port&gt;, and Sindri also holds its version to the release it pins. False when the profile doesn't say.</summary>
     public bool Managed { get; }
 
     /// <summary>Onyx's base URL (http or https on a loopback host), ending in '/'.</summary>
@@ -46,11 +47,15 @@ public sealed partial record OnyxSettings
     /// <returns>The settings, SND-CONTEXT-055 for a URL or version that breaks the rules, or SND-CONTEXT-002 for no token or one that isn't a secret pointer (never repeated).</returns>
     public static Result<OnyxSettings> Create(string? url, string? token, string? version, bool managed = false)
     {
-        _ = managed;
         var baseUrl = CheckUrl(url);
         if (baseUrl.IsError)
         {
             return baseUrl.Error;
+        }
+
+        if (managed && CheckManaged(baseUrl.Value) is { } notManaged)
+        {
+            return notManaged;
         }
 
         if (string.IsNullOrWhiteSpace(token))
@@ -67,7 +72,7 @@ public sealed partial record OnyxSettings
         }
 
         var pinned = CheckPinned(version);
-        return pinned.IsError ? pinned.Error : new OnyxSettings(baseUrl.Value, token, pinned.Value);
+        return pinned.IsError ? pinned.Error : new OnyxSettings(baseUrl.Value, token, pinned.Value, managed);
     }
 
     /// <summary>Compares the version a running Onyx reports with the pinned one.</summary>
@@ -111,6 +116,24 @@ public sealed partial record OnyxSettings
 
         var path = uri.GetLeftPart(UriPartial.Path);
         return new Uri(path.EndsWith('/') ? path : path + "/");
+    }
+
+    // A managed Onyx is the one `sindri onyx up` started: nginx on 127.0.0.1 at a port, over http, at the root.
+    private static Error? CheckManaged(Uri uri)
+    {
+        var why = true switch
+        {
+            _ when !string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.Ordinal) => "it isn't http",
+            _ when !string.Equals(uri.Host, "127.0.0.1", StringComparison.Ordinal) => $"its host is '{Shown(uri.Host)}', not 127.0.0.1",
+            _ when uri.IsDefaultPort => "it names no port",
+            _ when !string.Equals(uri.AbsolutePath, "/", StringComparison.Ordinal) => "it has a path",
+            _ => null,
+        };
+        return why is null
+            ? null
+            : ContextErrors.OnyxNotPinnedOrLoopback.With(
+                $"{UrlKey}: a managed Onyx (managed: true, written by `sindri onyx up`) must be exactly http://127.0.0.1:<port>, but {why}. "
+                + "Run `sindri onyx up` to write the entry again, or remove managed for an Onyx you run yourself.");
     }
 
     private static bool IsLoopback(Uri uri) =>

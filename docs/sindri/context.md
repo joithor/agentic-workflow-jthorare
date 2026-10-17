@@ -712,6 +712,12 @@ context:
 - `token`: a **secret pointer** to the Onyx admin key of a service account Sindri alone uses, never the key itself.
   Missing, or text that isn't a pointer, is `SND-CONTEXT-002`; the message doesn't repeat the text (rotate a key that
   was written into the profile).
+- `managed`: `true` when Sindri runs this Onyx (`sindri onyx up` writes it), default false (absent). A managed entry's `url` must
+  be exactly `http://127.0.0.1:<port>` (http, host `127.0.0.1`, an explicit port, no path), else `SND-CONTEXT-055` naming
+  `context.sources.onyx.url`; and Sindri (`profile validate` and `profile approve`, not the engine) requires its `version` to
+  be the release this build pins (`v4.9.0`; a leading `v` is ignored), else `SND-CONTEXT-055` naming
+  `context.sources.onyx.version` and the pinned release. A value that isn't `true` or `false` is `SND-CONTEXT-001`. An unmanaged
+  entry keeps the looser rules above.
 - `linear.teams`: team keys (a capital letter, then one or more capitals or digits, e.g. `ENG`). Linear's own `token` and `url` arrive
   with the native Linear adapter (S-6); this build refuses them (`SND-CONTEXT-001`), like any unknown key under
   `sources`, `onyx` or `linear`.

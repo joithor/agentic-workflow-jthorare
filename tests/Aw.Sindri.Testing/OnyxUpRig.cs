@@ -62,6 +62,12 @@ public sealed class OnyxUpRig
     /// <summary>Gets the clock.</summary>
     public RigClock Clock { get; }
 
+    /// <summary>Gets the owner's terminal (interactive; Enter is pressed unless a test feeds something else).</summary>
+    public FakeOwnerConsole Console { get; } = new();
+
+    /// <summary>Gets the browser.</summary>
+    public FakeBrowser Browser { get; } = new();
+
     /// <summary>Gets the paths under the home.</summary>
     public OnyxPaths Paths { get; }
 
@@ -80,7 +86,7 @@ public sealed class OnyxUpRig
             new OnyxConfigStep(Workspace, compose, Random, Progress),
             new OnyxPullStep(Runtime, Workspace, compose, Progress),
             new OnyxStartStep(Runtime, Health, readiness, Progress, Clock),
-            new OnyxSignupStep(),
+            new OnyxSignupStep(Console, Browser, Progress),
             new OnyxKeyStep(),
             new OnyxProfileStep(),
         ];

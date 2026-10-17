@@ -8823,3 +8823,13 @@ const Aw.Sindri.Core.Onyx.OnyxKeyPointers.Service = "onyx" -> string!
 static Aw.Sindri.Core.Onyx.OnyxKeyPointers.FileFor(string! sindriHome) -> Aw.Sindri.Core.Secrets.SecretPointer!
 static Aw.Sindri.Core.Onyx.OnyxKeyPointers.FilePath(string! sindriHome) -> string!
 static Aw.Sindri.Core.Onyx.OnyxKeyPointers.Keychain.get -> Aw.Sindri.Core.Secrets.SecretPointer!
+Aw.Sindri.Core.Onyx.IBrowser
+Aw.Sindri.Core.Onyx.IBrowser.Open(System.Uri! url) -> bool
+Aw.Sindri.Core.Onyx.IOwnerConsole
+Aw.Sindri.Core.Onyx.IOwnerConsole.Interactive.get -> bool
+Aw.Sindri.Core.Onyx.IOwnerConsole.ReadLine(string! prompt) -> string?
+Aw.Sindri.Core.Onyx.IOwnerConsole.ReadPassword(string! prompt) -> string?
+Aw.Sindri.Core.Onyx.IOwnerConsole.WaitForEnter(string! prompt) -> bool
+Aw.Sindri.Core.Onyx.OnyxPages
+static Aw.Sindri.Core.Onyx.OnyxPages.Connectors(int port) -> System.Uri!
+static Aw.Sindri.Core.Onyx.OnyxPages.SignUp(int port) -> System.Uri!

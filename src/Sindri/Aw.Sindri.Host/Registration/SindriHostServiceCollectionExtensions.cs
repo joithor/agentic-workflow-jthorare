@@ -20,7 +20,8 @@ internal static class SindriHostServiceCollectionExtensions
         .AddSingleton<ICommandCatalog, CommandCatalog>()
         .AddSingleton<Projector>()
         .AddSingleton<ScheduleInputs>()
-        .AddSingleton<IOnyxProgress>(static _ => new ConsoleOnyxProgress(Console.Error));   // `onyx up`'s lines and dots on standard error
+        .AddSingleton<IOnyxProgress>(static _ => new ConsoleOnyxProgress(Console.Error))   // `onyx up`'s lines and dots on standard error
+        .AddSingleton<IOwnerConsole>(static _ => new ConsoleOwnerConsole(Console.Error, new SystemTerminalInput()));   // the owner at the terminal, prompts on standard error
 
     /// <summary>
     /// Adds what only 'sindri serve' runs: the port it chooses before it binds (and the check that refuses to start without

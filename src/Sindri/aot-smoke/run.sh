@@ -233,6 +233,9 @@ session_tty() { # an agent session at a terminal (the CLI's own terminal check p
   session onyx up
   run onyx up
   session onyx down
+  # Onyx P3: `onyx open` reads state only; with no state.json (this scratch home never ran `onyx up`) the human is told to run it, a session is refused.
+  session onyx open
+  human onyx open </dev/null
 } >"$out/actual.raw"
 
 bash "$here/normalize.sh" "$work" "$root" <"$out/actual.raw" >"$out/actual.txt"

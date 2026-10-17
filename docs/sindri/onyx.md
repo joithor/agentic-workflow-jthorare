@@ -37,7 +37,7 @@ checks in §6.
 
 ## 2. Bind every published port to loopback
 
-> `sindri onyx up` does steps 1-5 of this page for you (pinned files fetched and checked, the `.env` and `docker-compose.override.yml` below written, the images pulled by digest, the stack started and checked) under `$AW_SINDRI_HOME/onyx/`, and `sindri onyx down` stops it. Creating the account and Sindri's key (§5) stay manual until P3. To keep the Slack and Discord bots from starting, `up` replaces the background service's command with one that patches the image's own supervisord config in a copy and runs supervisord on it, so it needs no file to copy out of the image and mount; the copy-out-and-mount recipe below remains for a hand setup. That replacement command drops the compose file's own custom-CA step (it runs `update-ca-certificates` when `/etc/ssl/certs/custom-ca.crt` is mounted into the background container), so a box that needs a custom CA inside the background container must add it to its own override.
+> `sindri onyx up` does steps 1-5 of this page for you (pinned files fetched and checked, the `.env` and `docker-compose.override.yml` below written, the images pulled by digest, the stack started and checked) under `$AW_SINDRI_HOME/onyx/`, and `sindri onyx down` stops it. Creating the account and Sindri's key (§5) are `sindri onyx up`'s next steps now: it opens Onyx's sign-up page and waits for you, asks for the owner's email and password once to create the `sindri-onyx` key (an admin service account in Onyx's `Admin` group), stores it in the keychain, writes `context.sources.onyx` into your profile with `managed: true` and approves it inline; `sindri onyx open` opens the sign-up or the connectors page. The hand setup in §5 stays for an Onyx you run yourself. To keep the Slack and Discord bots from starting, `up` replaces the background service's command with one that patches the image's own supervisord config in a copy and runs supervisord on it, so it needs no file to copy out of the image and mount; the copy-out-and-mount recipe below remains for a hand setup. That replacement command drops the compose file's own custom-CA step (it runs `update-ca-certificates` when `/etc/ssl/certs/custom-ca.crt` is mounted into the background container), so a box that needs a custom CA inside the background container must add it to its own override.
 
 The stock compose file publishes nginx on all interfaces (`"${HOST_PORT:-3000}:80"` and `"80:80"`). Add a
 `docker-compose.override.yml` beside it:
@@ -108,6 +108,8 @@ connector status (no connector route is on its allowlist, §7), so `$SINDRI cont
 answers and what the key is, not how far indexing has got.
 
 ## 5. The key
+
+> With a Sindri-managed Onyx (`sindri onyx up`), the `sindri-onyx` key is made and stored for you and the profile section below is written for you (`managed: true`; docs/csharp/sindri.md has the steps and the errors SND-ONYX-007 to 009). Do this by hand only for an Onyx you run yourself.
 
 Create a **dedicated service account** in Admin → API Keys named `sindri-onyx` and copy its key (`on_…`).
 The search route Sindri uses (`POST /api/admin/search`, the only v4.9.0 CE route that returns document ids without

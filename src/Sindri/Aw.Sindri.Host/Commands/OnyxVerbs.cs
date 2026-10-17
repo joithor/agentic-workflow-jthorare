@@ -94,11 +94,11 @@ internal sealed class OnyxVerbs(IServiceProvider services, Output output, AgentS
         return string.Join('\n', rows) + "\n";
     }
 
-    private static string DoctorWord(Aw.Sindri.Core.Doctor.CheckState state) => state switch
+    private static string DoctorWord(Core.Doctor.CheckState state) => state switch
     {
-        Aw.Sindri.Core.Doctor.CheckState.Ok => "ok",
-        Aw.Sindri.Core.Doctor.CheckState.Warn => "warn",
-        Aw.Sindri.Core.Doctor.CheckState.Fail => "fail",
+        Core.Doctor.CheckState.Ok => "ok",
+        Core.Doctor.CheckState.Warn => "warn",
+        Core.Doctor.CheckState.Fail => "fail",
         _ => throw new ArgumentOutOfRangeException(nameof(state), state, "unknown check state"),
     };
 

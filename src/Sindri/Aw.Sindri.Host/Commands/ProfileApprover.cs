@@ -1,8 +1,8 @@
 using Aw.Kernel;
 using Aw.Sindri.Features.ApproveProfile;
-using Aw.Sindri.Host.Commands;
+using Aw.Sindri.Host.Onyx;
 
-namespace Aw.Sindri.Host.Onyx;
+namespace Aw.Sindri.Host.Commands;
 
 /// <summary>IProfileApprover over `profile approve`: the same preview, the same typed challenge, through the same verb (which starts the control plane when it must).</summary>
 /// <param name="verbs">The verbs over the control plane.</param>

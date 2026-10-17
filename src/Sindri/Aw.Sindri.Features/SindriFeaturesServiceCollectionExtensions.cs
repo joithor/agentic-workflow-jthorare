@@ -16,6 +16,7 @@ using Aw.Sindri.Core.Jobs;
 using Aw.Sindri.Core.Lease;
 using Aw.Sindri.Core.Ledger;
 using Aw.Sindri.Core.Locks;
+using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Scheduling;
 using Aw.Sindri.Core.Text;
 using Aw.Sindri.Core.Views;
@@ -106,7 +107,7 @@ public static class SindriFeaturesServiceCollectionExtensions
             .AddScoped<IService<RecordHeartbeatRequest, RecordHeartbeatResponse>, RecordHeartbeatService>()
             .AddRecordServiceRun()
             .AddScoped<IService<CheckProfileRequest, CheckProfileResponse>, CheckProfileService>()
-            .AddScoped<ProfileContextCheck>()
+            .AddScoped<IProfileContextCheck, ProfileContextCheck>()
             .AddScoped<IService<ValidateProfileRequest, ValidateProfileResponse>, ValidateProfileService>()
             .AddDoctor()
             .AddOnyxStatus()

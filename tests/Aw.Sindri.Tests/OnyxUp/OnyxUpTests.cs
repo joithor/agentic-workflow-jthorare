@@ -1,5 +1,5 @@
-using Aw.Sindri.Core.Onyx;
 using Aw.Sindri.Core;
+using Aw.Sindri.Core.Onyx;
 using Aw.Sindri.Testing;
 
 namespace Aw.Sindri.Tests.OnyxUp;

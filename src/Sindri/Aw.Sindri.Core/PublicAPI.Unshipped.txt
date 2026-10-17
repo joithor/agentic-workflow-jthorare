@@ -8840,3 +8840,5 @@ Aw.Sindri.Core.Profile.ProfileWriteOutcome
 Aw.Sindri.Core.Profile.ProfileWriteOutcome.Changed = 1 -> Aw.Sindri.Core.Profile.ProfileWriteOutcome
 Aw.Sindri.Core.Profile.ProfileWriteOutcome.Created = 0 -> Aw.Sindri.Core.Profile.ProfileWriteOutcome
 Aw.Sindri.Core.Profile.ProfileWriteOutcome.Unchanged = 2 -> Aw.Sindri.Core.Profile.ProfileWriteOutcome
+Aw.Sindri.Core.Profile.IProfileContextCheck
+Aw.Sindri.Core.Profile.IProfileContextCheck.Check(Aw.Sindri.Core.Profile.SindriProfile! profile) -> Aw.Kernel.Error?

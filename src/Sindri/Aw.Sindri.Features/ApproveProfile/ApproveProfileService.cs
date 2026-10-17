@@ -18,7 +18,7 @@ namespace Aw.Sindri.Features.ApproveProfile;
 /// A, B records every step and a retry computes the same key. Approving redeems the 'approve profile &lt;hash6&gt;'
 /// challenge (S1-D5) bound to the live hash; a missing, mistyped, expired or stale one is SND-PROFILE-004 and records nothing.
 /// </summary>
-internal sealed class ApproveProfileService(IProfileSource live, IApprovals approvals, HeldLease held, ILedgerStore ledger, EventFactory events, IChallenges challenges, ProfileContextCheck context)
+internal sealed class ApproveProfileService(IProfileSource live, IApprovals approvals, HeldLease held, ILedgerStore ledger, EventFactory events, IChallenges challenges, IProfileContextCheck context)
     : IService<ApproveProfileRequest, ApproveProfileResponse>
 {
     public async ValueTask<Result<ApproveProfileResponse>> Handle(ApproveProfileRequest request, CancellationToken cancellationToken)
@@ -115,7 +115,6 @@ internal sealed class ApproveProfileService(IProfileSource live, IApprovals appr
         }
 
         var profile = loaded.Value.Profile;
-        var checkedContext = context.Check(profile);
-        return checkedContext.IsError ? checkedContext.Error : loaded;
+        return context.Check(profile) is { } invalid ? invalid : loaded;
     }
 }

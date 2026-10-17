@@ -1,4 +1,5 @@
 using Aw.Context.Testing.Engine;
+using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Features;
 using Aw.Sindri.Infrastructure.Onyx;
 using Aw.Sindri.Testing;
@@ -9,5 +10,5 @@ namespace Aw.Sindri.Tests;
 internal static class ProfileContextChecks
 {
     /// <summary>Gets a check over <see cref="FakeContextEngine.Instance"/>.</summary>
-    internal static ProfileContextCheck Default => new(FakeContextEngine.Instance, new FakeOnyxPins(new EmbeddedOnyxPins().Pins));
+    internal static IProfileContextCheck Default => new ProfileContextCheck(FakeContextEngine.Instance, new FakeOnyxPins(new EmbeddedOnyxPins().Pins));
 }

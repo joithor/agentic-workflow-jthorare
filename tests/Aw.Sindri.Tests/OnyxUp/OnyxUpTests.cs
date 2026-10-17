@@ -19,8 +19,8 @@ public sealed class OnyxUpTests
         var response = (await rig.Up(Token)).Value;
 
         Assert.Equal(["Inspect", "Ps", "MemoryUsedOutside", "ServerPlatform", "Pull", "RepoDigests", "RenderedConfig", "Up"], rig.Runtime.Calls, StringComparer.Ordinal);
-        Assert.Equal(_allSteps, response.Ran, StringComparer.Ordinal);
-        Assert.Equal(["signup", "key", "profile"], response.Skipped, StringComparer.Ordinal);   // the account steps do nothing yet
+        Assert.Equal([.. _allSteps, "signup"], response.Ran, StringComparer.Ordinal);
+        Assert.Equal(["key", "profile"], response.Skipped, StringComparer.Ordinal);   // the key and profile steps do nothing yet
         Assert.Equal("http://127.0.0.1:3000", response.Url);
         Assert.Equal(3000, response.Port);
         Assert.Equal("v4.9.0", response.Version);
@@ -125,7 +125,7 @@ public sealed class OnyxUpTests
         var warning = Assert.Single(response.Warnings);
         Assert.StartsWith("memory: ", warning, StringComparison.Ordinal);
         Assert.Contains(warning, rig.Progress.Lines, StringComparer.Ordinal);
-        Assert.Equal(_allSteps, response.Ran, StringComparer.Ordinal);
+        Assert.Equal([.. _allSteps, "signup"], response.Ran, StringComparer.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]

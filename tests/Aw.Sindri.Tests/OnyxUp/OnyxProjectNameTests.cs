@@ -80,7 +80,7 @@ public sealed class OnyxProjectNameTests
 
         var rerun = (await rig.Up(Token)).Value;
 
-        Assert.Equal(["fetch", "config", "pull", "start"], rerun.Ran, StringComparer.Ordinal);
+        Assert.Equal(["fetch", "config", "pull", "start", "signup"], rerun.Ran, StringComparer.Ordinal);
         Assert.Equal(1, rig.Progress.Lines.Count(static l => l.Contains(Foreign, StringComparison.Ordinal)));
     }
 

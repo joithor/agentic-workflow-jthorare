@@ -60,6 +60,7 @@ using Aw.Sindri.Features.ListRecipes;
 using Aw.Sindri.Features.ListRequests;
 using Aw.Sindri.Features.ListServices;
 using Aw.Sindri.Features.OnyxDown;
+using Aw.Sindri.Features.OnyxOpen;
 using Aw.Sindri.Features.OnyxStatus;
 using Aw.Sindri.Features.OnyxUp;
 using Aw.Sindri.Features.PauseService;
@@ -237,7 +238,8 @@ public static class SindriFeaturesServiceCollectionExtensions
         .AddSingleton<IOnyxUpStep, OnyxKeyStep>()
         .AddSingleton<IOnyxUpStep, OnyxProfileStep>()
         .AddScoped<IService<OnyxUpRequest, OnyxUpResponse>, OnyxUpService>()
-        .AddScoped<IService<OnyxDownRequest, OnyxDownResponse>, OnyxDownService>();
+        .AddScoped<IService<OnyxDownRequest, OnyxDownResponse>, OnyxDownService>()
+        .AddScoped<IService<OnyxOpenRequest, OnyxOpenResponse>, OnyxOpenService>();
 
     /// <summary>Onyx's status (P1): read-only and in process, like the doctor, but its own slice.</summary>
     private static IServiceCollection AddOnyxStatus(this IServiceCollection services) => services

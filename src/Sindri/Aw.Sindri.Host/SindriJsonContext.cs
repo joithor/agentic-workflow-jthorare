@@ -59,6 +59,7 @@ using Aw.Sindri.Features.ListRecipes;
 using Aw.Sindri.Features.ListRequests;
 using Aw.Sindri.Features.ListServices;
 using Aw.Sindri.Features.OnyxDown;
+using Aw.Sindri.Features.OnyxOpen;
 using Aw.Sindri.Features.OnyxStatus;
 using Aw.Sindri.Features.OnyxUp;
 using Aw.Sindri.Features.PauseService;
@@ -116,6 +117,7 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(OnyxUpResponse))]
 [JsonSerializable(typeof(OnyxStepResult))]
 [JsonSerializable(typeof(OnyxDownResponse))]
+[JsonSerializable(typeof(OnyxOpenResponse))]
 [JsonSerializable(typeof(DeskNotice))]   // engine P6 unit (c): a line of notifications.jsonl
 [JsonSerializable(typeof(EffectRow))]            // engine P6: an effect's ledger row (§5.7)
 [JsonSerializable(typeof(EffectReply))]          // engine P6 unit (a): an effect's reply event (notify.delivered, claim.created)

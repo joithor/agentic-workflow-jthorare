@@ -85,6 +85,7 @@ public sealed class UsageTests
     [InlineData("onyx status")]
     [InlineData("onyx up")]
     [InlineData("onyx down")]
+    [InlineData("onyx open")]
     public void Usage_lists_the_onyx_verbs(string verb) =>
         Assert.Single(Lines(), l => l.StartsWith($"sindri {verb} ", StringComparison.Ordinal) || l.StartsWith($"sindri {verb}\t", StringComparison.Ordinal));
 

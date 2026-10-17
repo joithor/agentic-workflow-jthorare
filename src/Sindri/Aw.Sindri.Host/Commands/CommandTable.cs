@@ -106,13 +106,14 @@ internal static class CommandTable
         };
     }
 
-    /// <summary>'sindri onyx status|up|down [--json]'.</summary>
+    /// <summary>'sindri onyx status|up|down|open [--json]'.</summary>
     private static async Task<int> Onyx(string[] rest, Verbs verbs, OnyxVerbs onyx, Output output, CancellationToken ct) =>
         rest switch
         {
             ["status", .. var flags] when Json(flags) is { } json => await verbs.OnyxStatus(json, ct).ConfigureAwait(false),
             ["up", .. var flags] when Json(flags) is { } json => await onyx.Up(json, ct).ConfigureAwait(false),
             ["down", .. var flags] when Json(flags) is { } json => await onyx.Down(json, ct).ConfigureAwait(false),
+            ["open", .. var flags] when Json(flags) is { } json => await onyx.Open(json, ct).ConfigureAwait(false),
             _ => await UnknownVerb(["onyx", .. rest], output).ConfigureAwait(false),
         };
 

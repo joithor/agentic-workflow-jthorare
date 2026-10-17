@@ -2546,3 +2546,26 @@ Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Key.init -> void
 Aw.Sindri.Features.OnyxUp.OnyxUpResponse.OnyxUpResponse(int Port, string! Url, string! Version, System.Collections.Generic.IReadOnlyList<string!>! Warnings, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.OnyxUp.OnyxStepResult!>! Steps, string? Key = null, string? Profile = null, Aw.Sindri.Core.Doctor.DoctorCheck? Doctor = null, string? Connectors = null) -> void
 Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Profile.get -> string?
 Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Profile.init -> void
+Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest
+Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest.<Clone>$() -> Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest!
+Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest.Equals(Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest? other) -> bool
+Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest.OnyxOpenRequest() -> void
+Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse
+Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.<Clone>$() -> Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse!
+Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.Deconstruct(out System.Uri! Url, out string! Page) -> void
+Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.Equals(Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse? other) -> bool
+Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.OnyxOpenResponse(System.Uri! Url, string! Page) -> void
+Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.Page.get -> string!
+Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.Page.init -> void
+Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.Url.get -> System.Uri!
+Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.Url.init -> void
+override Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest.GetHashCode() -> int
+override Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest.ToString() -> string!
+override Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.GetHashCode() -> int
+override Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.ToString() -> string!
+static Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest.operator !=(Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest? left, Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest? right) -> bool
+static Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest.operator ==(Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest? left, Aw.Sindri.Features.OnyxOpen.OnyxOpenRequest? right) -> bool
+static Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.operator !=(Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse? left, Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse? right) -> bool
+static Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse.operator ==(Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse? left, Aw.Sindri.Features.OnyxOpen.OnyxOpenResponse? right) -> bool

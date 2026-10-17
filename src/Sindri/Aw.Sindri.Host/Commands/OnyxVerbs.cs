@@ -3,6 +3,7 @@ using Aw.Kernel.Services;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Onyx;
 using Aw.Sindri.Features.OnyxDown;
+using Aw.Sindri.Features.OnyxOpen;
 using Aw.Sindri.Features.OnyxUp;
 using Aw.Sindri.Host.Onyx;
 
@@ -100,6 +101,12 @@ internal sealed class OnyxVerbs(IServiceProvider services, Output output, AgentS
         Aw.Sindri.Core.Doctor.CheckState.Fail => "fail",
         _ => throw new ArgumentOutOfRangeException(nameof(state), state, "unknown check state"),
     };
+
+    internal Task<int> Open(bool json, CancellationToken ct)
+    {
+        _ = (json, ct, typeof(OnyxOpenRequest), session);
+        throw new NotSupportedException();
+    }
 
     internal async Task<int> Down(bool json, CancellationToken ct)
     {

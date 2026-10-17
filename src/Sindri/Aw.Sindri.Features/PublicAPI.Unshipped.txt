@@ -2471,9 +2471,7 @@ Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Version.get -> string!
 Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Version.init -> void
 Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Warnings.init -> void
-Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Deconstruct(out int Port, out string! Url, out string! Version, out System.Collections.Generic.IReadOnlyList<string!>! Warnings, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.OnyxUp.OnyxStepResult!>! Steps) -> void
 Aw.Sindri.Features.OnyxUp.OnyxUpResponse.NeedsHuman.get -> System.Collections.Generic.IReadOnlyList<string!>!
-Aw.Sindri.Features.OnyxUp.OnyxUpResponse.OnyxUpResponse(int Port, string! Url, string! Version, System.Collections.Generic.IReadOnlyList<string!>! Warnings, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.OnyxUp.OnyxStepResult!>! Steps) -> void
 Aw.Sindri.Features.OnyxUp.OnyxStepOutcome
 Aw.Sindri.Features.OnyxUp.OnyxStepOutcome.NeedsHuman = 2 -> Aw.Sindri.Features.OnyxUp.OnyxStepOutcome
 Aw.Sindri.Features.OnyxUp.OnyxStepOutcome.Rewrote = 3 -> Aw.Sindri.Features.OnyxUp.OnyxStepOutcome
@@ -2538,3 +2536,13 @@ Aw.Sindri.Features.OnyxUp.OnyxStepResult.Deconstruct(out string! Step, out Aw.Si
 Aw.Sindri.Features.OnyxUp.OnyxStepResult.Hint.get -> string?
 Aw.Sindri.Features.OnyxUp.OnyxStepResult.Hint.init -> void
 Aw.Sindri.Features.OnyxUp.OnyxStepResult.OnyxStepResult(string! Step, Aw.Sindri.Features.OnyxUp.OnyxStepOutcome Outcome, string? Hint = null) -> void
+Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Connectors.get -> string?
+Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Connectors.init -> void
+Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Deconstruct(out int Port, out string! Url, out string! Version, out System.Collections.Generic.IReadOnlyList<string!>! Warnings, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.OnyxUp.OnyxStepResult!>! Steps, out string? Key, out string? Profile, out Aw.Sindri.Core.Doctor.DoctorCheck? Doctor, out string? Connectors) -> void
+Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Doctor.get -> Aw.Sindri.Core.Doctor.DoctorCheck?
+Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Doctor.init -> void
+Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Key.get -> string?
+Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Key.init -> void
+Aw.Sindri.Features.OnyxUp.OnyxUpResponse.OnyxUpResponse(int Port, string! Url, string! Version, System.Collections.Generic.IReadOnlyList<string!>! Warnings, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.OnyxUp.OnyxStepResult!>! Steps, string? Key = null, string? Profile = null, Aw.Sindri.Core.Doctor.DoctorCheck? Doctor = null, string? Connectors = null) -> void
+Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Profile.get -> string?
+Aw.Sindri.Features.OnyxUp.OnyxUpResponse.Profile.init -> void

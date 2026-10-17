@@ -2,8 +2,11 @@ using System.Text;
 using System.Text.Json;
 using Aw.Kernel.Json;
 using Aw.Kernel.Services;
+using Aw.Sindri.Core;
+using Aw.Sindri.Core.Doctor;
 using Aw.Sindri.Features.OnyxDown;
 using Aw.Sindri.Features.OnyxUp;
+using Aw.Sindri.Features.RunDoctor;
 using Aw.Sindri.Host;
 using Aw.Sindri.Host.Commands;
 using Aw.Sindri.Host.Onyx;
@@ -16,13 +19,14 @@ namespace Aw.Sindri.Tests.Commands;
 [Collection(ProcessEnvironment.Name)]
 public sealed class OnyxUpCommandTests : IDisposable
 {
-    private const string HandOver = "Onyx is running. Account setup (sign-up and Sindri's key) comes next: `sindri onyx up` will continue it once that stage lands.";
-
     private static readonly JsonSerializerOptions _json = AwJson.CreateOptions(SindriJsonContext.Default);
 
     private readonly StringWriter _out = new();
     private readonly StringWriter _error = new();
     private readonly OnyxUpRig _rig = new();
+    private readonly FakeBrowser _browser = new();
+    private readonly FakeProfileApprover _approver = new();
+    private readonly FakeDoctor _doctor = new();
     private readonly ServiceProvider _services;
 
     public OnyxUpCommandTests()
@@ -31,6 +35,8 @@ public sealed class OnyxUpCommandTests : IDisposable
         _services = new ServiceCollection()
             .AddSingleton(_rig.Service())
             .AddSingleton<Core.Onyx.IOnyxProgress>(_rig.Progress)
+            .AddSingleton<Core.Onyx.IBrowser>(_browser)
+            .AddSingleton<IService<RunDoctorRequest, RunDoctorResponse>>(_doctor)
             .AddSingleton<IService<OnyxDownRequest, OnyxDownResponse>>(
                 new OnyxDownService(_rig.Workspace, new Core.Onyx.OnyxFacts(_rig.Runtime, _rig.Probes, new FakeSindriHome(OnyxUpRig.Home)), _rig.Runtime))
             .BuildServiceProvider();
@@ -40,7 +46,7 @@ public sealed class OnyxUpCommandTests : IDisposable
 
     private static AgentSession Human { get; } = new(Signal: null, Terminal: true, Prover: false);
 
-    private OnyxVerbs Verbs(AgentSession session) => new(_services, new Output(_out, _error, _json), session);
+    private OnyxVerbs Verbs(AgentSession session) => new(_services, new Output(_out, _error, _json), session, _approver);
 
     [Fact, Trait("Lane", "unit")]
     public async Task Up_as_a_session_is_refused_with_SND_AUTH_002_and_calls_nothing()
@@ -67,7 +73,7 @@ public sealed class OnyxUpCommandTests : IDisposable
     }
 
     [Fact, Trait("Lane", "unit")]
-    public async Task Up_prints_url_version_and_the_P3_hand_over_line_on_stdout_and_progress_on_stderr()
+    public async Task Up_after_a_full_run_approves_inline_checks_the_onyx_row_and_hands_over_on_stdout_with_progress_on_stderr()
     {
         var code = await Verbs(Human).Up(json: false, TestContext.Current.CancellationToken);
 
@@ -77,15 +83,67 @@ public sealed class OnyxUpCommandTests : IDisposable
             [
                 "url       http://127.0.0.1:3000",
                 "version   v4.9.0",
+                "key       keychain:onyx/sindri-onyx",
+                "profile   approved",
+                "doctor    ok onyx answers as an admin service account",
                 "ran       fetch, config, pull, start, signup, key, profile",
                 "skipped   none",
-                HandOver,
+                "Opened Onyx's connectors page: http://127.0.0.1:3000/admin/connectors",
+                "Next, connect your sources there (company OAuth: get sign-off first):",
+                "  Linear: your product's teams, and a start date that covers the backtests",
+                "  Slack: your product's channels",
             ],
             lines,
             StringComparer.Ordinal);
+        Assert.Equal(1, _approver.Calls);
+        Assert.Equal(["http://127.0.0.1:3000/admin/connectors"], _browser.Opened.Select(static u => u.AbsoluteUri), StringComparer.Ordinal);
         Assert.Contains("fetch: running\n", _error.ToString().Replace("\r\n", "\n", StringComparison.Ordinal), StringComparison.Ordinal);
         Assert.Contains("start: running", _error.ToString(), StringComparison.Ordinal);
         Assert.DoesNotContain("running\n", _out.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Up_when_the_human_declines_leaves_the_profile_unapproved_prints_the_hint_and_exits_0()
+    {
+        _approver.Answer = SindriErrors.ProfileNeedsTerminal.With("you didn't type the phrase");
+
+        var code = await Verbs(Human).Up(json: false, TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, code);
+        Assert.Contains("profile   written, not approved (approve later: sindri profile approve)", _out.ToString(), StringComparison.Ordinal);
+        Assert.Contains("doctor    ", _out.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Up_when_the_approval_itself_fails_prints_its_code_and_exits_1_without_opening_anything()
+    {
+        _approver.Answer = SindriErrors.ApprovalsUnavailable.With("the approvals folder is full");
+
+        var code = await Verbs(Human).Up(json: false, TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, code);
+        Assert.Contains(SindriErrors.ApprovalsUnavailable.Code, _error.ToString(), StringComparison.Ordinal);
+        Assert.Empty(_browser.Opened);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Up_runs_only_the_context_onyx_doctor_row()
+    {
+        _ = await Verbs(Human).Up(json: false, TestContext.Current.CancellationToken);
+
+        Assert.Contains("doctor    ok onyx answers as an admin service account", _out.ToString(), StringComparison.Ordinal);
+        Assert.DoesNotContain("lease is held", _out.ToString(), StringComparison.Ordinal);
+        Assert.DoesNotContain("temporal is down", _out.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Up_prints_the_connectors_address_to_open_yourself_when_the_browser_cannot_open()
+    {
+        _browser.Result = false;
+
+        _ = await Verbs(Human).Up(json: false, TestContext.Current.CancellationToken);
+
+        Assert.Contains("Open Onyx's connectors page yourself: http://127.0.0.1:3000/admin/connectors", _out.ToString(), StringComparison.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -97,6 +155,7 @@ public sealed class OnyxUpCommandTests : IDisposable
         _ = await Verbs(Human).Up(json: false, TestContext.Current.CancellationToken);
 
         Assert.Contains("ran       none", _out.ToString(), StringComparison.Ordinal);
+        Assert.Contains("profile   approved", _out.ToString(), StringComparison.Ordinal);
         Assert.Contains("skipped   fetch, config, pull, start, signup, key, profile", _out.ToString(), StringComparison.Ordinal);
     }
 
@@ -112,6 +171,21 @@ public sealed class OnyxUpCommandTests : IDisposable
     }
 
     [Fact, Trait("Lane", "unit")]
+    public async Task Up_json_has_profile_doctor_key_and_connectors_and_no_prompt_text_on_stdout()
+    {
+        var code = await Verbs(Human).Up(json: true, TestContext.Current.CancellationToken);
+
+        using var document = JsonDocument.Parse(_out.ToString());   // the whole of stdout is one JSON document
+        var root = document.RootElement;
+        Assert.Equal(0, code);
+        Assert.Equal("approved", root.GetProperty("profile").GetString());
+        Assert.Equal("keychain:onyx/sindri-onyx", root.GetProperty("key").GetString());
+        Assert.Equal("http://127.0.0.1:3000/admin/connectors", root.GetProperty("connectors").GetString());
+        Assert.Equal("context:onyx", root.GetProperty("doctor").GetProperty("name").GetString());
+        Assert.DoesNotContain("Next, connect", _out.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public async Task Up_json_documents_steps_as_an_array_of_step_and_outcome()
     {
         _ = await Verbs(Human).Up(json: true, TestContext.Current.CancellationToken);
@@ -124,16 +198,18 @@ public sealed class OnyxUpCommandTests : IDisposable
     }
 
     [Fact, Trait("Lane", "unit")]
-    public async Task The_hand_over_line_follows_the_response()
+    public async Task Up_with_NeedsHuman_prints_the_hint_and_does_not_approve_or_hand_over()
     {
-        var needsYou = new OnyxUpResponse(3000, "http://127.0.0.1:3000", "v4.9.0", [], [new OnyxStepResult("fetch", OnyxStepOutcome.Ran), new OnyxStepResult("account", OnyxStepOutcome.NeedsHuman)]);
-        await using var provider = new ServiceCollection().AddSingleton<IService<OnyxUpRequest, OnyxUpResponse>>(new StubUp(needsYou)).BuildServiceProvider();
+        var needsYou = new OnyxUpResponse(3000, "http://127.0.0.1:3000", "v4.9.0", [], [new OnyxStepResult("fetch", OnyxStepOutcome.Ran), new OnyxStepResult("signup", OnyxStepOutcome.NeedsHuman, "run `sindri onyx up` in a terminal")]);
+        await using var provider = new ServiceCollection().AddSingleton<IService<OnyxUpRequest, OnyxUpResponse>>(new StubUp(needsYou)).AddSingleton<Core.Onyx.IBrowser>(_browser).BuildServiceProvider();
 
-        var code = await new OnyxVerbs(provider, new Output(_out, _error, _json), Human).Up(json: false, TestContext.Current.CancellationToken);
+        var code = await new OnyxVerbs(provider, new Output(_out, _error, _json), Human, _approver).Up(json: false, TestContext.Current.CancellationToken);
 
         Assert.Equal(0, code);
-        Assert.Contains("needs you: account", _out.ToString(), StringComparison.Ordinal);
-        Assert.DoesNotContain(HandOver, _out.ToString(), StringComparison.Ordinal);
+        Assert.Contains("needs you: signup (run `sindri onyx up` in a terminal)", _out.ToString(), StringComparison.Ordinal);
+        Assert.Equal(0, _approver.Calls);
+        Assert.Empty(_browser.Opened);
+        Assert.DoesNotContain("connectors", _out.ToString(), StringComparison.Ordinal);
     }
 
     private sealed class StubUp(OnyxUpResponse response) : IService<OnyxUpRequest, OnyxUpResponse>
@@ -280,5 +356,19 @@ public sealed class OnyxUpCommandTests : IDisposable
 
         Assert.Equal(1, code);
         Assert.Contains("SND-ONYX-010", _error.ToString(), StringComparison.Ordinal);
+    }
+
+    private sealed class FakeDoctor : IService<RunDoctorRequest, RunDoctorResponse>
+    {
+        public ValueTask<Kernel.Result<RunDoctorResponse>> Handle(RunDoctorRequest request, CancellationToken cancellationToken)
+        {
+            DoctorCheck[] checks =
+            [
+                new("lease", CheckState.Ok, "lease is held", Fix: null),
+                new("context:onyx", CheckState.Ok, "onyx answers as an admin service account", Fix: null),
+                new("temporal", CheckState.Fail, "temporal is down", Fix: "sindri serve"),
+            ];
+            return ValueTask.FromResult<Kernel.Result<RunDoctorResponse>>(new RunDoctorResponse(checks, 2));
+        }
     }
 }

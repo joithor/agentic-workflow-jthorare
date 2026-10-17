@@ -4,6 +4,7 @@ using Aw.Sindri.Core;
 using Aw.Sindri.Core.Onyx;
 using Aw.Sindri.Features.OnyxDown;
 using Aw.Sindri.Features.OnyxUp;
+using Aw.Sindri.Host.Onyx;
 
 namespace Aw.Sindri.Host.Commands;
 
@@ -15,7 +16,8 @@ namespace Aw.Sindri.Host.Commands;
 /// <param name="services">The CLI's scoped services.</param>
 /// <param name="output">Where answers go.</param>
 /// <param name="session">Who runs the CLI.</param>
-internal sealed class OnyxVerbs(IServiceProvider services, Output output, AgentSession session)
+/// <param name="approver">Approves the profile at the terminal once `onyx up` has written it.</param>
+internal sealed class OnyxVerbs(IServiceProvider services, Output output, AgentSession session, IProfileApprover approver)
 {
     private const string HandOver = "Onyx is running. Account setup (sign-up and Sindri's key) comes next: `sindri onyx up` will continue it once that stage lands.";
 
@@ -42,6 +44,7 @@ internal sealed class OnyxVerbs(IServiceProvider services, Output output, AgentS
             return await Fail(output, answer.Error).ConfigureAwait(false);
         }
 
+        _ = (approver, typeof(OnyxHandOver));
         var up = answer.Value;
         var next = up.NeedsHuman is { Count: > 0 } waiting ? $"needs you: {string.Join(", ", waiting)}" : HandOver;
         return json

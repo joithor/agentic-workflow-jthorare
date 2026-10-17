@@ -35,6 +35,17 @@ public sealed class OnyxUpTests
     }
 
     [Fact, Trait("Lane", "unit")]
+    public async Task The_response_names_the_key_pointer_and_never_the_key()
+    {
+        var rig = new OnyxUpRig();
+
+        var response = (await rig.Up(Token)).Value;
+
+        Assert.Equal("keychain:onyx/sindri-onyx", response.Key);
+        Assert.DoesNotContain(rig.Provisioning.MintedKey, response.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public async Task A_second_run_calls_nothing_heavy_and_writes_nothing()
     {
         var rig = new OnyxUpRig();

@@ -6,7 +6,6 @@ namespace Aw.Sindri.Infrastructure.Onyx;
 [JsonSerializable(typeof(OnyxVersionWire))]
 [JsonSerializable(typeof(OnyxPatWire))]
 [JsonSerializable(typeof(OnyxPatInfoWire[]))]
-[JsonSerializable(typeof(OnyxPatInfoWire[]))]
 [JsonSerializable(typeof(OnyxMeWire))]
 [JsonSerializable(typeof(OnyxRegisterRequestWire))]
 [JsonSerializable(typeof(OnyxUserEmailWire))]

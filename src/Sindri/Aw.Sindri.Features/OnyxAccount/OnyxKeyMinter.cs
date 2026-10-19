@@ -20,7 +20,7 @@ internal sealed class OnyxKeyMinter(IOnyxPrompts prompts, IOnyxProvisioning prov
     private const string KeyService = "onyx";
 
     /// <summary>What the owner is told whenever a token named sindri-onyx may be left in Onyx: it is a live admin token that nobody can read back, and the next run revokes it.</summary>
-    internal const string LeftoverNote = "A live admin token named sindri-onyx may exist on Onyx's user sindri@example.com that nobody can read back; the next `sindri onyx up` revokes it before making a new one, or deactivate that user in Onyx's Admin → Users page to stop it working now.";
+    internal const string LeftoverNote = $"A live admin token named sindri-onyx may exist on Onyx's user {OnyxAccounts.DedicatedEmail} that nobody can read back; the next `sindri onyx up` revokes it before making a new one, or deactivate that user in Onyx's Admin → Users page to stop it working now.";
 
     /// <summary>The prompt for the owner's login: it names whose account it wants, so Sindri's own address isn't typed in.</summary>
     internal const string LoginPrompt = "Your own Onyx admin login (the account you signed up with; Sindri creates its own user from it): ";
@@ -67,16 +67,17 @@ internal sealed class OnyxKeyMinter(IOnyxPrompts prompts, IOnyxProvisioning prov
     // The owner's session: the dedicated user exists, has a password only this call knows, and is an admin.
     private async ValueTask<Result<string>> Prepare(int port, CancellationToken cancellationToken)
     {
-        var email = await prompts.Ask(LoginPrompt, cancellationToken).ConfigureAwait(false);
+        var email = (await prompts.Ask(LoginPrompt, cancellationToken).ConfigureAwait(false))?.Trim();
+        if (email is { Length: > 0 } && IsSindriAddress(email))
+        {
+            // refused on the address alone, before the owner types a password
+            return SindriErrors.OnyxKeyFailed.With($"{email} is the address of Sindri's own Onyx user, which Sindri creates itself; nothing was sent to Onyx. Enter your own Onyx admin login, the account you signed up with at Onyx's sign-up page, and run `sindri onyx up` again");
+        }
+
         var password = email is { Length: > 0 } ? await prompts.AskSecret("The password of that account (not shown, not stored): ", cancellationToken).ConfigureAwait(false) : null;
         if (email is not { Length: > 0 } || password is not { Length: > 0 })
         {
             return SindriErrors.OnyxKeyFailed.With("no Onyx login was given; run `sindri onyx up` again and enter the email and password of the account you created");
-        }
-
-        if (IsSindriAddress(email))
-        {
-            return SindriErrors.OnyxKeyFailed.With($"{email.Trim()} is the address of Sindri's own Onyx user, which Sindri creates itself; nothing was sent to Onyx. Enter your own Onyx admin login, the account you signed up with at Onyx's sign-up page, and run `sindri onyx up` again");
         }
 
         var signedIn = await provisioning.SignIn(port, email, password, cancellationToken).ConfigureAwait(false);
@@ -94,8 +95,8 @@ internal sealed class OnyxKeyMinter(IOnyxPrompts prompts, IOnyxProvisioning prov
 
     // The earlier build's address and this build's: neither is the owner's login, and typing one is the mistake this guards.
     private static bool IsSindriAddress(string email)
-        => string.Equals(email.Trim(), OnyxAccounts.DedicatedEmail, StringComparison.OrdinalIgnoreCase)
-        || string.Equals(email.Trim(), OnyxAccounts.LegacyEmail, StringComparison.OrdinalIgnoreCase);
+        => string.Equals(email, OnyxAccounts.DedicatedEmail, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(email, OnyxAccounts.LegacyEmail, StringComparison.OrdinalIgnoreCase);
 
     // Retire an earlier build's user, then reset the dedicated user's password; only when Onyx has no such user register it. Then make it an admin.
     private async ValueTask<Result<string>> SetUpUser(IOnyxSession session, CancellationToken cancellationToken)
@@ -108,7 +109,8 @@ internal sealed class OnyxKeyMinter(IOnyxPrompts prompts, IOnyxProvisioning prov
 
         if (retired.Value)
         {
-            progress.Line($"key: deactivated {OnyxAccounts.LegacyEmail}, the Sindri user of an earlier build (its tokens no longer work)");
+            // Onyx answers 200 for a user that is already inactive too, so the line says where the user stands, which stays true on a rerun.
+            progress.Line($"key: {OnyxAccounts.LegacyEmail}, the Sindri user of an earlier build, is deactivated (its tokens no longer work)");
         }
 
         var reset = await session.ResetDedicatedPassword(cancellationToken).ConfigureAwait(false);

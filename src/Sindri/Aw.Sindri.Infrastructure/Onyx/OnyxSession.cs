@@ -29,7 +29,17 @@ internal sealed partial class OnyxSession(HttpClient client, Uri origin, TimeSpa
         }
 
         // 404 "User not found" is the usual answer: an earlier build's user was never made on this Onyx.
-        return sent.Value.Status == HttpStatusCode.NotFound ? false : Refusal(sent.Value, "retire the earlier Sindri user") is { } refused ? refused : true;
+        if (UserNotFound(sent.Value))
+        {
+            return false;
+        }
+
+        if (Refusal(sent.Value, "retire the earlier Sindri user") is { } refused)
+        {
+            return refused;
+        }
+
+        return true;
     }
 
     public async ValueTask<Result<string?>> ResetDedicatedPassword(CancellationToken cancellationToken)
@@ -41,7 +51,7 @@ internal sealed partial class OnyxSession(HttpClient client, Uri origin, TimeSpa
             return sent.Error;
         }
 
-        if (sent.Value.Status == HttpStatusCode.NotFound)
+        if (UserNotFound(sent.Value))
         {
             return Results.Success<string?>(value: null);   // no such user yet: the caller registers it
         }
@@ -107,6 +117,10 @@ internal sealed partial class OnyxSession(HttpClient client, Uri origin, TimeSpa
         return body;
     }
 
+    // Onyx's own answer for a user it doesn't have (404 with detail "User not found"); a 404 from a proxy, a wrong path or a route this Onyx lacks is a refusal like any other.
+    private static bool UserNotFound(OnyxAnswer answer)
+        => answer.Status == HttpStatusCode.NotFound && answer.Body.Contains("User not found", StringComparison.Ordinal);
+
     // The error of an admin route's answer, or null when it succeeded: 401 and 403 mean the login isn't an admin (SND-ONYX-007), anything else is SND-ONYX-008.
     private static Error? Refusal(OnyxAnswer answer, string what)
     {
@@ -120,7 +134,7 @@ internal sealed partial class OnyxSession(HttpClient client, Uri origin, TimeSpa
             return NotAdmin(answer.Status);
         }
 
-        var missing = answer.Status == HttpStatusCode.NotFound ? ": no such user" : string.Empty;
+        var missing = UserNotFound(answer) ? ": no such user" : answer.Status == HttpStatusCode.NotFound ? ": not Onyx's 'User not found', so the route or a proxy in between answered" : string.Empty;
         return SindriErrors.OnyxKeyFailed.With($"Onyx refused to {what} (HTTP {Code(answer.Status)}){missing}; run `sindri onyx up` again");
     }
 

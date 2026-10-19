@@ -187,6 +187,21 @@ public sealed class HttpOnyxProvisioningTests
         Assert.Null(reset.Value);
     }
 
+    // Only Onyx's own "User not found" means the user is missing; a 404 from a proxy or a route this Onyx doesn't have must not start a registration.
+    [Theory, Trait("Lane", "integration")]
+    [InlineData("{\"detail\":\"Not Found\"}")]
+    [InlineData("<html><body>404 Not Found</body></html>")]
+    [InlineData("")]
+    public async Task A_reset_404_that_is_not_onyxs_user_not_found_is_sindri_onyx_008(string body)
+    {
+        var session = await Session(Answering("/api/password/reset_password", HttpStatusCode.NotFound, body));
+
+        var reset = await session.ResetDedicatedPassword(Token);
+
+        Assert.Equal(SindriErrors.OnyxKeyFailed.Code, reset.Error.Code);
+        Assert.Contains("HTTP 404", reset.Error.Message, StringComparison.Ordinal);
+    }
+
     [Theory, Trait("Lane", "integration")]
     [InlineData(HttpStatusCode.Forbidden, "SND-ONYX-007")]
     [InlineData(HttpStatusCode.Unauthorized, "SND-ONYX-007")]
@@ -248,6 +263,21 @@ public sealed class HttpOnyxProvisioningTests
         var request = found.Requests.Single(static r => r.PathAndQuery == "/api/manage/admin/deactivate-user");
         Assert.Equal(HttpMethod.Patch, request.Method);
         Assert.Equal("{\"user_email\":\"sindri@sindri.app\"}", request.Body);
+    }
+
+    // A 404 that isn't Onyx's "User not found" must not read as "there is no earlier user": that would leave a live legacy admin in place without a word.
+    [Theory, Trait("Lane", "integration")]
+    [InlineData("{\"detail\":\"Not Found\"}")]
+    [InlineData("<html><body>404 Not Found</body></html>")]
+    [InlineData("")]
+    public async Task A_retire_404_that_is_not_onyxs_user_not_found_is_sindri_onyx_008(string body)
+    {
+        var session = await Session(Answering("/api/manage/admin/deactivate-user", HttpStatusCode.NotFound, body));
+
+        var retired = await session.RetireLegacyUser(Token);
+
+        Assert.Equal(SindriErrors.OnyxKeyFailed.Code, retired.Error.Code);
+        Assert.Contains("HTTP 404", retired.Error.Message, StringComparison.Ordinal);
     }
 
     [Theory, Trait("Lane", "integration")]

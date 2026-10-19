@@ -59,6 +59,9 @@ public sealed class FakeOnyxProvisioning : IOnyxProvisioning
     /// <summary>Gets the number of sign-ins.</summary>
     public int SignIns { get; private set; }
 
+    /// <summary>Gets the email of each sign-in, in order.</summary>
+    public IList<string> SignInEmails { get; } = [];
+
     /// <summary>Gets the number of sessions that were logged out.</summary>
     public int LoggedOut { get; private set; }
 
@@ -75,6 +78,7 @@ public sealed class FakeOnyxProvisioning : IOnyxProvisioning
     public ValueTask<Result<IOnyxSession>> SignIn(int port, string email, string password, CancellationToken cancellationToken)
     {
         SignIns++;
+        SignInEmails.Add(email);
         if (SignInError is { } error)
         {
             return ValueTask.FromResult<Result<IOnyxSession>>(error);

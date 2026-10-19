@@ -183,6 +183,19 @@ public sealed class OnyxDedicatedUserTests
         Assert.Contains("nothing was sent to Onyx", result.Error.Message, StringComparison.Ordinal);
         Assert.Equal(0, rig.Provisioning.SignIns);
         Assert.Empty(rig.Provisioning.Targets);
+        Assert.Equal(0, prompts.SecretsAsked);   // refused on the address alone, before the owner types a password
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task The_owners_login_is_sent_to_Onyx_without_the_spaces_around_it()
+    {
+        var rig = new Rig();
+        rig.Prompts.Answer("  owner@example.com \t", OwnerLogin);
+        var minter = new OnyxKeyMinter(rig.Prompts, rig.Provisioning, rig.Secrets, rig.Secrets, new FakeRandomHex(), rig.Progress);
+
+        _ = await minter.Mint(3000, Token);
+
+        Assert.Equal("owner@example.com", rig.Provisioning.SignInEmails[0]);
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -209,7 +222,8 @@ public sealed class OnyxDedicatedUserTests
         var response = (await rig.Run()).Value;
 
         Assert.Contains(OnyxAccounts.LegacyEmail, rig.Provisioning.Deactivated, StringComparer.Ordinal);
-        Assert.Contains(rig.Progress.Lines, static l => l.Contains("deactivated sindri@sindri.app", StringComparison.Ordinal));
+        // Onyx answers 200 for a user that is already inactive, so the line states where the user stands, which stays true on every rerun.
+        Assert.Contains(rig.Progress.Lines, static l => l.Contains("sindri@sindri.app, the Sindri user of an earlier build, is deactivated", StringComparison.Ordinal));
         Assert.NotNull(response.KeyPointer);
     }
 

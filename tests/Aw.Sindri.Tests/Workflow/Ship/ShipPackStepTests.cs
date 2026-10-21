@@ -1,7 +1,6 @@
 using System.Text.Json.Nodes;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Packets;
-using Aw.Sindri.Core.Workflow.Blocks;
 using Aw.Sindri.Core.Workflow.Ids;
 using Aw.Sindri.Testing.Packets;
 
@@ -34,11 +33,11 @@ public sealed class ShipPackStepTests
 
         var packet = await Json(rig, "packet.json");
         Assert.Equal(("handoff", "owner/name", "draft", "fix-line-p1-handoff"), ((string?)packet["kind"], (string?)packet["repo"], (string?)packet["status"], (string?)packet["id"]));
-        Assert.Equal(["pr", "body", "green", "index"], ((JsonObject)packet["links"]!).Select(static l => l.Key).ToArray());
+        Assert.Equal(["pr", "body", "green", "index"], [.. ((JsonObject)packet["links"]!).Select(static l => l.Key)]);
         var dir = rig.Area.PathFor(ShipRig.Address, DraftDir).Value;
         var draft = JsonNode.Parse(result.Result.Outputs[FactKey.From("fact:handoffDraft")].GetRawText())!;
         Assert.Equal((InMemoryPackets.HashOf(new PacketRef(PacketKind.Handoff, dir)), dir), ((string?)draft["hash"], (string?)draft["dir"]));
-        Assert.Contains(rig.Packets.Calls, static c => c is { Verb: "validate", Packet.Kind: PacketKind.Handoff });
+        Assert.Contains(rig.Packets.Calls, static c => string.Equals(c.Verb, "validate", StringComparison.Ordinal) && c.Packet.Kind == PacketKind.Handoff);
     }
 
     [Fact]

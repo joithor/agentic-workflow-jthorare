@@ -10714,7 +10714,6 @@ static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailures.Of(Aw.Sindri.C
 Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunches
 static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunches.LaunchIdFor(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun! run) -> Aw.Sindri.Core.Workflow.Engine.LaunchId
 static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunches.LaunchIdFor(Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId workflow, Aw.Sindri.Core.Workflow.Engine.RunToken run) -> Aw.Sindri.Core.Workflow.Engine.LaunchId
-static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunches.WorktreeFor(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun! run, Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepTarget! target) -> string!
 Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun
 Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun.<Clone>$() -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun!
 Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun.Address.get -> Aw.Sindri.Core.Workflow.Engine.InstanceAddress
@@ -11898,8 +11897,6 @@ static Aw.Sindri.Core.Sessions.PaneRead.Captured(int panePid, byte[]! capture) -
 Aw.Sindri.Core.Mcp.ProviderResult.Detail.get -> string!
 Aw.Sindri.Core.Mcp.ProviderResult.Detail.init -> void
 static Aw.Sindri.Core.Mcp.McpRegistration.Url(int port) -> string!
-Aw.Sindri.Core.Profile.WorkflowSettings.Deconstruct(out string? DeskTimeout, out string? EventHold, out System.Collections.Generic.IReadOnlyList<string!>? Effects, out string? DispatchDelay, out Aw.Sindri.Core.Profile.JudgeSettings? Judge, out Aw.Sindri.Core.Profile.WorkflowAgentSettings? Agent, out Aw.Sindri.Core.Profile.ForgeSettings? Forge, out Aw.Sindri.Core.Profile.RouteSettings? Route) -> void
-Aw.Sindri.Core.Profile.WorkflowSettings.WorkflowSettings(string? DeskTimeout = null, string? EventHold = null, System.Collections.Generic.IReadOnlyList<string!>? Effects = null, string? DispatchDelay = null, Aw.Sindri.Core.Profile.JudgeSettings? Judge = null, Aw.Sindri.Core.Profile.WorkflowAgentSettings? Agent = null, Aw.Sindri.Core.Profile.ForgeSettings? Forge = null, Aw.Sindri.Core.Profile.RouteSettings? Route = null) -> void
 Aw.Sindri.Core.Scoping.IScopePacketStore
 Aw.Sindri.Core.Scoping.IScopePacketStore.Hash(Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId instance, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<string!>!>
 Aw.Sindri.Core.Scoping.IScopePacketStore.ReadFile(Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId instance, string! name, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<string!>!>
@@ -11953,9 +11950,7 @@ Aw.Sindri.Core.Launch.StepArgs.Brief.get -> string?
 Aw.Sindri.Core.Launch.StepArgs.Brief.init -> void
 Aw.Sindri.Core.Launch.StepArgs.Deconstruct(out string? Model, out Aw.Sindri.Core.Launch.StepPolicy? Policy, out Aw.Sindri.Core.Launch.StepRef! Ref, out string? Brief) -> void
 Aw.Sindri.Core.Launch.StepArgs.StepArgs(string? Model, Aw.Sindri.Core.Launch.StepPolicy? Policy, Aw.Sindri.Core.Launch.StepRef! Ref, string? Brief = null) -> void
-static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunches.RequestFor(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun! run, Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepTarget! target, Aw.Sindri.Core.Workflow.Blocks.BlockDescriptor? descriptor = null) -> Aw.Sindri.Core.Launch.LaunchRequest!
 Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepBrief
-static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepBrief.Render(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun! run, Aw.Sindri.Core.Workflow.Blocks.BlockDescriptor? descriptor) -> string!
 Aw.Sindri.Core.Scoping.BriefFile
 Aw.Sindri.Core.Scoping.BriefFile.<Clone>$() -> Aw.Sindri.Core.Scoping.BriefFile!
 Aw.Sindri.Core.Scoping.BriefFile.BriefFile(string! Path, string! Text, string! Version) -> void
@@ -13229,3 +13224,178 @@ static Aw.Sindri.Core.Profile.RepoStatus.operator ==(Aw.Sindri.Core.Profile.Repo
 static Aw.Sindri.Core.Profile.RepoStatusRules.ExitCode(Aw.Sindri.Core.Profile.RepoStatus! status) -> int
 static Aw.Sindri.Core.Profile.RepoStatusRules.NudgeLine(Aw.Sindri.Core.Profile.RepoStatus! status) -> string!
 static Aw.Sindri.Core.Profile.RepoStatusRules.Text(Aw.Sindri.Core.Profile.RepoStatus! status) -> string!
+Aw.Sindri.Core.Forge.IPullRequests
+Aw.Sindri.Core.Forge.IPullRequests.CheckLog(string! link, string! check, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<string!>!>
+Aw.Sindri.Core.Forge.IPullRequests.Get(string! link, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Forge.PullView!>!>
+Aw.Sindri.Core.Forge.IPullRequests.Push(Aw.Sindri.Core.Forge.PullPush! push, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Forge.PullPushOutcome>!>
+Aw.Sindri.Core.Forge.IPullRequests.RerunChecks(string! link, string! sha, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<int>!>
+Aw.Sindri.Core.Forge.PullChecks
+Aw.Sindri.Core.Forge.PullChecks.<Clone>$() -> Aw.Sindri.Core.Forge.PullChecks!
+Aw.Sindri.Core.Forge.PullChecks.Deconstruct(out Aw.Sindri.Core.Forge.PullChecksState State, out string! Sha, out System.Collections.Generic.IReadOnlyList<string!>! Failing) -> void
+Aw.Sindri.Core.Forge.PullChecks.Equals(Aw.Sindri.Core.Forge.PullChecks? other) -> bool
+Aw.Sindri.Core.Forge.PullChecks.Failing.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Core.Forge.PullChecks.Failing.init -> void
+Aw.Sindri.Core.Forge.PullChecks.PullChecks(Aw.Sindri.Core.Forge.PullChecksState State, string! Sha, System.Collections.Generic.IReadOnlyList<string!>! Failing) -> void
+Aw.Sindri.Core.Forge.PullChecks.Sha.get -> string!
+Aw.Sindri.Core.Forge.PullChecks.Sha.init -> void
+Aw.Sindri.Core.Forge.PullChecks.State.get -> Aw.Sindri.Core.Forge.PullChecksState
+Aw.Sindri.Core.Forge.PullChecks.State.init -> void
+Aw.Sindri.Core.Forge.PullChecksState
+Aw.Sindri.Core.Forge.PullChecksState.Failing = 4 -> Aw.Sindri.Core.Forge.PullChecksState
+Aw.Sindri.Core.Forge.PullChecksState.None = 1 -> Aw.Sindri.Core.Forge.PullChecksState
+Aw.Sindri.Core.Forge.PullChecksState.Passing = 3 -> Aw.Sindri.Core.Forge.PullChecksState
+Aw.Sindri.Core.Forge.PullChecksState.Pending = 2 -> Aw.Sindri.Core.Forge.PullChecksState
+Aw.Sindri.Core.Forge.PullPush
+Aw.Sindri.Core.Forge.PullPush.<Clone>$() -> Aw.Sindri.Core.Forge.PullPush!
+Aw.Sindri.Core.Forge.PullPush.Deconstruct(out string! Link, out string! Workspace, out string! Sha, out string! LeaseSha) -> void
+Aw.Sindri.Core.Forge.PullPush.Equals(Aw.Sindri.Core.Forge.PullPush? other) -> bool
+Aw.Sindri.Core.Forge.PullPush.LeaseSha.get -> string!
+Aw.Sindri.Core.Forge.PullPush.LeaseSha.init -> void
+Aw.Sindri.Core.Forge.PullPush.Link.get -> string!
+Aw.Sindri.Core.Forge.PullPush.Link.init -> void
+Aw.Sindri.Core.Forge.PullPush.PullPush(string! Link, string! Workspace, string! Sha, string! LeaseSha) -> void
+Aw.Sindri.Core.Forge.PullPush.Sha.get -> string!
+Aw.Sindri.Core.Forge.PullPush.Sha.init -> void
+Aw.Sindri.Core.Forge.PullPush.Workspace.get -> string!
+Aw.Sindri.Core.Forge.PullPush.Workspace.init -> void
+Aw.Sindri.Core.Forge.PullPushOutcome
+Aw.Sindri.Core.Forge.PullPushOutcome.HeadMoved = 2 -> Aw.Sindri.Core.Forge.PullPushOutcome
+Aw.Sindri.Core.Forge.PullPushOutcome.Pushed = 1 -> Aw.Sindri.Core.Forge.PullPushOutcome
+Aw.Sindri.Core.Forge.PullPushOutcome.Rejected = 3 -> Aw.Sindri.Core.Forge.PullPushOutcome
+Aw.Sindri.Core.Forge.PullState
+Aw.Sindri.Core.Forge.PullState.Closed = 2 -> Aw.Sindri.Core.Forge.PullState
+Aw.Sindri.Core.Forge.PullState.Merged = 3 -> Aw.Sindri.Core.Forge.PullState
+Aw.Sindri.Core.Forge.PullState.Open = 1 -> Aw.Sindri.Core.Forge.PullState
+Aw.Sindri.Core.Forge.PullView
+Aw.Sindri.Core.Forge.PullView.<Clone>$() -> Aw.Sindri.Core.Forge.PullView!
+Aw.Sindri.Core.Forge.PullView.Checks.get -> Aw.Sindri.Core.Forge.PullChecks!
+Aw.Sindri.Core.Forge.PullView.Checks.init -> void
+Aw.Sindri.Core.Forge.PullView.Deconstruct(out string! Link, out Aw.Sindri.Core.Forge.PullState State, out string! HeadSha, out bool? Mergeable, out string? ReviewDecision, out int UnresolvedThreads, out Aw.Sindri.Core.Forge.PullChecks! Checks, out string? MergedSha) -> void
+Aw.Sindri.Core.Forge.PullView.Equals(Aw.Sindri.Core.Forge.PullView? other) -> bool
+Aw.Sindri.Core.Forge.PullView.HeadSha.get -> string!
+Aw.Sindri.Core.Forge.PullView.HeadSha.init -> void
+Aw.Sindri.Core.Forge.PullView.Link.get -> string!
+Aw.Sindri.Core.Forge.PullView.Link.init -> void
+Aw.Sindri.Core.Forge.PullView.Mergeable.get -> bool?
+Aw.Sindri.Core.Forge.PullView.Mergeable.init -> void
+Aw.Sindri.Core.Forge.PullView.MergedSha.get -> string?
+Aw.Sindri.Core.Forge.PullView.MergedSha.init -> void
+Aw.Sindri.Core.Forge.PullView.PullView(string! Link, Aw.Sindri.Core.Forge.PullState State, string! HeadSha, bool? Mergeable, string? ReviewDecision, int UnresolvedThreads, Aw.Sindri.Core.Forge.PullChecks! Checks, string? MergedSha) -> void
+Aw.Sindri.Core.Forge.PullView.ReviewDecision.get -> string?
+Aw.Sindri.Core.Forge.PullView.ReviewDecision.init -> void
+Aw.Sindri.Core.Forge.PullView.State.get -> Aw.Sindri.Core.Forge.PullState
+Aw.Sindri.Core.Forge.PullView.State.init -> void
+Aw.Sindri.Core.Forge.PullView.UnresolvedThreads.get -> int
+Aw.Sindri.Core.Forge.PullView.UnresolvedThreads.init -> void
+Aw.Sindri.Core.Profile.PrSettings.AutofixCap.get -> int?
+Aw.Sindri.Core.Profile.PrSettings.AutofixCap.init -> void
+override Aw.Sindri.Core.Forge.PullChecks.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Forge.PullChecks.GetHashCode() -> int
+override Aw.Sindri.Core.Forge.PullChecks.ToString() -> string!
+override Aw.Sindri.Core.Forge.PullPush.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Forge.PullPush.GetHashCode() -> int
+override Aw.Sindri.Core.Forge.PullPush.ToString() -> string!
+override Aw.Sindri.Core.Forge.PullView.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Forge.PullView.GetHashCode() -> int
+override Aw.Sindri.Core.Forge.PullView.ToString() -> string!
+static Aw.Sindri.Core.Forge.PullChecks.operator !=(Aw.Sindri.Core.Forge.PullChecks? left, Aw.Sindri.Core.Forge.PullChecks? right) -> bool
+static Aw.Sindri.Core.Forge.PullChecks.operator ==(Aw.Sindri.Core.Forge.PullChecks? left, Aw.Sindri.Core.Forge.PullChecks? right) -> bool
+static Aw.Sindri.Core.Forge.PullPush.operator !=(Aw.Sindri.Core.Forge.PullPush? left, Aw.Sindri.Core.Forge.PullPush? right) -> bool
+static Aw.Sindri.Core.Forge.PullPush.operator ==(Aw.Sindri.Core.Forge.PullPush? left, Aw.Sindri.Core.Forge.PullPush? right) -> bool
+static Aw.Sindri.Core.Forge.PullView.operator !=(Aw.Sindri.Core.Forge.PullView? left, Aw.Sindri.Core.Forge.PullView? right) -> bool
+static Aw.Sindri.Core.Forge.PullView.operator ==(Aw.Sindri.Core.Forge.PullView? left, Aw.Sindri.Core.Forge.PullView? right) -> bool
+Aw.Sindri.Core.Profile.PrSettings
+Aw.Sindri.Core.Profile.PrSettings.<Clone>$() -> Aw.Sindri.Core.Profile.PrSettings!
+Aw.Sindri.Core.Profile.PrSettings.Deconstruct(out int? AutofixCap) -> void
+Aw.Sindri.Core.Profile.PrSettings.Equals(Aw.Sindri.Core.Profile.PrSettings? other) -> bool
+Aw.Sindri.Core.Profile.PrSettings.PrSettings(int? AutofixCap = null) -> void
+Aw.Sindri.Core.Profile.WorkflowSettings.Deconstruct(out string? DeskTimeout, out string? EventHold, out System.Collections.Generic.IReadOnlyList<string!>? Effects, out string? DispatchDelay, out Aw.Sindri.Core.Profile.JudgeSettings? Judge, out Aw.Sindri.Core.Profile.WorkflowAgentSettings? Agent, out Aw.Sindri.Core.Profile.ForgeSettings? Forge, out Aw.Sindri.Core.Profile.RouteSettings? Route, out Aw.Sindri.Core.Profile.PrSettings? Pr) -> void
+Aw.Sindri.Core.Profile.WorkflowSettings.Pr.get -> Aw.Sindri.Core.Profile.PrSettings?
+Aw.Sindri.Core.Profile.WorkflowSettings.Pr.init -> void
+Aw.Sindri.Core.Profile.WorkflowSettings.WorkflowSettings(string? DeskTimeout = null, string? EventHold = null, System.Collections.Generic.IReadOnlyList<string!>? Effects = null, string? DispatchDelay = null, Aw.Sindri.Core.Profile.JudgeSettings? Judge = null, Aw.Sindri.Core.Profile.WorkflowAgentSettings? Agent = null, Aw.Sindri.Core.Profile.ForgeSettings? Forge = null, Aw.Sindri.Core.Profile.RouteSettings? Route = null, Aw.Sindri.Core.Profile.PrSettings? Pr = null) -> void
+Aw.Sindri.Core.Secrets.ISecretScan
+Aw.Sindri.Core.Secrets.ISecretScan.Hits(string! text) -> System.Collections.Generic.IReadOnlyList<int>!
+Aw.Sindri.Core.Workflow.Engine.Runtime.IAgentStepInstructions
+Aw.Sindri.Core.Workflow.Engine.Runtime.IAgentStepInstructions.Lines.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Core.Workflow.Engine.Runtime.IAgentStepInstructions.Step.get -> Aw.Sindri.Core.Workflow.Ids.BlockId
+Aw.Sindri.Core.Worktrees.AddedLine
+Aw.Sindri.Core.Worktrees.AddedLine.<Clone>$() -> Aw.Sindri.Core.Worktrees.AddedLine!
+Aw.Sindri.Core.Worktrees.AddedLine.AddedLine(string! Path, int Line, string! Text) -> void
+Aw.Sindri.Core.Worktrees.AddedLine.Deconstruct(out string! Path, out int Line, out string! Text) -> void
+Aw.Sindri.Core.Worktrees.AddedLine.Equals(Aw.Sindri.Core.Worktrees.AddedLine? other) -> bool
+Aw.Sindri.Core.Worktrees.AddedLine.Line.get -> int
+Aw.Sindri.Core.Worktrees.AddedLine.Line.init -> void
+Aw.Sindri.Core.Worktrees.AddedLine.Path.get -> string!
+Aw.Sindri.Core.Worktrees.AddedLine.Path.init -> void
+Aw.Sindri.Core.Worktrees.AddedLine.Text.get -> string!
+Aw.Sindri.Core.Worktrees.AddedLine.Text.init -> void
+Aw.Sindri.Core.Worktrees.FileChange
+Aw.Sindri.Core.Worktrees.FileChange.<Clone>$() -> Aw.Sindri.Core.Worktrees.FileChange!
+Aw.Sindri.Core.Worktrees.FileChange.Deconstruct(out string! Path, out Aw.Sindri.Core.Worktrees.FileChangeKind Kind) -> void
+Aw.Sindri.Core.Worktrees.FileChange.Equals(Aw.Sindri.Core.Worktrees.FileChange? other) -> bool
+Aw.Sindri.Core.Worktrees.FileChange.FileChange(string! Path, Aw.Sindri.Core.Worktrees.FileChangeKind Kind) -> void
+Aw.Sindri.Core.Worktrees.FileChange.Kind.get -> Aw.Sindri.Core.Worktrees.FileChangeKind
+Aw.Sindri.Core.Worktrees.FileChange.Kind.init -> void
+Aw.Sindri.Core.Worktrees.FileChange.Path.get -> string!
+Aw.Sindri.Core.Worktrees.FileChange.Path.init -> void
+Aw.Sindri.Core.Worktrees.FileChangeKind
+Aw.Sindri.Core.Worktrees.FileChangeKind.Added = 1 -> Aw.Sindri.Core.Worktrees.FileChangeKind
+Aw.Sindri.Core.Worktrees.FileChangeKind.Deleted = 3 -> Aw.Sindri.Core.Worktrees.FileChangeKind
+Aw.Sindri.Core.Worktrees.FileChangeKind.Modified = 2 -> Aw.Sindri.Core.Worktrees.FileChangeKind
+Aw.Sindri.Core.Worktrees.FileChangeKind.Renamed = 4 -> Aw.Sindri.Core.Worktrees.FileChangeKind
+Aw.Sindri.Core.Worktrees.IWorkspaceChanges
+Aw.Sindri.Core.Worktrees.IWorkspaceChanges.BranchFiles(string! workspace, string! tip, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<string!>!>!>
+Aw.Sindri.Core.Worktrees.IWorkspaceChanges.Since(string! workspace, string! since, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Worktrees.WorkspaceChanges!>!>
+Aw.Sindri.Core.Worktrees.WorkspaceChanges
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.<Clone>$() -> Aw.Sindri.Core.Worktrees.WorkspaceChanges!
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.AddedLines.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Worktrees.AddedLine!>!
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.AddedLines.init -> void
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.Deconstruct(out string! Head, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Worktrees.WorkspaceCommit!>! Commits, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Worktrees.FileChange!>! Files, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Worktrees.AddedLine!>! AddedLines) -> void
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.Equals(Aw.Sindri.Core.Worktrees.WorkspaceChanges? other) -> bool
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.Files.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Worktrees.FileChange!>!
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.Files.init -> void
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.WorkspaceChanges(string! Head, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Worktrees.WorkspaceCommit!>! Commits, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Worktrees.FileChange!>! Files, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Worktrees.AddedLine!>! AddedLines) -> void
+const Aw.Sindri.Core.Profile.PrSettings.DefaultAutofixCap = 3 -> int
+const Aw.Sindri.Core.Profile.PrSettings.MaxAutofixCap = 5 -> int
+override Aw.Sindri.Core.Profile.PrSettings.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Profile.PrSettings.GetHashCode() -> int
+override Aw.Sindri.Core.Profile.PrSettings.ToString() -> string!
+override Aw.Sindri.Core.Worktrees.AddedLine.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Worktrees.AddedLine.GetHashCode() -> int
+override Aw.Sindri.Core.Worktrees.AddedLine.ToString() -> string!
+override Aw.Sindri.Core.Worktrees.FileChange.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Worktrees.FileChange.GetHashCode() -> int
+override Aw.Sindri.Core.Worktrees.FileChange.ToString() -> string!
+override Aw.Sindri.Core.Worktrees.WorkspaceChanges.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Worktrees.WorkspaceChanges.GetHashCode() -> int
+override Aw.Sindri.Core.Worktrees.WorkspaceChanges.ToString() -> string!
+static Aw.Sindri.Core.Profile.PrSettings.AutofixCapOf(Aw.Sindri.Core.Profile.SindriProfile! profile) -> int
+static Aw.Sindri.Core.Profile.PrSettings.operator !=(Aw.Sindri.Core.Profile.PrSettings? left, Aw.Sindri.Core.Profile.PrSettings? right) -> bool
+static Aw.Sindri.Core.Profile.PrSettings.operator ==(Aw.Sindri.Core.Profile.PrSettings? left, Aw.Sindri.Core.Profile.PrSettings? right) -> bool
+static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunches.RequestFor(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun! run, Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepTarget! target, Aw.Sindri.Core.Workflow.Blocks.BlockDescriptor? descriptor = null, System.Collections.Generic.IReadOnlyList<string!>? instructions = null, string? workspace = null) -> Aw.Sindri.Core.Launch.LaunchRequest!
+static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunches.WorktreeFor(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun! run, Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepTarget! target, string? workspace = null) -> string!
+static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepBrief.Render(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepRun! run, Aw.Sindri.Core.Workflow.Blocks.BlockDescriptor? descriptor, System.Collections.Generic.IReadOnlyList<string!>? instructions = null) -> string!
+static Aw.Sindri.Core.Worktrees.AddedLine.operator !=(Aw.Sindri.Core.Worktrees.AddedLine? left, Aw.Sindri.Core.Worktrees.AddedLine? right) -> bool
+static Aw.Sindri.Core.Worktrees.AddedLine.operator ==(Aw.Sindri.Core.Worktrees.AddedLine? left, Aw.Sindri.Core.Worktrees.AddedLine? right) -> bool
+static Aw.Sindri.Core.Worktrees.FileChange.operator !=(Aw.Sindri.Core.Worktrees.FileChange? left, Aw.Sindri.Core.Worktrees.FileChange? right) -> bool
+static Aw.Sindri.Core.Worktrees.FileChange.operator ==(Aw.Sindri.Core.Worktrees.FileChange? left, Aw.Sindri.Core.Worktrees.FileChange? right) -> bool
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.Commits.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Worktrees.WorkspaceCommit!>!
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.Commits.init -> void
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.Head.get -> string!
+Aw.Sindri.Core.Worktrees.WorkspaceChanges.Head.init -> void
+Aw.Sindri.Core.Worktrees.WorkspaceCommit
+Aw.Sindri.Core.Worktrees.WorkspaceCommit.<Clone>$() -> Aw.Sindri.Core.Worktrees.WorkspaceCommit!
+Aw.Sindri.Core.Worktrees.WorkspaceCommit.Deconstruct(out string! Sha, out string! Message) -> void
+Aw.Sindri.Core.Worktrees.WorkspaceCommit.Equals(Aw.Sindri.Core.Worktrees.WorkspaceCommit? other) -> bool
+Aw.Sindri.Core.Worktrees.WorkspaceCommit.Message.get -> string!
+Aw.Sindri.Core.Worktrees.WorkspaceCommit.Message.init -> void
+Aw.Sindri.Core.Worktrees.WorkspaceCommit.Sha.get -> string!
+Aw.Sindri.Core.Worktrees.WorkspaceCommit.Sha.init -> void
+Aw.Sindri.Core.Worktrees.WorkspaceCommit.WorkspaceCommit(string! Sha, string! Message) -> void
+override Aw.Sindri.Core.Worktrees.WorkspaceCommit.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Worktrees.WorkspaceCommit.GetHashCode() -> int
+override Aw.Sindri.Core.Worktrees.WorkspaceCommit.ToString() -> string!
+static Aw.Sindri.Core.Worktrees.WorkspaceChanges.operator !=(Aw.Sindri.Core.Worktrees.WorkspaceChanges? left, Aw.Sindri.Core.Worktrees.WorkspaceChanges? right) -> bool
+static Aw.Sindri.Core.Worktrees.WorkspaceChanges.operator ==(Aw.Sindri.Core.Worktrees.WorkspaceChanges? left, Aw.Sindri.Core.Worktrees.WorkspaceChanges? right) -> bool
+static Aw.Sindri.Core.Worktrees.WorkspaceCommit.operator !=(Aw.Sindri.Core.Worktrees.WorkspaceCommit? left, Aw.Sindri.Core.Worktrees.WorkspaceCommit? right) -> bool
+static Aw.Sindri.Core.Worktrees.WorkspaceCommit.operator ==(Aw.Sindri.Core.Worktrees.WorkspaceCommit? left, Aw.Sindri.Core.Worktrees.WorkspaceCommit? right) -> bool

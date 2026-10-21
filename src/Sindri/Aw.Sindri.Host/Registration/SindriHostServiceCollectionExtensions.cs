@@ -14,6 +14,7 @@ internal static class SindriHostServiceCollectionExtensions
     /// <param name="services">The service collection.</param>
     /// <returns>The same collection.</returns>
     internal static IServiceCollection AddSindriHost(this IServiceCollection services) => services
+        .AddSingleton<Aw.Sindri.Core.Forge.IPullRequests, Aw.Sindri.Host.Forge.NoForgePullRequests>()   // until the forge wiring gives Sindri a forge
         .AddSingleton<ProcessShutdown>()
         .AddSingleton<IShutdown>(static sp => sp.GetRequiredService<ProcessShutdown>())
         .AddSingleton<IExitCode, ProcessExitCode>()

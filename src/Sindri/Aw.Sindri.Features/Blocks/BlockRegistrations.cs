@@ -54,7 +54,16 @@ internal static class BlockRegistrations
         .AddEffect<NotifyDeskEffect>()    // engine P6 unit (c)
         .AddEvent(RecipeEvents.ItemRouted)
         .AddEvent(RecipeEvents.ClaimCreated)
-        .AddEvent(RecipeEvents.NotifyDelivered);
+        .AddEvent(RecipeEvents.NotifyDelivered)
+        .AddPrEvents();
+
+    /// <summary>Registers the pull request events (PR babysitter spec §6.1): the poller's and the two the CI-red loop's effects reply with.</summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same collection.</returns>
+    private static IServiceCollection AddPrEvents(this IServiceCollection services) => services
+        .AddEvent(RecipeEvents.PrChanged)
+        .AddEvent(RecipeEvents.PrPushed)
+        .AddEvent(RecipeEvents.PrRerun);
 
     /// <summary>Registers the line's blocks (the build and prove stations' and the per-phase child's).</summary>
     /// <param name="services">The service collection.</param>
@@ -69,6 +78,9 @@ internal static class BlockRegistrations
         .AddBlockDescriptor(PhaseSteps.Drift)
         .AddBlockDescriptor(PhaseSteps.Decide)
         .AddBlockDescriptor(BabysitSteps.Watch)
+        .AddBlockDescriptor(BabysitSteps.Snapshot)
+        .AddBlockDescriptor(BabysitSteps.CiLog)
+        .AddBlockDescriptor(BabysitSteps.CiFix)
         .AddBlockDescriptor(LineEffects.Report);
 
     /// <summary>Registers the line's build and prove stations' Steps (line spec §7.2, §7.3), descriptors only.</summary>

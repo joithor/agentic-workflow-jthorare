@@ -21,4 +21,18 @@ internal static class RecipeEvents
     /// <summary>'notify.delivered', from the dispatcher, answering the 'effect.notify.desk' command that caused it.</summary>
     public static EventDescriptor NotifyDelivered { get; } = new(
         EventKind.From("notify.delivered"), Dispatcher, EventRoute.Causation, [OutcomeName.From("delivered")], []);
+
+    /// <summary>'pr.changed', from the pull request poller: the forge's changes to a watched pull request (PR babysitter spec §6.1). The outcome is the first change in the table's order.</summary>
+    public static EventDescriptor PrChanged { get; } = new(
+        EventKind.From("pr.changed"), "service:pr-watch", EventRoute.Item,
+        [OutcomeName.From("merged"), OutcomeName.From("closed"), OutcomeName.From("updated"), OutcomeName.From("review"), OutcomeName.From("ci"), OutcomeName.From("idle")], [FactKey.From("fact:prEvent")]);
+
+    /// <summary>'pr.pushed', from the dispatcher, answering the 'effect.pr.push' command that caused it (PR babysitter spec §6.1).</summary>
+    public static EventDescriptor PrPushed { get; } = new(
+        EventKind.From("pr.pushed"), Dispatcher, EventRoute.Causation,
+        [OutcomeName.From("pushed"), OutcomeName.From("pushedSource"), OutcomeName.From("nothing"), OutcomeName.From("headMoved"), OutcomeName.From("rejected")], [FactKey.From("fact:push")]);
+
+    /// <summary>'pr.rerun', from the dispatcher, answering the 'effect.pr.rerun-checks' command that caused it.</summary>
+    public static EventDescriptor PrRerun { get; } = new(
+        EventKind.From("pr.rerun"), Dispatcher, EventRoute.Causation, [OutcomeName.From("rerunRequested"), OutcomeName.From("rerunNone")], []);
 }

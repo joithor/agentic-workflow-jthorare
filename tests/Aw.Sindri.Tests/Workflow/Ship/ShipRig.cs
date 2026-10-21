@@ -26,7 +26,7 @@ internal sealed class ShipRig
         .With(PhaseDir, "packet.json", """{"schemaVersion":1,"kind":"phase","id":"fix-line-p1","repo":"owner/name","baseSha":"1111111111111111111111111111111111111111","status":"frozen","hash":null,"links":{}}""")
         .With(PhaseDir, "phase.json", """{"goal":"Print results as JSON","kind":"feature","testChange":[{"path":"test/format.test.js","reason":"new format"}]}""")
         .With(ProofDir, "proof.json", $$"""{"schemaVersion":1,"head":"{{Head}}","items":[],"notRun":[]}""")
-        .With(ProofDir, "index.json", $$"""{"schemaVersion":1,"kind":"proof","parents":["{{PhaseHash}}"],"acceptance":{"self":"{{ProofAcceptance}}","extends":"sha256:aa"}}""")
+        .With(ProofDir, "index.json", $$$"""{"schemaVersion":1,"kind":"proof","parents":["{{{PhaseHash}}}"],"acceptance":{"self":"{{{ProofAcceptance}}}","extends":"sha256:aa"}}""")
         .With(ProofDir, "acceptance.json", $$"""{"schemaVersion":1,"parent":"sha256:aa","items":[{"id":"AC-1","text":"tally --json prints an array","status":"passing","evidence":[{"kind":"test","path":"evidence/a.txt","sha256":"sha256:{{new string('a', 64)}}","commit":"{{Head}}","at":"t"}]}]}""")
         .With(ProofDir, "holdout.json", $$"""{"schemaVersion":1,"commit":"{{Head}}","results":[{"scenario":"H1","item":"AC-1","verdict":"pass","spent":true},{"scenario":"H2","item":"AC-1","verdict":"pass","spent":false}]}""")
         .With(ProofDir, "not-proven.md", "# Not proven\n\n- AC-1 / SG-1b (test): the empty-file case\n")

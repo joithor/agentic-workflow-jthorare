@@ -2,14 +2,20 @@ using System.Text.Json;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Workflow.Blocks;
 using Aw.Sindri.Features.Blocks.Step;
+using Aw.Sindri.Features.Ship;
+using Aw.Sindri.Testing.Packets;
+using Aw.Sindri.Testing.Scoping;
 using Aw.Sindri.Testing.Workflow;
+using Aw.Sindri.Tests.Sessions;
 
 namespace Aw.Sindri.Tests.Workflow.Blocks.Contracts;
 
-/// <summary>A descriptor-only block (no runtime until its phase): it hashes, kinds, registers once and resolves nothing.</summary>
+/// <summary>The ship station's pack Step on the block runtime: it hashes, kinds, registers once, resolves under its kind and honours cancellation.</summary>
 [Lane(TestLane.Unit)]
-public sealed class ShipPackStepContract : DescriptorContract
+public sealed class ShipPackStepContract : BlockContract
 {
+    protected override Type Block => typeof(ShipPackStep);
+
     protected override BlockDescriptor Descriptor => ShipSteps.Pack;
 
     protected override string ExpectedHash => "sha256:23d1f6fdb7fadca6c5cae974fd3d03a76046f2d1e73a876bf630c8f1b5f8982e";
@@ -17,4 +23,7 @@ public sealed class ShipPackStepContract : DescriptorContract
     protected override JsonSerializerOptions Json => ShippedComposition.Json;
 
     protected override IServiceProvider Compose() => ShippedComposition.Compose();
+
+    protected override async Task InvokeAsync(CancellationToken cancellationToken) =>
+        _ = await new ShipPackStep(new InMemoryBriefFiles(), new InMemoryRunArea(), new InMemoryPackets(), new InMemoryRepoCheckouts(), new ReplacingScrubber("a", "b")).Run(BuildShipContexts.Of("step.ship.pack", []), cancellationToken);
 }

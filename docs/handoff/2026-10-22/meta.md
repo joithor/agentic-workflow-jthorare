@@ -25,6 +25,8 @@ You are the meta orchestrator of team `sindri` (lanes api, engine, context, ui, 
 4. **#567 api** (add repo): unblocked by #570; needs a main merge and a fresh `ready`.
 5. **#601 ideas `c5718aa10`** (LN-PK lite): ready, after #597. The ideas lane reports 1454 of 1454 scoped tests passing. Recipe
    hashes move (step.lens.round, step.review.round, workflow.phase v2, review-loop v4), so the owner runs approve-all after merging.
+6. **#602 context `440c72cfd`** (CI-6, BuildCodeIndex): green, ready for its gate. Not ready yet: #604 S-9a (`325440a29`, needs a main
+   merge and a rerun). Context's first next step is the ARCH-INFRA-001 red from #595.
    Do NOT gate #584 (`dd7bd8b13` is a debug WIP). #599 (ui setup) isn't ready: its production client still throws on the five setup
    writes (see ui.md). #603 (ui workflows s2, `1799ce8e8`) isn't ready either; it needs review.
 
@@ -85,6 +87,13 @@ Classify these; never send them back as the PR's.
 - cutover-scrub: `~/repos/aw-wt/cutover-scrub`, branch `feat/cs-scrub`, no builder running. Brief: `.../plans/cutover/brief.md`, part A.
   Its work is pushed as WIP commit `85c09d687` on joithor `feat/cs-scrub` (unbuilt, untested; one fake-key test literal split for the scrubber).
 - Builders open PRs from joithor on the `jfork` remote (joithor/agentic-workflow-jthorare), not `fork`.
+
+## Handoff check (~05:30Z)
+
+Every lane replied HANDOFF DONE (api d555bb1a6, engine 770fb16b9, context 9288ed67b, ui 842fafbd7 / d13deef4a, ideas
+6cd54898a) and stopped its builders. `aw-meta worktree-list` finds no unpushed work. The only leftovers: PR-body scratch notes in
+three merged engine branches (launch-path-rounds, launch-tests-macos, test-git-template) and a regenerated
+`tests/Aw.Architecture.Tests/packages.lock.json` in two old gate trees. They're safe to sweep.
 
 ## Other
 

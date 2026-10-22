@@ -535,7 +535,7 @@ edges:
     to: Redaction
     kind: project
     status: current
-    note: "the text scrubber adapter (Infrastructure/Text/RedactingScrubber); Aw.Sindri.Workflows' RecordEvent scrubs each mirrored payload with it; replaces sindri's copy of the scrubbing patterns"
+    note: "the text scrubber adapter (Infrastructure/Text/RedactingScrubber); Aw.Sindri.Workflows' RecordEvent scrubs each mirrored payload with it; replaces sindri's copy of the scrubbing patterns; the Host also calls Redactor.Default directly for `sindri scrub` (Commands/Scrub: stdin, --staged, the pre-commit hook), a local verb that never needs the control plane"
   - from: Sindri
     to: Packets
     kind: cli

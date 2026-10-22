@@ -68,9 +68,10 @@ Generated from `sindri/src/errors.ts` by `cd sindri && npm run gen`. Do not edit
 | `SND-SCOPE-025` | Refusing to write a scope map into a git worktree. | use --sources file,code, or write outside the repo |
 | `SND-SCRUB-001` | A profile scrub pattern does not compile. | Fix the regex at the named scrub.extraPatterns index, then run `sindri profile validate`. |
 | `SND-SCRUB-002` | Staged changes contain likely secrets. | remove them (use a secret pointer or an env var); for a false positive, commit with --no-verify and say why |
-| `SND-SCRUB-003` | A different pre-commit hook is already installed, or core.hooksPath points the hook at a directory sindri didn't create (it never writes there). | Add both lines to that hook by hand, in this order: `sindri scrub --staged \|\| exit 1` then `sindri shape --record --staged \|\| true`. |
+| `SND-SCRUB-003` | A different pre-commit hook is already installed, or core.hooksPath points the hook at a directory sindri didn't create (it never writes there). | Add the line to that hook by hand: `sindri scrub --staged \|\| exit 1` (the TS Sindri also asked for `sindri shape --record --staged \|\| true`; the C# Sindri has no shape call). |
 | `SND-SCRUB-004` | `scrub --staged` or `--install-pre-commit` ran outside a git repo. | cd into the repo first, or pass --repo PATH to --install-pre-commit. |
 | `SND-SCRUB-005` | `git diff --cached` failed, so `scrub --staged` could not scan the staged changes. | Fix the git error shown in the details, then retry the commit. |
+| `SND-SCRUB-007` | A scrub timed out (a pattern ran past its match timeout), so the text was withheld (`sindri scrub`) or the file's scan was refused (`--staged`). | Retry; if one file always does it, commit it with --no-verify and say why. |
 | `SND-SCRUB-006` | git's init.templateDir is set to a directory sindri does not own, or could not be read or set. | copy the named hook into that template dir's hooks/ yourself, or `git config --global --unset init.templateDir` and rerun `sindri repo onboard --template` |
 | `SND-SECRET-001` | A secret pointer could not be resolved. | check the pointer in the profile and that the secret exists (env var, file, keychain item or 1Password item) |
 | `SND-SECRET-002` | A secret file is readable by other users. | chmod 600 &lt;file&gt; |

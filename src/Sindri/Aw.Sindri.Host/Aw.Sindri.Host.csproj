@@ -33,6 +33,8 @@
     <ProjectReference Include="../../Judge/Aw.Judge.Infrastructure/Aw.Judge.Infrastructure.csproj" />
     <ProjectReference Include="../Aw.Sindri.Workflows/Aw.Sindri.Workflows.csproj" />
     <ProjectReference Include="../../Aw.Kernel/Aw.Kernel.csproj" />
+    <!-- the scrub verb (Commands/Scrub): Redactor.Default; the tier-0 Redaction edge in deps.yaml -->
+    <ProjectReference Include="../../Redaction/Aw.Redaction/Aw.Redaction.csproj" />
     <ProjectReference Include="../../Aw.Kernel.Telemetry/Aw.Kernel.Telemetry.csproj" />
   </ItemGroup>
 

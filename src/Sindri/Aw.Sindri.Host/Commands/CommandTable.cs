@@ -8,6 +8,7 @@ using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Profile;
 
 using Aw.Sindri.Host.Commands.Probe;
+using Aw.Sindri.Host.Commands.Scrub;
 
 namespace Aw.Sindri.Host.Commands;
 
@@ -117,12 +118,20 @@ internal static class CommandTable
             ["doctor", ..] => await Doctor(args, verbs, harnesses, output, ct).ConfigureAwait(false),
             ["onyx", .. var rest] => await Onyx(rest, verbs, new OnyxVerbs(services, output, session, (hash, to, c) => new Verbs(client, probe, to, services, e => start.EnsureRunning(launch: true, e)).Approve(hash, Interactive(), Console.In, c)), output, ct).ConfigureAwait(false),
             ["repo", "status", .. var rest] => await new RepoStatusVerb(services, output).Run(rest, ct).ConfigureAwait(false),
+            ["scrub", .. var rest] => await Scrub(rest, output, environment).ConfigureAwait(false),
             ["mcp", .. var rest] => await new McpVerbs(services, output, session).Run(rest, ct).ConfigureAwait(false),
             ["context", ..] => await Context(args, client, output, services, (ct, interrupt.Again)).ConfigureAwait(false),
             ["recipe" or "workflow" or "scoping" or "design" or "plan" or "line" or "outbox" or "takeover" or "handback", ..] => await Workflows(args, new ScopingCommandTable.Host(services, output, new RecipeDesk(client, Console.In, c => start.EnsureRunning(launch: true, c), environment), environment), ct).ConfigureAwait(false),
             ["help" or "--help" or "-h"] => await output.Text(Usage.Text + "\n", 0).ConfigureAwait(false),
             _ => await UnknownVerb(args, output).ConfigureAwait(false),
         };
+    }
+
+    /// <summary>'sindri scrub …': the scrubber and the pre-commit gate. Local: it reads standard input and git and never needs the control plane.</summary>
+    private static async Task<int> Scrub(string[] args, Output output, Func<string, string?> environment)
+    {
+        var io = new ScrubIo(Console.In, output, Console.Error, Environment.CurrentDirectory);
+        return await new ScrubVerb(io, ProcessGit.Run, Aw.Redaction.Redactor.Default, ScrubBinary.Path(environment, Environment.ProcessPath)).Run(args).ConfigureAwait(false);
     }
 
     /// <summary>'sindri recipe|workflow|scoping|outbox|takeover|handback …': the recipe family, one arm per verb.</summary>

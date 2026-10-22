@@ -58,6 +58,7 @@ using Aw.Sindri.Features.GetJob;
 using Aw.Sindri.Features.GetLaunch;
 using Aw.Sindri.Features.GetLaunchTargets;
 using Aw.Sindri.Features.GetNeedsYou;
+using Aw.Sindri.Host.Commands.Scrub;
 using Aw.Sindri.Features.GetProfile;
 using Aw.Sindri.Features.GetQueue;
 using Aw.Sindri.Features.GetRepoStatus;
@@ -131,6 +132,7 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(StreamErrorFrame)), JsonSerializable(typeof(InstanceChanged)), JsonSerializable(typeof(ListCommandsRequest)), JsonSerializable(typeof(ListCommandsResponse)), JsonSerializable(typeof(CommandListRow))]
 [JsonSerializable(typeof(ListServicesRequest)), JsonSerializable(typeof(ListServicesResponse)), JsonSerializable(typeof(ServiceView)), JsonSerializable(typeof(GetProfileRequest))]
 [JsonSerializable(typeof(GetSetupRequest)), JsonSerializable(typeof(GetSetupResponse)), JsonSerializable(typeof(GetRepoStatusResponse)), JsonSerializable(typeof(RepoStatus))]
+[JsonSerializable(typeof(ScrubTextJson)), JsonSerializable(typeof(ScrubStagedJson)), JsonSerializable(typeof(ScrubInstallJson))]
 [JsonSerializable(typeof(GetProfileResponse)), JsonSerializable(typeof(RebuildViewsRequest)), JsonSerializable(typeof(CreateItemRequest)), JsonSerializable(typeof(ItemCreatedResponse))]
 [JsonSerializable(typeof(CloseItemRequest)), JsonSerializable(typeof(CloseItemBody)), JsonSerializable(typeof(GetQueueRequest)), JsonSerializable(typeof(QueueResponse))]
 [JsonSerializable(typeof(QueueGroupView)), JsonSerializable(typeof(ItemSummary)), JsonSerializable(typeof(ListItemsRequest)), JsonSerializable(typeof(ListItemsResponse))]

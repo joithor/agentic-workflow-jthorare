@@ -20,7 +20,8 @@ namespace Aw.Sindri.Features.Jobs;
 /// <param name="writer">Appends the job's own events.</param>
 /// <param name="registry">Releases a job's (kind, key) claim when it ends.</param>
 /// <param name="shutdown">A stop, or a lost lease, cancels every running job (unit F).</param>
-internal sealed class JobRunner(Func<JobScope> openScope, IJobContextAccessor jobs, ICallerContextAccessor callers, JobEventWriter writer, JobRegistry registry, IShutdown shutdown)
+/// <param name="waits">Where a job that parks on a signal waits (setup-once spec §5.6); a parked job holds no slot.</param>
+internal sealed class JobRunner(Func<JobScope> openScope, IJobContextAccessor jobs, ICallerContextAccessor callers, JobEventWriter writer, JobRegistry registry, IShutdown shutdown, JobWaits? waits = null)
     : IJobRunner, IAsyncDisposable, IDisposable
 {
     private readonly ConcurrentDictionary<string, JobRun> _runs = new(StringComparer.Ordinal);
@@ -28,7 +29,7 @@ internal sealed class JobRunner(Func<JobScope> openScope, IJobContextAccessor jo
     private int _disposed;
 
     /// <inheritdoc />
-    public int Running => _runs.Count;
+    public int Running => _runs.Values.Count(static r => !r.Waiting);   // a job parked on a signal holds no slot
 
     /// <summary>The ids of the jobs running now (a test names the ones that did not end).</summary>
     public IReadOnlyList<string> Active => [.. _runs.Keys];
@@ -227,7 +228,7 @@ internal sealed class JobRunner(Func<JobScope> openScope, IJobContextAccessor jo
             await using (scope.Lifetime.ConfigureAwait(false))
             {
                 using var caller = start.Service is { } service ? callers.EnterService(service.Value) : callers.Enter(start.Caller);   // RunService's work is the service's own run (D6)
-                using var job = jobs.Enter(new JobContext(start.Job, start.Kind, new QueueProgress(queue)));
+                using var job = jobs.Enter(new JobContext(start.Job, start.Kind, new QueueProgress(queue), waits is null ? null : new RunWaiting(run, waits, writer)));
                 return await start.Definition.Run(scope.Resolve, start.Request, run.Source.Token).ConfigureAwait(false);
             }
         }
@@ -283,6 +284,41 @@ internal sealed class JobRunner(Func<JobScope> openScope, IJobContextAccessor jo
         run.WriteFailure ??= failure;
         run.Cancelled = true;   // the job ends here; Execute writes its failed end while the lease is held, recovery otherwise
         await run.Source.CancelAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>Parks the run's job on a signal: 'job.waiting' is recorded, then the job holds no slot until the signal comes, the wait runs out or the job is cancelled.</summary>
+    private sealed class RunWaiting(JobRun run, JobWaits waits, JobEventWriter writer) : IJobWaiting
+    {
+        private int _ordinal;
+
+        public async ValueTask<bool> WaitFor(string signal, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            var ordinal = Interlocked.Increment(ref _ordinal);
+            var noted = await writer.Waiting(run.Start, signal, ordinal, CancellationToken.None).ConfigureAwait(false);
+            if (noted.IsError)
+            {
+                throw new InvalidOperationException("the wait could not be recorded (" + noted.Error.Code + ")");
+            }
+
+            var wait = waits.Park(run.Start.Job, signal);
+            run.Waiting = true;
+            try
+            {
+                await wait.Came.Task.WaitAsync(timeout, waits.Clock, cancellationToken).ConfigureAwait(false);
+            }
+            catch (TimeoutException)
+            {
+                return false;
+            }
+            finally
+            {
+                run.Waiting = false;
+                waits.Unpark(run.Start.Job);
+            }
+
+            _ = await writer.Resumed(run.Start, signal, ordinal, CancellationToken.None).ConfigureAwait(false);
+            return true;
+        }
     }
 
     private sealed class QueueProgress(JobLineQueue queue) : IProgress<string>

@@ -11,8 +11,8 @@ public sealed class SetupRowTests
     [InlineData("RegisterMcp", "POST", "/setup/mcp", "sindri mcp register --apply", "pending:SO-A4")]
     [InlineData("SetupOnyx", "POST", "/onyx/setup", "sindri onyx up", "pending:SO-A5")]
     [InlineData("ConnectOnyx", "POST", "/onyx/account", "sindri onyx connect", "pending:SO-A5")]
-    [InlineData("DeferOnyx", "POST", "/onyx/defer", "sindri onyx defer", "pending:SO-A5")]
-    public void Each_desk_action_has_a_pending_row_with_its_route_and_cli_form(string action, string method, string route, string cli, string ui)
+    [InlineData("DeferOnyx", "POST", "/onyx/defer", "sindri onyx defer", "ready")]
+    public void Each_desk_action_has_a_row_with_its_route_and_cli_form(string action, string method, string route, string cli, string ui)
     {
         var row = Assert.Single(new CommandCatalog().Rows, r => r.Action.Value == action);
 

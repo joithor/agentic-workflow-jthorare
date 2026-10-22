@@ -26,7 +26,7 @@ You are the meta orchestrator of team `sindri` (lanes api, engine, context, ui, 
 5. **#601 ideas `c5718aa10`** (LN-PK lite): ready, after #597. The ideas lane reports 1454 of 1454 scoped tests passing. Recipe
    hashes move (step.lens.round, step.review.round, workflow.phase v2, review-loop v4), so the owner runs approve-all after merging.
    Do NOT gate #584 (`dd7bd8b13` is a debug WIP). #599 (ui setup) isn't ready: its production client still throws on the five setup
-   writes (see ui.md).
+   writes (see ui.md). #603 (ui workflows s2, `1799ce8e8`) isn't ready either; it needs review.
 
 The lane files list what comes next. The owner closes #528 after #567 merges, and #463 after #574 merges.
 
@@ -48,7 +48,7 @@ The lane files list what comes next. The owner closes #528 after #567 merges, an
 
 Classify these; never send them back as the PR's.
 - Fixed tonight: format IDE0001 (#590), LockButtonWalk (#590), the Launch probes (#592), most git-template slow commits (#593).
-- Still red: the Architecture pair and NamedControls ContextPage (#597); Ui CreateItemDialog, ShellWindow, dot-grid (#598); Meta
+- Still red: the Architecture pair and NamedControls ContextPage (#597); ARCH-INFRA-001 on two public CodeIndex types (new since #595, context's); Ui CreateItemDialog, ShellWindow, dot-grid (#598); Meta
   SystemCommandRunner x5 and QueueGateSignal; Evidence SqliteReader hot journal; PreviewTmux; ContextApiGolden context-code capped;
   PosixProcessAncestry; bash ci-bash-tests (temp dir), install-headroom, sindri-ui-fixture, line-fixture.
 - Seen once, probably flakes: ListFilterAttributes, AgentRuntimeInterpreter.Cancel, LaunchesApiGolden sessions-id-exit.

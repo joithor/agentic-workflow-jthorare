@@ -23,6 +23,10 @@ You are the meta orchestrator of team `sindri` (lanes api, engine, context, ui, 
    slots, then Claude Code killed it for low memory. Re-gate.
 3. **#597 ui `cedf9e0da`** (context-arch: ARCH-UI-001, ARCH-CYCLE-001, NamedControls ContextPage): ready, gates after #598.
 4. **#567 api** (add repo): unblocked by #570; needs a main merge and a fresh `ready`.
+5. **#601 ideas `c5718aa10`** (LN-PK lite): ready, after #597. The ideas lane reports 1454 of 1454 scoped tests passing. Recipe
+   hashes move (step.lens.round, step.review.round, workflow.phase v2, review-loop v4), so the owner runs approve-all after merging.
+   Do NOT gate #584 (`dd7bd8b13` is a debug WIP). #599 (ui setup) isn't ready: its production client still throws on the five setup
+   writes (see ui.md).
 
 The lane files list what comes next. The owner closes #528 after #567 merges, and #463 after #574 merges.
 

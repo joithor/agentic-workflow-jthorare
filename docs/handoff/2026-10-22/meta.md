@@ -69,7 +69,15 @@ Classify these; never send them back as the PR's.
 
 ## Meta's own work
 
-- meta-codex: slice 1 merged (#589). Slices 2–6 not started (brief `~/.agentic-workflow/jthorare-agentic-workflow/plans/meta-codex/brief.md`).
+- meta-codex: a whole team on Codex, meta included (brief `~/.agentic-workflow/jthorare-agentic-workflow/plans/meta-codex/brief.md`;
+  owner decision 2026-10-21: a team is one provider, all Claude or all Codex). Six slices, each its own PR, in order:
+  1. One provider per team; the meta role set from a reported session id: **merged, #589** (`53937c574`).
+  2. Codex meta stop gate and inbox (`stop-check` with no `--transcript`; inbound rows from `lane-reply`): **next; not started, no branch.**
+  3. Watch for a Codex meta (no background notifications on Codex; `aw-meta-launch` runs the watch): not started.
+  4. `lanes-context` and `lane-recycle` on Codex (context size from Codex session files): not started.
+  5. `usage-wait` on Codex (usage-limit stops and their reset time): not started.
+  6. Skill and docs ("Running on Codex" in skills/meta/SKILL.md) and an end-to-end proof: not started.
+  Dispatch one Sonnet builder per slice, serially, each from main, in its own worktree; follow the brief's "Rules for every slice".
 - cutover-scrub: `~/repos/aw-wt/cutover-scrub`, branch `feat/cs-scrub`, no builder running. Brief: `.../plans/cutover/brief.md`, part A.
   Its work is pushed as WIP commit `85c09d687` on joithor `feat/cs-scrub` (unbuilt, untested; one fake-key test literal split for the scrubber).
 - Builders open PRs from joithor on the `jfork` remote (joithor/agentic-workflow-jthorare), not `fork`.

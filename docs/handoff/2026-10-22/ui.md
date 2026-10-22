@@ -10,7 +10,7 @@ PRs go to `jthorare/agentic-workflow` from `joithor:<branch>` (the remote is `jf
 |---|---|---|---|---|
 | #598 | `fix/sindri-ui-macos` | f3dac47a2 | ready, in meta's gate | Fixes three tests that fail on macOS on main: CreateItemDialogTests:269 (Ctrl vs Cmd), ShellWindowTests:1796 (expected start focus), and the ContextControlsRenderingTests dot grid (dot not pixel-centred in `ZoomBorder.Dots`). Gate passed build, deps, rules, packages and no-any before the handoff; aot-smoke exit 1 still to be attributed by meta (the PR touches no AOT path) |
 | #597 | `fix/sindri-ui-context-arch` | cedf9e0da | ready, after #598 in meta's gate | Fixes main's ARCH-UI-001 and ARCH-CYCLE-001 from #581. The map layout types moved to `ViewModels/Context/Layout` as plain `MapPoint`/`MapRect`/`MapVector`, with the Avalonia conversions in `Views/Controls/MapGeometryExtensions.cs`. Pre-merge: Architecture 130/130, Context tests green. The post-merge re-run is left to the gate |
-| #599 | `feat/sindri-ui-setup-4` (also `wip/sindri-ui-setup-4`) | fa0318b98 | open, not ready | Setup slice 4. Setup 113/113, routing 6/6. Its 3 failures are main's (fixed by #597/#598). The repo row builds against api #528's contract (#528 still open). LEFT: the lean-reviewer review was started but has no findings yet. Rerun it, fix the findings, then `ready #599` after #597 and #598 merge |
+| #599 | `feat/sindri-ui-setup-4` (also `wip/sindri-ui-setup-4`) | fa0318b98 | open, NOT ready (1 blocking review finding) | Setup slice 4. Setup 113/113, routing 6/6. Its 3 failures are main's (fixed by #597/#598). The repo row builds against api #528's contract (#528 still open). LEFT: fix the review findings below, then `ready #599` after #597 and #598 merge |
 | #584 | `feat/sindri-ui-needs-you-3` | dd7bd8b13 | open, NOT ready; do not gate | Needs-you slice 3 (hold and typed approve in the needs-you bar). Round-1 review items 1-3 and the nits are done (NeedsYou 211/211 at 9f1367a15). LEFT: item 4, the headless view test. **The head commit dd7bd8b13 is a `wip:` that adds that test with debug markers, and it hangs.** See "#584 hang" below |
 | (none) | `wip/sindri-ui-workflows-2` | 33a17082e | WIP, never built | Workflows slice 2 (board and toolbar, spec workflows.md §8.2). Main is merged. Lanes come from the served `lineStage` (api #583). 18 analyzer errors from the first build are fixed in 8423d2e74. 33a17082e adds edits that were never built, plus a `tests/Aw.Architecture.Tests/packages.lock.json` restore change, which needs checking before the PR. LEFT: build, Workflows tests, frames, format, PR `feat/sindri-ui-workflows-2`. Accepted departure: no separate red commit (the WIP never compiled) |
 | (none) | `wip/sindri-ui-run-canvas-2` | 52ae8d9e4 | WIP, never built | Run canvas slice 2 (graph model and layout, run-canvas.md §8.2). Contains main 6a674c43d and #597's cedf9e0da (checked). RunStates, RunLayout, RunCanvasLayout and RunGraphBuilder use the plain `MapRect`/`PortSide`. Mirrors #564's `actor`/`attempt`/`maxAttempts` as `FrameSummary`, with spec-shaped goldens under `tests/Aw.Sindri.Ui.Tests/Golden/SpecShaped/workflow-event-frame`. LEFT: build, Run namespace, golden and Architecture tests, format, push `feat/sindri-ui-run-canvas-2`; open the PR after #597 merges. Accepted: no separate red commit, `BranchesServed` false |
@@ -37,7 +37,24 @@ All are stopped. None has a test run or heavy job left (checked: no ui heavy job
 - ui-ny3 / ui-ny3b: #584 item 4. Stopped before the marker run got the heavy slot; it never ran.
 - ui-wf2: workflows s2. Stopped with its green build still queued; the build never ran.
 - ui-rc2 / ui-rc2b: run canvas s2. Stopped with the round still queued; it never ran.
-- ui-rev599: the lean-reviewer on #599, stopped at handoff.
+- ui-rev599: the lean-reviewer on #599. Its findings are below.
+
+## #599 review, round 1 (lean-reviewer, head fa0318b98: 1 blocking, 2 should-fix, 1 nit)
+1. BLOCKING. `Api/SindriApiClient.Setup.cs:13-25`: all five writes (`AddRepo`, `RegisterMcp`, `SetupOnyx`, `ConnectOnyx`, `DeferOnyx`) in the
+   production client still `throw new NotSupportedException()`, left from the red stub step. Once #528 lands and AddRepo is marked ready,
+   pressing Add crashes the app. `SindriApiClientSetupWritesTests` and the `SetupWrites` contract cases should fail; "113/113" covered only the Setup
+   namespace, so the Api namespace was never run. Fix: implement them. The first four are POSTs to `SetupRoutes.*` returning `JobStarted`;
+   `DeferOnyx` POSTs and returns `OnyxDeferView`. Send the same human caller and ui client headers as the other writes. `ConnectOnyx` must never
+   log or echo the body. Then run the Api namespace.
+2. Should-fix. `ViewModels/Labels.SetupForms.cs:137-148`: `SetupRefusal` doesn't map SND-PROFILE-002 (#528: the profile changed while being written).
+   Map it to a "try again" sentence. Add a spec-shaped golden `setup-repos/profile-changed`, using #528's text "The profile changed while Sindri was
+   writing it. Try again.", and a test.
+3. Should-fix. `Api/Setup/AddRepoRequest.cs:6`: `Name` is dead, because the form has no name field (an accepted departure). Drop it from the record
+   and the JSON context, or say in the PR why it stays.
+4. Nit. The `Route`/`CoreRoute` split preserves behaviour, and the anchors keep their order. But the U3'/U8 arms now sit after CoreRoute's, so a
+   future needs-you path that a CoreRoute arm already matches would lose to it.
+Checked, no findings: the seven setup-repos goldens are byte-identical to #528's; VMs are plain; no production file is over 300 lines; the Onyx
+password is cleared on send.
 
 ## #584 hang (what's known)
 - The typed-box test (`NeedsYouConfirmViewTests`, in dd7bd8b13) blocks for over 3 min at ~0-1% CPU: a blocked await, NOT the layout loop first suspected.
@@ -60,7 +77,7 @@ All are stopped. None has a test run or heavy job left (checked: no ui heavy job
 
 ## Next steps, in order
 1. Meta gates #598, then #597. On a failure, fix it in its worktree and send ready again.
-2. #599: rerun a lean-reviewer (findings in its reply), fix the findings, `ready #599`.
+2. #599: fix the round-1 review above (the blocking item first), run the Api AND Setup namespaces plus Architecture, then `ready #599`.
 3. #584: run the hold and typed tests alone, bounded, and read the markers. Fix the hang, remove the markers, merge main, run checks
    (NeedsYou namespace, the view test class, Architecture), push, `ready #584`.
 4. Workflows s2: build, fix, Workflows namespace + frames + Architecture, push `feat/sindri-ui-workflows-2`, PR, review, ready.

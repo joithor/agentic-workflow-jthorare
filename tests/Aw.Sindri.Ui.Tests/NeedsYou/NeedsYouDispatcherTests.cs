@@ -30,8 +30,8 @@ public sealed class NeedsYouDispatcherTests
 
     private static NeedsYouAction Service(string id, string label) => new(id, label, ActionReadiness.Ready, "sindri services " + id, RejectLike: false);
 
-    // The f5 desk golden, with the recommended outcome set or dropped.
-    private void ServeRecommending(string? outcome)
+    // The f5 desk golden, with the recommended outcome set or dropped; severalOutcomes serves its complete command naming two outcomes instead of "done".
+    private void ServeRecommending(string? outcome, bool severalOutcomes = false)
     {
         var instance = JsonNode.Parse(GoldenFiles.Api("workflow-instance", "f5-desk-recommended"))!;
         var desk = instance["current"]!["desk"]!.AsObject();
@@ -44,7 +44,8 @@ public sealed class NeedsYouDispatcherTests
             desk["recommended"]!["outcome"] = outcome;
         }
 
-        _server.InstanceBody = _ => new RouteAnswer(HttpStatusCode.OK, instance.ToJsonString());
+        var body = instance.ToJsonString();
+        _server.InstanceBody = _ => new RouteAnswer(HttpStatusCode.OK, severalOutcomes ? body.Replace("--outcome done", "--outcome <approve|revise>", StringComparison.Ordinal) : body);
     }
 
     [Fact]
@@ -87,9 +88,24 @@ public sealed class NeedsYouDispatcherTests
     }
 
     [Fact]
-    public async Task Complete_with_no_recommended_outcome_opens_the_sheet_and_sends_nothing()
+    public async Task Complete_sends_the_steps_only_outcome_when_none_is_recommended()
     {
         ServeRecommending(null);
+
+        var result = await Dispatcher().Run(NeedsYouRows.Desk(), NeedsYouRows.Desk().Actions[0]);
+
+        var (_, body) = Assert.Single(_server.CompleteCalls);
+        Assert.Equal(("done", DispatchOutcome.Sent), (body.Outcome, result.Outcome));
+    }
+
+    [Theory]
+    [InlineData("reviseDesign", false)]
+    [InlineData("rework", false)]
+    [InlineData("drop", false)]
+    [InlineData(null, true)]
+    public async Task Complete_that_needs_a_reason_or_a_choice_opens_the_sheet_and_sends_nothing(string? recommended, bool severalOutcomes)
+    {
+        ServeRecommending(recommended, severalOutcomes);
 
         var result = await Dispatcher().Run(NeedsYouRows.Desk(), NeedsYouRows.Desk().Actions[0]);
 

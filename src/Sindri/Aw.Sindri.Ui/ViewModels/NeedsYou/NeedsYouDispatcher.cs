@@ -17,7 +17,6 @@ internal sealed class NeedsYouDispatcher
     private const string PauseAction = "PauseService";
     private const string ResumeServiceAction = "ResumeService";
     private const string RunAction = "RunService";
-    private const string ApproveOutcome = "approve";
 
     private readonly ISindriApi _api;
     private readonly Func<Uri?> _apiUrl;
@@ -70,8 +69,8 @@ internal sealed class NeedsYouDispatcher
     private async Task<NeedsYouDispatch> Resume(string instance) =>
         Reply(await _commands.Send(ApplyCommandBody.Resume(instance)).ConfigureAwait(true));
 
-    // The desk report is sent only for the outcome that needs nothing more from the person (approve, as the desk recommends it); any other
-    // outcome, or none, opens the row's sheet where the action bar asks for the reason or the choice.
+    // The desk report is sent when the step has an outcome that needs nothing more from the person (the recommended one, else its only one);
+    // otherwise the row's sheet opens, where the action bar asks for the reason or the choice.
     private async Task<NeedsYouDispatch> Complete(string instance)
     {
         if (await _desk.Load(instance).ConfigureAwait(true) is not { } target)
@@ -79,12 +78,12 @@ internal sealed class NeedsYouDispatcher
             return new NeedsYouDispatch(DispatchOutcome.Refused, Labels.CompleteUnreadable);
         }
 
-        if (target.Recommended is not { } recommended || !string.Equals(recommended.Outcome, ApproveOutcome, StringComparison.OrdinalIgnoreCase))
+        if (target.InputFreeOutcome() is not { } outcome)
         {
             return new NeedsYouDispatch(DispatchOutcome.OpenSheet, Labels.CompleteNeedsChoice);
         }
 
-        return Reply(await _desk.Complete(target, ApproveOutcome, answers: null).ConfigureAwait(true), Labels.CompleteSent);
+        return Reply(await _desk.Complete(target, outcome, answers: null).ConfigureAwait(true), Labels.CompleteSent);
     }
 
     private async Task<NeedsYouDispatch> Service(string action, string name)

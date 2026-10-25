@@ -6,8 +6,6 @@ namespace Aw.Sindri.Ui.ViewModels.Instance;
 /// <summary>The state's sends (<see cref="ExpandedStateViewModel"/>, continued): Cancel after its confirm and Hand back, each as ApplyCommand to the instance, once per press, never retried.</summary>
 internal sealed partial class ExpandedStateViewModel
 {
-    private const string ApproveOutcome = "approve";
-
     private bool _sendingCommand;
 
     /// <summary>Sends the instance's commands; set by the frame, null when nothing can be sent.</summary>
@@ -17,8 +15,8 @@ internal sealed partial class ExpandedStateViewModel
     internal DeskReporter? Desk { get; set; }
 
     /// <summary>
-    /// Reports the open desk run: the report is sent once per press when the desk recommends approving; any other recommendation, or none,
-    /// leaves the choice to the person (the Needs-you action bar asks for the reason), and the note says so.
+    /// Reports the open desk run: the report is sent once per press when the step has an outcome that needs no input (the recommended one, else its only one);
+    /// otherwise the choice is the person's (the Needs-you action bar asks for the reason), and the note says so.
     /// </summary>
     /// <returns>A task that completes when the answer came.</returns>
     internal async Task CompleteAsync()
@@ -54,12 +52,12 @@ internal sealed partial class ExpandedStateViewModel
             return Labels.CompleteUnreadable;
         }
 
-        if (target.Recommended is not { } recommended || !string.Equals(recommended.Outcome, ApproveOutcome, StringComparison.OrdinalIgnoreCase))
+        if (target.InputFreeOutcome() is not { } outcome)
         {
             return Labels.CompleteNeedsChoice;
         }
 
-        var answer = await desk.Complete(target, ApproveOutcome, answers: null).ConfigureAwait(true);
+        var answer = await desk.Complete(target, outcome, answers: null).ConfigureAwait(true);
         return answer is not { } result ? Labels.SendingArrivesNote : result.IsError ? result.Error.Message : Labels.CompleteSent;
     }
 

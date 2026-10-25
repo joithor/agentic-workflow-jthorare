@@ -159,9 +159,21 @@ public sealed class ExpandedStateSendTests
     }
 
     [Fact]
-    public async Task Complete_with_no_recommended_outcome_sends_nothing_and_asks_for_the_choice()
+    public async Task Complete_reports_the_steps_only_outcome_when_none_is_recommended()
     {
         ServeRecommending(null);
+        var expanded = Expanded("dev-desk-round-trip");
+
+        await expanded.CompleteAsync();
+
+        var (_, body) = Assert.Single(_server.CompleteCalls);
+        Assert.Equal(("done", Labels.CompleteSent), (body.Outcome, expanded.PendingNote));
+    }
+
+    [Fact]
+    public async Task Complete_with_a_recommended_outcome_that_needs_a_reason_sends_nothing_and_asks_for_the_choice()
+    {
+        ServeRecommending("reviseDesign");
         var expanded = Expanded("dev-desk-round-trip");
 
         await expanded.CompleteAsync();
@@ -170,4 +182,3 @@ public sealed class ExpandedStateSendTests
         Assert.Equal(Labels.CompleteNeedsChoice, expanded.PendingNote);
     }
 }
-

@@ -104,7 +104,7 @@ if ! poll 3 gone; then
   shot after-unstall
   nodes "$OUT/left.json" --type TextBlock --contains "Views are stalled"
   nodes "$OUT/left2.json" --type TextBlock --contains "Rebuilding views"
-  fail "the pill says Healthy but '$(first_text "$OUT/left.json")$(first_text "$OUT/left2.json")' is still on Home 3 s later (screenshots in $OUT)"
+  fail "[stale panel after the health event, hypothesis 1] the pill says Healthy but '$(first_text "$OUT/left.json")$(first_text "$OUT/left2.json")' is still on Home 3 s later (screenshots in $OUT)"
 fi
 
 echo "PASS: Home's panels followed the Healthy pill within 3 s (screenshots in $OUT)"

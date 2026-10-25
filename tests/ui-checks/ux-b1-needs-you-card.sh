@@ -114,16 +114,16 @@ r="$(visible_n "$OUT/rows.json")"
 [ "$(visible_n "$OUT/panel.json")" -ge 1 ] || setup_fail "no visible NEEDS YOU card in the tree"
 fails=()
 if [ "$r" -gt "$n" ]; then
-  fails+=("the header says $n need you but $r rows show")
+  fails+=("[count-vs-rows mismatch, hypothesis 2] the header says $n need you but $r rows show")
 elif [ "$r" -lt "$n" ]; then
   nodes "$OUT/link.json" --type TextBlock --contains "all $n"
-  [ "$(visible_n "$OUT/link.json")" -ge 1 ] || fails+=("the header says $n need you, $r rows show and there is no 'all $n' link")
+  [ "$(visible_n "$OUT/link.json")" -ge 1 ] || fails+=("[count-vs-rows mismatch, hypothesis 2] the header says $n need you, $r rows show and there is no 'all $n' link")
 fi
 # bounds are window coordinates: the card's bottom edge must lie below the last row's bottom edge (the card's 1 px border), and below the link
 panel_bottom="$(jq '[.matches[] | select(.visible)][0] | ((.y // .Y) + (.height // .Height))' "$OUT/panel.json")"
 rows_bottom="$(jq '[.matches[] | select(.visible) | ((.y // .Y) + (.height // .Height))] | max // 0' "$OUT/rows.json")"
 if ! jq -n --argjson p "$panel_bottom" --argjson r "$rows_bottom" '$p >= $r + 1' | grep -q true; then
-  fails+=("the card ends at y=$panel_bottom, not below its last row (y=$rows_bottom): the bottom border is cut off")
+  fails+=("[card not re-measured, hypothesis 1] the card ends at y=$panel_bottom, not below its last row (y=$rows_bottom): the bottom border is cut off")
 fi
 if [ "${#fails[@]}" -gt 0 ]; then
   fail "$(IFS=';'; echo "${fails[*]}") (screenshots in $OUT)"

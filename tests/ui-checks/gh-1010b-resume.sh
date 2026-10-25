@@ -29,9 +29,9 @@ mkdir -p "$OUT" || exit 2
 APP_WRAPPER_PID=""
 setup_fail() { echo "gh-1010-resume: setup failed: $*" >&2; exit 2; }
 # On a failed match: what command.handled rows the ledger did have (command caller outcome, the last 20), on stderr.
-dump_handled() { # $@ extra ledger args (e.g. --item X)
+dump_handled() {
   local out lines
-  out="$("$PROVE" human ledger --json --type command.handled "$@" --max 1000 2>&1 | tr -d '\r')"
+  out="$("$PROVE" human ledger --json --type command.handled --max 2000 2>&1 | tr -d '\r')"
   lines="$(printf '%s' "$out" | jq -r '.events[]? | select(.type == "command.handled") | "\(.payload.command) \(.payload.caller) \(.payload.outcome)"' 2>/dev/null | tail -n 20)"
   if [ -n "$lines" ]; then echo "command.handled in the ledger (last 20):" >&2; printf '%s\n' "$lines" >&2; else echo "no command.handled events" >&2; fi
 }
@@ -91,17 +91,21 @@ resume=(--type Button --text Resume)
 "$DRIVER" screenshot --out "$OUT/before-click.png" >/dev/null 2>&1
 
 before="$("$PROVE" human ledger --json --item "$item" --max 1000 2>&1 | tr -d '\r')"
+# The ledger's highest event sequence before the click (events carry "sequence", GET /sindri/ledger, tests/Aw.Sindri.Tests/Golden/Api/ledger/human-all.json):
+# command.handled rows carry no item, so the match is tied to this run by sequence instead.
+before_seq="$("$PROVE" human ledger --json --max 100000 2>&1 | tr -d '\r' | jq -r '[.events[]?.sequence] | max // 0' 2>/dev/null)"
+case "$before_seq" in ''|*[!0-9]*) before_seq=0;; esac
 "$DRIVER" click "${resume[@]}" >/dev/null 2>&1 || setup_fail "the Resume click was not accepted by the driver"
 
 # 5. Within 5 s: the ledger records the answer from the UI, and the app shows it.
 sent=0
 for _ in $(seq 1 10); do
   after="$("$PROVE" human ledger --json --item "$item" --max 1000 2>&1 | tr -d '\r')"
-  if "$PROVE" human ledger --json --type command.handled --item "$item" --max 1000 2>&1 | tr -d '\r' | jq -e --arg c "ApplyCommand:answer-resume" '.events[]? | select(.type == "command.handled" and .payload.command == $c and .payload.caller == "human:ui" and .payload.outcome == "accepted")' >/dev/null 2>&1; then sent=1; break; fi   # command.handled: ApplyCommand:answer-resume by human:ui, accepted
+  if "$PROVE" human ledger --json --type command.handled --max 2000 2>&1 | tr -d '\r' | jq -e --arg c "ApplyCommand:answer-resume" --argjson after "$before_seq" '.events[]? | select(.type == "command.handled" and .sequence > $after and .payload.command == $c and .payload.caller == "human:ui" and .payload.outcome == "accepted")' >/dev/null 2>&1; then sent=1; break; fi   # command.handled: ApplyCommand:answer-resume by human:ui, accepted
   sleep 0.5
 done
 "$DRIVER" screenshot --out "$OUT/after-click.png" >/dev/null 2>&1
-[ "$sent" = 1 ] || { dump_handled --item "$item"; fail "no answer-resume in the ledger after 5 s (screenshots in $OUT)"; }
+[ "$sent" = 1 ] || { dump_handled; fail "no answer-resume in the ledger after 5 s (screenshots in $OUT)"; }
 [ "$before" != "$after" ] || fail "the ledger did not change after the Resume click (screenshots in $OUT)"
 "$DRIVER" wait-for "${resume[@]}" --state gone --wait-ms 5000 >/dev/null 2>&1 \
   || fail "the Resume row is still shown 5 s after the click (screenshots in $OUT)"

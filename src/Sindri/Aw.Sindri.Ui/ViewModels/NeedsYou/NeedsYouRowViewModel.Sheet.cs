@@ -31,8 +31,10 @@ internal sealed partial class NeedsYouRowViewModel
     /// <summary>True when the sheet shows the Complete button.</summary>
     public bool ShowsComplete => SheetComplete is not null;
 
+#pragma warning disable CA1822, MA0041 // a fixed word is a property because the view binds it
     /// <summary>The words on the Complete button.</summary>
     public string CompleteLabel => Labels.Action(CompleteAction);
+#pragma warning restore CA1822, MA0041
 
     /// <summary>The Complete button's accessible name: the words and the instance's address ("Complete ITM-.../dev-desk-round-trip/1").</summary>
     public string CompleteName => Labels.CommandName(CompleteLabel, Address);

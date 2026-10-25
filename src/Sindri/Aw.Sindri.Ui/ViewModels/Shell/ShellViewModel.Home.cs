@@ -76,15 +76,12 @@ internal sealed partial class ShellViewModel
         if (string.Equals(request.Action.CatalogId, ApproveAllViewModel.Action, StringComparison.Ordinal))
         {
             OpenApproveAll();
+            return;
         }
-        else if (request.Action.OptionId.Length > 0)
-        {
-            _ = AnswerDecision(request.RowId, request.Action.OptionId, note: null);
-        }
-        else
-        {
-            _ = Dispatch(request.RowId, request.Action);
-        }
+
+        _ = request.Action.OptionId.Length > 0
+            ? (Task)AnswerDecision(request.RowId, request.Action.OptionId, note: null)
+            : Dispatch(request.RowId, request.Action);
     }
 
     // The row says "Sending..." while the command is out, then the accepted sentence or the refusal as served; a desk task that needs a choice opens its sheet.

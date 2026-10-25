@@ -95,25 +95,8 @@ internal sealed partial class NeedsYouRowViewModel : ObservableObject
     /// <summary>Where Open goes; null when the row names no item.</summary>
     public DeepLink? ItemLink => Entry.ItemId is { } item ? new DeepLink(DeepLinkKind.Item, item) : null;
 
-    /// <summary>What the last action pressed on the row said (sending, sent, the refusal as served); empty before one was pressed.</summary>
-    public string ActionNote { get; private set; } = "";
-
     /// <summary>The words under the row: what its last action said, else the served recorded-only sentence (empty when the row isn't recorded-only).</summary>
     public string Notice => ActionNote.Length > 0 ? ActionNote : Entry.RecordedOnly ? Entry.Notice : "";
-
-    /// <summary>Says what became of an action pressed on the row.</summary>
-    /// <param name="note">The words; empty clears them.</param>
-    internal void SetActionNote(string note)
-    {
-        ArgumentNullException.ThrowIfNull(note);
-        if (!string.Equals(ActionNote, note, StringComparison.Ordinal))
-        {
-            ActionNote = note;
-            OnChanged(nameof(ActionNote));
-            OnChanged(nameof(Notice));
-            OnChanged(nameof(HasNotice));
-        }
-    }
 
     /// <summary>True when the row shows <see cref="Notice"/>.</summary>
     public bool HasNotice => Notice.Length > 0;

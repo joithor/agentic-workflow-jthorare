@@ -149,7 +149,7 @@ public sealed class NeedsYouDispatcherTests
     [Fact]
     public void The_resume_body_names_the_resume_answer_on_the_wire()
     {
-        var json = System.Text.Json.JsonSerializer.Serialize(ApplyCommandBody.Resume(Instance), Aw.Sindri.Ui.Api.SindriUiJsonContext.Default.ApplyCommandBody);
+        var json = System.Text.Json.JsonSerializer.Serialize(ApplyCommandBody.Resume(Instance), Ui.Api.SindriUiJsonContext.Default.ApplyCommandBody);
 
         Assert.Contains("\"resume\"", json, StringComparison.Ordinal);
     }

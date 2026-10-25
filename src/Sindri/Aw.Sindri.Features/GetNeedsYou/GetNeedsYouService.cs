@@ -36,7 +36,9 @@ internal sealed class GetNeedsYouService(IViewReader views, IProjectorStatus sta
             return records.Error;
         }
 
-        var rows = await joins.Apply(NeedsYouOrder.Sort([.. records.Value.Select(static r => r.Row), .. await live.Read(cancellationToken).ConfigureAwait(false)]), clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+        var stored = records.Value.Select(static r => r.Row).ToList();
+        var computed = (await live.Read(cancellationToken).ConfigureAwait(false)).Where(l => !stored.Exists(r => r.Id == l.Id));   // a computed row never doubles a stored one with its id (profile:drift)
+        var rows = await joins.Apply(NeedsYouOrder.Sort([.. stored, .. computed]), clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
         var empty = current.Text;
         if (empty is null && rows.Count == 0)
         {

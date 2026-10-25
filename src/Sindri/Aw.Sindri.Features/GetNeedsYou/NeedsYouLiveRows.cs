@@ -1,7 +1,9 @@
 using Aw.Sindri.Core.NeedsYou;
-using Aw.Sindri.Features.GetStatus;
 using Aw.Sindri.Core.Onyx;
+using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Text;
+using Aw.Sindri.Core.Views;
+using Aw.Sindri.Features.GetStatus;
 
 namespace Aw.Sindri.Features.GetNeedsYou;
 
@@ -13,13 +15,27 @@ namespace Aw.Sindri.Features.GetNeedsYou;
 /// <param name="profiles">The live and the approved profile, whose difference is the profile drift row.</param>
 internal sealed class NeedsYouLiveRows(IOnyxNotices onyx, SetupNotices setup, ITextScrubber scrubber, TimeProvider clock, ProfileReads profiles)
 {
-    internal ProfileReads Profiles => profiles;
-
-    /// <summary>The Onyx row and the setup rows, in that order.</summary>
+    /// <summary>The Onyx row, the profile drift row and the setup rows, in that order.</summary>
     /// <param name="cancellationToken">Cancels the reads.</param>
     /// <returns>The rows; empty when a source can't be read.</returns>
     public async ValueTask<IReadOnlyList<NeedsYouRow>> Read(CancellationToken cancellationToken) =>
-        [.. await OnyxRows(cancellationToken).ConfigureAwait(false), .. await SetupRows(cancellationToken).ConfigureAwait(false)];
+        [.. await OnyxRows(cancellationToken).ConfigureAwait(false), .. await DriftRows(cancellationToken).ConfigureAwait(false), .. await SetupRows(cancellationToken).ConfigureAwait(false)];
+
+    // The profile drift row from the live profile against the approved one, as the status compares them, so it shows when the pill does and not when the next
+    // profile.checked is recorded (up to 30 s later). The stored row has the same id; the service keeps that one when both exist.
+    private async ValueTask<IReadOnlyList<NeedsYouRow>> DriftRows(CancellationToken cancellationToken)
+    {
+        var approved = await profiles.Approved(cancellationToken).ConfigureAwait(false);
+        var loaded = await profiles.Live(cancellationToken).ConfigureAwait(false);
+        if (approved is not { IsSuccess: true, Value: { } before } || loaded.IsError || loaded.Value.Hash == before.Hash)
+        {
+            return [];
+        }
+
+        var drifted = new ProfileRow(before.Hash, ApprovedAt: null, loaded.Value.Hash, CheckedAt: null, Changed: true, ProfileDiff.Between(before.Profile, loaded.Value.Profile), ApprovedServices: [], Sequence: 0);
+        var row = NeedsYouRows.ForProfile(drifted, clock.GetUtcNow(), scrubber);
+        return row is { IsSuccess: true, Value: { } found } ? [found] : [];
+    }
 
     // The setup rows that are computed, not folded.
     private async ValueTask<IReadOnlyList<NeedsYouRow>> SetupRows(CancellationToken cancellationToken)

@@ -11,6 +11,13 @@ internal sealed partial class ExpandedStateViewModel
     /// <summary>Sends the instance's commands; set by the frame, null when nothing can be sent.</summary>
     internal InstanceCommander? Commander { get; set; }
 
+    /// <summary>Reports the instance's desk run; set by the frame, null when nothing can be sent.</summary>
+    internal DeskReporter? Desk { get; set; }
+
+    /// <summary>Reports the open desk run with the outcome the desk recommends.</summary>
+    /// <returns>A task that completes when the answer came.</returns>
+    internal Task CompleteAsync() => throw new NotSupportedException();
+
     /// <summary>The instance the commands go to; set by the frame.</summary>
     internal string? InstanceId { get; set; }
 

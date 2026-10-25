@@ -91,18 +91,32 @@ poll() {  # poll <seconds> <command...>: true as soon as the command succeeds
 shot() { drv_to /dev/null screenshot --out "$OUT/$1.png" || true; }
 
 
-# 2. Home lists the seven: the header says "7 need you".
+# 2. Home lists the seven decisions plus whatever setup rows Needs you also counts (e.g. "Approve all new workflows"): the header
+# is read once it shows a number and has held it for ~3 s; that number is N.
 summary_n() {
   nodes "$OUT/summary.json" --type TextBlock --contains " need you · "
   first_text "$OUT/summary.json" | sed -n 's/^\([0-9][0-9]*\) need you.*/\1/p'
 }
 summary_is() { [ "$(( $(summary_n) + 0 ))" -eq "$1" ]; }
-poll 90 summary_is 7 || setup_fail "Home's header never read 7 need you (see $OUT/app.log)"
+N=0
+settle_n() {  # true once the header has read the same non-zero number on every look for ~3 s
+  local v; v="$(( $(summary_n) + 0 ))"
+  if [ "$v" -gt 0 ] && [ "$v" -eq "$N" ]; then
+    [ "$SECONDS" -ge "$stable_since" ] && return 0
+    return 1
+  fi
+  N="$v"; stable_since=$((SECONDS + 3))
+  return 1
+}
+stable_since=0
+poll 90 settle_n || setup_fail "Home's header never settled on a need-you count (last read $N; see $OUT/app.log)"
+[ "$N" -ge 7 ] || setup_fail "Home's header settled on $N need you, fewer than the seven decisions opened"
+echo "ux-b1-needs-you-card: header settled on N=$N need you"
 shot before-decide
 
 # 3. One decision is decided at the terminal (the card must follow).
 bash "$FIXTURE" decide "${ids[0]}" accept >/dev/null 2>&1 || setup_fail "sindri-ui-fixture decide ${ids[0]} accept"
-poll 60 summary_is 6 || setup_fail "the header never dropped to 6 need you after the decision"
+poll 60 summary_is $((N - 1)) || setup_fail "the header never dropped to $((N - 1)) need you after the decision"
 sleep 3   # the card has had every chance to re-measure
 shot after-decide
 

@@ -99,6 +99,12 @@ internal sealed partial class ShellViewModel
             shown.SetActionNote(result.Outcome == DispatchOutcome.OpenSheet ? "" : result.Message);
         }
 
+        if (result.Outcome == DispatchOutcome.Sent && Health.ApiUrl() is { } url)
+        {
+            // An accepted command changes what needs the person: read the list now, so a row it settled (an approved workflow) leaves Home instead of waiting for an event.
+            await ReadNeedsYou(url, CancellationToken.None).ConfigureAwait(true);
+        }
+
         if (result.Outcome == DispatchOutcome.OpenSheet)
         {
             OpenNeedsYouRow(rowId);

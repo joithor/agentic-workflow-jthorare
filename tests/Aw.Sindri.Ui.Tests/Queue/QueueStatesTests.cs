@@ -84,6 +84,15 @@ public sealed class QueueStatesTests
     }
 
     [Fact]
+    public async Task Stalled_views_mark_the_panels_stale_instead_of_repeating_the_banners_sentence()
+    {
+        var queue = await Queue([], new AsOfView(588, 601, A.Noon, Rebuilding: false, Stalled: true));
+
+        Assert.True(queue.IsStale);
+        Assert.Equal(string.Empty, queue.RunningEmpty);
+    }
+
+    [Fact]
     public async Task The_footer_says_up_to_date_or_how_far_behind()
     {
         Assert.Equal(Labels.QueueUpToDate(214), (await Queue([])).FooterText);

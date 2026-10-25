@@ -69,7 +69,8 @@ internal sealed partial class ShellViewModel
         }
     }
 
-    // A key or a button asks to run an action: approve-all opens its dialog; a decision option is Decide, sent once with the option, and the sheet shows what came back.
+    // A key or a button asks to run an action: approve-all opens its dialog; a decision option is Decide, sent once with the option, and the sheet shows what came back;
+    // every other ready action goes to the dispatcher, and the row shows what became of it (never dropped silently).
     private void Decide(NeedsYouActionEventArgs request)
     {
         if (string.Equals(request.Action.CatalogId, ApproveAllViewModel.Action, StringComparison.Ordinal))
@@ -79,6 +80,31 @@ internal sealed partial class ShellViewModel
         else if (request.Action.OptionId.Length > 0)
         {
             _ = AnswerDecision(request.RowId, request.Action.OptionId, note: null);
+        }
+        else
+        {
+            _ = Dispatch(request.RowId, request.Action);
+        }
+    }
+
+    // The row says "Sending..." while the command is out, then the accepted sentence or the refusal as served; a desk task that needs a choice opens its sheet.
+    private async Task Dispatch(string rowId, NeedsYouAction action)
+    {
+        if (NeedsYou.Row(rowId) is not { } row || _dispatcher is not { } dispatcher)
+        {
+            return;
+        }
+
+        row.SetActionNote(Labels.RowSending);
+        var result = await dispatcher.Run(row.Entry, action).ConfigureAwait(true);
+        if (NeedsYou.Row(rowId) is { } shown)
+        {
+            shown.SetActionNote(result.Outcome == DispatchOutcome.OpenSheet ? "" : result.Message);
+        }
+
+        if (result.Outcome == DispatchOutcome.OpenSheet)
+        {
+            OpenNeedsYouRow(rowId);
         }
     }
 

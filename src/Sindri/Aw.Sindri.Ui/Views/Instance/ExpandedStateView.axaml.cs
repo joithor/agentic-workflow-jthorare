@@ -73,6 +73,8 @@ internal sealed partial class ExpandedStateView : UserControl
 
     private void OnAsk(object? sender, RoutedEventArgs e) => _state?.AskCancel();
 
+    private void OnComplete(object? sender, RoutedEventArgs e) => _ = _state?.CompleteAsync();
+
     private void OnHandBack(object? sender, RoutedEventArgs e) => _ = _state?.HandBackAsync();
 
     private void OnKeep(object? sender, RoutedEventArgs e) => _state?.Keep();

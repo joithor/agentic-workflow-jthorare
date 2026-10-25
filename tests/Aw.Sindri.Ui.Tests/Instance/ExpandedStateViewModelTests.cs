@@ -152,7 +152,8 @@ public sealed class ExpandedStateViewModelTests
         var served = FixtureInstances.Detail("dev-desk-round-trip").Current.Status.Commands;
 
         Expect.Sequence(served.Select(c => c.Cli), expanded.Commands.Select(c => c.Cli));
-        Assert.All(expanded.Commands, c => Assert.Equal((Labels.AvailableWithU8b, null), (c.PendingChip, c.Protected)));
+        // Complete, Cancel and Hand back are sent by the frame and carry no chip; the rest still wait for their send.
+        Assert.All(expanded.Commands, c => Assert.Equal((c.IsComplete || c.IsCancel || c.IsHandBack ? string.Empty : Labels.AvailableWithU8b, null), (c.PendingChip, c.Protected)));
         Assert.All(expanded.Commands, c => Assert.Contains(c.PendingChip, c.Name, StringComparison.Ordinal));
         await expanded.Commands[0].Copy(Token);
         Assert.Equal(served[0].Cli, _clipboard.Text);

@@ -186,7 +186,8 @@ public sealed class GetNeedsYouTests
         _q.Views.Slice.Profiles.Live = profile;
         using var entered = _q.Human();
 
-        Assert.Empty((await Get()).Rows);
+        // not Assert.Empty: this approved profile names repos, so the unrelated "turn on Sindri for your repos" setup row stands
+        Assert.DoesNotContain((await Get()).Rows, r => r.Id.Value == "profile:drift");
     }
 
     [Fact]

@@ -71,8 +71,8 @@ wait_ledger() {
 }
 
 # 1. The control plane, and Home's rows: a changed workflow, and the new shipped ones.
-bash "$FIXTURE" up >/dev/null 2>&1 || setup_fail "sindri-ui-fixture up"
-bash "$FIXTURE" changed-recipe >/dev/null 2>&1 || setup_fail "sindri-ui-fixture changed-recipe"
+bash "$FIXTURE" up >"$OUT/up.log" 2>&1 || setup_fail "sindri-ui-fixture up (see $OUT/up.log)"
+bash "$FIXTURE" changed-recipe >"$OUT/changed-recipe.log" 2>&1 || setup_fail "sindri-ui-fixture changed-recipe (see $OUT/changed-recipe.log)"
 
 # 2. The real app, drivable, on the fixture's control plane: this checkout's debug build (sindri-app.sh's publish would
 #    make the build the owner's current one), unless AW_SINDRI_UI names a binary.

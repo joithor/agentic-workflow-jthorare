@@ -20,6 +20,9 @@ internal sealed record DeskTarget(string InstanceId, string Run, StatusCommand? 
     /// <summary>True when the step's complete command is protected: a terminal completes it, so a send back is the step's "rework".</summary>
     internal bool IsTerminalOnly => Complete is { } command && string.Equals(command.Class, "protected", StringComparison.Ordinal);
 
+    /// <summary>The keys of the outputs the report must carry (the served desk form's required outputs); empty when none.</summary>
+    internal IReadOnlyList<string> RequiredOutputs { get; init; } = [];
+
     /// <summary>The instance's address, for taking the person to its frame; empty when not read.</summary>
     internal string Address { get; init; } = string.Empty;
 

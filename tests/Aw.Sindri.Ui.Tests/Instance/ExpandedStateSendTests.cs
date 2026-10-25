@@ -1,6 +1,7 @@
 using System.Net;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Ui.Api.Workflow;
+using Aw.Sindri.Ui.Platform;
 using Aw.Sindri.Ui.Testing;
 using Aw.Sindri.Ui.ViewModels;
 using Aw.Sindri.Ui.ViewModels.Instance;
@@ -23,7 +24,7 @@ public sealed class ExpandedStateSendTests
     private ExpandedStateViewModel Expanded(string scenario, bool wired = true)
     {
         var detail = FixtureInstances.Detail(scenario);
-        return new ExpandedStateViewModel(detail.Current, detail.Address, _clipboard, _clock)
+        return new ExpandedStateViewModel(detail.Current, detail.Address, _clipboard, _clock, readPath: (_, _, _) => Task.FromResult<PickedFile?>(new PickedFile("export.txt", 3, "abc"u8.ToArray())))
         {
             Commander = wired ? new InstanceCommander(_server, () => _api) : null,
             Desk = wired ? new DeskReporter(_server, () => _api) : null,
@@ -115,6 +116,7 @@ public sealed class ExpandedStateSendTests
     {
         var instance = System.Text.Json.Nodes.JsonNode.Parse(GoldenFiles.Api("workflow-instance", "f5-desk-recommended"))!;
         var desk = instance["current"]!["desk"]!.AsObject();
+        desk["outputs"] = System.Text.Json.Nodes.JsonNode.Parse("""[{"key":"fact:output","type":"file","required":true}]""");   // the output the sheet's input stands for
         if (outcome is null)
         {
             _ = desk.Remove("recommended");
@@ -150,6 +152,7 @@ public sealed class ExpandedStateSendTests
     {
         ServeRecommending("approve");
         var expanded = Expanded("dev-desk-round-trip");
+        expanded.Outputs.Single().Path = "export.txt";   // the task's required output, picked
 
         await expanded.CompleteAsync();
 
@@ -163,6 +166,7 @@ public sealed class ExpandedStateSendTests
     {
         ServeRecommending(outcome: null);
         var expanded = Expanded("dev-desk-round-trip");
+        expanded.Outputs.Single().Path = "export.txt";   // the task's required output, picked
 
         await expanded.CompleteAsync();
 

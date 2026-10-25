@@ -117,6 +117,11 @@ internal sealed class NeedsYouDispatcher
             return new NeedsYouDispatch(DispatchOutcome.OpenSheet, Labels.CompleteNeedsChoice);
         }
 
+        if (target.RequiredOutputs.Count > 0)
+        {
+            return new NeedsYouDispatch(DispatchOutcome.Refused, Labels.CompleteNeedsOutput);   // the file is picked in the instance sheet, which has the inputs; the row says so and stays
+        }
+
         return Reply(await _desk.Complete(target, outcome, answers: null).ConfigureAwait(true), Labels.CompleteSent);
     }
 

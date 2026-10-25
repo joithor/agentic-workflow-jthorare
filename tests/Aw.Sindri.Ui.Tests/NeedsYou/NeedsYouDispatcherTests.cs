@@ -31,10 +31,16 @@ public sealed class NeedsYouDispatcherTests
     private static NeedsYouAction Service(string id, string label) => new(id, label, ActionReadiness.Ready, "sindri services " + id, RejectLike: false);
 
     // The f5 desk golden, with the recommended outcome set or dropped; severalOutcomes serves its complete command naming two outcomes instead of "done".
-    private void ServeRecommending(string? outcome, bool severalOutcomes = false)
+    // The golden's one required output is dropped unless withOutputs, so these tests are about the outcome; the output has its own test.
+    private void ServeRecommending(string? outcome, bool severalOutcomes = false, bool withOutputs = false)
     {
         var instance = JsonNode.Parse(GoldenFiles.Api("workflow-instance", "f5-desk-recommended"))!;
         var desk = instance["current"]!["desk"]!.AsObject();
+        if (!withOutputs)
+        {
+            desk["outputs"] = new JsonArray();
+        }
+
         if (outcome is null)
         {
             _ = desk.Remove("recommended");
@@ -96,6 +102,17 @@ public sealed class NeedsYouDispatcherTests
 
         var (_, body) = Assert.Single(_server.CompleteCalls);
         Assert.Equal(("done", DispatchOutcome.Sent), (body.Outcome, result.Outcome));
+    }
+
+    [Fact]
+    public async Task Complete_on_a_task_with_a_required_output_says_to_open_it_with_Answer_and_sends_nothing()
+    {
+        ServeRecommending("approve", withOutputs: true);
+
+        var result = await Dispatcher().Run(NeedsYouRows.Desk(), NeedsYouRows.Desk().Actions[0]);
+
+        Assert.Empty(_server.CompleteCalls);
+        Assert.Equal((DispatchOutcome.Refused, Labels.CompleteNeedsOutput), (result.Outcome, result.Message));
     }
 
     [Theory]

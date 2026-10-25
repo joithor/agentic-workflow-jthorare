@@ -45,7 +45,7 @@ internal sealed partial class ExpandedStateViewModel
         }
     }
 
-    private static async Task<string> Report(DeskReporter desk, string instance)
+    private async Task<string> Report(DeskReporter desk, string instance)
     {
         if (await desk.Load(instance).ConfigureAwait(true) is not { } target)
         {
@@ -57,8 +57,31 @@ internal sealed partial class ExpandedStateViewModel
             return Labels.CompleteNeedsChoice;
         }
 
-        var answer = await desk.Complete(target, outcome, answers: null).ConfigureAwait(true);
+        if (await ReadOutputs(target).ConfigureAwait(true) is not { } files)
+        {
+            return OutputHint.Length > 0 ? OutputHint : Labels.CompleteNeedsChoice;
+        }
+
+        var answer = await desk.Complete(target, outcome, answers: null, files).ConfigureAwait(true);
         return answer is not { } result ? Labels.SendingArrivesNote : result.IsError ? result.Error.Message : Labels.CompleteSent;
+    }
+
+    // The contents of the outputs the served desk form requires, read from the inputs; null when one is missing or can't be used (its box says why).
+    private async Task<Dictionary<string, byte[]>?> ReadOutputs(DeskTarget target)
+    {
+        var files = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        foreach (var key in target.RequiredOutputs)
+        {
+            var input = Outputs.FirstOrDefault(o => string.Equals(o.Key, key, StringComparison.Ordinal));
+            if (input is null || !input.IsSet || await input.Content(CancellationToken.None).ConfigureAwait(true) is not { } content)
+            {
+                return null;
+            }
+
+            files[key] = content;
+        }
+
+        return files;
     }
 
     /// <summary>The instance the commands go to; set by the frame.</summary>

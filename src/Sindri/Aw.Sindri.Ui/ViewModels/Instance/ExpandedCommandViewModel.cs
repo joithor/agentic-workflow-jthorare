@@ -37,6 +37,13 @@ internal sealed class ExpandedCommandViewModel : ObservableObject
     /// <summary>The accessible name: the words and the instance.</summary>
     public string Name { get; }
 
+    /// <summary>False while the command waits for something the person has to give first (Complete, until its required outputs are set).</summary>
+    public bool CanSend
+    {
+        get;
+        set => Set(ref field, value);
+    } = true;
+
     /// <summary>True for Cancel, which asks first.</summary>
     public bool IsCancel => Verb == StatusVerb.Cancel;
 

@@ -80,7 +80,7 @@ internal sealed partial class ShellViewModel
         }
 
         _ = request.Action.OptionId.Length > 0
-            ? (Task)AnswerDecision(request.RowId, request.Action.OptionId, note: null)
+            ? AnswerDecision(request.RowId, request.Action.OptionId, note: null)
             : Dispatch(request.RowId, request.Action);
     }
 

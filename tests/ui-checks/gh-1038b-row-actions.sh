@@ -58,6 +58,13 @@ trap cleanup EXIT
 
 command -v jq >/dev/null 2>&1 || setup_fail "jq is needed"
 
+# On a failed match: what command.handled rows the ledger did have (command caller outcome, the last 20), on stderr.
+dump_handled() { # $@ extra ledger args (e.g. --item X)
+  local out lines
+  out="$("$PROVE" human ledger --json --type command.handled "$@" --max 3000 2>&1 | tr -d '\r')"
+  lines="$(printf '%s' "$out" | jq -r '.events[]? | select(.type == "command.handled") | "\(.payload.command) \(.payload.caller) \(.payload.outcome)"' 2>/dev/null | tail -n 20)"
+  if [ -n "$lines" ]; then echo "command.handled in the ledger (last 20):" >&2; printf '%s\n' "$lines" >&2; else echo "no command.handled events" >&2; fi
+}
 # The ledger as JSON (the text ledger line has no command name or outcome): a command.handled event whose payload names the
 # command (an ActionId string), caller human:ui and outcome accepted.
 accepted_by_ui() { # $1 a jq regex for the command
@@ -106,7 +113,7 @@ drv screenshot --out "$OUT/before.png" >/dev/null 2>&1
 
 # 3. Approve recipe on the changed-workflow row: ApproveRecipe by human:ui, accepted; the row leaves Home.
 drv click "${recipe[@]}" >/dev/null 2>&1 || setup_fail "the Approve recipe click was not accepted by the driver"
-wait_ledger '^ApproveRecipe$' || fail "no ApproveRecipe from human:ui"
+wait_ledger '^ApproveRecipe$' || { dump_handled; fail "no ApproveRecipe from human:ui"; }
 drv wait-for "${recipe[@]}" --state gone --wait-ms 5000 >/dev/null 2>&1 \
   || fail "the Approve recipe row is still on Home 5 s after the approval"
 
@@ -121,7 +128,7 @@ drv click "${all[@]}" --index 0 >/dev/null 2>&1 || setup_fail "the Approve all w
 drv wait-for "${all[@]}" --index 1 --state visible --wait-ms 30000 >/dev/null 2>&1 \
   || fail "no approve-all dialog after the Approve all click (nothing opened)"
 drv click "${all[@]}" --index 1 >/dev/null 2>&1 || setup_fail "the dialog's Approve click was not accepted by the driver"
-wait_ledger '^ApproveAll' || fail "no approve-all from human:ui"
+wait_ledger '^ApproveAll' || { dump_handled; fail "no approve-all from human:ui"; }
 
 drv screenshot --out "$OUT/after.png" >/dev/null 2>&1
 echo "PASS: Mark all seen, Approve recipe and Approve all each changed Home or sent their command as human:ui (screenshots in $OUT)"

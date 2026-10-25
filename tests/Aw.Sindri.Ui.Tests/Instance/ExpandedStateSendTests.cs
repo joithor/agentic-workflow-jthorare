@@ -161,7 +161,7 @@ public sealed class ExpandedStateSendTests
     [Fact]
     public async Task Complete_reports_the_steps_only_outcome_when_none_is_recommended()
     {
-        ServeRecommending(null);
+        ServeRecommending(outcome: null);
         var expanded = Expanded("dev-desk-round-trip");
 
         await expanded.CompleteAsync();

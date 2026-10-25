@@ -90,7 +90,7 @@ public sealed class NeedsYouDispatcherTests
     [Fact]
     public async Task Complete_sends_the_steps_only_outcome_when_none_is_recommended()
     {
-        ServeRecommending(null);
+        ServeRecommending(outcome: null);
 
         var result = await Dispatcher().Run(NeedsYouRows.Desk(), NeedsYouRows.Desk().Actions[0]);
 

@@ -63,11 +63,11 @@ internal sealed class NeedsYouDispatcher
             return Service(id, service);
         }
 
-        return Approval(entry, action) ?? Task.FromResult(new NeedsYouDispatch(DispatchOutcome.Unhandled, Labels.RowNotAvailable(action.Cli)));
+        return Approval(entry, action);
     }
 
-    // A changed workflow or the changed settings, approved with the same send the inbox bar uses; null for any other action.
-    private Task<NeedsYouDispatch>? Approval(NeedsYouEntry entry, NeedsYouAction action)
+    // A changed workflow or the changed settings, approved with the same send the inbox bar uses; any other action is said as not available.
+    private Task<NeedsYouDispatch> Approval(NeedsYouEntry entry, NeedsYouAction action)
     {
         if (string.Equals(action.CatalogId, ApproveRecipeAction, StringComparison.Ordinal) && SubjectOf(entry, NeedsYouKinds.Recipe) is { } recipe)
         {
@@ -76,7 +76,7 @@ internal sealed class NeedsYouDispatcher
 
         return string.Equals(action.CatalogId, ApproveProfileAction, StringComparison.Ordinal) && SubjectOf(entry, NeedsYouKinds.Profile) is { } hash
             ? Approve(ApproveProfileAction + hash, entry.Cli, url => NeedsYouConfirm.SendProfile(_api, url, hash))
-            : null;
+            : Task.FromResult(new NeedsYouDispatch(DispatchOutcome.Unhandled, Labels.RowNotAvailable(action.Cli)));
     }
 
     private async Task<NeedsYouDispatch> Approve(string key, string cli, Func<Uri, Task<(Error? Refused, bool Approved)>> send)
@@ -89,7 +89,7 @@ internal sealed class NeedsYouDispatcher
         try
         {
             var (refused, approved) = await send(url).ConfigureAwait(true);
-            return approved ? new NeedsYouDispatch(DispatchOutcome.Sent, Labels.RowApproved) : new NeedsYouDispatch(DispatchOutcome.Refused, NeedsYouConfirm.RefusalText(refused, cli));
+            return approved ? new NeedsYouDispatch(DispatchOutcome.Sent, Labels.RowApprovalSent) : new NeedsYouDispatch(DispatchOutcome.Refused, NeedsYouConfirm.RefusalText(refused, cli));
         }
         finally
         {

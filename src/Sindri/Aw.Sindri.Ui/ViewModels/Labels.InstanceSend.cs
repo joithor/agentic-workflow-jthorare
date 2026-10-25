@@ -16,7 +16,7 @@ internal static partial class Labels
     internal const string RowSending = "Sending...";
 
     /// <summary>Said on a row when its approval went through.</summary>
-    internal const string RowApproved = "Approved.";
+    internal const string RowApprovalSent = "Approved.";
 
     /// <summary>Said on a row when its command was accepted.</summary>
     internal const string RowSent = "Sent.";

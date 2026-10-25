@@ -8,7 +8,6 @@ using Aw.Sindri.Core.NeedsYou;
 using Aw.Sindri.Core.Views;
 using Aw.Sindri.Core.Workflow.ApproveAll;
 using Aw.Sindri.Features.GetNeedsYou;
-using Aw.Sindri.Features.GetStatus;
 using Aw.Sindri.Testing;
 using Aw.Sindri.Testing.Workflow.ApproveAll;
 using Aw.Sindri.Tests.ApproveAll;
@@ -29,7 +28,7 @@ public sealed class GetNeedsYouTests
     private readonly InMemoryJobViews _jobs = new();
     private IShippedRecipes _shipped = new FakeShippedRecipes([]);
 
-    private GetNeedsYouService Service() => new(_q.Views.Views, _q.Views.Progress, _q.Views.Slice.Callers, new NeedsYouLiveRows(_onyx, new SetupNotices(_jobs, _q.Views.Slice.Profiles, new ApproveAllPlanReader(_q.Views.Slice.Profiles, _shipped), new PassThroughScrubber(), TimeProvider.System, new Core.Setup.McpAutoGate(_q.Views.Slice.Profiles, new Core.Setup.McpEvents(_q.Views.Slice.Held, _q.Views.Slice.Store, _q.Views.Slice.Events, _q.Views.Slice.Callers), new NoSwitch(), _jobs)), new PassThroughScrubber(), TimeProvider.System, new ProfileReads(_q.Views.Slice.Profiles, _q.Views.Slice.Profiles)), TimeProvider.System, new NeedsYouJoins(new SomeInstances(), new SomeInstances(), new Core.Workflow.Registry.RecipeRegistryReader(new Testing.Workflow.Registry.InMemoryRecipeStore(), new Testing.Workflow.Registry.InMemoryRecipeApprovals(), EngineFixture.Catalog, SliceHarness.Json, new NoProfileFacts()), EngineFixture.Catalog));
+    private GetNeedsYouService Service() => new(_q.Views.Views, _q.Views.Progress, _q.Views.Slice.Callers, new NeedsYouLiveRows(_onyx, new SetupNotices(_jobs, _q.Views.Slice.Profiles, new ApproveAllPlanReader(_q.Views.Slice.Profiles, _shipped), new PassThroughScrubber(), TimeProvider.System, new Core.Setup.McpAutoGate(_q.Views.Slice.Profiles, new Core.Setup.McpEvents(_q.Views.Slice.Held, _q.Views.Slice.Store, _q.Views.Slice.Events, _q.Views.Slice.Callers), new NoSwitch(), _jobs)), new PassThroughScrubber(), TimeProvider.System, _q.Views.Slice.Profiles, _q.Views.Slice.Profiles), TimeProvider.System, new NeedsYouJoins(new SomeInstances(), new SomeInstances(), new Core.Workflow.Registry.RecipeRegistryReader(new Testing.Workflow.Registry.InMemoryRecipeStore(), new Testing.Workflow.Registry.InMemoryRecipeApprovals(), EngineFixture.Catalog, SliceHarness.Json, new NoProfileFacts()), EngineFixture.Catalog));
 
     private sealed class NoSwitch : Core.Setup.IMcpAutoSwitch
     {
@@ -161,6 +160,21 @@ public sealed class GetNeedsYouTests
         var row = Assert.Single((await Get()).Rows);
 
         Expect.Equal(("profile:drift", NeedsYouKind.Profile), (row.Id.Value, row.Kind));
+    }
+
+    [Fact]
+    public async Task A_stored_profile_drift_row_beats_the_live_one_with_its_id()
+    {
+        var approved = SliceHarness.Profile();
+        var live = SetupFactsRigProfile();
+        _ = await _q.Views.Slice.Profiles.Save(approved, RequestQueryHarness.Token);
+        _q.Views.Slice.Profiles.Live = live;
+        await _q.Views.Fold(EventTypes.ProfileChecked, new ProfileChecked(_q.Views.Slice.Ids.New<CommandId>(), approved.Hash, live.Value.Hash, Drifted: true, ["stored.path"], []));
+        using var entered = _q.Human();
+
+        var row = Assert.Single((await Get()).Rows);
+
+        Expect.Equal(("profile:drift", "1 key path changed: stored.path"), (row.Id.Value, row.Reason));
     }
 
     [Fact]

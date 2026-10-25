@@ -334,7 +334,7 @@ public sealed partial class FreshnessTests : IDisposable
     [InlineData("running-healthy", "Healthy · updated 2s ago")]
     [InlineData("running-degraded", "Degraded · updated 2s ago · index failed")]
     [InlineData("running-rebuilding", "Rebuilding · updated 2s ago")]
-    [InlineData("running-stalled", "Stalled · updated 30s ago · views stalled at 42")]
+    [InlineData("running-stalled", "Stalled · updated 30s ago")]   // B-20: the banner says the views' sentence; the pill keeps the word
     public async Task The_pill_reads_each_spec_shaped_status_golden(string scenario, string text)
     {
         var golden = AwJson.Deserialize<StatusView>(Encoding.UTF8.GetBytes(GoldenFiles.SpecShaped("status", scenario)), SindriApiClient.Json).Value;

@@ -25,14 +25,12 @@ public sealed class NeedsYouRowSheetCompleteTests
     public void A_desk_task_whose_complete_is_not_ready_offers_no_button()
     {
         var desk = NeedsYouRows.Desk();
-        var row = Row(desk with { Actions = [desk.Actions[0] with { Readiness = ActionReadiness.CliOnly }] });
+        var row = Row(desk with { Actions = [desk.Actions[0] with { Readiness = ActionReadiness.Pending }] });
 
         Assert.False(row.ShowsComplete);
     }
 
     [Fact]
-    public void Any_other_row_offers_no_complete_button()
-    {
+    public void Any_other_row_offers_no_complete_button() =>
         Assert.All([NeedsYouRows.Park(), NeedsYouRows.Failure(), NeedsYouRows.Recipe()], entry => Assert.False(Row(entry).ShowsComplete));
-    }
 }

@@ -28,6 +28,13 @@ mkdir -p "$OUT" || exit 2
 
 APP_WRAPPER_PID=""
 setup_fail() { echo "gh-1010-resume: setup failed: $*" >&2; exit 2; }
+# On a failed match: what command.handled rows the ledger did have (command caller outcome, the last 20), on stderr.
+dump_handled() { # $@ extra ledger args (e.g. --item X)
+  local out lines
+  out="$("$PROVE" human ledger --json --type command.handled "$@" --max 1000 2>&1 | tr -d '\r')"
+  lines="$(printf '%s' "$out" | jq -r '.events[]? | select(.type == "command.handled") | "\(.payload.command) \(.payload.caller) \(.payload.outcome)"' 2>/dev/null | tail -n 20)"
+  if [ -n "$lines" ]; then echo "command.handled in the ledger (last 20):" >&2; printf '%s\n' "$lines" >&2; else echo "no command.handled events" >&2; fi
+}
 fail() { echo "FAIL: $*" >&2; exit 1; }
 
 cleanup() {
@@ -94,7 +101,7 @@ for _ in $(seq 1 10); do
   sleep 0.5
 done
 "$DRIVER" screenshot --out "$OUT/after-click.png" >/dev/null 2>&1
-[ "$sent" = 1 ] || fail "no answer-resume in the ledger after 5 s (screenshots in $OUT)"
+[ "$sent" = 1 ] || { dump_handled --item "$item"; fail "no answer-resume in the ledger after 5 s (screenshots in $OUT)"; }
 [ "$before" != "$after" ] || fail "the ledger did not change after the Resume click (screenshots in $OUT)"
 "$DRIVER" wait-for "${resume[@]}" --state gone --wait-ms 5000 >/dev/null 2>&1 \
   || fail "the Resume row is still shown 5 s after the click (screenshots in $OUT)"

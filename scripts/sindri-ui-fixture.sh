@@ -33,6 +33,11 @@
 #                                  start workflow.dev-timeout (a desk Step with a 1m timeout that parks) on a new item and print the item; after
 #                                  about a minute the instance is parked by its timeout and offers answer kind resume (ApplyCommand:answer-resume).
 #                                  Run 'up' with FIXTURE_DESK_TIMEOUT=1m first, or the desk floor (default 2d) holds the park back
+#   sindri-ui-fixture.sh changed-recipe
+#                                  Needs-you rows for workflows (run after 'up'): approves an older, smaller version of the shipped
+#                                  workflow.hand-test as the owner (a desk step instead of the agent step, so the shipped version gains a
+#                                  capability), which gives Home a "Approve a changed workflow" row for it, and, since no other shipped
+#                                  workflow is approved, the "Approve all new workflows" row as well
 #   sindri-ui-fixture.sh incident start|stop
 #                                  start an incident-urgency instance (recipes/dev/incident-hold.yaml; it tops the strip) or cancel it
 #   sindri-ui-fixture.sh context up|draft|down
@@ -348,6 +353,34 @@ workflows() {
 
 park-timeout() {
   start_on_new_item workflow.dev-timeout "Fixture timeout park"
+}
+
+# The older version of a shipped workflow, approved by the owner so the shipped one waits for its own approval (it can do more): a "workflow . changed" row.
+changed-recipe() {
+  local dir="$AW_SINDRI_HOME/ui-fixture-recipes" file out
+  mkdir -p "$dir" || return
+  file="$dir/workflow.hand-test.yaml"
+  cat > "$file" <<'YAML' || return
+schema: 1
+id: workflow.hand-test
+version: 2
+description: "Block recipe: an earlier, smaller version of the hand test for the fixture (a desk step, no agent)."
+displayName: "Try the change by hand in the running app"
+inputs:
+  - { key: fact:phasePacket, label: "Phase packet", type: packet, kind: packet }
+  - { key: fact:workspace, label: "Workspace", type: text, kind: text }
+outputs:
+  - { key: fact:output, label: "Output", type: text, from: handtest }
+initial: handtest
+states:
+  handtest: { kind: active, step: step.produce, timeout: { after: 4h, then: park },
+              next: "Try the change for {item} by hand, then complete this Step." }
+  works:    { kind: terminal, outcome: resolved }
+transitions:
+  - { from: handtest, to: works, on: step.completed, when: { outcome: done }, produces: [fact:output] }
+YAML
+  out="$(printf 'approve workflow.hand-test 2\n' | "$PROVE" human recipe approve "$file" 2>&1)"
+  printf '%s\n' "$out" | grep -qE '^(approved|already approved)' || die "recipe approve of the older workflow.hand-test was refused: $out"
 }
 
 incident_file() { printf '%s\n' "$AW_SINDRI_HOME/ui-fixture-incident-item"; }
@@ -712,7 +745,7 @@ case "$verb" in
   items) [ "$#" -eq 1 ] || { [ "$#" -eq 2 ] && [ "$2" = "--large" ]; } || die "usage: items [--large]" ;;
   close) [ "$#" -eq 2 ] || { [ "$#" -eq 3 ] && [ "$3" = "--cancelled" ]; } || die "usage: close <item> [--cancelled]" ;;
   workflows) [ "$#" -eq 1 ] || { [ "$#" -eq 2 ] && [ "$2" = "--large" ]; } || die "usage: workflows [--large]" ;;
-  park-timeout) [ "$#" -eq 1 ] || die "'$verb' takes no arguments" ;;
+  park-timeout | changed-recipe) [ "$#" -eq 1 ] || die "'$verb' takes no arguments" ;;
   incident) { [ "$#" -eq 2 ] && { [ "$2" = start ] || [ "$2" = stop ]; }; } || die "usage: incident start|stop" ;;
   request) [ "$#" -ge 2 ] || die "usage: request [--item ID] [--repo R] <text>" ;;
   context)

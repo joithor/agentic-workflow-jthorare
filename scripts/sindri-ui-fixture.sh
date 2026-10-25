@@ -378,7 +378,14 @@ states:
   works:    { kind: terminal, outcome: resolved }
 transitions:
   - { from: handtest, to: works, on: step.completed, when: { outcome: done }, produces: [fact:output] }
+evals: [evals/workflow.hand-test/happy.jsonl]
 YAML
+  # The registry refuses an approval without eval cases (SND-RECIPE-008): the file the yaml names sits next to it.
+  mkdir -p "$dir/evals/workflow.hand-test" || return
+  cat > "$dir/evals/workflow.hand-test/happy.jsonl" <<'JSONL' || return
+{"start":{"inputs":{"fact:phasePacket":{"phase":"1","goal":"Export works"},"fact:workspace":"/work/tree"}}}
+{"trigger":{"kind":"step.completed","outcome":"done","outputs":{"fact:output":"Clicked export; a CSV downloaded."}},"expect":{"state":"works","outcome":"resolved"}}
+JSONL
   out="$(printf 'approve workflow.hand-test 2\n' | "$PROVE" human recipe approve "$file" 2>&1)"
   printf '%s\n' "$out" | grep -qE '^(approved|already approved)' || die "recipe approve of the older workflow.hand-test was refused: $out"
 }

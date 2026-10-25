@@ -1,4 +1,5 @@
 using Aw.Sindri.Core.NeedsYou;
+using Aw.Sindri.Features.GetStatus;
 using Aw.Sindri.Core.Onyx;
 using Aw.Sindri.Core.Text;
 
@@ -9,8 +10,11 @@ namespace Aw.Sindri.Features.GetNeedsYou;
 /// <param name="setup">The setup rows that are computed (the repo step's failure, the 'setup:mcp' need, and the approve-all plan's 'setup:recipes' and 'recipe:' rows).</param>
 /// <param name="scrubber">Scrubs the rows' text.</param>
 /// <param name="clock">Stamps the rows.</param>
-internal sealed class NeedsYouLiveRows(IOnyxNotices onyx, SetupNotices setup, ITextScrubber scrubber, TimeProvider clock)
+/// <param name="profiles">The live and the approved profile, whose difference is the profile drift row.</param>
+internal sealed class NeedsYouLiveRows(IOnyxNotices onyx, SetupNotices setup, ITextScrubber scrubber, TimeProvider clock, ProfileReads profiles)
 {
+    internal ProfileReads Profiles => profiles;
+
     /// <summary>The Onyx row and the setup rows, in that order.</summary>
     /// <param name="cancellationToken">Cancels the reads.</param>
     /// <returns>The rows; empty when a source can't be read.</returns>

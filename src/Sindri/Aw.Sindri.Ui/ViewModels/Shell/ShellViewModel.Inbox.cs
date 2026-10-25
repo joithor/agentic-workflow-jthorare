@@ -77,8 +77,8 @@ internal sealed partial class ShellViewModel
         var commands = new InstanceCommander(api, Health.ApiUrl);
         var desk = new DeskReporter(api, Health.ApiUrl, launcher);
         _dispatcher = new NeedsYouDispatcher(api, Health.ApiUrl, commands, desk);
-        var inbox = new NeedsYouPageViewModel(NeedsYou, _clock, clipboard, desk, new NeedsYouConfirm(Health.Catalog, Health.ApiUrl, api, _clock, () => NeedsYou.Seen.ReducedMotion),
-            new PausedAnswerViewModel(commands, clipboard, _clock), new TakeoverViewModel(api, Health.ApiUrl, commands, _clock));
+        var inbox = new NeedsYouPageViewModel(NeedsYou, _clock, clipboard, desk, new NeedsYouConfirm(Health.Catalog, Health.ApiUrl, api, _clock),
+            new PausedAnswerViewModel(commands), new TakeoverViewModel(api, Health.ApiUrl, commands, _clock));
         inbox.LeaveRequested += (_, _) => LeaveNeedsYouInbox();
         inbox.Bar.DecisionRequested += (_, e) => e.Settled = AnswerDecision(e.RowId, e.OptionId, e.Note);
         inbox.PrRequested += (_, e) =>

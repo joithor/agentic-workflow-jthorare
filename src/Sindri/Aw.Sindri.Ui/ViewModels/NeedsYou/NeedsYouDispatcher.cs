@@ -17,12 +17,15 @@ internal sealed class NeedsYouDispatcher
     private const string PauseAction = "PauseService";
     private const string ResumeServiceAction = "ResumeService";
     private const string RunAction = "RunService";
+    private const string ApproveRecipeAction = "ApproveRecipe";
+    private const string ApproveProfileAction = "ApproveProfile";
 
     private readonly ISindriApi _api;
     private readonly Func<Uri?> _apiUrl;
     private readonly InstanceCommander _commands;
     private readonly DeskReporter _desk;
     private readonly HashSet<string> _services = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _approvals = new(StringComparer.Ordinal);
 
     internal NeedsYouDispatcher(ISindriApi api, Func<Uri?> apiUrl, InstanceCommander commands, DeskReporter desk)
     {
@@ -60,7 +63,38 @@ internal sealed class NeedsYouDispatcher
             return Service(id, service);
         }
 
-        return Task.FromResult(new NeedsYouDispatch(DispatchOutcome.Unhandled, Labels.RowNotAvailable(action.Cli)));
+        return Approval(entry, action) ?? Task.FromResult(new NeedsYouDispatch(DispatchOutcome.Unhandled, Labels.RowNotAvailable(action.Cli)));
+    }
+
+    // A changed workflow or the changed settings, approved with the same send the inbox bar uses; null for any other action.
+    private Task<NeedsYouDispatch>? Approval(NeedsYouEntry entry, NeedsYouAction action)
+    {
+        if (string.Equals(action.CatalogId, ApproveRecipeAction, StringComparison.Ordinal) && SubjectOf(entry, NeedsYouKinds.Recipe) is { } recipe)
+        {
+            return Approve(ApproveRecipeAction + recipe, entry.Cli, url => NeedsYouConfirm.SendRecipe(_api, url, recipe, entry.Cli));
+        }
+
+        return string.Equals(action.CatalogId, ApproveProfileAction, StringComparison.Ordinal) && SubjectOf(entry, NeedsYouKinds.Profile) is { } hash
+            ? Approve(ApproveProfileAction + hash, entry.Cli, url => NeedsYouConfirm.SendProfile(_api, url, hash))
+            : null;
+    }
+
+    private async Task<NeedsYouDispatch> Approve(string key, string cli, Func<Uri, Task<(Error? Refused, bool Approved)>> send)
+    {
+        if (_apiUrl() is not { } url || !_approvals.Add(key))
+        {
+            return Busy();
+        }
+
+        try
+        {
+            var (refused, approved) = await send(url).ConfigureAwait(true);
+            return approved ? new NeedsYouDispatch(DispatchOutcome.Sent, Labels.RowApproved) : new NeedsYouDispatch(DispatchOutcome.Refused, NeedsYouConfirm.RefusalText(refused, cli));
+        }
+        finally
+        {
+            _ = _approvals.Remove(key);
+        }
     }
 
     private static string? SubjectOf(NeedsYouEntry entry, string kind) =>

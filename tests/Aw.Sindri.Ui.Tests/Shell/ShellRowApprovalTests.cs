@@ -1,5 +1,4 @@
 using Aw.Kernel.Testing;
-using Aw.Sindri.Ui.Platform;
 using Aw.Sindri.Ui.Testing;
 using Aw.Sindri.Ui.ViewModels;
 using Aw.Sindri.Ui.ViewModels.NeedsYou;
@@ -39,7 +38,7 @@ public sealed class ShellRowApprovalTests
         shell.NeedsYou.Press(row.Id, row.Actions[0]);
         await ShellWait.Until(shell, () => shell.NeedsYou.Row(row.Id) is null, Token);
 
-        Assert.Single(_server.RecipeApprovals);
+        _ = Assert.Single(_server.RecipeApprovals);
         Assert.Null(shell.NeedsYou.Row(row.Id));
     }, Token);
 

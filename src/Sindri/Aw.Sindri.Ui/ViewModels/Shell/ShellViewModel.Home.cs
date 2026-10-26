@@ -69,6 +69,11 @@ internal sealed partial class ShellViewModel
         }
     }
 
+    /// <summary>Completes the desk task of a row from its sheet: with the files the sheet's inputs hold when the task needs outputs, else as the row's own Complete does.</summary>
+    /// <param name="row">The row whose sheet shows Complete.</param>
+    /// <returns>A task that completes when the answer is said.</returns>
+    internal Task CompleteSheetRow(NeedsYouRowViewModel row) => throw new NotSupportedException();
+
     // A key or a button asks to run an action: approve-all opens its dialog; a decision option is Decide, sent once with the option, and the sheet shows what came back;
     // every other ready action goes to the dispatcher, and the row shows what became of it (never dropped silently).
     private void Decide(NeedsYouActionEventArgs request)

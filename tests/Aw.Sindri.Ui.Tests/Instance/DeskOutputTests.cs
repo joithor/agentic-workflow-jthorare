@@ -20,6 +20,12 @@ public sealed class DeskOutputTests
     private readonly FakeTimeProvider _clock = new(A.Noon);
     private readonly Dictionary<string, PickedFile?> _disk = new(StringComparer.Ordinal);
 
+    // The task the sheet reads before it sends (DeskReporter.Load reads the instance by id): the dev-desk-round-trip golden, whose desk requires fact:output.
+    public DeskOutputTests()
+    {
+        _server.InstanceBody = _ => new RouteAnswer(System.Net.HttpStatusCode.OK, GoldenFiles.Api("workflow-instance", "dev-desk-round-trip"));
+    }
+
     private Task<PickedFile?> Read(string path, int limit, CancellationToken token) => Task.FromResult(_disk.GetValueOrDefault(path));
 
     private ExpandedStateViewModel Expanded()

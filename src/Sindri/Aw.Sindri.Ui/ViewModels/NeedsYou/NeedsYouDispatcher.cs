@@ -50,7 +50,7 @@ internal sealed class NeedsYouDispatcher
         {
             if (string.Equals(id, ResumeAction, StringComparison.Ordinal))
             {
-                return Resume(instance);
+                return Resume(instance, entry.Cli);
             }
 
             if (string.Equals(id, CompleteAction, StringComparison.Ordinal))
@@ -101,8 +101,8 @@ internal sealed class NeedsYouDispatcher
     private static string? SubjectOf(NeedsYouEntry entry, string kind) =>
         entry.Subject is { } subject && string.Equals(subject.Kind, kind, StringComparison.Ordinal) && subject.Id.Length > 0 ? subject.Id : null;
 
-    private async Task<NeedsYouDispatch> Resume(string instance) =>
-        Reply(await _commands.Send(ApplyCommandBody.Resume(instance)).ConfigureAwait(true));
+    private async Task<NeedsYouDispatch> Resume(string instance, string cli) =>
+        Reply(await _commands.Send(ApplyCommandBody.Resume(instance)).ConfigureAwait(true), cli: cli);
 
     // The desk report is sent when the step has an outcome that needs nothing more from the person (the recommended one, else its only one);
     // otherwise the row's sheet opens, where the action bar asks for the reason or the choice. A task that requires output files needs them given (the sheet's inputs).
@@ -150,11 +150,11 @@ internal sealed class NeedsYouDispatcher
         }
     }
 
-    // A null answer is a send that did not go out: one for this target was in flight, or no endpoint is known.
-    private static NeedsYouDispatch Reply<T>(Result<T>? answer, string sent = Labels.RowSent) => answer switch
+    // A null answer is a send that did not go out: one for this target was in flight, or no endpoint is known. A refusal reads like an approval's: code, words, the row's command.
+    private static NeedsYouDispatch Reply<T>(Result<T>? answer, string sent = Labels.RowSent, string cli = "") => answer switch
     {
         null => Busy(),
-        { IsError: true } refused => new NeedsYouDispatch(DispatchOutcome.Refused, refused.Error.Message),
+        { IsError: true } refused => new NeedsYouDispatch(DispatchOutcome.Refused, Labels.ApproveRefusal(refused.Error.Code, refused.Error.Message, cli)),
         _ => new NeedsYouDispatch(DispatchOutcome.Sent, sent),
     };
 

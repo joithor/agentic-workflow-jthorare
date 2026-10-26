@@ -72,13 +72,15 @@ public sealed class NeedsYouDispatcherTests
     }
 
     [Fact]
-    public async Task A_refused_resume_is_said_as_served()
+    public async Task Refused_resume_shows_the_error_code()
     {
         _server.CommandAnswer = RouteAnswer.Problem(HttpStatusCode.Conflict, "SND-WF-041", "That run has moved on. Read the instance again.");
 
         var result = await Dispatcher().Run(ResumeRow(), Resume());
 
-        Assert.Equal((DispatchOutcome.Refused, "That run has moved on. Read the instance again."), (result.Outcome, result.Message));
+        Assert.Equal(DispatchOutcome.Refused, result.Outcome);
+        Assert.Contains("SND-WF-041", result.Message, StringComparison.Ordinal);
+        Assert.Contains("That run has moved on. Read the instance again.", result.Message, StringComparison.Ordinal);
     }
 
     [Fact]

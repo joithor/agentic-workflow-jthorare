@@ -39,8 +39,9 @@ internal sealed class NeedsYouDispatcher
     /// <summary>Runs the action on the row.</summary>
     /// <param name="entry">The row.</param>
     /// <param name="action">One of its ready actions.</param>
+    /// <param name="files">The contents of the desk task's required outputs by key, from the sheet's inputs; null from a row's own button, which has none to give.</param>
     /// <returns>What became of it.</returns>
-    internal Task<NeedsYouDispatch> Run(NeedsYouEntry entry, NeedsYouAction action)
+    internal Task<NeedsYouDispatch> Run(NeedsYouEntry entry, NeedsYouAction action, IReadOnlyDictionary<string, byte[]>? files = null)
     {
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentNullException.ThrowIfNull(action);
@@ -54,7 +55,7 @@ internal sealed class NeedsYouDispatcher
 
             if (string.Equals(id, CompleteAction, StringComparison.Ordinal))
             {
-                return Complete(instance);
+                return Complete(instance, files);
             }
         }
 
@@ -104,8 +105,8 @@ internal sealed class NeedsYouDispatcher
         Reply(await _commands.Send(ApplyCommandBody.Resume(instance)).ConfigureAwait(true));
 
     // The desk report is sent when the step has an outcome that needs nothing more from the person (the recommended one, else its only one);
-    // otherwise the row's sheet opens, where the action bar asks for the reason or the choice.
-    private async Task<NeedsYouDispatch> Complete(string instance)
+    // otherwise the row's sheet opens, where the action bar asks for the reason or the choice. A task that requires output files needs them given (the sheet's inputs).
+    private async Task<NeedsYouDispatch> Complete(string instance, IReadOnlyDictionary<string, byte[]>? files)
     {
         if (await _desk.Load(instance).ConfigureAwait(true) is not { } target)
         {
@@ -117,12 +118,12 @@ internal sealed class NeedsYouDispatcher
             return new NeedsYouDispatch(DispatchOutcome.OpenSheet, Labels.CompleteNeedsChoice);
         }
 
-        if (target.RequiredOutputs.Count > 0)
+        if (target.RequiredOutputs.Count > 0 && files is null)
         {
-            return new NeedsYouDispatch(DispatchOutcome.Refused, Labels.CompleteNeedsOutput);   // the file is picked in the instance sheet, which has the inputs; the row says so and stays
+            return new NeedsYouDispatch(DispatchOutcome.Refused, Labels.CompleteNeedsOutput);   // a row's own button has no file to give: the sheet has the inputs, and the row says so
         }
 
-        return Reply(await _desk.Complete(target, outcome, answers: null).ConfigureAwait(true), Labels.CompleteSent);
+        return Reply(await _desk.Complete(target, outcome, answers: null, files).ConfigureAwait(true), Labels.CompleteSent);
     }
 
     private async Task<NeedsYouDispatch> Service(string action, string name)

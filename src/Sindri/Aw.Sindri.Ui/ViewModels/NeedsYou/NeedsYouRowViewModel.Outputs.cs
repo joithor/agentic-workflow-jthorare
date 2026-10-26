@@ -19,10 +19,44 @@ internal sealed partial class NeedsYouRowViewModel
 
     /// <summary>Gives the row the inputs for its task's required outputs.</summary>
     /// <param name="outputs">One input per required output.</param>
-    internal void SetOutputs(IReadOnlyList<DeskOutputViewModel> outputs) => throw new NotSupportedException();
+    internal void SetOutputs(IReadOnlyList<DeskOutputViewModel> outputs)
+    {
+        ArgumentNullException.ThrowIfNull(outputs);
+        Outputs = outputs;
+        foreach (var output in outputs)
+        {
+            output.PropertyChanged += (_, e) =>
+            {
+                if (string.Equals(e.PropertyName, nameof(DeskOutputViewModel.IsSet), StringComparison.Ordinal))
+                {
+                    OnChanged(nameof(CanComplete));
+                    OnChanged(nameof(OutputHint));
+                }
+            };
+        }
+
+        OnChanged(nameof(Outputs));
+        OnChanged(nameof(HasOutputs));
+        OnChanged(nameof(CanComplete));
+        OnChanged(nameof(OutputHint));
+    }
 
     /// <summary>Reads the files the inputs stand for.</summary>
     /// <param name="cancellationToken">Cancels the read.</param>
     /// <returns>The contents by output key, or null when one is missing or can't be used (its box says why).</returns>
-    internal Task<Dictionary<string, byte[]>?> ReadOutputs(CancellationToken cancellationToken) => throw new NotSupportedException();
+    internal async Task<Dictionary<string, byte[]>?> ReadOutputs(CancellationToken cancellationToken)
+    {
+        var files = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        foreach (var output in Outputs)
+        {
+            if (!output.IsSet || await output.Content(cancellationToken).ConfigureAwait(true) is not { } content)
+            {
+                return null;
+            }
+
+            files[output.Key] = content;
+        }
+
+        return files;
+    }
 }

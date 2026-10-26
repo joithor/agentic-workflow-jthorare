@@ -50,6 +50,13 @@ internal sealed partial class ShellViewModel
     {
         Health.Follow(ReadNeedsYou);
         NeedsYou.SheetRequested += (_, e) => OpenNeedsYouRow(e.RowId);
+        NeedsYou.PropertyChanged += (_, e) =>
+        {
+            if (string.Equals(e.PropertyName, nameof(NeedsYouViewModel.SheetRow), StringComparison.Ordinal))
+            {
+                _ = LoadSheetOutputs(NeedsYou.SheetRow);
+            }
+        };
         NeedsYou.ActionRequested += (_, e) => Decide(e);
         Decision.Refused += (_, _) => Navigate(new DeepLink(DeepLinkKind.Decision, Decision.DecisionId));
         NeedsYou.CopyRequested += (_, e) => _ = clipboard.SetText(e.Text, CancellationToken.None);
@@ -85,7 +92,7 @@ internal sealed partial class ShellViewModel
     }
 
     // The row says "Sending..." while the command is out, then the accepted sentence or the refusal as served; a desk task that needs a choice opens its sheet.
-    private async Task Dispatch(string rowId, NeedsYouAction action)
+    private async Task Dispatch(string rowId, NeedsYouAction action, IReadOnlyDictionary<string, byte[]>? files = null)
     {
         if (NeedsYou.Row(rowId) is not { } row || _dispatcher is not { } dispatcher)
         {
@@ -93,7 +100,7 @@ internal sealed partial class ShellViewModel
         }
 
         row.SetActionNote(Labels.RowSending);
-        var result = await dispatcher.Run(row.Entry, action).ConfigureAwait(true);
+        var result = await dispatcher.Run(row.Entry, action, files).ConfigureAwait(true);
         if (NeedsYou.Row(rowId) is { } shown)
         {
             shown.SetActionNote(result.Outcome == DispatchOutcome.OpenSheet ? "" : result.Message);

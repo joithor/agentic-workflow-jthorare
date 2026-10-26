@@ -71,11 +71,14 @@ internal sealed partial class ShellViewModel
     }
 
     private NeedsYouDispatcher? _dispatcher;
+    private DeskReporter? _desk;
+    private IFilePicker _files = NullFilePicker.Instance;
 
-    private NeedsYouPageViewModel InitInbox(ISindriApi api, IClipboard clipboard, ILauncher launcher)
+    private NeedsYouPageViewModel InitInbox(ISindriApi api, IClipboard clipboard, ILauncher launcher, IFilePicker files)
     {
+        _files = files;
         var commands = new InstanceCommander(api, Health.ApiUrl);
-        var desk = new DeskReporter(api, Health.ApiUrl, launcher);
+        var desk = _desk = new DeskReporter(api, Health.ApiUrl, launcher);
         _dispatcher = new NeedsYouDispatcher(api, Health.ApiUrl, commands, desk);
         var inbox = new NeedsYouPageViewModel(NeedsYou, _clock, clipboard, desk, new NeedsYouConfirm(Health.Catalog, Health.ApiUrl, api, _clock),
             new PausedAnswerViewModel(commands), new TakeoverViewModel(api, Health.ApiUrl, commands, _clock));

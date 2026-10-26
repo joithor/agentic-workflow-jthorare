@@ -57,4 +57,29 @@ public sealed class ShellRowApprovalTests
         Assert.Equal(reads, _server.NeedsYouCalls);
         Assert.NotNull(shell.NeedsYou.Row(row.Id));
     }, Token);
+
+    [Fact]
+    public Task Resume_on_a_home_row_shows_sending_until_the_answer() => UiThread.Run(async () =>
+    {
+        _server.WorkflowCommandGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var shell = await RunningShell();
+        var action = new NeedsYouAction("ApplyCommand:answer-resume", "Resume", ActionReadiness.Ready, "sindri workflow answer ITM-01JC8/step/1 --resume", RejectLike: false);
+        var row = NeedsYouRows.Park("park:WFI-1") with
+        {
+            PrimaryAction = action.CatalogId,
+            Actions = [action],
+            Subject = new NeedsYouSubject("instance", "WFI-1"),
+        };
+        shell.ShowNeedsYou(new NeedsYouFeed([row], ""));
+
+        shell.NeedsYou.Press(row.Id, action);
+        await ShellWait.Until(shell, () => shell.NeedsYou.Row(row.Id)?.ActionNote == Labels.RowSending, Token);
+        Assert.Equal(Labels.RowSending, shell.NeedsYou.Row(row.Id)?.ActionNote);
+
+        _server.WorkflowCommandGate.SetResult();
+        await ShellWait.Until(shell, () => shell.NeedsYou.Row(row.Id)?.ActionNote is not Labels.RowSending, Token);
+
+        _ = Assert.Single(_server.CommandCalls);
+        Assert.NotEqual(Labels.RowSending, shell.NeedsYou.Row(row.Id)?.ActionNote, StringComparer.Ordinal);
+    }, Token);
 }

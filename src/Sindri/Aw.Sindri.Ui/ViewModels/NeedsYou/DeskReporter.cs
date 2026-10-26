@@ -205,7 +205,7 @@ internal sealed class DeskReporter(ISindriApi api, Func<Uri?> apiUrl, ILauncher?
 
         try
         {
-            var outputs = new Dictionary<string, byte[]>(files ?? new Dictionary<string, byte[]>(), StringComparer.Ordinal);
+            var outputs = new Dictionary<string, byte[]>(files ?? new Dictionary<string, byte[]>(StringComparer.Ordinal), StringComparer.Ordinal);
             if (answers is { Length: > 0 })
             {
                 outputs[AnswersKey] = Encoding.UTF8.GetBytes(answers);

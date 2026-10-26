@@ -8,7 +8,7 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace Aw.Sindri.Ui.Tests.Setup;
 
-/// <summary>The setup checklist in the shell: read on connect and with every event, G U, the `setup` link and Home's line open Settings at the checklist, a row's button opens the approve-all dialog, and Home hides the setup rows while the line stands for them.</summary>
+/// <summary>The setup checklist in the shell: read on connect and with every event, G U, the `setup` link and Home's line open Settings at the checklist, a row's button opens the approve-all dialog, and Home hides only the setup row of the step the line names.</summary>
 [Lane(TestLane.Unit)]
 public sealed class ShellSetupTests
 {
@@ -127,12 +127,12 @@ public sealed class ShellSetupTests
     }, Token);
 
     [Fact]
-    public Task Home_hides_every_setup_row_while_a_step_is_open_and_shows_them_again_when_setup_is_finished() => UiThread.Run(async () =>
+    public Task Home_keeps_the_setup_rows_the_line_does_not_name_and_lists_them_all_when_setup_is_finished() => UiThread.Run(async () =>
     {
         _server.NeedsYouView = RouteAnswer.SpecShaped("needs-you", "extra-setup-rows");
         var shell = await Connected();
         await ShellWait.Until(shell, () => shell.Setup.IsHomeLineShown, Token);
-        Assert.Empty(shell.NeedsYou.Rows);   // the line stands for them
+        await ShellWait.Until(shell, () => shell.NeedsYou.Rows.Count == 2, Token);   // the line names the profile; neither the mcp nor the workflows row is its step
 
         _server.SetupAnswer = RouteAnswer.Api("setup", "all-done");
         await shell.Health.RefreshViews(new Uri("http://127.0.0.1:7410/"), Token);

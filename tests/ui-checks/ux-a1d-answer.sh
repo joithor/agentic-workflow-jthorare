@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Replaces ux-a1c-answer.sh (which replaced ux-a1b, which replaced the frozen ux-a1-answer.sh): ux-a1c finished with the sheet's Complete accepted (the file is typed into the
 # "Output fact:output" box first), but then waited for the "Answer <subject>" button to be gone. dev-desk-round-trip's export step leads to an import desk step on the SAME instance,
-# so the strip row stays and keeps its Answer button; only its stage changes from "export r1/2" to "import". This one keeps every step and the ledger assertion (CompleteStep by human:ui,
-# accepted) and replaces the last assertion: within 5 s the clicked instance's strip row (found by its subject, not by the button name) no longer shows the export step.
+# so the strip row stays and keeps its Answer button; only its words change ("needs your output" becomes "needs your import"). This one keeps every step and the ledger assertion (CompleteStep by human:ui,
+# accepted) and replaces the last assertion: within 5 s the clicked instance's strip row (found by its full name "<subject>, <workflow>", not by the button name) is gone or no longer says "needs your output".
 # tests/ui-checks/ux-a1-answer.sh — frozen regression check for the UX-pass finding A-1: Home's Answer on a desk instance opens the
 # instance sheet, and the sheet's Complete must report the desk run (today it is a label with "Not available in the app yet").
 # It drives the REAL sindri-ui (UI driver, docs/csharp/ui-driver.md) against a guarded fixture home
@@ -126,21 +126,27 @@ done
 "$DRIVER" screenshot --out "$OUT/after-click.png" >/dev/null 2>&1
 [ "$sent" = 1 ] || { dump_handled; fail "no complete sent (no CompleteStep by human:ui in the ledger after 5 s; screenshots in $OUT)"; }
 [ "$before" != "$after" ] || fail "no complete sent (the ledger did not change; screenshots in $OUT)"
-# 5. The instance moved on: its strip row (the Border whose name has the subject the clicked Answer button names) no longer shows the export step within 5 s.
-subject="${answer#Answer }"
+# 5. The instance moved on: its strip row (the Border named "<subject>, <workflow>", Labels.StripRowName; the clicked button is "Answer, <subject>", Labels.AnswerName) no
+#    longer says it needs the export's output within 5 s: the row is gone, or its texts no longer hold "needs your output" (they read "needs your import" once the import step is open).
+#    The subject is matched whole, with the ", " after it, so another row whose subject only starts the same cannot match.
+subject="${answer#Answer, }"
 row_texts() {
   local id
-  id="$("$DRIVER" search --type Border --limit 200 2>/dev/null | jq -r --arg s "$subject" '[.matches[] | select((.name // "") | contains($s))][0].id // empty')"
+  id="$("$DRIVER" search --type Border --limit 200 2>/dev/null | jq -r --arg s "$subject, " '[.matches[] | select((.name // "") | startswith($s))][0].id // empty')"
   [ -n "$id" ] || return 1
   "$DRIVER" tree --node-id "$id" --depth 8 2>/dev/null | jq -r '[.. | objects | .text? | strings] | join(" | ")'
 }
 moved=0
+texts=""
 for _ in $(seq 1 10); do
-  texts="$(row_texts)"
-  if [ -n "$texts" ] && ! printf '%s' "$texts" | grep -q 'export'; then moved=1; break; fi
+  if texts="$(row_texts)"; then
+    if ! printf '%s' "$texts" | grep -q 'needs your output'; then moved=1; break; fi
+  else
+    moved=1; break   # the row is gone
+  fi
   sleep 0.5
 done
 "$DRIVER" screenshot --out "$OUT/after-moved.png" >/dev/null 2>&1
-[ "$moved" = 1 ] || fail "the instance's strip row still shows the export step 5 s after the Complete (row texts: ${texts:-none found}; screenshots in $OUT)"
+[ "$moved" = 1 ] || fail "the instance's strip row still says it needs the output 5 s after the Complete (row texts: ${texts:-none found}; screenshots in $OUT)"
 
 echo "PASS: the sheet's Complete reported the desk run as human:ui and the instance moved on to its next step (screenshots in $OUT)"

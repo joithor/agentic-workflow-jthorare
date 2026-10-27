@@ -7,7 +7,7 @@ namespace Aw.Context.Core.WholeMap;
 /// one would hold more than half the nodes or more than the area cap, or when there are fewer than 3 (at most two passes, each replacing a feature by its child features; the replaced feature
 /// and what reaches only it are unassigned). A feature's area is the area-feature at or above it; every other node
 /// takes the area most of the nodes it points at (or that point at it) are in, one vote per edge, ties to the smallest key, the other areas it reaches in 'also in' (at most five).
-/// An area no vote reaches is the unassigned group, and unassigned votes count for nothing. Concept nodes (and the edges to them) are left out: they are a band of their own, never an area.
+/// An area no vote reaches is the unassigned group, and unassigned votes count for nothing. Concept nodes (and the edges to them) are left out: they are a band of their own, never an area. So are tag features (<see cref="TagFeatures"/>): they take the area most of the files they tag are in, after the areas are settled.
 /// </summary>
 internal sealed class AreaAssigner
 {
@@ -20,15 +20,22 @@ internal sealed class AreaAssigner
     private readonly Dictionary<string, List<string>> _chains = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _roots = new(StringComparer.Ordinal);
     private readonly int _areaCap;
+    private readonly Dictionary<string, List<string>> _tagged = new(StringComparer.Ordinal);
 
     internal AreaAssigner(GraphSnapshot graph, int areaCap)
     {
         _areaCap = areaCap;
-        _kinds = graph.Nodes.Where(n => n.Key.Kind != NodeKind.Concept).GroupBy(n => n.Key.Value, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.First().Key.Kind, StringComparer.Ordinal);
+        var tags = TagFeatures.Of(graph);
+        _kinds = graph.Nodes.Where(n => n.Key.Kind != NodeKind.Concept && !tags.Contains(n.Key.Value)).GroupBy(n => n.Key.Value, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.First().Key.Kind, StringComparer.Ordinal);
         foreach (var edge in graph.Edges.Where(e => _kinds.ContainsKey(e.From.Value) && _kinds.ContainsKey(e.To.Value)))
         {
             Add(_out, edge.From.Value, edge);
             Add(_in, edge.To.Value, edge);
+        }
+
+        foreach (var edge in graph.Edges.Where(e => e.Type == EdgeType.Tags && tags.Contains(e.To.Value) && _kinds.ContainsKey(e.From.Value)))
+        {
+            Add(_tagged, edge.To.Value, edge.From.Value);
         }
 
         foreach (var feature in Keys(NodeKind.Feature))
@@ -62,6 +69,11 @@ internal sealed class AreaAssigner
             _areas[key] = new NodeArea(AreaIndex.UnassignedKey, []);
         }
 
+        foreach (var (tag, files) in _tagged.OrderBy(p => p.Key, StringComparer.Ordinal))
+        {
+            _areas[tag] = Tally(files) ?? new NodeArea(AreaIndex.UnassignedKey, []);
+        }
+
         return new AreaIndex(_areas);
     }
 
@@ -93,6 +105,16 @@ internal sealed class AreaAssigner
         }
 
         return replaced.Count == 0 ? null : [.. set.Except(replaced, StringComparer.Ordinal), .. replaced.SelectMany(a => children[a])];
+    }
+
+    private static void Add(Dictionary<string, List<string>> index, string key, string value)
+    {
+        if (!index.TryGetValue(key, out var list))
+        {
+            index[key] = list = [];
+        }
+
+        list.Add(value);
     }
 
     private static void Add(Dictionary<string, List<GraphEdge>> index, string key, GraphEdge edge)

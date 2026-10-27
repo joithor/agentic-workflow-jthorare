@@ -76,6 +76,7 @@ internal static partial class Labels
         "mentions" or "quotes" => "mentioned in",
         "conflicts" => "conflicts",
         "implements" => "implemented in",
+        "tags" => "also tagged",
         "tests" => "tested by",
         "part-of" => "part of",
         "on" => "happens on",

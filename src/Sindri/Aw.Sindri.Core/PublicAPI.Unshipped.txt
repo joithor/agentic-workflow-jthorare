@@ -5933,7 +5933,7 @@ const Aw.Sindri.Core.Views.ViewNames.NeedsYou = "needs_you" -> string!
 const Aw.Sindri.Core.Views.ViewNames.Profile = "profile" -> string!
 const Aw.Sindri.Core.Views.ViewNames.Requests = "requests" -> string!
 const Aw.Sindri.Core.Views.ViewNames.Services = "services" -> string!
-const Aw.Sindri.Core.Views.ViewSchema.Version = 16 -> int
+const Aw.Sindri.Core.Views.ViewSchema.Version = 17 -> int
 const Aw.Sindri.Core.Workflow.Engine.Effects.OutboxEvents.Cancelled = "outbox.cancelled" -> string!
 const Aw.Sindri.Core.Workflow.Engine.Effects.OutboxEvents.Dispatched = "outbox.dispatched" -> string!
 const Aw.Sindri.Core.Workflow.Engine.Effects.OutboxEvents.Pending = "outbox.pending" -> string!
@@ -11150,8 +11150,6 @@ static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepTarget.operator !=(Aw.Sin
 static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepTarget.operator ==(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepTarget? left, Aw.Sindri.Core.Workflow.Engine.Runtime.AgentStepTarget? right) -> bool
 Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState
 Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.<Clone>$() -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState!
-Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.AgentSessionState(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionEnd? EndedAs = null, int? ExitCode = null, string? Detail = null, bool Refused = false) -> void
-Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionEnd? EndedAs, out int? ExitCode, out string? Detail, out bool Refused) -> void
 Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.EndedAs.get -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionEnd?
 Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.EndedAs.init -> void
 Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.Equals(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState? other) -> bool
@@ -20594,6 +20592,133 @@ static Aw.Sindri.Core.Sandbox.RuntimeCeiling.Next(System.TimeSpan elapsedReal, S
 Aw.Sindri.Core.Workflow.Engine.Runtime.IRunSuspensions
 Aw.Sindri.Core.Workflow.Engine.Runtime.IRunSuspensions.IsSuspended(Aw.Sindri.Core.Workflow.Engine.LaunchId launch, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<bool>!>
 Aw.Sindri.Core.Ledger.ILedgerReader.ByKey(string! idempotencyKey, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Ledger.LedgerEvent?>!>
+Aw.Sindri.Core.Workflow.Engine.Instances.Suspension.Sandbox.init -> void
+Aw.Sindri.Core.Workflow.Engine.ParkKind.SelfCheck = 10 -> Aw.Sindri.Core.Workflow.Engine.ParkKind
+Aw.Sindri.Core.Workflow.Engine.ParkKind.Unconfinable = 9 -> Aw.Sindri.Core.Workflow.Engine.ParkKind
+Aw.Sindri.Core.Workflow.Engine.ParkReason.Launch = 9 -> Aw.Sindri.Core.Workflow.Engine.ParkReason
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailure.Reason.get -> string?
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailure.Reason.init -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailure.Source.get -> string?
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailure.Source.init -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailureKind.LaunchPark = 4 -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailureKind
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailureKind.NoRuntime = 3 -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailureKind
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailureKind.Wait = 5 -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLaunchFailureKind
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionEnd.Limit = 4 -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionEnd
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.<Clone>$() -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit!
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Detail.get -> string!
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Equals(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit? other) -> bool
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Kind.init -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Limit.get -> long
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Limit.init -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Peak.get -> long
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Peak.init -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.AgentSessionState(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionEnd? EndedAs = null, int? ExitCode = null, string? Detail = null, bool Refused = false, Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit? Limit = null, bool FoundEnded = false) -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionEnd? EndedAs, out int? ExitCode, out string? Detail, out bool Refused, out Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit? Limit, out bool FoundEnded) -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.FoundEnded.get -> bool
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.FoundEnded.init -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.Limit.get -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit?
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionState.Limit.init -> void
+override Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.GetHashCode() -> int
+override Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.ToString() -> string!
+static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.operator !=(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit? left, Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit? right) -> bool
+static Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.operator ==(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit? left, Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit? right) -> bool
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Deconstruct(out string! Actor, out Aw.Sindri.Core.Workflow.Engine.RunToken Run, out string! Code, out string? Reason, out string? Source, out string! Detail) -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Equals(Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused? other) -> bool
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.LaunchRefused(string! Actor, Aw.Sindri.Core.Workflow.Engine.RunToken Run, string! Code, string? Reason, string? Source, string! Detail) -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Deconstruct(out string! Actor, out Aw.Sindri.Core.Workflow.Engine.RunToken Run, out string! Code, out string? Reason, out string? Source, out string! Detail) -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Equals(Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable? other) -> bool
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.RuntimeUnavailable(string! Actor, Aw.Sindri.Core.Workflow.Engine.RunToken Run, string! Code, string? Reason, string? Source, string! Detail) -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost
+Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Deconstruct(out string! Actor, out Aw.Sindri.Core.Workflow.Engine.RunToken Run) -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Equals(Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost? other) -> bool
+Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Run.get -> Aw.Sindri.Core.Workflow.Engine.RunToken
+Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Run.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.SessionLost(string! Actor, Aw.Sindri.Core.Workflow.Engine.RunToken Run) -> void
+const Aw.Sindri.Core.Workflow.Engine.Triggers.TriggerNames.LaunchRefused = "launch.refused" -> string!
+const Aw.Sindri.Core.Workflow.Engine.Triggers.TriggerNames.RuntimeUnavailable = "runtime.unavailable" -> string!
+const Aw.Sindri.Core.Workflow.Engine.Triggers.TriggerNames.SessionLost = "session.lost" -> string!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.<Clone>$() -> Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.GetHashCode() -> int
+override Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.KeyPart.get -> string!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Name.get -> string!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.ToString() -> string!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.<Clone>$() -> Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.GetHashCode() -> int
+override Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.KeyPart.get -> string!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Name.get -> string!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.ToString() -> string!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.<Clone>$() -> Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.GetHashCode() -> int
+override Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.KeyPart.get -> string!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Name.get -> string!
+override Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.ToString() -> string!
+override sealed Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Equals(Aw.Sindri.Core.Workflow.Engine.Triggers.Trigger? other) -> bool
+static Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.operator !=(Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused? left, Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused? right) -> bool
+static Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.operator ==(Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused? left, Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused? right) -> bool
+static Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.operator !=(Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable? left, Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable? right) -> bool
+static Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.operator ==(Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable? left, Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable? right) -> bool
+static Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.operator !=(Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost? left, Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost? right) -> bool
+static Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.operator ==(Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost? left, Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost? right) -> bool
+Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Tokens.get -> int
+Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Tokens.init -> void
+Aw.Sindri.Core.Workflow.Engine.Instances.Suspension.Sandbox.get -> Aw.Sindri.Core.Workflow.Engine.SandboxPark?
+Aw.Sindri.Core.Workflow.Engine.SandboxPark
+Aw.Sindri.Core.Workflow.Engine.SandboxPark.<Clone>$() -> Aw.Sindri.Core.Workflow.Engine.SandboxPark!
+Aw.Sindri.Core.Workflow.Engine.SandboxPark.Code.get -> string!
+Aw.Sindri.Core.Workflow.Engine.SandboxPark.Code.init -> void
+Aw.Sindri.Core.Workflow.Engine.SandboxPark.Deconstruct(out string! Code, out string? Reason, out string? Source) -> void
+Aw.Sindri.Core.Workflow.Engine.SandboxPark.Equals(Aw.Sindri.Core.Workflow.Engine.SandboxPark? other) -> bool
+Aw.Sindri.Core.Workflow.Engine.SandboxPark.Reason.get -> string?
+Aw.Sindri.Core.Workflow.Engine.SandboxPark.Reason.init -> void
+Aw.Sindri.Core.Workflow.Engine.SandboxPark.SandboxPark(string! Code, string? Reason, string? Source) -> void
+Aw.Sindri.Core.Workflow.Engine.SandboxPark.Source.get -> string?
+Aw.Sindri.Core.Workflow.Engine.SandboxPark.Source.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.ILaunchRefusal
+Aw.Sindri.Core.Workflow.Engine.Triggers.ILaunchRefusal.Actor.get -> string!
+Aw.Sindri.Core.Workflow.Engine.Triggers.ILaunchRefusal.Code.get -> string!
+Aw.Sindri.Core.Workflow.Engine.Triggers.ILaunchRefusal.Detail.get -> string!
+Aw.Sindri.Core.Workflow.Engine.Triggers.ILaunchRefusal.Reason.get -> string?
+Aw.Sindri.Core.Workflow.Engine.Triggers.ILaunchRefusal.Source.get -> string?
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Code.get -> string!
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Code.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Detail.get -> string!
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Detail.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Reason.get -> string?
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Reason.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Run.get -> Aw.Sindri.Core.Workflow.Engine.RunToken
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Run.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Source.get -> string?
+Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Source.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Code.get -> string!
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Code.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Detail.get -> string!
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Detail.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Reason.get -> string?
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Reason.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Run.get -> Aw.Sindri.Core.Workflow.Engine.RunToken
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Run.init -> void
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Source.get -> string?
+Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Source.init -> void
+override Aw.Sindri.Core.Workflow.Engine.SandboxPark.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Workflow.Engine.SandboxPark.GetHashCode() -> int
+override Aw.Sindri.Core.Workflow.Engine.SandboxPark.ToString() -> string!
+override sealed Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Equals(Aw.Sindri.Core.Workflow.Engine.Triggers.Trigger? other) -> bool
+override sealed Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Equals(Aw.Sindri.Core.Workflow.Engine.Triggers.Trigger? other) -> bool
+static Aw.Sindri.Core.Workflow.Engine.SandboxPark.operator !=(Aw.Sindri.Core.Workflow.Engine.SandboxPark? left, Aw.Sindri.Core.Workflow.Engine.SandboxPark? right) -> bool
+static Aw.Sindri.Core.Workflow.Engine.SandboxPark.operator ==(Aw.Sindri.Core.Workflow.Engine.SandboxPark? left, Aw.Sindri.Core.Workflow.Engine.SandboxPark? right) -> bool
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind.Memory = 0 -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind.Wall = 1 -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.AgentSessionLimit(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind Kind, long Limit, long Peak) -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind Kind, out long Limit, out long Peak) -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Kind.get -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind
 Aw.Sindri.Core.Launch.LaunchPickOutcomes
 Aw.Sindri.Core.Events.PickWhy
 const Aw.Sindri.Core.Events.ApiViews.LaunchPicks = "launch-picks" -> string!

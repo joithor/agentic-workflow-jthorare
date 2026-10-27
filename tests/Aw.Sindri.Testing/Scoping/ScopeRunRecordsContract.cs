@@ -73,7 +73,7 @@ public abstract class ScopeRunRecordsContract
         var read = await records.Of(_scoping, Token);
 
         var record = Expect.Only(read.Value);
-        Expect.Equal(new ScopeRunRecord("step.scope.gap-search", "gap-search", 2, "agent", "claude-opus-5-5", "claude-opus-5-5", "anthropic", 1_000, launch.Launch.Value), record);
+        Expect.Equal(new ScopeRunRecord("step.scope.gap-search", "gap-search", 2, "agent", "claude-opus-5-5", "claude-opus-5-5", "anthropic", 1_000, launch.Launch.Value, Target: "claude-code"), record);
     }
 
     /// <summary>A launch no usage was sampled for has no model and no tokens, and still shows what it asked for.</summary>
@@ -88,7 +88,7 @@ public abstract class ScopeRunRecordsContract
         var read = await records.Of(_scoping, Token);
 
         var record = Expect.Only(read.Value);
-        Expect.Equal(new ScopeRunRecord("step.scope.draft", "draft", 1, "agent", Model: null, "claude-sonnet-5-5", Vendor: null, 0, launch.Launch.Value), record);
+        Expect.Equal(new ScopeRunRecord("step.scope.draft", "draft", 1, "agent", Model: null, "claude-sonnet-5-5", Vendor: null, 0, launch.Launch.Value, Target: "claude-code"), record);
     }
 
     /// <summary>A launch names the run id its session passes as --run, so the context call log (keyed by instance and run id) can be read for it (issue 1005).</summary>

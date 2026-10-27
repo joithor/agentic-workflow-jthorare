@@ -201,7 +201,7 @@ internal sealed partial class ShellWindow : Window
             ResetSheetScroll();   // a sheet that opens starts at its top; a pushed child and Back keep their scroll
         }
 
-        Dispatcher.UIThread.Post(Shell is { IsSheetShown: true } ? FocusOpenedSheet : KeepFocus, DispatcherPriority.Loaded);
+        Dispatcher.UIThread.Post(Shell is { IsSheetShown: true } ? FocusOpenedSheet : KeepFocusAfterClose, DispatcherPriority.Loaded);
     }
 
     // A page switch (a G-chord) hides the page the focused control was on: focus goes to the page region, which is named, so the new page is spoken.

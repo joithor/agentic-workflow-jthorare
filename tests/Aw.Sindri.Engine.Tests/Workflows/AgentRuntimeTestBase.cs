@@ -40,6 +40,7 @@ public abstract class AgentRuntimeTestBase : IDisposable
     internal string? _factRepo;   // the repo key fact:item names, when a test wants one the profile doesn't list
     internal ILauncher? _launcherSeen;   // what the host sees as the launcher when a test wraps the fake
     internal IRunDiff? _diffSeen;
+    internal Action<IServiceCollection>? _extra;   // more registrations a test wants over the fakes (the model pick's settings, judge and catalog)
 
     public void Dispose()
     {
@@ -202,6 +203,9 @@ public abstract class AgentRuntimeTestBase : IDisposable
         public ServiceProvider Sindri { get; }
 
         public LaunchId Launch => AgentLaunches.LaunchIdFor(Run());
+
+        /// <summary>The launch id of the run's one retry on a stronger model (model-pick spec 5).</summary>
+        public LaunchId EscalatedLaunch => AgentLaunches.LaunchIdFor(Run() with { Escalation = 1 });
 
         public string Worktree => AgentLaunches.WorktreeFor(Run(), new AgentStepTarget(ItemId.From(_item.Id), AgentId.From("claude-code"), Repo));
 
@@ -379,6 +383,7 @@ public abstract class AgentRuntimeTestBase : IDisposable
             _ = services.Replace(ServiceDescriptor.Singleton(test._diffSeen ?? test._diff));
             _ = services.Replace(ServiceDescriptor.Singleton<IStepOutputs>(test._outputs));
             _ = services.Replace(ServiceDescriptor.Singleton(new AgentRuntimeOptions(PollInterval: TimeSpan.FromMilliseconds(100)) { SlotRetry = TimeSpan.FromMilliseconds(50), SlotSlice = TimeSpan.FromMilliseconds(400) }));
+            test._extra?.Invoke(services);
         }
     }
 

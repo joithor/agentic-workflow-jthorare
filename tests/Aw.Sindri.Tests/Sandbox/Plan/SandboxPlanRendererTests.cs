@@ -1,4 +1,5 @@
 using Aw.Kernel.Testing;
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Req = Aw.Sindri.Testing.Sandbox.SandboxRequests;
 
@@ -54,4 +55,16 @@ public sealed class SandboxPlanRendererTests
 
         Assert.Equal(SandboxPlanRenderer.Explain(plan, "evil.example"), SandboxPlanRenderer.Explain(plan with { }, "evil.example"));
     }
+
+    private static SandboxPlan LearningPlan()
+    {
+        var plan = SandboxPlannerTests.Build(Req.WriteScope);
+        return plan with { Network = plan.Network with { Mode = NetworkMode.Learn, LearnUntil = new DateTimeOffset(2026, 11, 3, 9, 0, 0, TimeSpan.Zero) } };
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void Show_of_a_learning_plan_names_the_expiry() => Match(SandboxPlanRenderer.Show(LearningPlan()), "show-learning.txt");
+
+    [Fact, Trait("Lane", "unit")]
+    public void Explain_of_an_unlisted_host_while_learning_names_the_expiry() => Match(SandboxPlanRenderer.Explain(LearningPlan(), "evil.example"), "explain-host-learning.txt");
 }

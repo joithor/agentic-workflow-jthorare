@@ -112,7 +112,8 @@ internal static class Engines
         var review = new MapReview(new ReviewQueueService(store, scrubbers), new ReviewMapService(store, new FakeCurrentUser(), clock), new ReviewHistoryService(store), new ExportReviewService(store, scrubbers, new FakeReviewFileStore(), clock),
             new PreviewReviewFileService(new FakeReviewFileStore()), new ApplyReviewFileService(store, new FakeReviewFileStore(), new FakeCurrentUser(), clock), new PromoteMapService(store, clock));
         return new ContextMap(admin, review, new MapProposals(Build(clock, store), new ProposeFromScopeService(store, store, clock), new GetProposalsService(store, store, scrubbers)), Publishing(store), new CleanMapService(store, scrubbers, new FakeModelPort(), new FakeCurrentUser(), clock),
-            new Features.ScanConcepts.ScanConceptsService(store, scrubbers, new FakeModelPort(), new NoConceptSearch(), new FakeConceptHintStore(), clock));
+            new Features.ScanConcepts.ScanConceptsService(store, scrubbers, new FakeModelPort(), new NoConceptSearch(), new FakeConceptHintStore(), clock),
+            new Features.BuildMap.CheckStructureService(store, Build(clock, store), new Aw.Context.Testing.Locks.FakeHeavyJobLock()));
     }
 
     /// <summary>A scan search that finds nothing: the query tests never scan.</summary>

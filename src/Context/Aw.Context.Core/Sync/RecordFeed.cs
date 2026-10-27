@@ -8,10 +8,11 @@ namespace Aw.Context.Core.Sync;
 /// the Host adapter implements it over each connector. It replaces <see cref="IChangeFeed"/>. Replaying a pull answers the
 /// same page; a source that is down is an error with its code.
 /// </summary>
-public abstract class RecordFeed
+/// <param name="source">The source this feed reads.</param>
+public abstract class RecordFeed(SourceId source)
 {
     /// <summary>The source this feed reads; the keys it returns belong to it.</summary>
-    public abstract SourceId Source { get; }
+    public SourceId Source { get; } = source;
 
     /// <summary>Pulls one page.</summary>
     /// <param name="pull">Where to continue, how much and how far back.</param>

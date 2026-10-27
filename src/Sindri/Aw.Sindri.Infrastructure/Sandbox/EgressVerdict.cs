@@ -6,6 +6,9 @@ internal enum EgressVerdict
     /// <summary>A group allows the host and the target address is public (or listed).</summary>
     Allowed,
 
+    /// <summary>Learn mode let a host through that no group lists; the public address is dialed like an allowed one and the log lists the host to add.</summary>
+    Learned,
+
     /// <summary>No group allows the host or port.</summary>
     Denied,
 

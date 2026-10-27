@@ -1,9 +1,12 @@
 using System.Globalization;
 using System.Text.Json;
+using Aw.Kernel;
 using Aw.Kernel.Json;
 using Aw.Kernel.Testing;
+using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Judge;
 using Aw.Sindri.Core.Launch;
+using Aw.Sindri.Core.Launches;
 using Aw.Sindri.Core.Ledger;
 using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Workflow.Engine;
@@ -145,6 +148,72 @@ public sealed class ModelPickLaunchTests : IDisposable
         Expect.Equal("sonnet,sonnet", string.Join(',', rig.Launcher.Requests.Select(r => r.Step?.Model)));
     }
 
+    [Fact(Timeout = 120_000)]
+    public async Task A_cheap_pick_with_a_stronger_model_allowed_can_escalate_and_reports_its_model()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+        _ = rig.Judge.Chooses("m1");
+
+        var launched = await rig.Launch(Run(1), floor: null, ct);
+
+        Expect.Equal("haiku/True", launched.Model + "/" + launched.CanEscalate);
+    }
+
+    [Theory(Timeout = 120_000)]
+    [InlineData("m3", null, null)]       // opus is the strongest model there is
+    [InlineData("m2", "sonnet", null)]   // the cap leaves nothing above sonnet
+    [InlineData(null, null, "sonnet")]   // a pin leaves one model
+    public async Task A_pick_with_nothing_stronger_allowed_cannot_escalate(string? key, string? cap, string? pin)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true, Cap: cap, Pin: pin), ct);
+        _ = rig.Judge.Chooses(key ?? "m1");
+
+        var launched = await rig.Launch(Run(1), floor: null, ct);
+
+        Assert.False(launched.CanEscalate);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_step_that_names_its_model_cannot_escalate()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+
+        var launched = await rig.Launch(Run(1), floor: null, ct, model: "haiku");
+
+        Assert.False(launched.CanEscalate);
+    }
+
+    /// <summary>A Step that reads a workspace would retry in the failed run's dirty worktree (spec 5), so it does not escalate.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_step_that_reads_a_workspace_cannot_escalate()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+        _ = rig.Judge.Chooses("m1");
+
+        var launched = await rig.Launch(Run(1), floor: null, ct, workspace: _harness.Fact("/work/phase"));
+
+        Expect.Equal("haiku/False", launched.Model + "/" + launched.CanEscalate);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task An_escalation_picks_above_the_failed_model_records_why_and_cannot_escalate_again()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+        _ = rig.Judge.Chooses("m1");
+        var retry = Run(1) with { Escalation = 1 };
+
+        var launched = await rig.Launch(retry, floor: null, ct, previous: new PreviousRun("haiku", "refused", Check: null, Tokens: 300), escalation: 1);
+
+        Expect.Equal("sonnet,opus", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
+        Expect.Equal("sonnet/False", launched.Model + "/" + launched.CanEscalate);   // opus is still allowed, but one retry is all there is
+        Expect.Equal("haiku/refused", await rig.Picked("escalatedFrom", "escalatedFromKind", ct));
+    }
+
     [Theory(Timeout = 120_000)]
     [InlineData("below-threshold", "below-threshold")]
     [InlineData("unavailable", "judge-unavailable")]
@@ -162,6 +231,90 @@ public sealed class ModelPickLaunchTests : IDisposable
         Expect.Equal($"rules/{reason}", await rig.Picked("by", "reason", ct));
     }
 
+    /// <summary>The second opinion on the drafter's only agent (#1008): the drafter's model is out of the candidates, so the challenger runs on another one.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_on_the_drafters_only_agent_is_picked_among_the_other_models()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
+        _ = rig.Judge.Chooses("m1");
+
+        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+
+        Expect.Equal("no failure", launched.Failure is { } failure ? failure.Code + ": " + failure.Message : "no failure");
+        Expect.Equal("haiku,sonnet", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
+        Expect.Equal("haiku", rig.Launcher.Requests[0].Step?.Model);
+    }
+
+    /// <summary>The retry of a challenger keeps the drafter's exclusion (#1008, spec 4.1): above the failed model and not the drafter's model, so with the drafter on opus there is nothing above sonnet.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_cannot_escalate_to_the_drafters_model()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
+        _ = rig.Judge.Chooses("m2");   // haiku, sonnet are left: sonnet
+
+        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+
+        Expect.Equal("sonnet/False", launched.Model + "/" + launched.CanEscalate);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_challengers_escalation_picks_above_the_failed_model_without_the_drafters()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("sonnet"));
+        _ = rig.Judge.Chooses("m1");
+        var first = await rig.Launch(Challenge(1), floor: null, ct);   // haiku, opus are left: haiku, and opus is above it
+        var retry = Challenge(1) with { Escalation = 1 };
+
+        var launched = await rig.Launch(retry, floor: null, ct, previous: new PreviousRun("haiku", "refused", Check: null, Tokens: 300), escalation: 1);
+
+        Expect.Equal("haiku/True", first.Model + "/" + first.CanEscalate);
+        Expect.Equal("opus/False", launched.Model + "/" + launched.CanEscalate);   // sonnet is the drafter's: opus is the only model left
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_whose_only_model_is_the_drafters_parks_with_SND_MODEL_003()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true, Models: [new ModelFacts("sonnet", "Sonnet", ModelSource.Profile, 0)]), ct, drafter: new DrafterRan("sonnet"));
+
+        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+
+        Expect.Equal("SND-MODEL-003", launched.Failure?.Code ?? "no failure");
+        Expect.Equal(0, rig.Launcher.Requests.Count);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_on_the_drafters_only_agent_parks_when_the_drafters_model_was_not_recorded()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan(Model: null));
+
+        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+
+        Expect.Equal("SND-MODEL-003", launched.Failure?.Code ?? "no failure");
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_moves_to_a_second_usable_agent_when_the_catalog_has_one()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"), agents: [AgentEntries.ClaudeCode, AgentEntries.Codex]);
+
+        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+
+        Expect.Equal("no failure", launched.Failure is { } failure ? failure.Code + ": " + failure.Message : "no failure");
+        Expect.Equal("codex", rig.Launcher.Requests[0].Agent.Value);
+    }
+
+    private static AgentStepRun Challenge(int attempt)
+    {
+        var address = InstanceAddress.From("T-9/step/" + attempt.ToString(CultureInfo.InvariantCulture));
+        return new AgentStepRun(WorkflowInstanceId.Of(address), address, RunToken.From(attempt.ToString(CultureInfo.InvariantCulture) + ".1"), new StepRef("challenge", "step.scope.challenge"), WriteScope: false);
+    }
+
     private static ChooseAnswer Answer(string scenario) => scenario switch
     {
         "below-threshold" => new ChooseAnswer(ChooseStatus.Escalated, Choice: null, "below-threshold", DecisionRef: "decision-2"),
@@ -176,7 +329,7 @@ public sealed class ModelPickLaunchTests : IDisposable
         return new AgentStepRun(WorkflowInstanceId.Of(address), address, RunToken.From(attempt.ToString(CultureInfo.InvariantCulture) + ".1"), new StepRef("questions", "step.interview.questions"), WriteScope: false);
     }
 
-    private async Task<PickRig> Rig(ModelPickSettings settings, CancellationToken ct)
+    private async Task<PickRig> Rig(ModelPickSettings settings, CancellationToken ct, DrafterRan? drafter = null, AgentEntry[]? agents = null)
     {
         var launcher = new FakeLauncher();
         var judge = new FakeModelPickJudge();
@@ -187,6 +340,11 @@ public sealed class ModelPickLaunchTests : IDisposable
             _ = services.Replace(ServiceDescriptor.Singleton<IModelPickSettings>(new FakeModelPickSettings { Settings = settings }));
             _ = services.Replace(ServiceDescriptor.Singleton<IModelPickHistory>(new FakeModelPickHistory()));
             _ = services.Replace(ServiceDescriptor.Singleton<IModelCatalog>(new FakeModelCatalog().With(_claude, _three)));
+            _ = services.Replace(ServiceDescriptor.Singleton<IAgentCatalog>(new FixedAgentCatalog(agents ?? [AgentEntries.ClaudeCode])));   // one usable agent unless a test names more: the real catalog also has codex and cursor, which a challenger would move to
+            if (drafter is not null)
+            {
+                _ = services.Replace(ServiceDescriptor.Singleton<ILaunchViews>(new DraftedLaunches(drafter)));
+            }
         });
         await WorkflowsHarness.HoldLease(sindri, ct);
         var declared = new SindriProfile(SindriProfile.CurrentSchemaVersion, "tester", Repos: [new RepoEntry(Repo, Path.Combine(_harness.Home, "checkout"))], Workflow: new WorkflowSettings(Agent: new WorkflowAgentSettings(_claude)));
@@ -197,14 +355,35 @@ public sealed class ModelPickLaunchTests : IDisposable
         return new PickRig(sindri, item, launcher, judge);
     }
 
+    /// <summary>The drafter's launch: on claude-code, in the challenger's instance, with the model it asked for (null: not recorded).</summary>
+    private sealed record DrafterRan(string? Model);
+
+    /// <summary>The launches view with the one drafter launch every challenger Step of this file's addresses follows.</summary>
+    private sealed class DraftedLaunches(DrafterRan drafter) : ILaunchViews
+    {
+        public ValueTask<Result<LaunchRow?>> Get(LaunchId launch, CancellationToken cancellationToken) => ValueTask.FromResult(Results.Success((LaunchRow?)null));
+
+        public ValueTask<Result<IReadOnlyList<LaunchRow>>> ForItem(ItemId item, CancellationToken cancellationToken)
+        {
+            var row = new LaunchRow(LaunchId.From("LCH-" + new string('a', 32)), item, Repo: null, LaunchMode.Open, _claude, "engine", LaunchState.Started, DateTimeOffset.UnixEpoch, OutcomeAt: null,
+                Code: null, Message: null, Stage: null, SessionId: null, ReportedSessionId: null, TabTitle: null, Viewer: null, Late: false, Attach: null, CatalogSource: null, ArgvHash: null, Ended: null,
+                new LaunchStep(InstanceAddress.From("T-9/step/1"), "draft", Attempt: 1), Sequence: 1);
+            return ValueTask.FromResult(Results.Success<IReadOnlyList<LaunchRow>>([row with { Model = drafter.Model }]));
+        }
+
+        public ValueTask<Result<IReadOnlyList<LaunchRow>>> ForRepo(RepoName repo, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public ValueTask<Result<IReadOnlyList<LaunchRow>>> Since(DateTimeOffset since, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
     private sealed class PickRig(ServiceProvider sindri, FactValue item, FakeLauncher launcher, FakeModelPickJudge judge) : IAsyncDisposable
     {
         public FakeLauncher Launcher { get; } = launcher;
 
         public FakeModelPickJudge Judge { get; } = judge;
 
-        public Task<AgentLaunched> Launch(AgentStepRun run, string? floor, CancellationToken ct, string? model = null) =>
-            sindri.GetRequiredService<AgentLaunching>().Launch(new AgentLaunchRun(run, item, Model: model, Floor: floor), ct);
+        public Task<AgentLaunched> Launch(AgentStepRun run, string? floor, CancellationToken ct, string? model = null, PreviousRun? previous = null, int escalation = 0, FactValue? workspace = null) =>
+            sindri.GetRequiredService<AgentLaunching>().Launch(new AgentLaunchRun(run, item, workspace, Model: model, Previous: previous, Escalation: escalation, Floor: floor), ct);
 
         public async Task<IReadOnlyList<LedgerEvent>> Rows(CancellationToken ct) => (await sindri.GetRequiredService<ILedgerStore>().ReadAfter(0, 500, ct)).Value;
 

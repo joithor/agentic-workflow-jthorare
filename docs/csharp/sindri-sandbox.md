@@ -290,6 +290,12 @@ init waits for it, stops both forwarders and exits with the agent's status. The 
 - **How a session ends.** A memory kill is the kernel's (`OOMPolicy=kill`): the watchdog sees `oom_kill` in `memory.events`, or, if the poll missed it, systemd's `Result=oom-kill` of the failed unit. Wrap then reports the exit through `POST /sindri/sessions/{launch}/exit` with `limit` (`kind`, `limit`, `peak` and the peaks of every limit): the service takes one final usage sample (`ISessionUsageSampler.Flush`), then appends `session.ended` with reason `limit`, never `lost`. An ordinary exit takes the same final sample.
 - **Not in this phase.** `sandbox.limit-hit` (`TasksMax`, `MemoryHigh`, disk) needs a proven route and is SB-3b/SB-5a's; `GET /sindri/launches/{launch}/suspended` is the ledger read of #1383 (`IRunSuspensions`); the `step.failed(limit)` mapping is P8 U9's; the session cap and the shims are SB-3b.
 
+## SB-4b: explain and denials
+
+- **`sindri sandbox explain <path|host|command> [--plan <file>] [--json]`** runs in process, before any service is built, and reads **only** the plan file `--plan` or `AW_SANDBOX_PLAN` names (`SandboxEnvironment.Plan`; the launcher sets it, SB-5a). It never opens `AW_SINDRI_HOME`, `AW_STATE_DIR`, the ledger or telemetry and needs no control plane, so it answers with the state directory denied (test `Explain_reads_only_the_plan_file`). The answer is `SandboxPlanRenderer.Explain`; `--json` is `{"query","answer"}`. Exit 0 answered, 2 usage, no plan file or an unreadable one (one `SND-CLI-003` line).
+- **`sindri sandbox denials [--run <launch>] [--since <time|30m|6h|2d>] [--json]`** is a query: `GET /sindri/sandbox/denials?launch=&since=` (`ListDenials`; `IDenialFiles` is the Core port, `DiskDenialFiles` the adapter). It never starts the control plane (exit 1 `SND-API-001` when it is down). The text (`DenialsRenderer`) groups the counters of every launch by target and rule, the most counted first, with the fix by kind: a network host gets "allow `<host>` for this repo: add it to `sandbox.repos.<repo>.hosts`" (a private address and a hit cap get their reason, no fix); a not-bound home path gets `sandbox.repos.<repo>.homeAllow`; a path on the permanent deny list gets its reason and no fix; a tool the agent's own policy refused gets "push from your own terminal, or let Sindri send it" for a git push and "blocked `<tool>` by the agent's own policy" otherwise; the overflow is "+N more not counted by target". `--since` keeps the entries last seen at or after the time.
+- **Where the counters are.** There is no fixed per-launch run-area root yet, so `DiskDenialFiles` reads each `$AW_SINDRI_HOME/launches/<id>.sandbox.json`, takes the directory of its `AW_SANDBOX_PLAN` environment entry (the run area) and reads `denials.json` there. A launch whose run area was removed, or whose file cannot be read, has no row: the ledger's `sandbox.denied` events are the history, these files the live count. The owner sees a route and a CLI; the item sheet's "Blocked" list is SB-6's.
+
 ## Phases
 
 | Phase | Builds |
@@ -303,5 +309,5 @@ init waits for it, stops both forwarders and exits with the agent's status. The 
 
 ## Environment
 
-`AW_SANDBOX_BWRAP`, `AW_SANDBOX_SYSTEMD_RUN` and `AW_SANDBOX_SOCAT` redirect the three host binaries for a test. No variable switches the
+`AW_SANDBOX_BWRAP`, `AW_SANDBOX_SYSTEMD_RUN` and `AW_SANDBOX_SOCAT` redirect the three host binaries for a test. `AW_SANDBOX_PLAN` is set by the launcher and read only by `sandbox explain`. No variable switches the
 sandbox off. `deps.yaml` declares the host-tool edges; `scripts/install-deps.sh` (which `setup.sh` runs) checks `bubblewrap` and `socat` (both soft until SB-5a wires the sandbox into a launch: a failed install warns and setup goes on), and warns when `systemd-run --user --scope` does not work.

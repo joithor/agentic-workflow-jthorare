@@ -31,6 +31,12 @@ internal static partial class CommandTable
             return await Serve(environment, clock).ConfigureAwait(false);
         }
 
+        if (args is ["sandbox", "explain", .. var explain])
+        {
+            // before Compose: explain reads only the plan file, never the state directory, the ledger or telemetry (sandbox spec 3.6)
+            return await SandboxExplainVerb.Run(explain, environment, Console.Out, Console.Error, CancellationToken.None).ConfigureAwait(false);
+        }
+
         var services = Composition.Compose(new ServiceCollection(), environment, clock);
         configure?.Invoke(services);   // tests only: a test replaces a port with its fake; Program passes nothing
         var provider = services.BuildServiceProvider();
@@ -102,6 +108,7 @@ internal static partial class CommandTable
             ["launch" or "session", ..] => await LaunchOrSession(args, client, (output, environment), services, (ct, interrupt.Again)).ConfigureAwait(false),
             ["doctor", ..] => await Doctor(args, verbs, harnesses, output, ct).ConfigureAwait(false),
             ["onyx", .. var rest] => await Onyx(rest, verbs, new OnyxVerbs(services, output, (hash, to, c) => new Verbs(client, probe, to, services, e => start.EnsureRunning(launch: true, e)).Approve(hash, c)), output, ct).ConfigureAwait(false),
+            ["sandbox", "denials", .. var rest] => await new SandboxDenialsVerb(client, output, services.GetRequiredService<TimeProvider>()).Run(rest, ct).ConfigureAwait(false),
             ["mcp", .. var rest] => await new McpVerbs(services, output).Run(rest, ct).ConfigureAwait(false),
             ["context", ..] => await Context(args, client, output, services, (ct, interrupt.Again)).ConfigureAwait(false),
             ["line", "holdout", .. var rest] => await new LineHoldoutVerbs(client, output, Interactive(), Console.In).Run(rest, ct).ConfigureAwait(false),

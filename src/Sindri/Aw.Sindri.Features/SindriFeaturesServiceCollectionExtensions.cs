@@ -59,6 +59,7 @@ using Aw.Sindri.Features.Jobs;
 using Aw.Sindri.Features.Launching;
 using Aw.Sindri.Features.ListCommands;
 using Aw.Sindri.Features.ListDecisions;
+using Aw.Sindri.Features.ListDenials;
 using Aw.Sindri.Features.ListInstances;
 using Aw.Sindri.Features.ListItems;
 using Aw.Sindri.Features.ListJobs;
@@ -191,6 +192,7 @@ public static class SindriFeaturesServiceCollectionExtensions
         _ = services.AddScoped<IValidator<ListRequestsRequest>, AcceptAllValidator<ListRequestsRequest>>().AddQuery<ListRequestsRequest, ListRequestsResponse, ListRequestsService>();
         _ = services.AddScoped<IValidator<GetJobRequest>, AcceptAllValidator<GetJobRequest>>().AddQuery<GetJobRequest, JobView, GetJobService>();
         _ = services.AddScoped<IValidator<GetLaunchRequest>, AcceptAllValidator<GetLaunchRequest>>().AddQuery<GetLaunchRequest, LaunchView, GetLaunchService>().AddScoped<IValidator<GetRunSuspensionRequest>, AcceptAllValidator<GetRunSuspensionRequest>>().AddQuery<GetRunSuspensionRequest, RunSuspensionView, GetRunSuspensionService>();
+        _ = services.AddScoped<IValidator<ListDenialsRequest>, AcceptAllValidator<ListDenialsRequest>>().AddQuery<ListDenialsRequest, ListDenialsResponse, ListDenialsService>();
         _ = services.AddScoped<IValidator<GetLaunchTargetsRequest>, AcceptAllValidator<GetLaunchTargetsRequest>>().AddQuery<GetLaunchTargetsRequest, LaunchTargets, GetLaunchTargetsService>();
         _ = services.AddScoped<IValidator<ListJobsRequest>, AcceptAllValidator<ListJobsRequest>>().AddQuery<ListJobsRequest, JobList, ListJobsService>();
         _ = services.AddScoped<IValidator<GetItemRequest>, AcceptAllValidator<GetItemRequest>>().AddQuery<GetItemRequest, ItemView, GetItemService>().AddScoped<LaunchTargetsReader>().AddScoped<IItemLaunchSource, ItemLaunchSource>();

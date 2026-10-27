@@ -6,6 +6,8 @@ ConnectAI paths below are relative to its repo root (a private TypeScript monore
 
 ## 0. Why
 
+What is taken from ConnectAI, said plainly so the owner can confirm it is what they meant: its ideas and mechanics for two connectors (GitHub, Slack), its chunk size and overlap, its cursor boundary rule, its hybrid-search shape and its constants. Nothing of its code is copied (§5.1), its data model is not used (§14.4) and 16 of its 18 connectors are not ported. The "fully Sindri owned" part is the store, the ids, the ranking and the map.
+
 Onyx was meant to be a recall engine behind a port, with Sindri doing the ranking (retrieval spec D2, D3, `2026-10-10-sindri-context-retrieval-design.md:64-65`). Four things make that the wrong shape now:
 
 | What | Today | Why it hurts |
@@ -35,7 +37,9 @@ Onyx was meant to be a recall engine behind a port, with Sindri doing the rankin
 
 ## 2. Goals and non-goals
 
-Goals: the owner connects GitHub, Slack and Linear by pasting read-only tokens into the profile and running `sindri index sync`; every record in scope arrives, with its state, links and attachments; a query returns it by meaning and by exact words, ranked with the graph; the map build reads the same rows the search does; nothing outside Sindri's own process runs.
+Goals: the owner connects GitHub, Slack and Linear with read-only tokens and runs `sindri index sync`; every record in scope arrives, with its state, links and attachments; a query returns it by exact words at once and by meaning once its vectors exist, ranked with the graph; the map build reads the same rows the search does; no Docker stack and no server run for the index. The one other process is the loopback Ollama the code index already needs; with it down, words-and-graph search still answers (§5.8).
+
+**First usable milestone** (the thing the owner can try before any vector exists): the store, the GitHub and Linear feeds, the lexical leg and the map reading the store: phases I1, I2, I3 and the lexical half of I4, about 9 PRs (§12). Vectors, Slack, the new ranking signals and Onyx's removal follow and are each gated on a number (§12).
 
 Non-goals:
 - No multi-tenant anything: one owner, one box, one `context.db` (README X61 keeps "shared later, not foreclosed": a `Shared` source placement stays in the contract, `SourcePlacement.cs`).
@@ -70,14 +74,14 @@ Measured on the dev box for this spec: 16 cores, 31 GB RAM, 73 GB free disk (`np
 
 **Where:** the same `context.db`, not a new file. One transaction can write a record, its chunks and its vector rows; one query can join `source_record` to `node` through the key (§4.3). The cost is a bigger file with big blob rows beside small graph rows; WAL checkpoints and `VACUUM` run in the existing purge service. The code index's per-repo immutable files stay as they are (they are derived data published by pointer, code index spec §4.1); the store is the one place for everything else.
 
-### 4.2 Schema (migration `0016`, `planning/ERD.md` gets the same tables)
+### 4.2 Schema (migration M-add, `planning/ERD.md` gets the same tables)
 
 ```sql
 -- One row per record. The structured facts a tracker gives: not only text.
 CREATE TABLE source_record (
     key         TEXT PRIMARY KEY,                 -- RecordKey: linear:issue/<uuid> | github:pr/<owner>/<repo>/<n> | github:issue/... | slack:<channel>/<ts> | repo:<repo>/<path>
     source      TEXT NOT NULL,                    -- linear | github | slack | repo-docs
-    kind        TEXT NOT NULL CHECK (kind IN ('doc','issue','pr','comment','project','message')),
+    kind        TEXT NOT NULL,                    -- doc | issue | pr | project | message | ...; validated in C# (an enum and a contract test), not a CHECK, so a new source adds no table rebuild
     repo        TEXT NULL,                        -- the profile repo it belongs to, when it has one
     title       TEXT NOT NULL,                    -- scrubbed, one line
     url         TEXT NULL,                        -- only an allowed scheme and host (Permalinks)
@@ -93,13 +97,14 @@ CREATE TABLE source_record (
     synced_at   TEXT NOT NULL
 ) STRICT;
 CREATE INDEX source_record_by_source ON source_record (source, updated_at);
+CREATE INDEX source_record_by_state ON source_record (repo, state, updated_at);   -- the state and freshness signals and the scope mask (§4.4)
 
 -- What the source itself says connects two records: a pull request that closes an issue, an issue's parent, a Linear attachment.
 CREATE TABLE record_link (
     from_key   TEXT NOT NULL REFERENCES source_record (key) ON DELETE CASCADE,
     to_ref     TEXT NOT NULL,                     -- the other record's key when known; `path:<repo>/<path>` for a file a PR touched (resolved at map build, §7.5); else the url as the source gave it (scrubbed)
     to_key     TEXT NULL,                         -- filled when to_ref resolves to a stored record
-    kind       TEXT NOT NULL CHECK (kind IN ('parent','blocks','duplicates','relates','closes','attachment','review-of','replies-to','in-project','touches')),
+    kind       TEXT NOT NULL,                     -- parent | blocks | duplicates | relates | closes | attachment | review-of | replies-to | in-project | touches; validated in C#
     title      TEXT NULL,
     PRIMARY KEY (from_key, to_ref, kind)
 ) STRICT;
@@ -111,36 +116,47 @@ CREATE TABLE chunk (
     seq        INTEGER NOT NULL,
     text       TEXT NOT NULL,                     -- scrubbed
     tokens     INTEGER NOT NULL,
-    line_start INTEGER NULL, line_end INTEGER NULL   -- docs keep their line span (as doc_chunk does)
+    line_start INTEGER NULL, line_end INTEGER NULL,  -- docs keep their line span (as doc_chunk does)
+    ruleset    TEXT NOT NULL                      -- copied from the record: lets the lexical leg filter without a join
 ) STRICT;
 CREATE INDEX chunk_by_record ON chunk (record, seq);
-CREATE VIRTUAL TABLE chunk_fts USING fts5 (text, content = 'chunk', content_rowid = 'id', tokenize = 'unicode61');   -- plus the three triggers doc_chunk has
+CREATE VIRTUAL TABLE chunk_fts USING fts5 (text, content = 'chunk', content_rowid = 'id', tokenize = 'unicode61');
+-- Three triggers keep the index in step (`doc_chunk` has two, insert and delete, because docs are deleted and re-inserted; `chunk` is rewritten in place when a record is re-chunked or its text is withheld, so it needs the update one too):
+--   AFTER INSERT                       INSERT INTO chunk_fts (rowid, text) VALUES (new.id, new.text)
+--   AFTER DELETE                       INSERT INTO chunk_fts (chunk_fts, rowid, text) VALUES ('delete', old.id, old.text)
+--   AFTER UPDATE OF text               the 'delete' row for old, then the insert for new
+-- A query joins source_record and keeps `ruleset = @ruleset AND blocked = 0 AND removed_at IS NULL` (the shape of DocSql.Search, DocSql.cs:35-41).
 
 -- One vector per thing embedded, under the same key as the thing.
 CREATE TABLE embedding (
-    space     TEXT NOT NULL CHECK (space IN ('chunk','node')),
+    seq       INTEGER PRIMARY KEY AUTOINCREMENT,  -- monotonic: the cache loads `WHERE seq > :last` (§4.4)
+    space     TEXT NOT NULL,                      -- 'chunk' | 'node' (| 'summary' later, §5.7)
     key       TEXT NOT NULL,                      -- a chunk key, or a graph NodeKey
     model     TEXT NOT NULL,                      -- name and digest from the pin
     text_hash TEXT NOT NULL,                      -- of what was embedded; a row with another hash is stale
     dim       INTEGER NOT NULL,
     vec       BLOB NOT NULL,                      -- float32 little-endian, L2-normalised (so cosine is a dot product)
-    PRIMARY KEY (space, key, model)
-) STRICT, WITHOUT ROWID;
+    UNIQUE (space, key, model)
+) STRICT;     -- a rowid table: WITHOUT ROWID is for rows under a few hundred bytes, and these are ~3 KB
+-- No foreign key (the key is polymorphic), so a trigger does the cascade: AFTER DELETE ON chunk
+--   DELETE FROM embedding WHERE space = 'chunk' AND key = old.key.   Node vectors are deleted by the map build that retires the node.
+-- A purge, a tombstone and a re-chunk therefore leave no vector without a chunk; an integration test asserts zero orphans.
 
--- source_cursor (0001) gains: phase TEXT NULL, backfill_cursor TEXT NULL, lease_until TEXT NULL.
+-- source_cursor (0001) gains: phase TEXT NULL, backfill_cursor TEXT NULL.   (No lease column: SyncLocks and one serve host already give single flight.)
+-- A new counter, record_stamp, is bumped once per committed page and once per committed embed batch; the caches in §4.4 watch it (not change_stamp, which every graph write moves).
 ```
 
-How the old tables map: `doc` becomes `source_record` rows of kind `doc` (`blob` is `version`, `title`, `blocked`, `ruleset` carry over); `doc_chunk` becomes `chunk` (line spans carry over). Migration `0016` creates the new tables and copies; `0017`, one release later, drops `doc` and `doc_chunk`. Copied docs have no vectors yet: the embed job (§5.6) fills them. `intent_record` and its links, decisions and conflicts (`0006`) stay exactly as they are; its `key` is the same string as `source_record.key`. It keeps the linker's bookkeeping (`extraction_state`, `linked_map`). Its `title`, `version` and `aliases` repeat what `source_record` holds; folding them is a later clean-up (Q13).
+How the old tables map: a `doc` becomes a `source_record` of kind `doc` (`blob` becomes `version`; `title`, `blocked`, `ruleset` carry over); `doc_chunk` becomes `chunk` (line spans carry over). `planning/ERD.md` has no `context.db` section today (it covers the Sindri ledger and the code index), so it gains its first one, covering these tables and the existing `doc`, `node`, `intent_*` and `change_stamp` tables. Migration numbers are "the next free number at merge": `ctx-1365-s5` already carries a `0016_s5_map_checks.sql` and main's last is `0015`, so this spec's migrations are written as **M-add** (creates the tables, copies nothing) and **M-drop** (drops `doc` and `doc_chunk`) and rebase onto whatever number is free. There is no SQL copy of `doc`/`doc_chunk`: `text_hash` has no SQLite function to compute it and `tokens` is not stored today. Instead the repo-docs feed (the one writer from phase I1) re-reads the docs on its first run, which is cheap (git blobs) and fills the real hashes and token counts; until it has run, search falls back to the old tables, which stay until M-drop, a release later. Docs have no vectors until the embed job (§5.6) fills them. `intent_record` and its links, decisions and conflicts (`0006`) stay exactly as they are; its `key` is the same string as `source_record.key`. It keeps the linker's bookkeeping (`extraction_state`, `linked_map`). Its `title`, `version` and `aliases` repeat what `source_record` holds; folding them is a later clean-up (Q13).
 
 ### 4.3 Ids shared with the graph
 
-One rule: **the graph node of a record is `record:` plus its record key** (`IntentOverlay.cs:123`, `RecordNode`; repo docs already follow it, `RepoDocs.Key`, `RepoDocs.cs:17`). A chunk's key is `<record key>#<seq>`; its vector row has that key. A graph node's vector (`space = 'node'`, §7.3) has the node's own key (`feature:...`, `concept:...`). A code node is `code:<path>` and is not stored in `source_record` (code text is read from git at the sha, retrieval spec `:337`); its vectors stay in the code index (§7.4).
+One rule: **the graph node of a record is `record:` plus its record key** (`IntentOverlay.cs:123`, `RecordNode`; repo docs already follow it, `RepoDocs.Key`, `RepoDocs.cs:17`). A chunk's key is `<record key>#<seq>`; its vector row has that key. A graph node's vector (`space = 'node'`, §7.3) has the node's own key (`feature:...`, `concept:...`) and is rebuilt when a map version is promoted, not carried across versions. A code node is `code:<path>` and is not stored in `source_record` (code text is read from git at the sha, retrieval spec `:337`); its vectors stay in the code index (§7.4).
 
-So from a chunk to its node: strip `#<seq>`, prepend `record:`. From a node to its chunks: strip `record:`, `WHERE record = ?`. No lookup table, no second id space.
+So from a chunk to its node: cut at the **last** `#` (a record key may itself contain `#`, e.g. a doc path `repo:x/a#b.md`; `seq` must be numeric or the key is not a chunk key), prepend `record:`. From a node to its chunks: strip `record:`, `WHERE record = ?`. No lookup table, no second id space.
 
 ### 4.4 Search cost and the budget
 
-Vectors are L2-normalised on write, so a query is one dot product per stored vector. The existing code index loops in `double` with three accumulators per pair (`VectorCodec.cs:42-50`); the store uses a `float` loop over `System.Numerics.Vector<float>` (BCL, NativeAOT-safe) on a RAM copy of the matrix, loaded once by `serve` and refreshed when the store's commit stamp moves (`Store/StampedCache.cs` is the pattern). Memory is the limit, not arithmetic.
+Vectors are L2-normalised on write, so a query is one dot product per stored vector. The existing code index loops in `double` with three accumulators per pair (`VectorCodec.cs:42-50`); the store uses a `float` loop over `System.Numerics.Vector<float>` (BCL, NativeAOT-safe) on a RAM copy of the matrix, loaded once by `serve`. It is **append-only**: the cache remembers the highest `embedding.seq` it has read and each refresh loads only `WHERE seq > last`; it rebuilds fully only on a delete (purge, tombstone, re-chunk), a ruleset change or a model change. It watches `record_stamp` (§4.2), bumped once per committed page or embed batch, so an embed job that commits every 4,096 chunks for hours does not invalidate the graph's caches and does not re-read the whole matrix. (`StampedCache`, `Store/StampedCache.cs`, reloads whole values on any stamp move; it is the pattern for the stamp, not for this cache.) Memory is the limit, not arithmetic. V1 keeps float32 only; the int8 tier and an approximate index are what the budget below names as the next step, not v1 work. `serve`'s resident size today is not measured in this spec; phase I0 prints it beside the matrix size so the owner can see the delta.
 
 Sizes are arithmetic (n chunks times 768 floats times 4 bytes), not measurements; the corpus size is an assumption that phase I0 replaces with the owner's real counts (it prints them from the sources' list endpoints):
 
@@ -152,13 +168,23 @@ Sizes are arithmetic (n chunks times 768 floats times 4 bytes), not measurements
 
 **Budget:** p95 of the whole dense leg under 150 ms at the owner's real size on this box. Up to about 100,000 chunks the matrix is kept as float32 in RAM (307 MB). Above that, the cache holds int8 vectors (a scale per vector, a quarter of the memory) and the top 200 are re-scored exactly from the float32 rows. Past 1,000,000, or when the measured p95 misses the budget, option B or an approximate index goes behind the same `IVectorScan` port; no other code changes. Which of those and when is a phase I0 number, not a guess made here (Q2).
 
-The scope rule (retrieval spec §3, "Repo scope") applies **inside** the scan: the caller's allowed record set is a mask over the matrix before the top 50 are taken, never a filter after it, or a session whose repo owns few records would get an empty leg.
+The scope rule (retrieval spec §3, "Repo scope") applies **inside** the scan: the caller's allowed record set is a mask over the matrix before the top 50 are taken, never a filter after it, or a session whose repo owns few records would get an empty leg. How the mask is built (it decides what leaks, §10):
+
+- The matrix carries a parallel array of record ids, loaded with it. The mask is computed from `source_record` (`repo`, `source`, `ruleset`, `removed_at`, `blocked`) and the **profile's audience table**, per scope, cached by `record_stamp`.
+- **Audience comes from the profile, never from the live link graph.** A record has an audience: a repo's docs and a GitHub record belong to their repo; a Linear record belongs to the repos of the teams the profile maps to them (`context.sources.linear.teams`); a Slack record belongs to the repos the profile maps its channel to (`context.sources.slack.channels: [{id, name, repos}]`). A record with no audience entry is visible to **no** session (default deny); it still counts in `sindri index status`. Links change after a mask is built; the profile is approved, so it does not.
+- The mask applies to every leg: dense, lexical, graph (anchors) and the seed expansion (§6.1), so a hit's neighbours are masked too, and an out-of-scope hit gives the same empty answer as no hit (the behaviour of `SND-CONTEXT-045`).
 
 ### 4.5 What is stored, and what stays out
 
 Stored: scrubbed text, titles, authors, urls (allowed hosts only), states, times, the links a source states. Not stored: unscrubbed text (a record the scrubber blocks keeps its row, `blocked = 1`, and no chunks), attachments' contents (their title and url only), comments' author handles beyond the scrubbed display name, direct messages (never read: the Slack allowlist names channels, §5.4), tokens (never, §5.4).
 
-The file is `0600` in a `0700` directory, as `context.db` is now (retrieval spec §3 "State"); full-disk encryption is assumed, as there. When the profile's scrub patterns change, the ruleset id changes, every record under the old one is skipped by search (as docs are, `0003`) and marked for a re-pull; the next sync fetches it again, scrubs it, and re-embeds only when `text_hash` changed.
+The file is `0600` in a `0700` directory, as `context.db` is now (retrieval spec §3 "State"), and so are `context.db-wal` and `context.db-shm` (the process runs with umask 077; `sindri doctor` checks all three files and every parent directory); full-disk encryption is assumed, as there.
+
+**A tombstone removes the text.** `removed_at` keeps the row (key, title, url, state) so links to it stay readable, and deletes its chunks, their FTS rows and their vectors in the same transaction. The database runs with `PRAGMA secure_delete = ON`; a purge or a reconcile that deleted anything ends with an FTS5 `optimize`, a WAL truncate checkpoint, and an invalidation of the in-memory matrix. A profile key `context.index.retainDays` (default none; `slack` can set its own) makes the daily reconcile tombstone older records. Authors are stored as the scrubbed display name only.
+
+**The scrubber fails closed.** Every stored field (title, author, text, state word, link titles) goes through it before hashing and before the chunker. An exception or a timeout inside it means `blocked = 1`, no text and the title replaced by the key, never raw text stored. Slack and GitHub comments are free text from many people, so each connector has a regression corpus of planted secrets (Slack `xoxb-` and `xoxp-` tokens, GitHub tokens, keys in URLs, JWTs) that must come out redacted or blocked. When the ruleset changes, rows under the old ruleset lose their chunks and vectors at once in a job that runs before the next pull, rather than waiting to be skipped.
+
+**Links in text are cut down.** A `record_link.to_ref` that is a url is kept only when its host is the source's own or a listed docs host, with query string and fragment removed; any other url is reduced to its host or dropped (pre-signed and login links carry secrets in the query). When the profile's scrub patterns change, the ruleset id changes, every record under the old one is skipped by search (as docs are, `0003`) and marked for a re-pull; the next sync fetches it again, scrubs it, and re-embeds only when `text_hash` changed.
 
 ## 5. Sources, connectors and sync
 
@@ -224,7 +250,7 @@ Linear stays an `IContextSource` inside Context. It gains a `Pull`: a new list o
 
 ### 5.3 The first two connectors
 
-**GitHub** (`Aw.Connectors.Infrastructure/GitHub/`): one `HttpClient` to `api.github.com` (or an `https` Enterprise host the profile names), no redirect to another host, per repo in the profile's `context.sources.github.repos`:
+**GitHub** (`Aw.Connectors.Infrastructure/GitHub/`): one `HttpClient` to `api.github.com` (or an `https` Enterprise host, its own profile key that `profile approve` shows the owner; IP literals and hosts that resolve to loopback, link-local or private ranges are refused unless the profile marks them), per repo in the profile's `context.sources.github.repos`:
 - Issues and pull requests through `GET /repos/{o}/{r}/issues?state=all&sort=updated&direction=asc&since=<cursor>&per_page=100` (this endpoint returns both; a record with a `pull_request` field is a PR; ConnectAI's transport reads `/issues` this way and reads `/pulls` separately, newest first, filtering locally, `github/transport.ts:473-522`; Sindri needs one list, so it uses `/issues` and fetches the PR detail only for PRs), then for a PR `GET /pulls/{n}` once for `merged`, `draft`, `merged_at` and the change counts (ConnectAI asks the `/pulls` *list* for those counts, `transport.ts:340-343`, which I believe omits them: inventory open question 2, settled by taking them from the single-PR route) and `GET /pulls/{n}/files` (100 per page, at most 3 pages) for the paths it changed (§7.5). Comments and review bodies, which ConnectAI never fetches (inventory §2.1: counts only), are fetched for records updated since the cursor, newest first, capped per record by a profile key (default 100 comments).
 - State: `open`, `closed`, `merged`, `draft`. Links: `closes`/`fixes #n` in the PR body and linked issues from the timeline (`closes`), the PR's issue (`relates`), a cross-reference in a comment (`relates`).
 - Cursor: the newest `updated_at` seen plus the ids seen at exactly that instant (ConnectAI's boundary rule, `github/transport.ts:137-210`), so a page boundary inside one timestamp loses nothing and repeats nothing.
@@ -254,11 +280,11 @@ Phases per source, from ConnectAI's four (`phases.ts:5-17`), run by the one driv
 | Phase | What it reads | Default |
 |---|---|---|
 | Recent | Records updated in the last N days, newest first, so the first answers come in minutes | 30 days (`phases.ts:40`) |
-| Backfill | Older records, one page per tick, resumable from `backfill_cursor` | pages of 100 (ConnectAI uses 10 because each page costs a model call; Sindri's page costs an HTTP call and an embed) |
+| Backfill | Older records, one page per tick, resumable from `backfill_cursor` | pages of 100 (ConnectAI uses 10 because each page costs a model call; Sindri's page costs an HTTP call and an embed). For one owner this is the first full pull; there is no budget gate |
 | Incremental | Changes since `cursor` | every 5 minutes while `serve` runs |
 | Reconcile | A bounded full window, to catch deletes and edits the cursor missed; marks records the source no longer returns as `removed_at` | daily, 90 days (`phases.ts:50`) |
 
-A page commits in **one transaction**: records, links, chunks, the FTS rows, and the moved cursor, all or none (the rule `IIntentStore.CommitPage` already states, `IIntentStore.cs`). Embedding is a **separate, resumable job** (§5.6), so a slow embedder never holds a sync: a record is searchable by words the moment its page commits, and by meaning when its vectors land. A replay of a page changes nothing (compare `text_hash` and `version`). Sync runs as the engine, like `SyncSources` does today (`SyncSourcesService.cs`), and uses the same `SyncLocks`. A `sindri index sync [source]` verb and a built-in service run it; a source that is down is a row with its code, not a failed call (as now).
+A page commits in **one `BEGIN IMMEDIATE` transaction**: `source_record`, `record_link`, `chunk` (the FTS rows follow by trigger), the matching `intent_record` rows and the moved cursor, all or none. Today `IIntentStore.CommitPage` writes `intent_record` one record at a time with `Cursor: null` (`IntentSyncRun.cs:183`), so `Commit(RecordBatch)` is a new method that writes both tables together, or they drift; a kill-between test covers each pair (record and cursor, record and chunks, record and `intent_record`). The phase names are internal; the owner sees two milestones, **usable** (the recent window is synced) and **complete** (backfill and embedding done), §5.8. Embedding is a **separate, resumable job** (§5.6), so a slow embedder never holds a sync: a record is searchable by words the moment its page commits, and by meaning when its vectors land. A replay of a page changes nothing (compare `text_hash` and `version`). Sync runs as the engine, like `SyncSources` does today (`SyncSourcesService.cs`), and uses the same `SyncLocks`. A `sindri index sync [source]` verb and a built-in service run it; a source that is down is a row with its code, not a failed call (as now).
 
 ### 5.6 Chunking and embedding
 
@@ -280,6 +306,46 @@ ConnectAI runs up to five model calls on every item after it is chunked: entity 
 What the owner gets back is entities, facts and summaries that Sindri's graph already produces another way: the rules linker makes deterministic links from the record text (retrieval spec D3), the optional model linker proposes links as untrusted `propose` rows (D15), and a feature's summary is the map's own `describe` step. ConnectAI needs its facts because it has no structure to hang records on; Sindri's map is that structure.
 
 **Decision (I11): no model call on ingest, in v1.** Nothing in the store's design needs one: chunks and vectors are made from the scrubbed source text. If a later spec wants a one-line summary per record to embed beside the raw chunks (the "derived path", `chunk-synthesize.ts:1-23`), it is an opt-in job over records that have no summary yet, on the profile's model switch, bounded by a budget; the schema has room (`embedding.space` could gain `summary`) and nothing here blocks it. Q19.
+
+### 5.8 What the owner sees
+
+One progress surface serves the CLI and the app: `sindri index status [--json]` prints it, Home shows the same line live from the event stream.
+
+```
+github   usable · synced 8,200 / ~20,000 records · embedded 14,000 / 31,000 chunks · about 6 h left · newest first
+slack    waiting · back at 14:05 (rate limited; 312 threads read)
+linear   complete · 1,940 records · embedded
+```
+
+Per source, one state, its text, its fix and where it shows:
+
+| State | Text | Fix | Shows in |
+|---|---|---|---|
+| ok / complete | "complete" | none | status, Home |
+| syncing | "usable" or "filling older history" | none | status, Home |
+| waiting | "waiting, back at 14:05" (rate limit, with the reset time) | none | status, Home, doctor (ok) |
+| needs token | "needs token: the token was refused" (401, or a pointer that does not resolve) | `sindri index connect <source>` | status, Home, doctor (fail), setup |
+| needs access | "needs access: repo X is unreadable" (a listed repo or channel the token cannot read, or a renamed one) | widen the token or fix the profile | status, Home, doctor (warn), setup |
+| error | the code and one line | per code | status, doctor |
+| embeddings off | "meaning search is off: Ollama isn't running" | start Ollama | status, Home, every query's answer, doctor (warn) |
+| cap reached | "cap reached: older chunks are word-search only" | raise `context.index.maxChunks` | status, Home |
+
+`index connect <source>` validates the token **and** every listed repo or channel before it saves anything, so a wrong scope fails at connect, not hours into a sync. Embedding has pause and resume (`index embed pause|resume`, and a button on Home).
+
+**Setup replaces the Onyx step** with four ordered steps, each with the states not started, waiting on you, running, done, failed: 1 approve the profile; 2 connect GitHub (and Slack, if used): the app shows "waiting for the token in your terminal" while `index connect` reads it, because the token is typed at the terminal and never in the app; 3 first sync ("usable" when the recent window is in); 4 first embed ("complete"). A box that never ran `onyx up` sees none of the Onyx wording. After the upgrade that removes Onyx, a banner and a `sindri setup` row say "GitHub and Slack need new tokens; searches are partial until then" (§8.2).
+
+**A query while vectors are partial or missing** answers from what exists and says so in the answer, in plain words: "meaning search is off: Ollama isn't running" or "meaning search covers 69% of your records; the rest are word-search only". The dense leg is dropped, the lexical and graph legs answer, `index sync` keeps running (sync does not need Ollama), and a golden pins the wording. A wrong model digest is the same state with its own line.
+
+**Doctor rows** (replacing `onyx:stack` and `context:onyx`):
+
+| Row | ok | warn | fail | Fix line |
+|---|---|---|---|---|
+| `index:store` | file and `-wal`/`-shm` are `0600` in a `0700` directory | any mode or parent wider; file over 5 GB | cannot open or migrate | `chmod`; Q1 |
+| `index:embeddings` | Ollama reachable, digest equals the pin, backlog moving | Ollama unreachable; backlog not moving for 1 h | digest differs from the pin | start Ollama; `install-deps.sh` |
+| `index:github`, `index:slack`, `index:linear` | complete or syncing | waiting; needs access | needs token | `index connect <source>` |
+| `index:onyx-leftover` | no Onyx volumes or `.env` | present and unacknowledged | present, with raw Slack and Linear text in them (§8.2 step 5) | `sindri onyx down --purge`; once purged or `acknowledged` in the profile, the row is gone |
+
+`index purge <source>` shows its counts first ("deletes 8,200 records, 31,000 chunks, 31,000 vectors, about 140 MB") and asks for the human's yes; it cannot be undone except by syncing again, which is why it is a human action. Adding a repo or channel to the profile shows "backfilling 2 new repos" in the same progress line.
 
 ## 6. The query path and ranking
 
@@ -343,7 +409,7 @@ Order after features: A, D, B, C. D jumped from last to second because the map l
 | §11 says | Now |
 |---|---|
 | Doc records come from the build, from `IDocIndex` and the path list (§11.2) | From the build, from `IRecordStore` for the doc text and from the path list for existence. The rules (record globs, directory-doc names, home-feature links, cited-path `mentions`, roll-up) do not change |
-| "The map build does not see it" (§11.1), the doc index is `doc_chunk` behind `IDocIndex` | The doc index **is** the store (`source_record` kind `doc`, `chunk`): `IDocIndex` and `SqliteDocIndex` are retired after `0017`; `RefreshDocsService` becomes the repo-docs feed of §5.5 |
+| "The map build does not see it" (§11.1), the doc index is `doc_chunk` behind `IDocIndex` | The doc index **is** the store (`source_record` kind `doc`, `chunk`): `IDocIndex` and `SqliteDocIndex` are retired after M-drop; `RefreshDocsService` becomes the repo-docs feed of §5.5 |
 | `MapDocSources(IDocIndex Docs, ICodeSymbolSource Symbols)` | `MapRecordSources(IRecordStore Records, ICodeSymbolSource Symbols)` |
 | Open question 18: a doc's age needs a per-file commit time the reader doesn't give | Unchanged for docs (the repo head's time first). Tracker records now have real `created_at`, `updated_at`, `closed_at` |
 | "The tracker half (issues, projects, decisions, freshness) is the ideas lane's own design" | The tracker half's inputs exist in the store: state, links, attachments and times for Linear and GitHub. The ideas lane designs only what a lens shows, not how records arrive |
@@ -383,7 +449,7 @@ Counts are files that mention "onyx" (an upper bound on what is deleted; `grep -
 
 | Area | What | Action |
 |---|---|---|
-| CLI | `sindri onyx up/down/status/open`, `OnyxVerbs.cs`, `CommandTable.cs:104,167`, `Interrupt.cs:45`, the status row `Verbs.cs:135` | Delete. `onyx down` stays one release as a stub that stops a leftover stack and prints the Docker command to delete its volumes (Q8) |
+| CLI | `sindri onyx up/down/status/open`, `OnyxVerbs.cs`, `CommandTable.cs:104,167`, `Interrupt.cs:45`, the status row `Verbs.cs:135` | Delete, except `onyx down --purge`, which stays one release as a human-only stub that lists and removes a leftover stack, its files and its keychain entries (§8.2 step 5, Q20). |
 | API and setup | `ConnectOnyx`, `DeferOnyx`, `SetupOnyx`, `OnyxAccount`, `OnyxEnsure`, `OnyxStatus`, `OnyxUp`, `OnyxDown` slices; the endpoints `ConnectOnyxEndpoint`, `DeferOnyxEndpoint`, `SetupOnyxEndpoint`; the Onyx parts of `GetSetup` and `SetupSources`; the serve hooks `OnyxServeHooks.cs` | Delete. The setup screen's Onyx step is replaced by "connect your sources" (I8) |
 | Sindri Core and Infrastructure | `Aw.Sindri.Core/Onyx/*` (about 50 files: compose, container runtime, provisioning, pins, login), `Aw.Sindri.Infrastructure/Onyx/*` (the Docker CLI runtime, HTTP provisioning, compose YAML, health), 93, 57, 34 and 23 files in Core, Features, Infrastructure and Host mention it | Delete; keep `KeychainSecretWriter` and `ISecretWriter` (§5.4) |
 | UI | 20 files in `Aw.Sindri.Ui` | Delete the Onyx views and view models; the setup flow and its goldens change |
@@ -400,7 +466,12 @@ Counts are files that mention "onyx" (an upper bound on what is deleted; `grep -
 2. Run the backtest on both: Onyx arm and store arm, same corpus, same questions. Parity (store arm at least as good on the pass bars of retrieval spec §9.4) is the gate to delete.
 3. Switch the default: sources in the catalog are the store's; Onyx is no longer built into the catalog.
 4. Delete in the order of §8.1's table, top to bottom, one PR per row group (each PR builds and tests alone). The `onyx.lock` and setup step go last so a box that never ran `onyx up` is untouched at every step.
-5. Owner actions, once, listed by `sindri setup` as one click each: paste the GitHub and Slack tokens; approve the profile; optionally `docker compose -p sindri-onyx-<hash> down -v` and delete `$AW_SINDRI_HOME/onyx/` (Sindri never deletes the containers or volumes itself; `sindri doctor` warns while they exist).
+5. Owner actions, once, listed by `sindri setup`: paste the GitHub and Slack tokens; approve the profile; and **purge the Onyx leftovers**. Onyx's Postgres and OpenSearch volumes hold a raw, unscrubbed copy of the Slack and Linear text, which the new store deliberately does not, so leaving them is the largest exposure this migration leaves behind. `sindri onyx down --purge` (the one Onyx verb that stays, as a human-only stub for one release; Q20) lists what it will delete (the project's containers and volumes by name, `$AW_SINDRI_HOME/onyx/` including its generated `.env` with the admin and API secrets, and the Onyx keychain entries), asks for the human's yes, then removes them. Sindri never does this on its own. `index:onyx-leftover` (§5.8) is a fail while those exist and goes away once purged.
+6. **Rollback.** Before I8 (Onyx removal), Onyx is still switchable back on with one profile key and nothing has been dropped: M-add only adds tables and copies nothing. M-drop is the only destructive step; it ships a release after I8 and only when I8 has soaked. If the I5 parity run fails, the owner decides between fixing the store arm and keeping Onyx for the sources the store does not cover (Q4); nothing is deleted until the answer is yes.
+
+**The last Onyx PR passes only when `grep -rli onyx` over the tree, minus history (old specs, git, `docs/superpowers`), is empty.** The §8.1 table is the plan; the grep is the proof, because the first count missed real files: `Dockerfile`, `scripts/sindri-pod.sh` and its test (`--onyx`, `AW_SINDRI_POD_ONYX_PORT`), `scripts/context-first-run.sh`, its test and the `context-first-run.up-dry-run.txt` golden, `scripts/lib/sindri-build-inputs.sh`, `scripts/ci/changed-areas.sh` and its test, `scripts/env-scan-ignore.txt`, `ONBOARDING.md`, `docs/sindri/{OPERATIONS,deploy,README,context,linear,SETUP}.md`, the `docs/*.html` pages, and in Context `Arm.Onyx` (`Core/Eval/Backtest/Arm.cs`), `Arms.NotAvailable`, `LensIntent.cs`, `SourceRef.cs`, `SourcesSection.cs` and `Features/QueryContext/ItemMiss.cs`. Each deletion PR deletes its code **and its tests together** and regenerates its goldens in the same PR (deleted code cannot build while its tests still name it). Bash tests that change with it: `sindri-pod`, `context-first-run`, `ci-changed-areas`, `install-onyx`, `onyx-lock`, `images-lock`. `ISecretWriter` lives in `Aw.Sindri.Core/Onyx/ISecretWriter.cs` today, so it moves out of `Onyx/` (to `Secrets/`, beside `ISecretPointers`) in the first connector PR, before any deletion.
+
+**Before the switch, a usage check.** Onyx also connected Confluence and Drive spaces (`docs/sindri/onyx.md:174-175`), and the store does not. Phase I5 lists which Onyx sources returned hits in the backtest and in recent sessions; the owner reads that list (Q4) and either accepts the loss or names a connector to add before Onyx goes.
 
 ### 8.3 What happens to data Onyx already gave Sindri
 
@@ -410,8 +481,8 @@ Less than it sounds: Sindri never stored Onyx's text (§0). What it stored is in
 |---|---|---|---|
 | A Linear issue | `linear:issue/<uuid>` | the same | Nothing to do. The native adapter and Onyx's connector already wrote the same key (`LinearRecordKeys.cs`, `OnyxRecordKeys.cs:44-47`). `source` changes from `onyx` to `linear` when the Linear feed first rewrites the row |
 | A Slack thread | `slack:<channel>/<ts>` | the same | Nothing to do (§5.3) |
-| Other Onyx documents | `onyx:<type>/<id>`, including GitHub as `onyx:github/<id>` | GitHub: `github:issue\|pr/<owner>/<repo>/<n>`; others: none | Onyx's GitHub id "is whatever Onyx gives it" (`docs/sindri/onyx.md:183`), so a mapping is not guaranteed. Rows that can't be mapped become orphaned links (the overlay already reports them, `IntentOverlayResult`); their links are **derived** by rules from record text and are rebuilt from the new GitHub records at the next sync. **Human** decisions on them (overrides naming `record:onyx:...`) can't be re-derived: the migration lists them before it drops anything, and the owner decides (§13, Q8) |
-| Repo docs | `doc`, `doc_chunk` | `source_record`, `chunk` | Copied by `0016`, scrubbed text as it was; vectors by the embed job |
+| Other Onyx documents | `onyx:<type>/<id>`, including GitHub as `onyx:github/<id>` | GitHub: `github:issue\|pr/<owner>/<repo>/<n>`; others: none | Onyx's GitHub id "is whatever Onyx gives it" (`docs/sindri/onyx.md:183`), so a mapping is not guaranteed. Rows that can't be mapped become orphaned links (the overlay already reports them, `IntentOverlayResult`); their links are **derived** by rules from record text and are rebuilt from the new GitHub records at the next sync. **Human** decisions on them (overrides naming `record:onyx:...`) can't be re-derived: the migration writes them to a file, `sindri index migrate review` shows each with keep, remap (to a new GitHub key) or drop, and the default for an unanswered one is keep as an orphan, which the overlay already reports (§13, Q8) |
+| Repo docs | `doc`, `doc_chunk` | `source_record`, `chunk` | Re-read by the repo-docs feed on its first run (§4.2), scrubbed again; vectors by the embed job |
 | Onyx's own index (its Postgres and OpenSearch volumes) | | | Not migrated. It is a derived copy of data the connectors read again. Re-reading is the cost: GitHub about 200 list requests per 20,000 records (§5.3) |
 
 ## 9. Packages, tiers and edges
@@ -441,98 +512,108 @@ edges:
   - { from: Embeddings,   to: Kernel,          kind: project, status: planned, note: "Result, IService, ids" }
   - { from: Connectors,   to: Kernel,          kind: project, status: planned, note: "Result, ids, IService" }
   - { from: Connectors,   to: KernelTelemetry, kind: project, status: planned, note: "logs and spans (codes and counts only, never record text)" }
-  - { from: Context,      to: Embeddings,      kind: project, status: planned, note: "Context.Infrastructure: the query embedding, the vector scan, the embed job's client" }
   - { from: CodeIndex,    to: Embeddings,      kind: project, status: planned, note: "phase I6: OllamaEmbedder and VectorCodec move here (until then CodeIndex keeps its own)" }
+  - { from: Sindri,       to: Embeddings,      kind: project, status: planned, note: "Host binds Context's vector ports (IQueryEmbedder, IVectorScan) to Aw.Embeddings, as it binds ISymbolVectors" }
+  - { from: Sindri,       to: Embeddings,      kind: compose, status: planned, note: "Host calls AddEmbeddings and nothing else from it" }
   - { from: Sindri,       to: Connectors,      kind: project, status: planned, note: "Features and Host use IConnector and its records through Aw.Connectors.Core" }
   - { from: Sindri,       to: Connectors,      kind: compose, status: planned, note: "Host calls AddConnectorsFeatures and AddConnectorsInfrastructure and nothing else from them" }
   - { from: SindriUi,     to: Sindri,          kind: http,    status: current, note: "unchanged; the setup flow's API routes change (Onyx routes removed, source connect routes added)" }
 ```
 
-Only `Aw.Context.Infrastructure`, `Aw.Connectors.Infrastructure` and the Host use these tier-0 packages: Core and Features may use `Aw.Kernel` among tier 0 and nothing else (`deps.yaml:37-60`, ARCH-DIR-005), which is why the chunker and the ports sit in Core and the scan and the client do not. Packages `Context` and `Sindri` keep their present edges (`deps.yaml:421-436,507-514,629-636`). No package gains a new edge to `Context`. Nothing in `deps.yaml` names Onyx (its executables are external, as the managed-Onyx spec §9 notes), so removal edits no edge.
+Context does **not** reference `Embeddings`: `Aw.Context.Infrastructure` already has four in-repo project references and the limit is `projectFanOut: 4` (`deps.yaml:92`; Infrastructure is not exempt), and `Aw.Context.Features` may use `Aw.Kernel` among tier 0 and nothing else (`deps.yaml:37-60`, ARCH-DIR-005). So the query embedder and the scan are **ports in `Aw.Context.Core`** (`IQueryEmbedder`, `IVectorScan`, the way `ISymbolVectors` is a Core port bound in `ContextFeaturesServiceCollectionExtensions.cs:95`); the cache that loads rows from SQLite is in `Context.Infrastructure` and hands the matrix to the port; the Host binds the ports to `Aw.Embeddings`. `Aw.Connectors.Infrastructure` uses only Kernel packages. The pointer grammar (`env:`, `file:`, `keychain:`, `op:`) is private to `LinearSettings` today (`LinearSettings.cs:17`); `GitHubSettings` and `SlackSettings` in `Connectors.Core` carry their own copy of the grammar with a parity test against `LinearSettings` (a shared Kernel helper is a later clean-up). Packages `Context` and `Sindri` keep their present edges (`deps.yaml:421-436,507-514,629-636`). No package gains a new edge to `Context`. Nothing in `deps.yaml` names Onyx (its executables are external, as the managed-Onyx spec §9 notes), so removal edits no edge.
 
-Why not put the connectors inside Context, as Linear and Onyx sit today (`Aw.Context.Infrastructure/Linear`, `/Onyx`)? That works under the tier rules with no adapter and keeps one contract (`IContextSource`). It was weighed and not chosen because Context is the retrieval engine and 58 of its files already mention Onyx (`grep -rli onyx src/Context`, 2026-10-27), and the owner asked for ConnectAI's code to be pulled out into something Sindri owns, which a package with its own contract and tests makes visible and reusable (a recipe block can use `Connectors` without Context). The cost is the adapter in the Host (one small class per connector) and two places to read when tracing a record. Q5 puts the choice to the owner.
+Why not put the connectors inside Context, as Linear and Onyx sit today (`Aw.Context.Infrastructure/Linear`, `/Onyx`)? That works under the tier rules with no adapter and keeps one contract (`IContextSource`). It was weighed and not chosen because Context is the retrieval engine and 58 of its files already mention Onyx (`grep -rli onyx src/Context`, 2026-10-27), and the owner asked for ConnectAI's code to be pulled out into something Sindri owns, which a package with its own contract and tests makes visible and reusable (a recipe block can use `Connectors` without Context). The cost is the adapter in the Host (one small class per connector) and two places to read when tracing a record. Q5 puts the choice to the owner (a decision on structure; the answer changes no behaviour).
 
 ### 9.3 Where the code goes (by the C# rules)
 
 | Package | Layer | What |
 |---|---|---|
-| `Aw.Embeddings` | library | `IEmbedder`, `OllamaEmbedder`, `VectorCodec`, `IVectorScan` with `ScanInProcess`; fakes and contract tests in `Aw.Embeddings.Testing` |
+| `Aw.Embeddings` | library | `OllamaEmbedder`, `VectorCodec`, `ScanInProcess` (implementing Context's `IQueryEmbedder` and `IVectorScan` ports through small adapters in the Host); fakes and contract tests in `Aw.Embeddings.Testing`; tests in `Aw.Embeddings.Tests` |
 | `Aw.Connectors.Core` | Core | `IConnector`, `ConnectorPage`, `ConnectorItem`, `TextCleaner`, the profile records `GitHubSettings`, `SlackSettings` (a secret pointer and scope lists, with `Create` that validates, as `LinearSettings` does) |
 | `Aw.Connectors.Features` | Features | `PullGitHub`, `PullSlack` slices (a request, a service, a fake client in tests) |
 | `Aw.Connectors.Infrastructure` | Infrastructure | the HTTP clients, wire records, source-generated JSON context |
-| `Aw.Context.Core` | Core | `IRecordStore`, `RecordBatch`, `RecordFeed`, `Chunker`, `RankFeatures` additions, `ReachSignal` |
-| `Aw.Context.Features` | Features | `SyncSources` rewritten around feeds, `EmbedRecords`, the search legs, `BuildMap` reading `IRecordStore` |
-| `Aw.Context.Infrastructure` | Infrastructure | `SqliteRecordStore` (migration `0016`), `VectorMatrixCache`, the Linear feed |
+| `Aw.Context.Core` | Core | `IRecordStore`, `RecordBatch`, `RecordFeed`, `IQueryEmbedder`, `IVectorScan`, `Chunker`, `RankFeatures` additions, `ReachSignal` |
+| `Aw.Context.Features` | Features | `SyncSources` rewritten around feeds, `EmbedRecords` (through the Core ports), the search legs, `BuildMap` reading `IRecordStore` |
+| `Aw.Context.Infrastructure` | Infrastructure | `SqliteRecordStore` (M-add), `VectorMatrixCache`, the Linear feed |
 | `Aw.Sindri.Host` | Host | the adapter `ConnectorFeed : RecordFeed` over `IConnector`; `sindri index connect\|sync\|status\|purge` |
 | `Aw.Sindri.Features` | Features | the `index-sync` and `index-embed` built-in services (the shape of `code-index-embed`) |
 
 ## 10. Security and trust
 
 - **Trust is unchanged** (retrieval spec §7): record text, titles and authors are `untrusted` and fenced on egress; stored text is scrubbed first. A new stored-text surface is why Q7 asks the owner's yes before the first line of code.
-- **Egress.** Nothing leaves the machine except the connectors' own requests to their tool's API, over `https` to an allowed host with no redirect to another host (the forge adapter's rule, `src/Forge/Aw.Forge.Core/Ports/IForge.cs:9`), and the loopback embed call. A test asserts both.
+- **Egress.** Nothing leaves the machine except the connectors' own requests to their tool's API, over `https` to an exact-match allowed host (the forge adapter's rule, `src/Forge/Aw.Forge.Core/Ports/IForge.cs:9`), and the loopback embed call. Every connector client sets `AllowAutoRedirect = false` and `UseProxy = false` (as `LinearHttp.cs:6` does) and treats a 3xx as an error; the scheme and host of every follow-up url (a `Link` header's `next`, a file or permalink url) are compared with the allowlist before the request is sent, and the Authorization header is never sent anywhere else. A fake server per connector asserts each of these.
 - **Callers.** Reads are any caller; `index sync` is any caller (it runs as the engine, as `sources sync` does); `index connect` writes a secret and is human-only; `index purge <source>` deletes a source's rows and vectors and is a `desk` action (one reversible-by-resync step, the terminal or the app may run it).
-- **Prompt injection in a record** is the existing threat (S-H3): record text never reaches a model on ingest (§2), and on egress it is fenced.
-- **Direct messages and unlisted channels are never read**: the Slack connector refuses a channel not in the profile before sending a request (`SND-CONTEXT` code, a test with a fake Slack that fails the run on any other route).
-- **Disk.** The store holds more private text than any file Sindri has held; it is `0600` in a `0700` directory, and `sindri doctor` warns when the file's mode or its directory's is wider (the check the three SQLite files get today).
+- **Prompt injection in a record** is the existing threat (S-H3), larger now: the text includes GitHub comments (anyone on a public repo) and Slack threads (anyone in the workspace, bots and guests), which agents read as search results. On egress it is fenced as untrusted, as today, and each chunk's record carries its author's relation to the org where the source says (member, outside collaborator, bot, guest): an outside author's text is fenced with a stronger "unverified third party" label. "Record text never reaches a model on ingest" (§2, §5.7) is true of this index; the optional model linker (retrieval spec D15) does read record text, stays off by default and, when on, reads member-authored records only. An egress test plants an injection string in a Slack thread and in an outside PR comment.
+- **Direct messages and unlisted channels are never read**: the Slack connector refuses a channel not in the profile before sending a request (`SND-INDEX-006`, a test with a fake Slack that fails the run on any other route). The allowlist is keyed by Slack channel **id**, with the name for display, so a renamed channel or a different channel reusing a name needs a new approval.
+- **Disk.** The store holds more private text than any file Sindri has held; it and its `-wal` and `-shm` are `0600` in a `0700` directory, and `sindri doctor` warns when any mode or any parent directory is wider (the check the three SQLite files get today). Test fixtures never copy the real database.
+- **Tokens.** A `file:` pointer wider than `0600` is refused (a Sindri code, no echo of the path's contents); `keychain:` is preferred; `index connect` reads the token without echo and passes it only in the Authorization header. Response bodies go through `Aw.Redaction` before they reach an error row, and HTTP spans capture no bodies; the planted-token test includes a fake server that reflects the token back.
 
 ## 11. Proof
 
 - **Unit:** `Chunker` (windows, overlap, dense text, multi-byte at a cut: the cases ConnectAI's tests cover, `connections/src/connectors/__tests__`), `TextCleaner`, the cursor boundary rule, the reach and state and freshness scores, fusion with the new legs, the scope mask inside the scan (a session with three allowed records gets three, not zero).
 - **Contract:** `IRecordStore`, `IConnector` and `IEmbedder` each get a fake and a contract suite the real adapter also passes (the repo's rule, `.agents/rules/csharp-testing.md`).
-- **Integration:** `SqliteRecordStore` on temp files: migration `0016` run on a copy of a database made by `0015` (docs copied, intent tables untouched, old `source_cursor` rows kept); a page commit is atomic (kill between records and cursor: neither moves); a replayed page writes nothing; a ruleset change marks rows outdated and a re-pull fixes them; FTS and a dense query agree on a planted record.
+- **Integration:** `SqliteRecordStore` on temp files: M-add run on a copy of a database made by `0015` (new tables exist and are empty, `doc`, `doc_chunk`, intent tables and old `source_cursor` rows untouched; the first docs refresh fills `source_record` and `chunk` with real hashes and token counts); a page commit is atomic (a kill between any two of record, chunks, `intent_record` and cursor: none of them moves); a purge, tombstone and re-chunk leave zero orphan `embedding` rows; a `#` in a doc path round-trips between chunk key and node key; a replayed page writes nothing; a ruleset change marks rows outdated and a re-pull fixes them; FTS and a dense query agree on a planted record.
 - **Fakes:** a fake GitHub server and a fake Slack server (`Aw.Connectors.Testing`), the way `FakeOnyxServer` is built today; a fake Ollama.
 - **Heavy (nightly):** real Ollama with the pinned model: dense leg ranks a known near-duplicate first; the measured numbers of phase I0 (scan p95 at 50,000 and 250,000 synthetic chunks, embed throughput, store size).
-- **Backtest (the gate for deleting Onyx, §8.2):** the existing arms plus a `store` arm and a `store+features` arm on the owner's three Linear projects' corpus and questions (retrieval spec §9); the report prints, per arm, the pass-bar numbers and the share of tracker records left unlinked (input to Q10).
+- **Backtest (the gate for deleting Onyx, §8.2):** the existing arms plus a `store-lexical` arm (words and graph only), a `store` arm (plus dense) and a `store+features` arm, on the owner's three Linear projects' corpus and questions (retrieval spec §9) **plus a new question set whose answers live only in GitHub issues and PRs and in Slack** (at least 15 questions the owner writes or approves), because Linear never needed Onyx and a Linear-only corpus cannot show GitHub or Slack are covered. **The bar:** the `store` arm must meet or beat the Onyx arm on every pass bar of retrieval spec §9.4 (the numbers are that spec's, not restated here) with no bar lower by more than one question, and the GitHub/Slack set must pass at least as many questions as the Onyx arm does. **Dense and the new signals ship on only if their arm beats `store-lexical` or `store`, respectively, on the same bars**; otherwise they stay off and the lexical store ships. The report prints, per arm, the numbers, the share of tracker records left unlinked (input to Q10), and which Onyx sources returned hits (§8.2).
 - **Setup proof:** `./setup.sh --dry-run` shows no Onyx step; `scripts/check-env-example.sh`, `node scripts/check-deps.mjs`, `scripts/dotnet-verify-packages.sh` pass; `sindri doctor` lists the new rows (`index:store`, `index:embeddings`, `index:github`, `index:slack`) and none for Onyx.
 
 ## 12. Phases and parallel plan (for /specToProvenPR)
 
-Lanes: api, engine, context, ui, ideas. Builders are Sonnet, in parallel, one project each (builders never build or test beyond one light build; leads run the gates). Every phase's PR carries its own tests.
+Lanes: api, engine, context, ui, ideas. Builders are Sonnet, in parallel, one project each (a builder does the one light build of its project; leads run the gates). Every phase's PR carries its own tests. PR counts are my estimates, one per row of the unit table that follows.
 
-| Phase | What | Needs | Lane |
-|---|---|---|---|
-| **I0: measure** | A throwaway harness, never merged: the scan's p95 at 50,000 and 250,000 chunks on this box (float32 and int8); Ollama `truncate: false`; embed throughput; sqlite-vec's load on the bundled `e_sqlite3` and under NativeAOT; one Slack `conversations.history` call with the owner's token to read its page cap and `Retry-After`; the owner's real record counts from the Linear and GitHub list endpoints. Results written into this spec's §4.4 table | nothing | context |
-| **I1: store and port** | Migration `0016`, `SqliteRecordStore`, `IRecordStore`, `RecordBatch`, `Chunker`, the doc copy; `0017` drop in a later release. The `IRecordStore` fake and contract land first so I2 and the ideas lane start on it | I0 for the budget only | context |
-| **I1e: `Embeddings`** | The tier-0 package: `IEmbedder`, `OllamaEmbedder`, `VectorCodec`, `IVectorScan`; its `deps.yaml` entries | nothing | engine |
-| **I2: feed driver and Linear** | `RecordFeed`, `SyncSources` rewritten, the Linear feed with issue state, `EmbedRecords` job and `index-sync`/`index-embed` services, `sindri index sync\|status` | I1, I1e | context |
-| **I3: GitHub** | `Connectors` package, GitHub client, settings, the Host adapter, `sindri index connect github`, Permalinks host | I1 (the port), fake server | api |
-| **I3b: Slack** | The Slack client, settings, `index connect slack` | I3 (the package and adapter exist) | api |
-| **I4: search legs and ranking** | Dense and lexical legs over the store with the scope mask, the seed graph leg, `Reach`/`State`/`Freshness`, `FeatureWeights` additions, backtest arms | I1, I1e, I2 | context |
-| **I5: parity run, switch, backtest brief from the store** | The backtest brief source reads the store; the parity run; the catalog's default switches. **The gate to I8** | I2, I3, I3b, I4 | context |
-| **I6: `CodeIndex` uses `Embeddings`** | Move `OllamaEmbedder` and `VectorCodec`; optional, can wait | I1e | engine |
-| **I7: node vectors and similar-link proposals** | `space = 'node'`, proposals in map review. Only if I5's unlinked share justifies it (Q10) | I5 | context, ideas |
-| **I8: Onyx removal** | §8.1 in the order of §8.2: verbs and slices, then Sindri Core and Infrastructure, UI, Context, doctor and aot-smoke, errors and profile, pins and scripts and setup, docs, tests and goldens | I5 | engine (Sindri side), ui (views and goldens), context (Context side), api (endpoints) |
-| **S7 (map-structure §11)** | Doc records and the tracker half of #1373 | S3 and I1's port and fake | ideas |
+| Phase | What | Needs | Lane | PRs |
+|---|---|---|---|---|
+| **I0: measure** | A throwaway harness, never merged: the scan's p95 at 50,000 chunks and at 3 times the owner's real count on this box (float32; int8 only if float32 misses); `serve`'s resident size; Ollama `truncate: false`; embed throughput; sqlite-vec's load on the bundled `e_sqlite3` and under NativeAOT; one Slack `conversations.history` call with the owner's token to read its page cap and `Retry-After`; the owner's real record counts from the Linear and GitHub list endpoints. Results go into §4.4 and §12.2. **Gate:** I4's dense half, the cap (Q18) and the model choice (Q6) wait for it; I1 to I3 do not. A one-day task | nothing | context | 0 (a spec amendment) |
+| **I1: store, port, ports** | M-add, `SqliteRecordStore`, `IRecordStore`, `RecordBatch`, `Chunker`, the repo-docs feed; `IQueryEmbedder` and `IVectorScan` ports. The `IRecordStore` fake and contract land first so I2 and the ideas lane start on it | nothing | context | 4 |
+| **I1e: `Embeddings`** | The tier-0 package after its scaffold: `OllamaEmbedder`, `VectorCodec`, `ScanInProcess`; Host adapters to Context's ports | the scaffold unit | engine | 3 |
+| **I2: feed driver and Linear** | `RecordFeed`, `SyncSources` rewritten, the Linear feed with issue state, `index-sync` service, `sindri index sync\|status` and the progress surface (§5.8) | I1 | context | 4 |
+| **I3: GitHub** | `Connectors` package, GitHub client, settings, the Host adapter, `sindri index connect github`, Permalinks host, `ISecretWriter` moved out of `Onyx/` | I1 (the port), fake server | api | 4 |
+| **I3b: Slack** | The Slack client, settings, `index connect slack`. **Conditional:** it starts only if I0's probe shows the owner's app is not throttled to 1 request a minute, or the owner accepts a slow background source (Q16), and names the channels | I3, I0 | api | 2 |
+| **I4a: lexical leg** | Lexical leg over the store with the scope mask and audience table, the degraded-answer wording, backtest `store-lexical` arm | I1, I2 | context | 3 |
+| **I4b: dense leg and embed job** | `EmbedRecords`, `index-embed`, `VectorMatrixCache`, dense leg with the floor, `store` arm | I1e, I4a, I0 | context | 3 |
+| **I4c: graph signals** | Seed leg, `Reach`/`State`/`Freshness`, `FeatureWeights`, `store+features` arm. Ships on only if its arm wins (§11) | I4a | context | 2 |
+| **I5: parity run, usage check, switch** | The backtest brief source reads the store; the parity run on the bar in §11; the Onyx-source usage list; the catalog's default switches. **The gate to I8** | I2, I3, I4a (I3b, I4b, I4c if built) | context | 2 |
+| **I6: `CodeIndex` uses `Embeddings`** | Move `OllamaEmbedder` and `VectorCodec`; optional, can wait | I1e | engine | 1 |
+| **I7: node vectors and similar-link proposals** | `space = 'node'`, proposals in map review. Only if I5's unlinked share justifies it (Q10) | I5 | context, ideas | 2 |
+| **I8: Onyx removal** | The ten row groups of §8.1, each deleting its code and its tests together | I5 and the usage-check answer | engine, ui, context, api | 10 |
+| **S7 (map-structure §11)** | Doc records, `context.docs.directoryNames` (profile key, `ProfileDiff`, `check-profile-doc.mjs`, the `RefreshDocsService` change) and the tracker half of #1373 | S3, I1, the repo-docs feed | ideas | 3 |
 
-I0, I1 and I1e start together (three builders). I2 starts when I1's port and fake merge; I3 can start on the same day against the fake. I4 starts when I1 and I1e merge, with a fake feed. I5 waits for I2 to I4. I8's PRs are independent after I5 and run in parallel by area; the ui lane's goldens and the engine lane's aot-smoke expected output are the shared files, so those two PRs merge in turn. Shared files with the map lane: `BuildMapService.cs` (S7's wiring) and `EdgeRules.cs` (no change here: Q9 adds no type).
+**First usable milestone** = I1 + I2 + I3 + I4a, about 15 PRs, and nothing in it needs Ollama, vectors, Slack or a ranking experiment. Vectors (I4b) follow as soon as I0 has its numbers.
+
+I0, I1 and the scaffold unit start together. I2 starts when I1's port and fake merge; I3 starts the same day against the fake. I4a starts when I1 and I2 merge. I4b needs I0's numbers. I5 waits for the built subset of I2 to I4. I8's PRs are independent after I5 and run in parallel by area; the ui lane's goldens, the engine lane's `src/Sindri/aot-smoke/expected.txt`, `Verbs.cs` and `CommandTable.cs` are the shared files, so those PRs merge in turn. Shared files with the map lane: `BuildMapService.cs` (S7's wiring) and `EdgeRules.cs` (no change here: Q9 adds no type).
 
 ### 12.1 Work units (builders, Sonnet, one project each)
 
-Every unit is a red test plus its code in one project, so the lane lead can run many at once. U-numbers are for this table only.
+Every unit is a red test plus its code in one project, so the lane lead can run many at once. Phase and gates are columns; "gates" are the extra checks that PR must run (§12.3).
 
-| Unit | What | Project | After |
-|---|---|---|---|
-| U1 | `VectorCodec`, L2 normalise, `IVectorScan` + `ScanInProcess` (float, `Vector<float>`), fake and contract suite | `Aw.Embeddings` | none |
-| U2 | `OllamaEmbedder` (loopback guard, digest check, batches, `truncate:false`), fake Ollama | `Aw.Embeddings` | none |
-| U3 | `deps.yaml` entries, `check-deps` pass, scaffold of the two packages | repo root | none |
-| U4 | Migration `0016`, schema, `SqliteRecordStore` (commit page, read, tombstone) | `Aw.Context.Infrastructure` | U3 |
-| U5 | `IRecordStore`, `RecordBatch`, fake and contract suite | `Aw.Context.Core`, `.Testing` | none |
-| U6 | `Chunker`, `TextCleaner` (pure) | `Aw.Context.Core`, `Aw.Connectors.Core` | none |
-| U7 | Doc copy `doc`/`doc_chunk` to the store; repo-docs feed | `Aw.Context.*` | U4, U5 |
-| U8 | `RecordFeed`, rewritten `SyncSources` driver, phases and cursor columns | `Aw.Context.Features` | U5 |
-| U9 | Linear `Pull` + issue state + new list query | `Aw.Context.Infrastructure` | U5 |
-| U10 | `EmbedRecords` job, `index-embed` service, `VectorMatrixCache` | `Aw.Context.*`, `Aw.Sindri.Features` | U1, U2, U4 |
-| U11 | GitHub client, cursor boundary, rate limit, fake server | `Aw.Connectors.Infrastructure`, `.Testing` | U3, U6 |
-| U12 | GitHub settings, `PullGitHub` slice, Host adapter, Permalinks host | `Aw.Connectors.Core/Features`, `Aw.Sindri.Host` | U11, U5 |
-| U13 | Slack client, thread rules, rate limit, fake server | `Aw.Connectors.Infrastructure` | U11 |
-| U14 | `sindri index connect|sync|status|purge` verbs and `index-sync` service | `Aw.Sindri.Host`, `.Features` | U8, U12 |
-| U15 | Dense and lexical legs with scope mask, dense floor | `Aw.Context.Features/Infrastructure` | U4, U10 |
-| U16 | Seed graph leg, `Reach`, `State`, `Freshness`, weights | `Aw.Context.Core` | U5 |
-| U17 | Backtest `store` and `store+features` arms; brief source from the store | `Aw.Context.Infrastructure/Eval` | U15, U16 |
-| U18 | `MapRecordSources`, build reads the store, citation counts, `touches` edges, commit stamp line | `Aw.Context.Features` | U5, S3 |
-| U19-U26 | Onyx removal PRs, one per row group of §8.1 (CLI, API/setup, Sindri Core/Infra, UI, Context, doctor/aot-smoke, errors/profile, pins/scripts/setup, docs, tests/goldens) | per area | I5 |
+| Unit | Phase | What | Project | After | Gates |
+|---|---|---|---|---|---|
+| U3 | I1 | `deps.yaml` entries for `Embeddings` and `Connectors`, scaffold of both packages and their `.Testing` and `.Tests` projects, `check-deps` pass | repo root | none | deps |
+| U5 | I1 | `IRecordStore`, `RecordBatch`, `IQueryEmbedder`, `IVectorScan`, fakes and contract suites | `Aw.Context.Core`, `.Testing` | none | arch |
+| U6a | I1 | `Chunker` (pure) | `Aw.Context.Core` | none | arch |
+| U6b | I3 | `TextCleaner` (pure) | `Aw.Connectors.Core` | U3 | arch |
+| U4 | I1 | M-add (next free number), schema, triggers, `SqliteRecordStore` (commit page in one transaction, read, tombstone, secure-delete) | `Aw.Context.Infrastructure` | U5 | integration |
+| U7 | I1 | repo-docs feed writing `source_record`/`chunk` | `Aw.Context.Features/Infrastructure` | U4, U5 | integration |
+| U1 | I1e | `VectorCodec`, L2 normalise, `ScanInProcess` (float, `Vector<float>`), contract suite for `IVectorScan` | `Aw.Embeddings` | U3 | arch |
+| U2 | I1e | `OllamaEmbedder` (loopback guard, digest check, batches, `truncate:false`), fake Ollama | `Aw.Embeddings` | U3 | |
+| U2b | I1e | Host adapters binding the Core ports to `Aw.Embeddings` | `Aw.Sindri.Host` | U1, U2, U5 | arch |
+| U8 | I2 | `RecordFeed`, rewritten `SyncSources` driver, phases and cursor columns | `Aw.Context.Features` | U5 | arch, engine tests if notice text moves |
+| U9 | I2 | Linear `Pull` + issue state + new list query | `Aw.Context.Infrastructure` | U5 | |
+| U14 | I2 | `sindri index sync\|status\|purge\|embed` verbs, `index-sync` service, the progress surface | `Aw.Sindri.Host`, `.Features` | U8 | aot-smoke, Ui.Tests (DTOs), env-example, profile-doc |
+| U11 | I3 | GitHub client, cursor boundary, rate limit, redirect and host rules, fake server | `Aw.Connectors.Infrastructure`, `.Testing` | U3, U6b | |
+| U12 | I3 | GitHub settings, `PullGitHub` slice, Host adapter, `index connect github`, Permalinks host, `ISecretWriter` move | `Aw.Connectors.Core/Features`, `Aw.Sindri.Host` | U11, U5 | aot-smoke, arch |
+| U13 | I3b | Slack client, thread rules, rate limit, channel-id allowlist, fake server | `Aw.Connectors.Infrastructure` | U11 | |
+| U15a | I4a | Lexical leg, scope mask with the audience table, degraded wording | `Aw.Context.Features/Infrastructure` | U4, U5 | integration |
+| U17a | I4a | Backtest `store-lexical` arm: the arm enum and `Arms` | `Aw.Context.Core` | U15a | |
+| U17b | I4a | Backtest brief source from the store | `Aw.Context.Infrastructure/Eval` | U15a | |
+| U10 | I4b | `EmbedRecords` job, `index-embed` service, `VectorMatrixCache` (append-only) | `Aw.Context.*`, `Aw.Sindri.Features` | U1, U2b, U4 | aot-smoke |
+| U15b | I4b | Dense leg with the floor; `store` arm | `Aw.Context.Features` | U10, U17a | |
+| U16 | I4c | Seed graph leg, `Reach`, `State`, `Freshness`, weights; `store+features` arm | `Aw.Context.Core` | U15a | arch |
+| U18 | S7 | `MapRecordSources`, build reads the store, citation counts, `touches` edges, record-stamp line | `Aw.Context.Features` | U5, U7, S3 | arch |
+| U19 to U28 | I8 | Ten Onyx-removal PRs, one per §8.1 row group (CLI; API and setup; Sindri Core and Infra; UI; Context; doctor and aot-smoke; errors and profile; pins, scripts and setup; docs; tests and goldens that survive the others), each with its own tests and goldens | per area | I5 | aot-smoke, Ui.Tests, Engine tests, bash tests |
 
-U1 to U3, U5 and U6 start on day one (none depends on another): five builders. U4 follows U3. U9, U11, U16 start once U5 and U6 merge. The lane leads run the gates; builders do the one light build of their project.
+U3, U5, U6a start on day one (they touch different projects and none depends on another): three builders; U3 is the first merge because `Aw.Embeddings` and `Aw.Connectors` do not exist until it lands (`ls src`), so U1, U2, U6b and U11 wait on it. U4 follows U5. U9, U11 and U16 start once their "After" merge. The lane leads run the gates; builders do the one light build of their project.
 
 ### 12.2 Box cost, in one place
 
@@ -547,30 +628,52 @@ U1 to U3, U5 and U6 start on day one (none depends on another): five builders. U
 | Network | GitHub about 200 list requests per 20,000 records plus 5,000 to 10,000 file lists; Slack depends on its rate limit (§5.3) | cited and arithmetic |
 | Model on ingest | none (§5.7) | decision |
 
-Gates that stay sequential: any PR that edits a recipe or the shipped catalog runs the Sindri integration lane; any PR that changes a doctor row updates `src/Sindri/aot-smoke/expected.txt` and runs aot-smoke; any PR that adds a `using Aw.` or a Core sub-namespace runs `Aw.Architecture.Tests`; any new environment variable goes in `.env.example`.
+### 12.3 Gates and errors
+
+Gates that stay sequential: any PR that edits a recipe or the shipped catalog runs the Sindri integration lane; any PR that changes a doctor row or adds a verb updates `src/Sindri/aot-smoke/expected.txt` and runs aot-smoke; any PR that changes notice or banner text runs `Aw.Sindri.Engine.Tests`; any PR that changes a DTO, the setup flow or a golden runs `Aw.Sindri.Ui.Tests`; any PR that adds a `using Aw.` or a Core sub-namespace runs `Aw.Architecture.Tests`; any new environment variable goes in `.env.example` (`scripts/check-env-example.sh`); any new profile key (`context.index.maxChunks`, `context.index.retainDays`, `context.sources.github.repos`, `.host`, `context.sources.slack.channels`, the vector floor keys) goes in `docs/csharp/sindri-profile.md` and passes `scripts/tests/check-profile-doc.test.sh`, and the owner re-approves the profile once. I0 names no new environment variable; the Ollama URL is the code index's existing one.
+
+New error codes (each gets a row in `docs/sindri/errors.md` and a test; retired `SND-ONYX-*` codes stay reserved and are never reused):
+
+| Code | Meaning | Exit | Fix line |
+|---|---|---|---|
+| `SND-INDEX-001` | A token pointer does not resolve, or a `file:` pointer is wider than 0600 | 2 | `sindri index connect <source>` |
+| `SND-INDEX-002` | A listed repo or channel is unreadable with this token | 1 | widen the token or fix the profile |
+| `SND-INDEX-003` | A source is rate limited (carries the reset time) | 1 | wait; automatic |
+| `SND-INDEX-004` | The embed model's digest differs from the pin | 1 | `scripts/install-deps.sh` |
+| `SND-INDEX-005` | Ollama is unreachable (meaning search off) | 1 | start Ollama |
+| `SND-INDEX-006` | A channel or host is not in the profile; no request was sent | 2 | add it to the profile and approve |
+| `SND-INDEX-007` | The profile still names Onyx | 2 | remove `context.sources.onyx` and re-approve |
+| `SND-INDEX-008` | A cursor was reset by the source; a bounded re-read follows | 1 | none; automatic |
 
 ## 13. Open questions for the owner (plain words)
 
+Numbers are stable, so reply "3 - yes". The first group needs your yes; the second is decided by this spec unless you object.
+
+### Needs your yes
+
+3. **GitHub issues as real records?** On 2026-10-23 you decided GitHub issues stay search-only context with no Sindri adapter, because Onyx brought them in (`docs/sindri/onyx.md:183-186`). With Onyx gone, Sindri's own GitHub connector has to read them. *Recommend: yes, as records with a state and links (kind `issue` and `pr`), searchable and linked into the map, but still never turned into a Sindri item automatically; `sindri item add` stays the only way.*
+4. **Which sources do you actually use, and which will you lose?** Onyx also connected Confluence and Drive spaces; the store does not, and ConnectAI has no equivalent. Phase I5 prints which Onyx sources returned hits in the backtest and in your recent sessions. Beyond GitHub, Slack and Linear, ConnectAI has Notion, Jira, Granola and Zoom. *Recommend: stop at GitHub, Slack and Linear unless that list shows a source you use; add Notion or Jira only when you name one. If a source you rely on is on the list, keep Onyx for it until its connector exists.*
+7. **Is storing scrubbed record text OK?** Today Sindri keeps no record text; it asks Linear or Onyx each time. The index needs the text on this box. It is scrubbed first, in a `0600` file, and a purge verb exists. This reverses a line of the retrieval spec, so it needs your yes. *Recommend yes, with scrub-then-store, `blocked` records kept without text, and no retention limit (closed records stay: it is an index of your own tools, not a SaaS retention problem).*
+8. **When does Onyx go, and what of its leftovers?** *Recommend: after the parity backtest and your read of the usage list (I5), not before. Until then M-add only adds tables and Onyx can be switched back on with one profile key. Human decisions that point at `onyx:` keys go to a review file (keep, remap or drop; unanswered means keep as an orphan).*
+15. **A profile that still names Onyx after removal:** an error with the fix, or ignored with a warning? *Recommend an error for one release; a silently ignored `onyx` key would look like it still worked.*
+16. **Slack: do you want it, and which app?** Two steps. First: is the Slack workspace yours, or your company's, and can you create an app in it? ConnectAI's reader is throttled to 1 request a minute and 15 messages a call (`slack/transport.ts:13-15`), the limit Slack puts on apps distributed outside its Marketplace; as I understand it an app you create in your own workspace is not limited that way (not verified; I0 makes one call with your token and reports "about 50 requests a minute" or "throttled to 1"). Second, with that answer, pick: run Slack, or leave it for later. *Recommend an internal app you create and install yourself, channels listed by id in the profile, no direct messages ever, private channels only if listed and the bot is a member. If it is throttled, Slack stays a slow background source or waits, and nothing else depends on it.*
+18. **First embed takes hours on CPU, and how much to embed.** Newest records first, resumable, pausable, searchable by words the moment they sync; the derived estimate is 3.5 to 14 hours for 50,000 chunks (§5.6), measured in I0. `context.index.maxChunks` caps it (default 60,000): past it, older chunks are word-search only. *Recommend accepting the hours and the cap; raise it when I0's measured rate says the box can afford more.*
+19. **Any model call on ingest?** ConnectAI makes up to five per item (summary, facts, entities, procedures, preferences). For your size that is 2 to 23 days of CPU and a second resident model, or egress to a hosted model (§5.7). *Recommend none in v1; the graph's own linker does the useful part. A one-line summary per record is a later, opt-in job if search quality asks for it.*
+20. **May `sindri onyx down --purge` delete Onyx's volumes and files?** Onyx's database volumes hold a raw, unscrubbed copy of your Slack and Linear text (the new store keeps only scrubbed text), plus a generated `.env` with admin and API secrets and keychain entries. The verb lists everything first and asks for your yes; Sindri never does it by itself. *Recommend yes: it is the largest exposure this migration would otherwise leave on disk.*
+
+### Decided unless you object
+
 1. **One file or two?** The index goes into the same `context.db` as the graph so a record, its chunks and its node join in one query. The price is one bigger file. *Recommend the same file; a separate `index.db` only if the file passes about 5 GB, where `VACUUM` starts to hurt.*
 2. **Vector search: scan it, or add sqlite-vec?** I recommend scanning in process (nothing new to install), with a budget of 150 ms at your real size, and sqlite-vec or an index structure only if phase I0 or later numbers miss it. *Recommend the scan, budget as stated, decided by I0's measurement.*
-3. **GitHub issues as real records?** On 2026-10-23 you decided GitHub issues stay search-only context with no Sindri adapter, because Onyx brought them in (`docs/sindri/onyx.md:183-186`). With Onyx gone, Sindri's own GitHub connector has to read them. *Recommend: yes, as records with a state and links (kind `issue` and `pr`), searchable and linked into the map, but still never turned into a Sindri item automatically; `sindri item add` stays the only way.*
-4. **Which connectors after GitHub, Slack and Linear?** ConnectAI has Notion, Jira, Granola, Zoom. Onyx gave you Confluence and Drive spaces; ConnectAI has neither. Do you use any of them? *Recommend: stop at GitHub, Slack and Linear; add Notion or Jira only when you name one you use. Docs spaces without a ConnectAI equivalent wait until you need one.*
-5. **Connectors as their own package, or inside Context?** *Recommend a new tier-1 `Connectors` package with one small adapter per connector in the Host (§9.2): it is the visible "ConnectAI code, Sindri owned" piece. If you'd rather have one contract and no adapter, inside Context works with no rule broken.*
+5. **Connectors as their own package, or inside Context?** *Recommend a new tier-1 `Connectors` package with one small adapter per connector in the Host (§9.2): it keeps the ConnectAI-derived readers apart from the retrieval engine, and Context already has 58 files that mention Onyx. If you'd rather have one contract and no adapter, inside Context works with no rule broken.*
 6. **Which embedding model?** The box already has `nomic-embed-text` (768 dimensions, pinned in `context/code-index.lock`) for the code index. ConnectAI used a 1,024-dimension model. *Recommend nomic: one model for code and records, no new pull. Every vector row names its model, so a later change is a re-embed job, not a migration.*
-7. **Is storing scrubbed record text OK?** Today Sindri keeps no record text; it asks Linear or Onyx each time. The index needs the text on this box. It is scrubbed first, in a `0600` file, and a purge verb exists. This reverses a line of the retrieval spec, so it needs your yes. *Recommend yes, with scrub-then-store, `blocked` records kept without text, and no retention limit (closed records stay: it is an index of your own tools, not a SaaS retention problem).*
-8. **When does Onyx go, and what of the leftovers?** *Recommend: after the parity backtest (I5), not before; `sindri onyx down` stays one release as a stub that stops a leftover stack and prints the Docker commands to delete its volumes, and Sindri never deletes your containers or volumes. Human decisions that point at `onyx:` keys are listed before anything is dropped.*
 9. **Edges between records.** A PR that closes an issue becomes a `mentions` edge with the link kind as its detail, not a new edge type. *Recommend that for now; a `closes` type is one row in `EdgeRules` if lenses want to show it differently.*
 10. **Do we build node vectors and similar-link proposals (I7)?** *Recommend not yet: I5 reports how many tracker records stay unlinked after the rule linker runs; build I7 only if that share is over 20%.*
 11. **Weights for reach, state, freshness.** Starting values 1, 0.5, 0.5. *Recommend they ship only if the backtest arm with them beats the five-feature arm on the pass bars, as the reranker does (D13); otherwise they stay at zero.*
 12. **State words.** Six: open, closed, merged, draft, canceled, done; the source's own word is kept beside. *Recommend that; Linear's "In Review" and GitHub's draft PR both fit.*
 13. **`intent_record` and `source_record` repeat a title, version and aliases.** *Recommend leaving both in v1 and folding `intent_record` into `source_record` after Onyx is gone and the dust settles.*
 14. **Code vectors: leave them in the code index?** A query then runs two scans. *Recommend leaving them, and revisiting only if the backtest shows the two-pass cost or a worse fusion.*
-15. **A profile that still names Onyx after removal:** an error with the fix, or ignored with a warning? *Recommend an error for one release; a silently ignored `onyx` key would look like it still worked.*
-16. **Slack: which token, and which channels, and what kind of app?** ConnectAI's Slack reader is throttled to 1 request a minute and 15 messages a call (`slack/transport.ts:13-15`), the limit Slack puts on apps distributed outside its Marketplace; as I understand it an app you create in your own workspace is not limited that way (not verified; I0 checks with your token). *Recommend a bot token from an internal app you create and install yourself, channels listed by name in the profile, no direct messages ever, private channels only if listed and the bot is a member. If your workspace turns out to be throttled, Slack stays a slow background source and nothing else waits on it.*
 17. **Any ConnectAI file copied as it is?** The plan reimplements everything in C# with ConnectAI as a guide, and copies nothing (it is BSL 1.1 and yours). *Recommend that; say which file if you want one lifted.*
-18. **First embed takes hours on CPU.** Newest records first, resumable, searchable by words the moment they sync. *Recommend accepting that, with the embed job working newest first and capped by the profile's `context.index.maxChunks` (default 60,000) so the first full embed is bounded to about a day; the newest records are searchable by meaning within the first hour.*
-19. **Any model call on ingest?** ConnectAI makes up to five per item (summary, facts, entities, procedures, preferences). For your size that is 2 to 23 days of CPU and a second resident model, or egress to a hosted model (§5.7). *Recommend none in v1; the graph's own linker does the useful part. A one-line summary per record is a later, opt-in job if search quality asks for it.*
-20. **A cap on how much to embed?** `context.index.maxChunks`, default 60,000, newest records first. Past it, older chunks are searchable by words only. *Recommend the cap; raise it when I0's measured embed rate says the box can afford more.*
 
 ## 14. Where the code differs from what you'd assume
 
@@ -580,7 +683,7 @@ Gates that stay sequential: any PR that edits a recipe or the shipped catalog ru
 4. **ConnectAI keeps no structured records.** Its own rule: "ConnectAI deliberately does not own a normalized per-vendor record mirror" (`CLAUDE.md:16`). Its GitHub connector turns a PR's state, priority, blockers and counts into one synthesized sentence (`github-connector.ts:87-96`) and keeps only that sentence, the raw text windows and a hash of the participants (`:155-167`). The structured `source_record` and `record_link` tables are new design; what is ported is the fetching, the paging, the cursors and the chunker.
 5. **ConnectAI's ranking writes on read.** Its recency re-rank bumps an access count on every retrieved chunk (`actr-rerank.ts`, "WRITE-BACK"). A ranking that changes with how often you asked can't be backtested, so it is not ported (§5.1).
 6. **The code index's vector loop is too slow for this.** It is a scalar loop in `double` with three accumulators per pair (`VectorCodec.cs:42-50`), fine for one repo's symbols and about an order of magnitude off what 250,000 chunks need (§4.4). The store's scan is new code in `Embeddings`.
-7. **Tier rules, not taste, decide the package split.** A tier-1 package can't reference another tier-1 package and Core and Infrastructure may use tier 0 only (`deps.yaml:24-60`), so `Connectors` can't speak Context's types; Sindri's Host is the glue, as for the code index (`ContextFeaturesServiceCollectionExtensions.cs:95`). The embedder had to go to tier 0 for Context's query path and the connectors alike.
+7. **Tier rules, not taste, decide the package split.** A tier-1 package can't reference another tier-1 package and Core and Infrastructure may use tier 0 only (`deps.yaml:24-60`), so `Connectors` can't speak Context's types; Sindri's Host is the glue, as for the code index (`ContextFeaturesServiceCollectionExtensions.cs:95`). The embedder is tier 0 so the code index and the store share one client; Context reaches it only through ports the Host binds.
 8. **Docker stays on the box.** Serena runs in a container (`setup.sh:268-290`), so removing Onyx does not remove Docker from setup. What goes is Docker as a requirement of Sindri.
 9. **The backtest still depends on Onyx.** The eval arms read Onyx for the intent brief (`Eval/OnyxBriefSource.cs`, `Eval/Backtest/Arms.cs`), which is why parity is run before deletion (§8.2) and not after.
 10. **A doc's key and a node's key are already one thing.** Repo docs are `repo:<repo>/<path>` and their node `record:repo:<repo>/<path>` (`RepoDocs.cs:17`, `IntentOverlay.cs:123`). "Ids shared with the graph" is mostly extending that rule to chunks and vectors, not a new scheme.
@@ -591,3 +694,7 @@ Gates that stay sequential: any PR that edits a recipe or the shipped catalog ru
 15. **ConnectAI's lexical leg ANDs every term.** `plainto_tsquery` needs all words, so a long question finds little (inventory §5). Sindri's `OR` with `bm25` is a deliberate change (§6.1).
 16. **Embed speed was quoted for symbols, not chunks.** The code index's "hour or two" is for short symbols; a 400-token chunk is far longer, so the first full embed is slower per item than the code index's figure suggests (§5.6).
 17. **ConnectAI's GitHub reader cannot link anything.** No comment text, no review text, no cross-references, no permalink in the breadcrumb (`github-connector.ts:11`, `github/SPEC.md` §5); its `/pulls` list is asked for change counts it probably does not return (`transport.ts:340-343`, inventory open question 2). Every link in §7.5 is new work, not a port.
+18. **Features cannot reach the embedder, and Context cannot either.** `Aw.Context.Features` may use `Aw.Kernel` among tier 0 only, and `Aw.Context.Infrastructure` is already at the fan-out limit of 4 (`deps.yaml:92`), so Context gets ports in Core and the Host binds them to `Aw.Embeddings` (§9.2). An earlier draft had Context reference `Embeddings` directly; that would have failed `DEPS-FANOUT-002`.
+19. **The existing cache pattern does not fit.** `StampedCache` reloads a whole value when its stamp moves, and the existing stamp moves on every graph write (`0008`, `0009`); an embed job commits for hours, so the vector cache is append-only on its own `record_stamp` (§4.4).
+20. **`doc_chunk` has two triggers, not three.** Docs are deleted and re-inserted, so it has no update trigger (`0001_s1a_repo_docs.sql`); `chunk` is rewritten in place and needs one (§4.2).
+21. **Migration numbers are not ours to pick.** `ctx-1365-s5` already has a `0016`; the spec says "next free number at merge" (§4.2).

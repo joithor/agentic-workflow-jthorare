@@ -5,8 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Aw.Sindri.Infrastructure.Sandbox;
 
 /// <summary>
-/// Registers the Linux sandbox and its owner-copy login source (sandbox spec SB12, SB18). Nothing calls it yet: the product Host registers only 'UnavailableSandbox'
-/// until the launcher integration (SB-5a) switches it over, and a test pins that.
+/// Registers the Linux sandbox and its owner-copy login source (sandbox spec SB12, SB18). The product Host reaches it through 'AddSindriPlatformSandbox' (the SB-5a switch), on Linux only.
 /// </summary>
 public static class BubblewrapServiceCollectionExtensions
 {

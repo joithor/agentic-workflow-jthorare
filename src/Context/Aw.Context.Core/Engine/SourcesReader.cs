@@ -36,7 +36,7 @@ internal static partial class SourcesReader
 
         return Unknown(sources, _sources) is { } name
             ? SettingsReader.Invalid("context.sources." + name, "is not a source this build knows (onyx, linear, github, slack)")
-            : Entry(sources, "onyx", _onyx) ?? Entry(sources, "linear", _linear) ?? Entry(sources, "github", _github) ?? Entry(sources, "slack", _slack);
+            : Entry(sources, "onyx", _onyx) ?? Entry(sources, "linear", _linear) ?? Entry(sources, "github", _github) ?? Entry(sources, "slack", _slack) ?? SlackChannelShape(sources);
     }
 
     /// <summary>The checked onyx settings (or null) and Linear teams of a well-shaped 'sources' map.</summary>
@@ -92,6 +92,28 @@ internal static partial class SourcesReader
 
         var created = LinearSettings.Create(linear.Url, linear.Token, teams);
         return created.IsError ? created.Error : Kernel.Results.Success<LinearSettings?>(created.Value);
+    }
+
+    /// <summary>Each 'context.sources.slack.channels' entry must be a map, so a bare string is named by its key path, not by the deserializer.</summary>
+    private static Error? SlackChannelShape(JsonElement sources)
+    {
+        if (!sources.TryGetProperty("slack", out var slack) || !slack.TryGetProperty("channels", out var channels) || channels.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        var at = 0;
+        foreach (var channel in channels.EnumerateArray())
+        {
+            if (channel.ValueKind != JsonValueKind.Object)
+            {
+                return SettingsReader.Invalid(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"context.sources.slack.channels[{at}]"), "must be a map with an id and a name");
+            }
+
+            at++;
+        }
+
+        return null;
     }
 
     private static Error? Entry(JsonElement sources, string name, string[] known)

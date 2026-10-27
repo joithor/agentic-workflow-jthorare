@@ -36,7 +36,7 @@ internal sealed class EndLearnModeService(ILedgerStore ledger, HeldLease held, E
 
         var at = clock.GetUtcNow();
         var key = string.Create(CultureInfo.InvariantCulture, $"{EventTypes.SandboxLearnEnded}:{request.Repo?.Value ?? "all"}:{at.UtcTicks}");
-        var appended = await ledger.Append(events.Entry(EventTypes.SandboxLearnEnded, new SandboxLearnEnded(request.Repo, at), key), grant, cancellationToken).ConfigureAwait(false);
+        var appended = await ledger.Append(events.Entry(EventTypes.SandboxLearnEnded, new SandboxLearnEnded(at, request.Repo), key), grant, cancellationToken).ConfigureAwait(false);
         return appended.IsError ? appended.Error : new CommandAccepted(caller.CommandId, appended.Value.Sequence);
     }
 }

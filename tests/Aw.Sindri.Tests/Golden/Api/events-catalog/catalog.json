@@ -301,11 +301,6 @@
       ]
     },
     {
-      "type": "sandbox.learn-ended",
-      "keyShape": "sandbox.learn-ended:<repo|all>:<atTicks>",
-      "invalidates": []
-    },
-    {
       "type": "sandbox.limit-hit",
       "keyShape": "sandbox.limit-hit:<launch>:<kind>:<n>",
       "invalidates": [

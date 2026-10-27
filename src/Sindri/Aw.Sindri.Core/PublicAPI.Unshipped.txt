@@ -20885,11 +20885,11 @@ Aw.Sindri.Core.Events.SandboxLearnEnded
 Aw.Sindri.Core.Events.SandboxLearnEnded.<Clone>$() -> Aw.Sindri.Core.Events.SandboxLearnEnded!
 Aw.Sindri.Core.Events.SandboxLearnEnded.At.get -> System.DateTimeOffset
 Aw.Sindri.Core.Events.SandboxLearnEnded.At.init -> void
-Aw.Sindri.Core.Events.SandboxLearnEnded.Deconstruct(out Aw.Sindri.Core.Ids.RepoName? Repo, out System.DateTimeOffset At) -> void
+Aw.Sindri.Core.Events.SandboxLearnEnded.Deconstruct(out System.DateTimeOffset At, out Aw.Sindri.Core.Ids.RepoName? Repo) -> void
 Aw.Sindri.Core.Events.SandboxLearnEnded.Equals(Aw.Sindri.Core.Events.SandboxLearnEnded? other) -> bool
 Aw.Sindri.Core.Events.SandboxLearnEnded.Repo.get -> Aw.Sindri.Core.Ids.RepoName?
 Aw.Sindri.Core.Events.SandboxLearnEnded.Repo.init -> void
-Aw.Sindri.Core.Events.SandboxLearnEnded.SandboxLearnEnded(Aw.Sindri.Core.Ids.RepoName? Repo, System.DateTimeOffset At) -> void
+Aw.Sindri.Core.Events.SandboxLearnEnded.SandboxLearnEnded(System.DateTimeOffset At, Aw.Sindri.Core.Ids.RepoName? Repo = null) -> void
 const Aw.Sindri.Core.Events.EventTypes.SandboxLearnEnded = "sandbox.learn-ended" -> string!
 override Aw.Sindri.Core.Events.SandboxLearnEnded.Equals(object? obj) -> bool
 override Aw.Sindri.Core.Events.SandboxLearnEnded.GetHashCode() -> int

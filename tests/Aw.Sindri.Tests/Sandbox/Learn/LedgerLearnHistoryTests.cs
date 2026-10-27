@@ -96,7 +96,7 @@ public sealed class LedgerLearnHistoryTests
     }
 
     private ValueTask Ended(RepoName? repo) =>
-        Append(EventTypes.SandboxLearnEnded, new SandboxLearnEnded(repo, _slice.Clock.GetUtcNow()), string.Create(CultureInfo.InvariantCulture, $"sandbox.learn-ended:{repo?.Value ?? "all"}:{_slice.Clock.GetUtcNow().UtcTicks}"), item: null);
+        Append(EventTypes.SandboxLearnEnded, new SandboxLearnEnded(_slice.Clock.GetUtcNow(), repo), string.Create(CultureInfo.InvariantCulture, $"sandbox.learn-ended:{repo?.Value ?? "all"}:{_slice.Clock.GetUtcNow().UtcTicks}"), item: null);
 
     private async ValueTask Append<T>(string type, T payload, string key, string? item)
     {

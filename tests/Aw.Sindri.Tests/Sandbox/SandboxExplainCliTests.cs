@@ -63,8 +63,9 @@ public sealed class SandboxExplainCliTests : IDisposable
     {
         var exit = await CommandTable.Run(["sandbox", "explain", "evil.example"], Environment(PlanFile()), TimeProvider.System);
 
+        var answer = SandboxPlanRenderer.Explain(SandboxPlannerTests.Build(Req.WriteScope), "evil.example");
         Assert.Equal(0, exit);
-        Assert.Equal(SandboxPlanRenderer.Explain(SandboxPlannerTests.Build(Req.WriteScope), "evil.example") + "\n", _out.ToString());
+        Assert.Equal(answer.EndsWith('\n') ? answer : answer + "\n", _out.ToString());   // one trailing newline, never two
         Assert.Empty(_error.ToString());
     }
 

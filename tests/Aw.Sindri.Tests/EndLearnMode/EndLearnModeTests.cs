@@ -1,3 +1,4 @@
+using System.Globalization;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Commands;
@@ -30,7 +31,7 @@ public sealed class EndLearnModeTests
         Assert.True(result.IsSuccess, result.IsError ? result.Error.ToString() : null);
         var recorded = Assert.Single(_slice.Store.Events);
         var payload = _slice.Events.Payload<SandboxLearnEnded>(recorded).Value;
-        Expect.Equal((EventTypes.SandboxLearnEnded, $"sandbox.learn-ended:web:{_slice.Clock.GetUtcNow().UtcTicks}", recorded.Sequence), (recorded.Envelope.Type, recorded.IdempotencyKey, result.Value.Sequence));
+        Expect.Equal((EventTypes.SandboxLearnEnded, string.Create(CultureInfo.InvariantCulture, $"sandbox.learn-ended:web:{_slice.Clock.GetUtcNow().UtcTicks}"), recorded.Sequence), (recorded.Envelope.Type, recorded.IdempotencyKey, result.Value.Sequence));
         Expect.Equal(("web", _slice.Clock.GetUtcNow()), (payload.Repo?.Value, payload.At));
     }
 

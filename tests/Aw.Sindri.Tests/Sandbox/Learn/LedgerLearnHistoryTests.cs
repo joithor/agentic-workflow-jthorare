@@ -1,3 +1,4 @@
+using System.Globalization;
 using Aw.Kernel.Ids;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Events;
@@ -46,8 +47,10 @@ public sealed class LedgerLearnHistoryTests
         var web = await subject.Read("web", Token);
         var none = await subject.Read("mobile", Token);
 
-        Expect.Equal((first, 2, (DateTimeOffset?)null), (web.FirstLearnRun, web.LearnRuns, web.EndedAt));
-        Expect.Equal((0, (DateTimeOffset?)null), (none.LearnRuns, none.FirstLearnRun));
+        Expect.Equal((first, 2), (web.FirstLearnRun, web.LearnRuns));
+        Expect.True(web.EndedAt is null);
+        Expect.Equal(0, none.LearnRuns);
+        Expect.True(none.FirstLearnRun is null);
     }
 
     [Fact]
@@ -83,7 +86,7 @@ public sealed class LedgerLearnHistoryTests
 
     private ValueTask Launch(ItemId item, NetworkMode mode)
     {
-        var launch = LaunchId.From($"LCH-{++_launches:D32}");
+        var launch = LaunchId.From(string.Create(CultureInfo.InvariantCulture, $"LCH-{++_launches:D32}"));
         var summary = new SandboxSummary(SandboxMechanism.Bubblewrap, "9f2c0a41d8e6", ["/work"], ["model"], mode, InnerState.On, new SandboxLimitsSummary("12GiB", "400%", 2048),
             new SandboxCredentialsSummary(GithubCredentials.None), ModelLoginSource.OwnerCopy);
         return Append(EventTypes.LaunchStarted,
@@ -93,7 +96,7 @@ public sealed class LedgerLearnHistoryTests
     }
 
     private ValueTask Ended(RepoName? repo) =>
-        Append(EventTypes.SandboxLearnEnded, new SandboxLearnEnded(repo, _slice.Clock.GetUtcNow()), $"sandbox.learn-ended:{repo?.Value ?? "all"}:{_slice.Clock.GetUtcNow().UtcTicks}", item: null);
+        Append(EventTypes.SandboxLearnEnded, new SandboxLearnEnded(repo, _slice.Clock.GetUtcNow()), string.Create(CultureInfo.InvariantCulture, $"sandbox.learn-ended:{repo?.Value ?? "all"}:{_slice.Clock.GetUtcNow().UtcTicks}"), item: null);
 
     private async ValueTask Append<T>(string type, T payload, string key, string? item)
     {

@@ -135,7 +135,7 @@ internal static class EndpointTable
         _ = commands.MapFileRequest();
         _ = commands.MapRebuildViews();
         _ = commands.MapImportContextMap();
-        _ = commands.MapPromoteContextMap();
+        _ = commands.MapPromoteContextMap().MapCheckContextMapStructure();
         _ = commands.MapProposeContextMap();
         _ = commands.MapReviewContextMap();
         _ = commands.MapShowLineHoldout();

@@ -58,7 +58,7 @@ internal sealed class BuildContextMapService(ContextScopes scopes, IContextEngin
         var held = await HoldWhenClean(recorder.Value, scope.Value, report, cancellationToken).ConfigureAwait(false);
         return held.IsError
             ? held.Error
-            : new BuildContextMapResult(recorded.Value.Repo, recorded.Value.Draft, recorded.Value.Proposed, [.. report.Degraded.Take(MaxDegraded)]);
+            : new BuildContextMapResult(recorded.Value.Repo, recorded.Value.Draft, recorded.Value.Proposed, [.. report.Degraded.Take(MaxDegraded)]) { Checks = report.Checks?.Summary };
     }
 
     // A clean draft is held for the service's publish step; a queue that can't be read leaves the draft for a person's promote, never failing the build that already succeeded.

@@ -45,6 +45,7 @@ internal sealed class ShowMapStatusService(IGraphStore store) : IService<ShowMap
         return new MapStatusView(version, MapCounts.Of(shown, layer.Count), orphaned, versions.Value.Count(v => v.Status == MapVersionStatus.Retained), ScopedTo(request.Scope.Caller), coverage.Value)
         {
             RulesOlder = RulesOlder(version, request.Scope),
+            Checks = version.Checks,
             Roles = Roles(shown, version, request.Scope),
         };
     }

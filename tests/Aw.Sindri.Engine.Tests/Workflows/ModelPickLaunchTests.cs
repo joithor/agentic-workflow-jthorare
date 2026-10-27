@@ -11,6 +11,7 @@ using Aw.Sindri.Core.Ledger;
 using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Core.Workflow.Engine.Runtime;
+using Aw.Sindri.Core.Workflow.Recipes;
 using Aw.Sindri.Infrastructure.Workflows;
 using Aw.Sindri.Testing;
 using Aw.Sindri.Testing.Judge;
@@ -215,6 +216,57 @@ public sealed class ModelPickLaunchTests : IDisposable
         Expect.Equal("codex", rig.Launcher.Requests[0].Agent.Value);
     }
 
+    /// <summary>A state's 'agent: codex' (#1269) runs its Step on that agent, not the profile's.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_state_that_names_an_agent_runs_on_it()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: false), ct, agents: [AgentEntries.ClaudeCode, AgentEntries.Codex]);
+
+        var launched = await rig.Launch(Run(1), floor: null, ct, agent: new StateAgent(Use: "codex"));
+
+        Expect.Equal("no failure", launched.Failure is { } failure ? failure.Code + ": " + failure.Message : "no failure");
+        Expect.Equal("codex", rig.Launcher.Requests[0].Agent.Value);
+    }
+
+    /// <summary>'agent: { differentFrom: draft }' is the general rule the scoping challenger used to be hard-coded for (#1269): any Step can declare it.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_state_that_differs_from_another_moves_to_a_second_usable_agent()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: false), ct, drafter: new DrafterRan("opus"), agents: [AgentEntries.ClaudeCode, AgentEntries.Codex]);
+
+        var launched = await rig.Launch(Run(1), floor: null, ct, agent: new StateAgent(DifferentFrom: "draft"));
+
+        Expect.Equal("no failure", launched.Failure is { } failure ? failure.Code + ": " + failure.Message : "no failure");
+        Expect.Equal("codex", rig.Launcher.Requests[0].Agent.Value);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_state_that_differs_from_another_on_the_only_agent_picks_another_model()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
+        _ = rig.Judge.Chooses("m1");
+
+        _ = await rig.Launch(Run(1), floor: null, ct, agent: new StateAgent(DifferentFrom: "draft"));
+
+        Expect.Equal("haiku,sonnet", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
+    }
+
+    /// <summary>With no 'agent:' key a Step that is not the scoping challenger differs from nothing, so the drafter's model stays a candidate.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_state_with_no_agent_key_differs_from_nothing()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
+        _ = rig.Judge.Chooses("m1");
+
+        _ = await rig.Launch(Run(1), floor: null, ct);
+
+        Expect.Equal("haiku,sonnet,opus", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
+    }
+
     private static AgentStepRun Challenge(int attempt)
     {
         var address = InstanceAddress.From("T-9/step/" + attempt.ToString(CultureInfo.InvariantCulture));
@@ -288,8 +340,8 @@ public sealed class ModelPickLaunchTests : IDisposable
 
         public FakeModelPickJudge Judge { get; } = judge;
 
-        public Task<AgentLaunched> Launch(AgentStepRun run, string? floor, CancellationToken ct, string? model = null) =>
-            sindri.GetRequiredService<AgentLaunching>().Launch(new AgentLaunchRun(run, item, Model: model, Floor: floor), ct);
+        public Task<AgentLaunched> Launch(AgentStepRun run, string? floor, CancellationToken ct, string? model = null, StateAgent? agent = null) =>
+            sindri.GetRequiredService<AgentLaunching>().Launch(new AgentLaunchRun(run, item, Model: model, Floor: floor, Agent: agent), ct);
 
         public async Task<IReadOnlyList<LedgerEvent>> Rows(CancellationToken ct) => (await sindri.GetRequiredService<ILedgerStore>().ReadAfter(0, 500, ct)).Value;
 

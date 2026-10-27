@@ -59,6 +59,14 @@ public sealed record WorkflowEventDetail(
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? Tokens { get; init; }
 
+    /// <summary>The launcher agent an agent run ran on (#1269); null for any other event. Not written when null.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Agent { get; init; }
+
+    /// <summary>The model an agent run asked for; null for any other event and when none was named. Not written when null.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Model { get; init; }
+
     /// <summary>On a step.failed row of an agent run: <see cref="AgentFailureKinds"/> (refused, check_failed, crashed); null otherwise. Not written when null.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? FailureKind { get; init; }

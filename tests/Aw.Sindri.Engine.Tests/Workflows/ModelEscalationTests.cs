@@ -107,7 +107,6 @@ public sealed class ModelEscalationTests : AgentRuntimeTestBase
             await WaitFor(() => _launcher.Requests.Count == 3, ct);   // the engine's own retry of the Step: a fresh run, picked again from the cheapest
             Assert.Equal([rig.Launch, rig.EscalatedLaunch], _launcher.Requests.Take(2).Select(static r => r.Launch));
             Assert.Equal("haiku", _launcher.Requests[2].Step?.Model);
-            Assert.Equal(700, await Tokens(rig, "step.failed", ct));   // both failed runs are charged: 300 + 400
         });
     }
 

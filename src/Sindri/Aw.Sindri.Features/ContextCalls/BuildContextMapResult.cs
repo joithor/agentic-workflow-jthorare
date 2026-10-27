@@ -9,4 +9,18 @@ public sealed record BuildContextMapResult(string Repo, int Draft, int Proposed,
 {
     /// <summary>The structure measures as one line of numbers (map structure spec §4.3), on every build; null when the build did not measure.</summary>
     public string? Checks { get; init; }
+
+    /// <summary>The build report's notes (what the concept pass did and could not do), at most 20 lines; empty when there are none.</summary>
+    public IReadOnlyList<string> Notes { get; init; } = [];
+
+    /// <summary>What the build's structure cut replaced (the migration line); null when it replaced nothing.</summary>
+    public Aw.Context.Core.Map.StructureCounts? Replaced { get; init; }
+
+    /// <summary>The result of a build.</summary>
+    /// <param name="repo">The repo.</param>
+    /// <param name="draft">The draft number.</param>
+    /// <param name="proposed">How many nodes were proposed.</param>
+    /// <param name="report">The build report.</param>
+    /// <returns>The small result the job keeps.</returns>
+    internal static BuildContextMapResult Of(string repo, int draft, int proposed, Aw.Context.Core.Map.MapBuildReport report) => throw new NotSupportedException();
 }

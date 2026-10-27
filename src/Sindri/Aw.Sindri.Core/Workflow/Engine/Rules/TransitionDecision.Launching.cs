@@ -72,7 +72,7 @@ public static partial class TransitionDecision
 
     /// <summary>
     /// A session that ended while the instance was suspended (sandbox spec §7, SB16 (8)), found when the suspension ended and the watch resumed: there is no session to hand back to,
-    /// so the Step runs again in a new run. The answer's own effect (a grant) was applied when the suspension ended; no round is counted and no Step failure is recorded.
+    /// so the Step runs again in a new run. The answer's own effect (a grant) was applied when the suspension ended; the session ran, so a round is counted (at the cap it parks with rounds), and no Step failure is recorded.
     /// </summary>
     private static Decision SessionGone(Deciding d, WorkflowInstance instance, SessionLost lost)
     {
@@ -81,6 +81,6 @@ public static partial class TransitionDecision
             return rejected;
         }
 
-        return RerunAfterAnswer(d, instance, new ResumeAction(ResumeKind.Restart, Withheld: null, Gate: null, Effects: []), counts: false);
+        return RerunAfterAnswer(d, instance, new ResumeAction(ResumeKind.Rerun, Withheld: null, Gate: null, Effects: []));   // the session ran, so the new run counts a round like any rerun; the launch parks do not (the Step never ran)
     }
 }

@@ -134,16 +134,17 @@ public sealed class LaunchRefusalDecisionTests
     }
 
     [Fact]
-    public void A_session_found_ended_when_a_suspension_ended_starts_a_new_run_without_a_round_or_a_failure()
+    public void A_session_found_ended_when_a_suspension_ended_starts_a_new_run_that_counts_a_round_and_no_failure()
     {
-        var before = Running();
+        var running = Running();
+        var before = running with { Loops = new Dictionary<string, LoopState>(StringComparer.Ordinal) { ["revisions"] = new LoopState(1, 3, Last: null) } };
 
         var applied = Assert.IsType<Applied>(Decide(before, new SessionLost("service:agent:" + ProduceStep, _run), Deskable()));
 
         var after = applied.Changes[0].After;
         Assert.Equal((RunToken.For(1, 2), StepRuntime.Agent, null, 0), (after.Frame.Run?.Token, after.Frame.Run?.Runtime, after.Frame.Run?.Launch, after.Frame.Run?.Retries));
         Assert.Null(after.Suspension);
-        Assert.Equal(3, after.Loops["revisions"].Round);
+        Assert.Equal(2, after.Loops["revisions"].Round);   // the session ran, so a round counts (the launch parks count none)
         Assert.Equal(before.Spent, after.Spent);
         Assert.Equal(TriggerNames.SessionLost, applied.Changes[0].Event.Trigger.Kind);
         Assert.Equal((FollowUpKind.StartRun, RunToken.For(1, 2)), (Assert.Single(applied.FollowUps).Kind, applied.FollowUps[0].Run!.Value));

@@ -24,7 +24,7 @@ public sealed class FakeAgentSessions : IAgentSessions
     /// <param name="peak">The most the session used.</param>
     public void EndByLimit(LaunchId launch, LimitKind kind, long limit, long peak)
     {
-        var ended = new AgentSessionLimit(kind == LimitKind.Memory ? AgentSessionLimit.Memory : AgentSessionLimit.Wall, limit, peak);
+        var ended = new AgentSessionLimit(kind == LimitKind.Memory ? AgentLimitKind.Memory : AgentLimitKind.Wall, limit, peak);
         _ = _ended.TryAdd(launch, new AgentSessionState(AgentSessionEnd.Limit, ExitCode: null, ended.Detail, Refused: false, ended));
     }
 

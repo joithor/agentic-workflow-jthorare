@@ -48,7 +48,7 @@ internal sealed class LedgerAgentSessions(ILaunchViews views, ILedgerReader ledg
     }
 
     private static AgentSessionLimit Of(LimitKind kind, long limit, long peak) =>
-        new(kind == LimitKind.Memory ? AgentSessionLimit.Memory : AgentSessionLimit.Wall, limit, peak);
+        new(kind switch { LimitKind.Memory => AgentLimitKind.Memory, LimitKind.Wall => AgentLimitKind.Wall, _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "not a limit this build knows") }, limit, peak);
 
     public async ValueTask<Result<long>> Usage(LaunchId launch, CancellationToken cancellationToken)
     {

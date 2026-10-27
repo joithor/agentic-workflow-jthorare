@@ -20547,9 +20547,6 @@ static Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.operator ==(Aw.Sindri
 Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Tokens.get -> int
 Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Tokens.init -> void
 Aw.Sindri.Core.Workflow.Engine.Instances.Suspension.Sandbox.get -> Aw.Sindri.Core.Workflow.Engine.SandboxPark?
-Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.AgentSessionLimit(string! Kind, long Limit, long Peak) -> void
-Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Deconstruct(out string! Kind, out long Limit, out long Peak) -> void
-Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Kind.get -> string!
 Aw.Sindri.Core.Workflow.Engine.SandboxPark
 Aw.Sindri.Core.Workflow.Engine.SandboxPark.<Clone>$() -> Aw.Sindri.Core.Workflow.Engine.SandboxPark!
 Aw.Sindri.Core.Workflow.Engine.SandboxPark.Code.get -> string!
@@ -20587,8 +20584,6 @@ Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Run.get -> Aw.Sindri.
 Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Run.init -> void
 Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Source.get -> string?
 Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Source.init -> void
-const Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Memory = "memory" -> string!
-const Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Wall = "wall" -> string!
 override Aw.Sindri.Core.Workflow.Engine.SandboxPark.Equals(object? obj) -> bool
 override Aw.Sindri.Core.Workflow.Engine.SandboxPark.GetHashCode() -> int
 override Aw.Sindri.Core.Workflow.Engine.SandboxPark.ToString() -> string!
@@ -20596,3 +20591,9 @@ override sealed Aw.Sindri.Core.Workflow.Engine.Triggers.LaunchRefused.Equals(Aw.
 override sealed Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.Equals(Aw.Sindri.Core.Workflow.Engine.Triggers.Trigger? other) -> bool
 static Aw.Sindri.Core.Workflow.Engine.SandboxPark.operator !=(Aw.Sindri.Core.Workflow.Engine.SandboxPark? left, Aw.Sindri.Core.Workflow.Engine.SandboxPark? right) -> bool
 static Aw.Sindri.Core.Workflow.Engine.SandboxPark.operator ==(Aw.Sindri.Core.Workflow.Engine.SandboxPark? left, Aw.Sindri.Core.Workflow.Engine.SandboxPark? right) -> bool
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind.Memory = 0 -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind.Wall = 1 -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.AgentSessionLimit(Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind Kind, long Limit, long Peak) -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind Kind, out long Limit, out long Peak) -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.AgentSessionLimit.Kind.get -> Aw.Sindri.Core.Workflow.Engine.Runtime.AgentLimitKind

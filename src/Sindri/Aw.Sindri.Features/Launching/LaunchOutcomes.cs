@@ -127,7 +127,7 @@ internal sealed class LaunchOutcomes(ILedgerStore ledger, EventFactory events, I
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(error);
         return Failed(grant, new LaunchFailed(request.Launch, request.Item, error.Code, error.Message, LaunchFailureDetail.Of(error, stage),
-            request.Instance, request.Step?.Ref.State, request.Run?.Number, started.Sandbox), cancellationToken);
+            request.Instance, request.Step?.Ref.State, request.Run?.Number), cancellationToken);
     }
 
     /// <summary>Records that a client attached to an 'unconfirmed' launch's session.</summary>

@@ -1,5 +1,3 @@
-using Aw.Sindri.Infrastructure.Sandbox;
-
 namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 
 /// <summary>What the sandbox step reads besides the plan: the systemd-run program, the box's size and the longest wall any Step gets.</summary>

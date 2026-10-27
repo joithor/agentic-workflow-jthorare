@@ -44,23 +44,13 @@ internal sealed partial class Launcher
             var hashFile = LaunchSecrets.PathFor(parts.Options.SecretsDirectory, request.Launch);
             var prior = File.Exists(hashFile) ? await File.ReadAllBytesAsync(hashFile, cancellationToken).ConfigureAwait(false) : null;   // a live session of this launch may own it
             LaunchSecrets.Write(parts.Options.SecretsDirectory, request.Launch, secret);
-            var env = Environment(request, workDir);
-            var argv = composed.Value.Argv;
-            SandboxSummary? summary = null;
-            if (!request.Attended && parts.Sandbox is { } sandbox)
+            var confined = await Confine(request, composed.Value.Argv, Environment(request, workDir), cancellationToken).ConfigureAwait(false);
+            if (confined.IsError)
             {
-                var confined = await sandbox.Prepare(request, argv, cancellationToken).ConfigureAwait(false);   // a refusal carries its SND-LAUNCH-014..017 or -020 code; Start cleans up (and releases) after it
-                if (confined.IsError)
-                {
-                    return confined.Error;
-                }
-
-                argv = confined.Value.Argv;
-                env["AW_SINDRI_HOME"] = confined.Value.SessionHome;   // the agent sees the session home, never the real one
-                summary = confined.Value.Summary;
+                return confined.Error;   // a refusal carries its SND-LAUNCH-014..017 or -020 code; Start cleans up (and releases) after it
             }
 
-            return new Prepared(workDir, argv, env, composed.Value.Session?.Value) { PriorHash = prior, Seed = composed.Value.Seed, Sandbox = summary };
+            return new Prepared(workDir, confined.Value.Argv, confined.Value.Env, composed.Value.Session?.Value) { PriorHash = prior, Seed = composed.Value.Seed, Sandbox = confined.Value.Summary };
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -253,24 +243,6 @@ internal sealed partial class Launcher
         LaunchFileStore.DeleteIn(parts.Options.LaunchDirectory, McpLaunchConfig.PathFor(parts.Options.LaunchDirectory, launch));
         _ = await parts.Scratch.Remove(ScratchPath(launch), CancellationToken.None).ConfigureAwait(false);   // the evaluator's checkout; none for any other launch
         await ReleaseSandbox(launch).ConfigureAwait(false);
-    }
-
-    /// <summary>Releases the launch's sandbox (egress, session home, denials) once its session is over or its start failed; a no-op for a launch with none, and a failure never fails the stop.</summary>
-    private async ValueTask ReleaseSandbox(LaunchId launch)
-    {
-        if (parts.Sandbox is not { } sandbox)
-        {
-            return;
-        }
-
-        try
-        {
-            await sandbox.Release(launch, CancellationToken.None).ConfigureAwait(false);
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException)
-        {
-            // what the release left behind is the crash sweep's; the stop itself went through
-        }
     }
 
     private string ScratchPath(LaunchId launch) => Path.Combine(parts.Options.ScratchDirectory, "eval-" + launch.Value);

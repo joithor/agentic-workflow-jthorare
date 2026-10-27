@@ -1,5 +1,5 @@
 using Aw.Kernel.Testing;
-using Aw.Sindri.Core;
+using Aw.Sindri.Infrastructure;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Infrastructure.Sandbox;
@@ -12,12 +12,10 @@ namespace Aw.Sindri.Tests.Sandbox.Bubblewrap;
 [Lane(TestLane.Unit)]
 public sealed class PlatformSandboxRegistrationTests
 {
-    private static ServiceCollection Core() =>
-    [
-        ServiceDescriptor.Singleton<ISandbox, UnavailableSandbox>(),
-        ServiceDescriptor.Singleton(new SindriSettings("/home/owner/.agentic-workflow/sindri-app", "/home/owner/.agentic-workflow/sindri-app/profile.yaml")),
-        ServiceDescriptor.Singleton<TimeProvider>(new FakeTimeProvider()),
-    ];
+    private static IServiceCollection Core() => new ServiceCollection()
+        .AddSingleton<ISandbox, UnavailableSandbox>()
+        .AddSingleton(new SindriSettings("/home/owner/.agentic-workflow/sindri-app", "/home/owner/.agentic-workflow/sindri-app/profile.yaml"))
+        .AddSingleton<TimeProvider>(new FakeTimeProvider());
 
     private static string? Env(string name) => string.Equals(name, "HOME", StringComparison.Ordinal) ? "/home/owner" : null;
 

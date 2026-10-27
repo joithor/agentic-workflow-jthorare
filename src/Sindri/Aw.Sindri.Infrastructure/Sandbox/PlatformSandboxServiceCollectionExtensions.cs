@@ -1,4 +1,3 @@
-using Aw.Sindri.Core;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Infrastructure.Sessions;
@@ -32,7 +31,7 @@ public static class PlatformSandboxServiceCollectionExtensions
             return services;
         }
 
-        services.RemoveAll<ISandbox>();
+        _ = services.RemoveAll<ISandbox>();
         return services
             .AddSindriBubblewrapSandbox(environment)
             .AddSingleton<ISliceScopes>(new CgroupSliceScopes(SliceDirectory(uid)))

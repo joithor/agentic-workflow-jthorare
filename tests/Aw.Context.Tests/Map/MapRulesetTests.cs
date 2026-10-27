@@ -37,6 +37,18 @@ public sealed class MapRulesetTests
     }
 
     [Fact, Trait("Lane", "unit")]
+    public void A_changed_depends_on_or_owns_entry_changes_the_hash()
+    {
+        var plain = Repo("a") with { Concepts = [ConceptPin.Of(ConceptId.From("billing"), "Billing", summary: null, features: null, paths: ["src/**"])] };
+        var depends = Repo("a") with { Concepts = [ConceptPin.Of(ConceptId.From("billing"), "Billing", summary: null, features: null, paths: ["src/**"]).Declaring(["orders"], owns: null)] };
+        var owns = Repo("a") with { Concepts = [ConceptPin.Of(ConceptId.From("billing"), "Billing", summary: null, features: null, paths: ["src/**"]).Declaring(dependsOn: null, ["invoices"])] };
+
+        Assert.NotEqual(MapRuleset.Of([plain]), MapRuleset.Of([depends]), StringComparer.Ordinal);
+        Assert.NotEqual(MapRuleset.Of([plain]), MapRuleset.Of([owns]), StringComparer.Ordinal);
+        Assert.NotEqual(MapRuleset.Of([depends]), MapRuleset.Of([owns]), StringComparer.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public void Demote_globs_change_the_hash_and_the_same_ones_hash_the_same()
     {
         var plain = Repo("a", "x/**");

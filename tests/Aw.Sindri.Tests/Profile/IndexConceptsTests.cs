@@ -94,7 +94,7 @@ public sealed class IndexConceptsTests : IDisposable
     [Fact, Trait("Lane", "unit")]
     public void The_pins_reach_the_context_repo_through_the_profile_entry()
     {
-        var pin = new ConceptPin(ConceptId.From("billing"), "Billing", Summary: null, Features: [], Paths: []);
+        var pin = new ConceptPin(ConceptId.From("billing"), "Billing", Summary: null, Features: [], Paths: [], DependsOn: [], Owns: []);
 
         Assert.Equal([pin], ScopeRules.Usable([new ProfileRepoEntry("web", "/r/web", DenyPaths: null, Concepts: [pin])]).Single().Concepts);
     }
@@ -141,5 +141,63 @@ public sealed class IndexConceptsTests : IDisposable
 
         Assert.Contains("repos.web.index.concepts[0].paths[1]: must not contain '..'", ProfileRules.Check(bad).Error.Message, StringComparison.Ordinal);
         Assert.True(ProfileRules.Check(good).IsSuccess);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void The_profiles_pins_come_before_a_repos_own_so_the_first_pin_wins_a_file()
+    {
+        var profile = Profile(Pins(new ConceptSettings(ConceptPinId.From("wide"), "Wide")), Pins(new ConceptSettings(ConceptPinId.From("narrow"), "Narrow")));
+
+        var pins = ScopeRules.Usable(ContextScopes.Entries(profile)).Single().Concepts;
+
+        Assert.Equal(["wide", "narrow"], pins.Select(p => p.Id?.Value), StringComparer.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void The_declared_dependencies_and_stores_reach_the_context_repo()
+    {
+        var profile = Profile(Pins(new ConceptSettings(ConceptPinId.From("billing"), "Billing", DependsOn: ["orders"], Owns: ["invoices"]), new ConceptSettings(ConceptPinId.From("orders"), "Orders")));
+
+        var pin = ScopeRules.Usable(ContextScopes.Entries(profile)).Single().Concepts[0];
+
+        Assert.Equal((["orders"], ["invoices"]), (pin.DependsOn, pin.Owns));
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void A_depends_on_entry_that_names_no_pin_is_refused_with_its_key_path()
+    {
+        var profile = Profile(Pins(new ConceptSettings(ConceptPinId.From("billing"), "Billing", DependsOn: ["orders"])));
+
+        Assert.Contains("index.concepts[0].dependsOn[0]: names no pin", ProfileRules.Check(profile).Error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void A_depends_on_entry_may_name_a_pin_of_the_other_list()
+    {
+        var profile = Profile(Pins(new ConceptSettings(ConceptPinId.From("billing"), "Billing", DependsOn: ["orders"])), Pins(new ConceptSettings(ConceptPinId.From("orders"), "Orders")));
+
+        Assert.True(ProfileRules.Check(profile).IsSuccess);
+    }
+
+    [Theory, Trait("Lane", "unit")]
+    [InlineData("")]
+    [InlineData("  ")]
+    [InlineData("!!!")]
+    public void An_owns_entry_that_is_not_a_legal_thing_name_is_refused_with_its_key_path(string name)
+    {
+        var profile = Profile(Pins(new ConceptSettings(ConceptPinId.From("billing"), "Billing", Owns: ["invoices", name])));
+
+        Assert.Contains("index.concepts[0].owns[1]", ProfileRules.Check(profile).Error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void A_changed_depends_on_or_owns_entry_shows_in_the_profile_diff()
+    {
+        var before = Profile(Pins(new ConceptSettings(ConceptPinId.From("billing"), "Billing"), new ConceptSettings(ConceptPinId.From("orders"), "Orders")));
+        var depends = Profile(Pins(new ConceptSettings(ConceptPinId.From("billing"), "Billing", DependsOn: ["orders"]), new ConceptSettings(ConceptPinId.From("orders"), "Orders")));
+        var owns = Profile(Pins(new ConceptSettings(ConceptPinId.From("billing"), "Billing", Owns: ["invoices"]), new ConceptSettings(ConceptPinId.From("orders"), "Orders")));
+
+        Assert.Equal(["index.concepts.billing"], ProfileDiff.Between(before, depends));
+        Assert.Equal(["index.concepts.billing"], ProfileDiff.Between(before, owns));
     }
 }

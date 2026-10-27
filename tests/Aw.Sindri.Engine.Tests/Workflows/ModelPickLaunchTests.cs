@@ -52,6 +52,37 @@ public sealed class ModelPickLaunchTests : IDisposable
         Expect.Equal("default/pick-off", await rig.Picked("by", "reason", TestContext.Current.CancellationToken));
     }
 
+    /// <summary>Model-pick M-9: with the pick off a step's floor still holds, so an install that never turned the pick on does not draft below strong.</summary>
+    [Theory(Timeout = 120_000)]
+    [InlineData("strong", "opus")]
+    [InlineData("standard", "sonnet")]
+    [InlineData("cheap", "haiku")]
+    public async Task Pick_off_with_a_floor_runs_the_cheapest_model_at_or_above_it(string floor, string expected)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: false), ct);
+
+        _ = await rig.Launch(Run(1), floor, ct);
+
+        Expect.Equal(expected, rig.Launcher.Requests[0].Step?.Model);
+        Expect.Equal(0, rig.Judge.Asks.Count);
+        Expect.Equal($"constraint/{expected}", await rig.Picked("by", "model", ct));
+        Expect.Equal("constraint/floor", await rig.Picked("by", "reason", ct));
+    }
+
+    /// <summary>The scoping recipe's challenge state: floor standard, and the drafter on opus leaves one model.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_with_a_standard_floor_and_the_drafter_on_opus_runs_on_sonnet()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
+
+        _ = await rig.Launch(Challenge(1), floor: "standard", ct);
+
+        Expect.Equal("sonnet", rig.Launcher.Requests[0].Step?.Model);
+        Expect.Equal(0, rig.Judge.Asks.Count);
+    }
+
     [Fact(Timeout = 120_000)]
     public async Task One_candidate_is_the_pick_and_asks_no_judge()
     {

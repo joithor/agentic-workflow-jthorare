@@ -13,9 +13,24 @@ public sealed class ScopingChallengeAgentTests
         Assert.Equal(new StateAgent(DifferentFrom: "draft"), Scoping().States["challenge"].Agent);
 
     [Fact, Trait("Lane", "unit")]
-    public void The_scoping_recipe_is_version_17() => Assert.Equal(17, Scoping().Version);
+    public void The_scoping_recipe_is_version_18() => Assert.Equal(18, Scoping().Version);
 
     [Fact, Trait("Lane", "unit")]
     public void No_other_scoping_state_names_an_agent() =>
         Assert.Empty(Scoping().States.Where(s => s.Key != "challenge" && s.Value.Agent is not null).Select(s => s.Key));
+
+    /// <summary>Model-pick M-9 (spec 8): draft needs a strong model and the second opinion at least a standard one, and neither names a model of its own, so the pick (or the floor, with the pick off) decides.</summary>
+    [Fact, Trait("Lane", "unit")]
+    public void Draft_has_a_strong_floor_and_challenge_a_standard_one_and_neither_pins_a_model()
+    {
+        var states = Scoping().States;
+
+        Assert.Equal(("strong", "standard"), (states["draft"].Model?.Floor, states["challenge"].Model?.Floor));
+        Assert.False(states["draft"].Step!.With.ContainsKey("model"));
+        Assert.False(states["challenge"].Step!.With.ContainsKey("model"));
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void No_other_scoping_state_has_a_floor() =>
+        Assert.Empty(Scoping().States.Where(s => s.Key is not ("draft" or "challenge") && s.Value.Model is not null).Select(s => s.Key));
 }

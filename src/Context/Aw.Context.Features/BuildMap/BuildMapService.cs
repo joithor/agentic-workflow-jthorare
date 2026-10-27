@@ -20,7 +20,7 @@ namespace Aw.Context.Features.BuildMap;
 /// touched, and every override, pending 'propose' rows included, is re-applied on read. A missing graphify is
 /// 'degraded: clusters', not an error.
 /// </summary>
-internal sealed class BuildMapService(
+internal sealed partial class BuildMapService(
     IRepoReader repos,
     IClusterSource clusterSource,
     MapNamers namers,
@@ -34,18 +34,13 @@ internal sealed class BuildMapService(
     public async ValueTask<Result<MapBuildReport>> Handle(BuildMapRequest request, CancellationToken cancellationToken)
     {
         var scope = request.Scope;
-        var mapped = SettingsReader.Read(scope.Settings).Bind(settings => ScopeRules.Resolve(settings, scope.Repos, scope.Caller).Map(r => (Settings: settings, Repos: r)));
+        var mapped = Mapped(scope);
         if (mapped.IsError)
         {
             return mapped.Error;
         }
 
         var (settings, mappedRepos) = mapped.Value;
-        if (mappedRepos.Count == 0)
-        {
-            return ContextErrors.SettingsInvalid.With("context.repos: the profile maps no repo to build from (fix: add a repo to the profile and approve it)");
-        }
-
         using var turn = await gate.Enter(cancellationToken).ConfigureAwait(false);
         return await Build(request.Progress, settings, mappedRepos, scope.Repos, cancellationToken).ConfigureAwait(false);
     }
@@ -79,31 +74,24 @@ internal sealed class BuildMapService(
             heads.Add(new MapHead(repo.Name, one.Value.Commit, await OnDefault(repo, one.Value.Commit, cancellationToken).ConfigureAwait(false)));
         }
 
+        found = WithStructure(found);
         // why: mappedRepos is not empty, so the loop set the primary
         return MapHead.Check(heads) is { } invalid ? invalid : new Reading(found, degraded, primary!.Value.Name, primary.Value.Commit, heads, settings) { Dropped = dropped };
     }
 
+    // THE SEAM for the structure steps that need every repo's files at once (map structure spec §3): S4's FeatureRollup.Apply goes here, over the merged extraction (S3's
+    // HomeFeatures.Assign runs per repo inside Extract). A build and 'context map checks --build' both read through ReadRepos, so the checks measure what the build would save.
+    private static ExtractedMap WithStructure(ExtractedMap found) => found;
+
     private async ValueTask<Result<MapBuildReport>> Save(Reading read, IReadOnlyList<ContextRepo> profileRepos, IReadOnlyList<ContextRepo> mappedRepos, CancellationToken cancellationToken)
     {
-        var current = await store.Snapshot(draft: false, cancellationToken).ConfigureAwait(false);
-        if (current.IsError)
+        var cut = await CutBasis(read, profileRepos, mappedRepos, cancellationToken).ConfigureAwait(false);
+        if (cut.IsError)
         {
-            return current.Error;
+            return cut.Error;
         }
 
-        var basis = current.Value?.Graph ?? GraphSnapshot.Empty;
-        var open = await store.Snapshot(draft: true, cancellationToken).ConfigureAwait(false);
-        if (open.IsError)
-        {
-            return open.Error;
-        }
-
-        var at = clock.GetUtcNow();
-        var ruleset = MapRuleset.Of(ScopeRules.Mapped(read.Settings, profileRepos));
-        var changed = current.Value is { } map && !string.Equals(map.Version.Ruleset, ruleset, StringComparison.Ordinal);
-        var cuts = new BuildCuts(profileRepos, mappedRepos, read.Found, changed, at);
-        var (kept, undo) = cuts.Apply(basis, current.Value?.Overrides ?? []);
-        undo = UndoAlso(undo, open.Value, cuts);
+        var (kept, undo, ruleset, at) = cut.Value;
         // The concepts ('index.concepts' pins of the mapped repos first) are derived over the whole joined graph (records and decisions included) and saved in the draft, so reads never call a model.
         // A namer or a code index that can't answer leaves the deterministic names or the plain grouping and says so as a degraded note.
         // The structure checks (map structure spec §4) run on the joined graph before the concept pass and before any write: a refused build pays for neither and leaves the last draft and the current map as they were.

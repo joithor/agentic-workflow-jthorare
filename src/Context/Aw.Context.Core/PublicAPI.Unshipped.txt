@@ -8352,3 +8352,26 @@ static Aw.Context.Core.Roles.RoleDropped.operator !=(Aw.Context.Core.Roles.RoleD
 static Aw.Context.Core.Roles.RoleDropped.operator ==(Aw.Context.Core.Roles.RoleDropped? left, Aw.Context.Core.Roles.RoleDropped? right) -> bool
 Aw.Context.Core.Extract.IRepoReader.ListTracked(Aw.Context.Core.Engine.ContextRepo! repo, string! commit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<string!>!>!>
 static Aw.Context.Core.Roles.RoleCounter.Dropped(Aw.Context.Core.Engine.ContextRepo! repo, System.Collections.Generic.IReadOnlyList<string!>! tracked) -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Roles.RoleDropped!>!
+Aw.Context.Core.Facade.IContextMap.MapStructure(Aw.Context.Core.Map.MapChecksSource source, System.IProgress<string!>? progress, Aw.Context.Core.Engine.ContextScope! scope, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Map.MapChecksView!>!>
+Aw.Context.Core.Map.MapChecksSource
+Aw.Context.Core.Map.MapChecksSource.Build = 2 -> Aw.Context.Core.Map.MapChecksSource
+Aw.Context.Core.Map.MapChecksSource.Current = 0 -> Aw.Context.Core.Map.MapChecksSource
+Aw.Context.Core.Map.MapChecksSource.Draft = 1 -> Aw.Context.Core.Map.MapChecksSource
+Aw.Context.Core.Map.MapChecksView
+Aw.Context.Core.Map.MapChecksView.<Clone>$() -> Aw.Context.Core.Map.MapChecksView!
+Aw.Context.Core.Map.MapChecksView.Deconstruct(out Aw.Context.Core.Map.MapChecksSource Source, out int? Version, out Aw.Context.Core.Engine.ChecksMode Mode, out Aw.Context.Core.Map.MapChecksReport! Report) -> void
+Aw.Context.Core.Map.MapChecksView.Equals(Aw.Context.Core.Map.MapChecksView? other) -> bool
+Aw.Context.Core.Map.MapChecksView.MapChecksView(Aw.Context.Core.Map.MapChecksSource Source, int? Version, Aw.Context.Core.Engine.ChecksMode Mode, Aw.Context.Core.Map.MapChecksReport! Report) -> void
+Aw.Context.Core.Map.MapChecksView.Mode.get -> Aw.Context.Core.Engine.ChecksMode
+Aw.Context.Core.Map.MapChecksView.Mode.init -> void
+Aw.Context.Core.Map.MapChecksView.Report.get -> Aw.Context.Core.Map.MapChecksReport!
+Aw.Context.Core.Map.MapChecksView.Report.init -> void
+Aw.Context.Core.Map.MapChecksView.Source.get -> Aw.Context.Core.Map.MapChecksSource
+Aw.Context.Core.Map.MapChecksView.Source.init -> void
+Aw.Context.Core.Map.MapChecksView.Version.get -> int?
+Aw.Context.Core.Map.MapChecksView.Version.init -> void
+override Aw.Context.Core.Map.MapChecksView.Equals(object? obj) -> bool
+override Aw.Context.Core.Map.MapChecksView.GetHashCode() -> int
+override Aw.Context.Core.Map.MapChecksView.ToString() -> string!
+static Aw.Context.Core.Map.MapChecksView.operator !=(Aw.Context.Core.Map.MapChecksView? left, Aw.Context.Core.Map.MapChecksView? right) -> bool
+static Aw.Context.Core.Map.MapChecksView.operator ==(Aw.Context.Core.Map.MapChecksView? left, Aw.Context.Core.Map.MapChecksView? right) -> bool

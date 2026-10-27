@@ -65,6 +65,7 @@ public static partial class TransitionDecision
         private static string? ReasonOf(Trigger trigger) => trigger switch
         {
             StepFailed failed => failed.Reason,
+            LaunchRefusal refusal => refusal.Detail,
             OutboxRefused { Reason: null } refused => refused.Code,
             OutboxRefused refused => refused.Code + ": " + refused.Reason,
             _ => null,

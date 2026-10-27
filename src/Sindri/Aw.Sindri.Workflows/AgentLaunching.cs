@@ -1,6 +1,7 @@
 using Aw.Kernel;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.LensPacks;
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Workflow.Blocks;
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Core.Workflow.Engine.Runtime;
@@ -18,7 +19,8 @@ namespace Aw.Sindri.Infrastructure.Workflows;
 /// <param name="diff">Reads the start commit.</param>
 /// <param name="catalog">The blocks' descriptors, for the Step's brief.</param>
 /// <param name="inputs">What a launch reads beside the target: the pack bundles, the stored facts and the Steps' instructions.</param>
-internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver targets, AgentLaunchRecorder recorder, IRunDiff diff, BlockCatalog catalog, AgentLaunchInputs inputs)
+/// <param name="options">How long to wait for a free session slot.</param>
+internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver targets, AgentLaunchRecorder recorder, IRunDiff diff, BlockCatalog catalog, AgentLaunchInputs inputs, AgentRuntimeOptions options)
 {
     /// <summary>Launches the run's session.</summary>
     /// <param name="run">The run.</param>
@@ -62,7 +64,12 @@ internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver tar
     // Asks the launcher for the session and records the outcome; the worktree and start commit, or the failure.
     private async Task<AgentLaunched> Start(LaunchRequest request, CancellationToken cancellationToken)
     {
-        var result = await launcher.Launch(request, cancellationToken).ConfigureAwait(false);
+        var result = await LaunchOrWait(request, cancellationToken).ConfigureAwait(false);
+        if (result is null)
+        {
+            return new AgentLaunched(Worktree: null, StartHead: null, Failure: null, Waiting: true);   // the cap is still reached: nothing is recorded, the workflow asks again
+        }
+
         switch (result)
         {
             case StartedLaunch started:
@@ -74,6 +81,26 @@ internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver tar
                 return new AgentLaunched(Worktree: null, StartHead: null, AgentLaunchFailures.Of(failed));
             default:
                 throw new InvalidOperationException($"the launcher answered {result.GetType().Name}");
+        }
+    }
+
+    // SND-LAUNCH-020 is a queue condition (sandbox spec §6): ask again every SlotRetry until the slice ends, recording nothing; null says the slice ended with the cap still reached.
+    private async Task<LaunchResult?> LaunchOrWait(LaunchRequest request, CancellationToken cancellationToken)
+    {
+        for (var waited = TimeSpan.Zero; ; waited += options.SlotRetry)
+        {
+            var result = await launcher.Launch(request, cancellationToken).ConfigureAwait(false);
+            if (result is not FailedLaunch failed || SandboxCodes.KindOf(failed.Error.Code) != LaunchCodeKind.ResourceWait)
+            {
+                return result;
+            }
+
+            if (waited + options.SlotRetry > options.SlotSlice)
+            {
+                return null;
+            }
+
+            await Task.Delay(options.SlotRetry, cancellationToken).ConfigureAwait(false);
         }
     }
 

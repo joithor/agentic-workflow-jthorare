@@ -28,6 +28,15 @@ internal static class Unavailables
     public static bool IsGoneSession(StepFailed failed) =>
         failed.Actor.StartsWith("service:agent:", StringComparison.Ordinal) && failed.Dependency is null && (string.Equals(failed.Reason, "exit", StringComparison.Ordinal) || string.Equals(failed.Reason, "lost", StringComparison.Ordinal));
 
+    /// <summary>The reason of an agent run whose session a sandbox limit killed (the word <see cref="Sandbox.SandboxCode.FailureReason"/> gives -019); its detail says which limit, its value and the peak.</summary>
+    public const string LimitReason = "limit";
+
+    /// <summary>Whether a failure is an agent session a sandbox limit killed: the Step ran past its memory or wall limit, so running it again unchanged would hit it again (sandbox spec E1-I1).</summary>
+    /// <param name="failed">The failure.</param>
+    /// <returns>True for an agent Step failure with reason 'limit' (a launch failure names its dependency, so it is never one).</returns>
+    public static bool IsLimitKill(StepFailed failed) =>
+        failed.Actor.StartsWith("service:agent:", StringComparison.Ordinal) && failed.Dependency is null && string.Equals(failed.Reason, LimitReason, StringComparison.Ordinal);
+
     /// <summary>What the park says for a gone agent session: the Step, how often its session was relaunched and the last error.</summary>
     /// <param name="step">The Step whose session is gone.</param>
     /// <param name="reason">How the session ended ('exit' or 'lost').</param>

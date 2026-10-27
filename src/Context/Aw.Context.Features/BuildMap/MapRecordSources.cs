@@ -1,5 +1,6 @@
-#pragma warning disable MA0182 // registered and read by the build in the next commit
+#pragma warning disable MA0182 // BuildMapService takes it once the store adapter is registered (no host builds an IRecordStore yet)
 using Aw.Context.Core.Records;
+using Aw.Context.Core.Sources;
 using Aw.Context.Core.Symbols;
 using Aw.Kernel;
 
@@ -13,9 +14,45 @@ internal sealed record MapRecordSources(IRecordStore Records, ICodeSymbolSource 
     /// <summary>Most resolved paths a pull request keeps as edges.</summary>
     internal const int TouchCap = 50;
 
+    private const int ListPage = 1000;
+
     /// <summary>Reads every record in scope.</summary>
     /// <param name="input">What the build has.</param>
     /// <param name="cancellationToken">Cancels the read.</param>
     /// <returns>The nodes, edges and report lines; the store's error when it can't be read.</returns>
-    internal ValueTask<Result<MapRecordReading>> Read(MapRecordInput input, CancellationToken cancellationToken) => throw new NotSupportedException();
+    internal async ValueTask<Result<MapRecordReading>> Read(MapRecordInput input, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        var stamps = await Records.Stamps(cancellationToken).ConfigureAwait(false);
+        var stored = stamps.IsError ? stamps.Error : await ListAll(cancellationToken).ConfigureAwait(false);
+        if (stamps.IsError || stored.IsError)
+        {
+            return stamps.IsError ? stamps.Error : stored.Error;
+        }
+
+        var pass = new RecordPass(Records, input, stored.Value);
+        return await pass.Run(cancellationToken).ConfigureAwait(false) is { } failed ? failed : pass.Reading(stamps.Value.RecordStamp);
+    }
+
+    private async ValueTask<Result<List<StoredRecord>>> ListAll(CancellationToken cancellationToken)
+    {
+        var all = new List<StoredRecord>();
+        RecordKey? after = null;
+        while (true)
+        {
+            var page = await Records.List(new RecordFilter(), after, ListPage, cancellationToken).ConfigureAwait(false);
+            if (page.IsError)
+            {
+                return page.Error;
+            }
+
+            if (page.Value.Count == 0)
+            {
+                return all;
+            }
+
+            all.AddRange(page.Value);
+            after = page.Value[^1].Key;
+        }
+    }
 }

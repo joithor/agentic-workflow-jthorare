@@ -1,4 +1,3 @@
-#pragma warning disable MA0182 // used by MapRecordSources from the next commit
 using System.Text.RegularExpressions;
 
 namespace Aw.Context.Features.BuildMap;

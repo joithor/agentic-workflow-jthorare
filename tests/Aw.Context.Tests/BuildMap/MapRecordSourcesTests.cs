@@ -94,7 +94,7 @@ public sealed class MapRecordSourcesTests
 
         Assert.Contains(reading.Map.Nodes, n => n.Key.Value == Doc1("docs/guide.md"));
         Assert.Empty(reading.Map.Edges);
-        Assert.DoesNotContain(reading.Notes, n => n.StartsWith("records:", StringComparison.Ordinal) && !n.Contains("as of stamp", StringComparison.Ordinal));
+        Assert.DoesNotContain(reading.Notes, n => n.Contains("older than HEAD", StringComparison.Ordinal));
     }
 
     [Fact, Trait("Lane", "unit")]

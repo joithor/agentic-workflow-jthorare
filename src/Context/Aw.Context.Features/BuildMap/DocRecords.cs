@@ -1,4 +1,3 @@
-#pragma warning disable MA0182 // used by MapRecordSources from the next commit
 using Aw.Context.Core.Docs;
 using Aw.Context.Core.Engine;
 using Aw.Context.Core.Graph;

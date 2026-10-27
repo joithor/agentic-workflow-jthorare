@@ -331,6 +331,24 @@
       "confirm": null
     },
     {
+      "action": "CheckContextMapStructure",
+      "class": "desk",
+      "allowedCallers": [
+        "human+terminal",
+        "human",
+        "session"
+      ],
+      "terminal": false,
+      "method": "POST",
+      "route": "/sindri/context/map/checks",
+      "cli": "sindri context map checks [--draft] [--build]",
+      "ui": "ready",
+      "destructive": false,
+      "readsViews": false,
+      "shortcut": null,
+      "confirm": null
+    },
+    {
       "action": "CloseItem:cancelled",
       "class": "desk",
       "allowedCallers": [
@@ -746,24 +764,6 @@
       "method": "POST",
       "route": "/sindri/launch/targets/probe",
       "cli": "sindri launch probe",
-      "ui": "ready",
-      "destructive": false,
-      "readsViews": false,
-      "shortcut": null,
-      "confirm": null
-    },
-    {
-      "action": "CheckContextMapStructure",
-      "class": "desk",
-      "allowedCallers": [
-        "human+terminal",
-        "human",
-        "session"
-      ],
-      "terminal": false,
-      "method": "POST",
-      "route": "/sindri/context/map/checks",
-      "cli": "sindri context map checks [--draft] [--build]",
       "ui": "ready",
       "destructive": false,
       "readsViews": false,

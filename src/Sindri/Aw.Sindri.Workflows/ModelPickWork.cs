@@ -9,4 +9,5 @@ namespace Aw.Sindri.Infrastructure.Workflows;
 /// <param name="Target">Where the Step runs.</param>
 /// <param name="Request">The launch request built with no model.</param>
 /// <param name="Files">The pack's files and the written facts.</param>
-internal sealed record ModelPickWork(AgentLaunchRun Run, AgentStepTarget Target, LaunchRequest Request, IReadOnlyList<PickFileText> Files);
+/// <param name="Drafter">For a challenger Step, the drafter's launch (#1008); null for any other Step.</param>
+internal sealed record ModelPickWork(AgentLaunchRun Run, AgentStepTarget Target, LaunchRequest Request, IReadOnlyList<PickFileText> Files, DrafterModel? Drafter = null);

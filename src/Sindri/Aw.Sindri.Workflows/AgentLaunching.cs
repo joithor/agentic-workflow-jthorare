@@ -1,4 +1,5 @@
 using Aw.Kernel;
+using Aw.Sindri.Core;
 using Aw.Sindri.Core.Judge;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.LensPacks;
@@ -14,13 +15,13 @@ namespace Aw.Sindri.Infrastructure.Workflows;
 /// and reads the worktree's HEAD as the run's start. The launcher is idempotent per launch id, so a retry or a replay starts no second session.
 /// </summary>
 /// <param name="launcher">The launcher, waiting out a full session cap (SND-LAUNCH-020).</param>
-/// <param name="targets">Where the Step runs.</param>
+/// <param name="placing">Where the Step runs, and for a challenger the drafter it differs from (#1008).</param>
 /// <param name="recorder">Records 'launch.started' and 'launch.failed'.</param>
 /// <param name="diff">Reads the start commit.</param>
 /// <param name="catalog">The blocks' descriptors, for the Step's brief.</param>
 /// <param name="inputs">What a launch reads beside the target: the pack bundles, the stored facts and the Steps' instructions.</param>
 /// <param name="picker">Picks the model the session runs on (model-pick spec 5).</param>
-internal sealed class AgentLaunching(AgentLaunchWaiting launcher, AgentTargetResolver targets, AgentLaunchRecorder recorder, IRunDiff diff, BlockCatalog catalog, AgentLaunchInputs inputs, ModelPicker picker)
+internal sealed class AgentLaunching(AgentLaunchWaiting launcher, AgentPlacing placing, AgentLaunchRecorder recorder, IRunDiff diff, BlockCatalog catalog, AgentLaunchInputs inputs, ModelPicker picker)
 {
     /// <summary>Launches the run's session.</summary>
     /// <param name="run">The run.</param>
@@ -29,19 +30,20 @@ internal sealed class AgentLaunching(AgentLaunchWaiting launcher, AgentTargetRes
     public async Task<AgentLaunched> Launch(AgentLaunchRun run, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(run);
-        var target = await targets.Resolve(run.Item, run.Run.Address, cancellationToken).ConfigureAwait(false);
+        var target = await placing.Place(run, cancellationToken).ConfigureAwait(false);
         if (target.IsError)
         {
-            return StepFailed(target.Error);   // nothing was asked of the launcher, so there is no outcome to record
+            return Unplaced(target.Error);
         }
 
+        var (where, drafter) = target.Value;
         var workspace = await WorkspaceOf(run, cancellationToken).ConfigureAwait(false);
         if (workspace.IsError)
         {
             return StepFailed(workspace.Error);
         }
 
-        var bundle = await Bundle(run, target.Value, cancellationToken).ConfigureAwait(false);
+        var bundle = await Bundle(run, where, cancellationToken).ConfigureAwait(false);
         if (bundle.IsError)
         {
             return BundleFailed(bundle.Error);
@@ -52,13 +54,13 @@ internal sealed class AgentLaunching(AgentLaunchWaiting launcher, AgentTargetRes
             return StepFailed("SND-LAUNCH-013", AgentModels.Refusal(profile));   // the launcher's own refusal of a model it can't express
         }
 
-        var asked = await Request(run, target.Value, workspace.Value, bundle.Value, cancellationToken).ConfigureAwait(false);
+        var asked = await Request(run, where, workspace.Value, bundle.Value, cancellationToken).ConfigureAwait(false);
         if (asked.IsError)
         {
             return StepFailed(asked.Error);
         }
 
-        var chosen = await picker.Pick(new ModelPickWork(run, target.Value, asked.Value.Request, asked.Value.Files), cancellationToken).ConfigureAwait(false);
+        var chosen = await picker.Pick(new ModelPickWork(run, where, asked.Value.Request, asked.Value.Files, drafter), cancellationToken).ConfigureAwait(false);
         if (chosen.Refusal is { } refusal)
         {
             return new AgentLaunched(Worktree: null, StartHead: null, new AgentLaunchFailure(AgentLaunchFailureKind.Park, refusal.Code, refusal.Message));   // SND-MODEL-003: no model is allowed, the owner fixes the cap or floor
@@ -66,6 +68,12 @@ internal sealed class AgentLaunching(AgentLaunchWaiting launcher, AgentTargetRes
 
         return await Start(string.Equals(chosen.Model, asked.Value.Request.Step?.Model, StringComparison.Ordinal) ? asked.Value.Request : asked.Value.WithModel(chosen.Model), cancellationToken).ConfigureAwait(false);
     }
+
+    // Nothing was asked of the launcher, so there is no outcome to record; no agent may run a challenger (SND-LAUNCH-028) parks until the owner approves one.
+    private static AgentLaunched Unplaced(Error error) =>
+        string.Equals(error.Code, SindriErrors.LaunchNoUsableAgent.Code, StringComparison.Ordinal)
+            ? new AgentLaunched(Worktree: null, StartHead: null, new AgentLaunchFailure(AgentLaunchFailureKind.Park, error.Code, error.Message))
+            : StepFailed(error);
 
     // Asks the launcher for the session and records the outcome; the worktree and start commit, or the failure.
     private async Task<AgentLaunched> Start(LaunchRequest request, CancellationToken cancellationToken)

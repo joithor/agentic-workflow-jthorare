@@ -145,6 +145,59 @@ public sealed class ModelPickLaunchTests : IDisposable
         Expect.Equal("sonnet,sonnet", string.Join(',', rig.Launcher.Requests.Select(r => r.Step?.Model)));
     }
 
+    [Fact(Timeout = 120_000)]
+    public async Task A_cheap_pick_with_a_stronger_model_allowed_can_escalate_and_reports_its_model()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+        _ = rig.Judge.Chooses("m1");
+
+        var launched = await rig.Launch(Run(1), floor: null, ct);
+
+        Expect.Equal("haiku/True", launched.Model + "/" + launched.CanEscalate);
+    }
+
+    [Theory(Timeout = 120_000)]
+    [InlineData("m3", null, null)]       // opus is the strongest model there is
+    [InlineData("m2", "sonnet", null)]   // the cap leaves nothing above sonnet
+    [InlineData(null, null, "sonnet")]   // a pin leaves one model
+    public async Task A_pick_with_nothing_stronger_allowed_cannot_escalate(string? key, string? cap, string? pin)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true, Cap: cap, Pin: pin), ct);
+        _ = rig.Judge.Chooses(key ?? "m1");
+
+        var launched = await rig.Launch(Run(1), floor: null, ct);
+
+        Assert.False(launched.CanEscalate);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_step_that_names_its_model_cannot_escalate()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+
+        var launched = await rig.Launch(Run(1), floor: null, ct, model: "haiku");
+
+        Assert.False(launched.CanEscalate);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task An_escalation_picks_above_the_failed_model_records_why_and_cannot_escalate_again()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+        _ = rig.Judge.Chooses("m1");
+        var retry = Run(1) with { Escalation = 1 };
+
+        var launched = await rig.Launch(retry, floor: null, ct, previous: new PreviousRun("haiku", "refused", Check: null, Tokens: 300), escalation: 1);
+
+        Expect.Equal("sonnet,opus", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
+        Expect.Equal("sonnet/False", launched.Model + "/" + launched.CanEscalate);   // opus is still allowed, but one retry is all there is
+        Expect.Equal("haiku/refused", await rig.Picked("escalatedFrom", "escalatedFromKind", ct));
+    }
+
     [Theory(Timeout = 120_000)]
     [InlineData("below-threshold", "below-threshold")]
     [InlineData("unavailable", "judge-unavailable")]
@@ -203,8 +256,8 @@ public sealed class ModelPickLaunchTests : IDisposable
 
         public FakeModelPickJudge Judge { get; } = judge;
 
-        public Task<AgentLaunched> Launch(AgentStepRun run, string? floor, CancellationToken ct, string? model = null) =>
-            sindri.GetRequiredService<AgentLaunching>().Launch(new AgentLaunchRun(run, item, Model: model, Floor: floor), ct);
+        public Task<AgentLaunched> Launch(AgentStepRun run, string? floor, CancellationToken ct, string? model = null, PreviousRun? previous = null, int escalation = 0) =>
+            sindri.GetRequiredService<AgentLaunching>().Launch(new AgentLaunchRun(run, item, Model: model, Previous: previous, Escalation: escalation, Floor: floor), ct);
 
         public async Task<IReadOnlyList<LedgerEvent>> Rows(CancellationToken ct) => (await sindri.GetRequiredService<ILedgerStore>().ReadAfter(0, 500, ct)).Value;
 

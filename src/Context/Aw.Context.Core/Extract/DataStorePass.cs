@@ -86,7 +86,7 @@ public static class DataStorePass
         return stores;
     }
 
-    private static NodeKey? ThingKey(string name)
+    internal static NodeKey? ThingKey(string name)
     {
         var kebab = new StringBuilder();
         foreach (var c in name.ToLowerInvariant())

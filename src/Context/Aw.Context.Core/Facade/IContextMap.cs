@@ -41,6 +41,17 @@ public interface IContextMap : IScopeProposals
     /// <returns>The status, or SND-CONTEXT-001/003/020/030.</returns>
     public ValueTask<Result<MapStatusView>> MapStatus(string? anchor, ContextScope scope, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The structure measures of a map (map structure spec §4.3): the current map, the draft or the map a build would save, read for a human ('context map checks'). A session is refused (SND-CONTEXT-020): the output lists feature keys.
+    /// <see cref="MapChecksSource.Build"/> extracts in memory with no model call, writes nothing and takes the heavy-job slot a backtest takes.
+    /// </summary>
+    /// <param name="source">Which map.</param>
+    /// <param name="progress">Told the step lines of a build's extraction and who holds the heavy-job slot, or null.</param>
+    /// <param name="scope">The caller and the profile's repos and settings.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>The measures, or SND-CONTEXT-030 with no map, 044 with no draft, 040 when the heavy-job slots stayed busy.</returns>
+    public ValueTask<Result<MapChecksView>> MapStructure(MapChecksSource source, IProgress<string>? progress, ContextScope scope, CancellationToken cancellationToken);
+
     /// <summary>Doctor 'context:map': whether there is a current map and whether overrides are orphaned, counted over the map as the profile's deny globs leave it (as status counts it).</summary>
     /// <param name="scope">The approved profile's context section and repos with a service caller, or null when no profile is approved (the stored map is counted).</param>
     /// <param name="cancellationToken">Cancels the call.</param>

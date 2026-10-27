@@ -359,6 +359,23 @@
       "shortcut": null
     },
     {
+      "action": "EndLearnMode",
+      "class": "desk",
+      "allowedCallers": [
+        "human+terminal",
+        "human",
+        "session"
+      ],
+      "terminal": false,
+      "method": "POST",
+      "route": "/sindri/sandbox/learn-off",
+      "cli": "sindri sandbox learn off [--repo <repo>] [--json]",
+      "ui": "ready",
+      "destructive": false,
+      "readsViews": false,
+      "shortcut": null
+    },
+    {
       "action": "FileRequest",
       "class": "request",
       "allowedCallers": [

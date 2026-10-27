@@ -279,4 +279,45 @@ public sealed class SandboxPlannerTests
         Assert.Same(plan, SandboxPlanner.FromStored(plan).Value);
         Assert.Equal("no-stored-plan", SandboxRefusal.ReasonOf(SandboxPlanner.FromStored(stored: null).Error));
     }
+
+    [Fact, Trait("Lane", "unit")]
+    public void A_learn_profile_with_history_plans_learn_until_the_window_ends()
+    {
+        var now = new DateTimeOffset(2026, 10, 27, 9, 0, 0, TimeSpan.Zero);
+        var request = Req.ReadOnly with
+        {
+            Settings = new SandboxSettings(Network: new SandboxNetwork(Mode: NetworkMode.Learn)),
+            Learn = new LearnContext(new LearnHistory(now.AddDays(-2), LearnRuns: 4, EndedAt: null), now),
+        };
+
+        var plan = Build(request);
+
+        Assert.Equal(NetworkMode.Learn, plan.Network.Mode);
+        Assert.Equal(now.AddDays(5), plan.Network.LearnUntil);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void A_learn_profile_past_its_window_plans_enforce()
+    {
+        var now = new DateTimeOffset(2026, 10, 27, 9, 0, 0, TimeSpan.Zero);
+        var request = Req.ReadOnly with
+        {
+            Settings = new SandboxSettings(Network: new SandboxNetwork(Mode: NetworkMode.Learn)),
+            Learn = new LearnContext(new LearnHistory(now.AddDays(-8), LearnRuns: 4, EndedAt: null), now),
+        };
+
+        var plan = Build(request);
+
+        Assert.Equal(NetworkMode.Enforce, plan.Network.Mode);
+        Assert.Null(plan.Network.LearnUntil);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void Without_a_learn_context_the_profile_mode_is_used_as_is()
+    {
+        var plan = Build(Req.ReadOnly with { Settings = new SandboxSettings(Network: new SandboxNetwork(Mode: NetworkMode.Learn)) });
+
+        Assert.Equal(NetworkMode.Learn, plan.Network.Mode);
+        Assert.Null(plan.Network.LearnUntil);
+    }
 }

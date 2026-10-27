@@ -14,8 +14,9 @@ public sealed class ScopingModelRulesTests
 
     private static ScopeRuleStatus Status(ScopingCheckResponse response, string rule) => response.Rules.Single(r => r.Rule == rule).Status;
 
-    private static JsonObject Record(string step, string? model, string? requested = null, string via = "agent", string vendor = "fixture") => new()
+    private static JsonObject Record(string step, string? model, string? requested = null, string via = "agent", string vendor = "fixture", string? target = null) => new()
     {
+        ["target"] = target,
         ["step"] = step,
         ["state"] = step["step.scope.".Length..],
         ["round"] = 1,
@@ -62,6 +63,26 @@ public sealed class ScopingModelRulesTests
         Assert.Equal(ScopeRuleStatus.Warn, Status(response, "SCP-CHAL-002"));
         Assert.Contains(response.Warnings, w => w.Rule == "SCP-CHAL-002" && w.Message.Contains("workflow.scoping.models", StringComparison.Ordinal));
         Assert.Equal(ScopeOutcome.Complete, response.Outcome);
+    }
+
+    /// <summary>Model-pick M-7: the pick records the models, so a challenger on the drafter's agent and model fails on them (the run records ask for the pick's model).</summary>
+    [Fact, Trait("Lane", "unit")]
+    public void A_challenger_on_the_drafters_agent_and_the_same_picked_model_fails()
+    {
+        var response = Run(WithRuns(Record("step.scope.draft", "opus", "opus", target: "claude-code"), Record("step.scope.challenge", "opus", "opus", target: "claude-code")));
+
+        Assert.Equal(ScopeRuleStatus.Fail, Status(response, "SCP-CHAL-002"));
+    }
+
+    /// <summary>The M-7 proof, in process: the facts a scoping packet is checked on (runs.json with the recorded models), through the same service 'sindri scoping check --facts' runs.</summary>
+    [Fact, Trait("Lane", "unit")]
+    public async Task The_local_check_passes_a_challenger_on_the_drafters_agent_and_another_recorded_model()
+    {
+        var facts = WithRuns(Record("step.scope.draft", "opus", "opus", target: "claude-code"), Record("step.scope.challenge", "sonnet", "sonnet", target: "claude-code"));
+
+        var response = await ScopingCheckTests.Run(facts, ScopeStage.Evidence);
+
+        Assert.Equal(ScopeRuleStatus.Pass, Status(response, "SCP-CHAL-002"));
     }
 
     [Fact, Trait("Lane", "unit")]

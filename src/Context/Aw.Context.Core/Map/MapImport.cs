@@ -16,6 +16,9 @@ public sealed record MapImport(ContextRepoName Repo, string? Commit, GraphSnapsh
     /// <summary>The hash of the map rules it was built under (<see cref="MapRuleset"/>), or null when none is recorded (an import, a promote that keeps the draft's own).</summary>
     public string? Ruleset { get; init; }
 
+    /// <summary>The structure reason to keep with the version (<see cref="MapVersion.Checks"/>), or null.</summary>
+    public string? Checks { get; init; }
+
     /// <summary>The tracked files each ignored role dropped (<see cref="MapVersion.Dropped"/>), or null when none is recorded.</summary>
     public IReadOnlyList<RoleDropped>? Dropped { get; init; }
 

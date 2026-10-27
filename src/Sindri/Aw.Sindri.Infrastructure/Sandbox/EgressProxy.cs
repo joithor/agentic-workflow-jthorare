@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Text;
+using Aw.Sindri.Core.Events;
+using Aw.Sindri.Core.Sandbox.Denials;
 
 namespace Aw.Sindri.Infrastructure.Sandbox;
 
@@ -10,6 +12,9 @@ namespace Aw.Sindri.Infrastructure.Sandbox;
 /// <param name="caps">The per-run caps.</param>
 internal sealed class EgressProxy(EgressPolicy policy, IEgressDialer dialer, EgressLog log, EgressCaps caps)
 {
+    /// <summary>Counts what the proxy denies (a host no group lists, a private address, a cap); null counts nothing.</summary>
+    public DenialCounter? Denials { get; init; }
+
     private const int MaxHead = 16 * 1024;
     private static readonly byte[] _headEnd = "\r\n\r\n"u8.ToArray();
     private int _active;
@@ -25,6 +30,7 @@ internal sealed class EgressProxy(EgressPolicy policy, IEgressDialer dialer, Egr
         if (Interlocked.Increment(ref _active) > caps.MaxConnections || Interlocked.Read(ref _bytes) >= caps.MaxBytes)
         {
             log.Record("(cap)", 0, EgressVerdict.Refused);
+            Denials?.Record(new DenialObservation(DenialKind.Network, "(cap)", DenialRules.Cap));
             await Reply(client, 503, "Service Unavailable", cancellationToken).ConfigureAwait(false);
             _ = Interlocked.Decrement(ref _active);
             return;
@@ -63,6 +69,7 @@ internal sealed class EgressProxy(EgressPolicy policy, IEgressDialer dialer, Egr
         if (decision is not { Verdict: EgressVerdict.Allowed, Address: { } address })
         {
             log.Record(host, port, decision.Verdict);
+            CountDenial(host, decision.Verdict);
             await Reply(client, 403, "Forbidden", cancellationToken).ConfigureAwait(false);
             return;
         }
@@ -85,6 +92,22 @@ internal sealed class EgressProxy(EgressPolicy policy, IEgressDialer dialer, Egr
             }
 
             await EgressRelay.Run(client, upstream, c => Interlocked.Add(ref _bytes, c) <= caps.MaxBytes, caps.HalfCloseGrace, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    // Only Denied and Refused are denials; a learned host or a failed dial is not.
+    private void CountDenial(string host, EgressVerdict verdict)
+    {
+        var rule = verdict switch
+        {
+            EgressVerdict.Denied => DenialRules.NoGroup,
+            EgressVerdict.Refused => DenialRules.PrivateAddress,
+            EgressVerdict.Allowed or EgressVerdict.Failed => null,
+            _ => null,
+        };
+        if (rule is not null)
+        {
+            Denials?.Record(new DenialObservation(DenialKind.Network, host, rule));
         }
     }
 

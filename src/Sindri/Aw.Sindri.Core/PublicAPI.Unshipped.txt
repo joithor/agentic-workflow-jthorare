@@ -20828,3 +20828,6 @@ override Aw.Sindri.Core.Sandbox.LearnHistory.GetHashCode() -> int
 override Aw.Sindri.Core.Sandbox.LearnHistory.ToString() -> string!
 static Aw.Sindri.Core.Sandbox.LearnHistory.operator !=(Aw.Sindri.Core.Sandbox.LearnHistory? left, Aw.Sindri.Core.Sandbox.LearnHistory? right) -> bool
 static Aw.Sindri.Core.Sandbox.LearnHistory.operator ==(Aw.Sindri.Core.Sandbox.LearnHistory? left, Aw.Sindri.Core.Sandbox.LearnHistory? right) -> bool
+Aw.Sindri.Core.Sandbox.Denials.ISandboxDenials
+Aw.Sindri.Core.Sandbox.Denials.ISandboxDenials.Append(Aw.Sindri.Core.Events.SandboxDenied! denied, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>
+Aw.Sindri.Core.Launches.LaunchSessionEvents.Append(Aw.Sindri.Core.Events.SandboxDenied! denied, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>

@@ -3,9 +3,11 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Aw.Context.Core.Extract;
+using Aw.Context.Core.Glossary;
 using Aw.Context.Core.Locks;
 using Aw.Context.Testing.Extract;
 using Aw.Context.Testing.Fixtures;
+using Aw.Context.Testing.Glossary;
 using Aw.Sindri.Core.Events;
 using Aw.Sindri.Core.Lease;
 using Aw.Sindri.Core.Ledger;
@@ -37,6 +39,9 @@ public sealed class ContextReviewApiTests : IDisposable
         Directory.Delete(_locks, recursive: true);
     }
 
+    // why: home features are what the labeler and the concept namer name now, so a host with no model fake must not ask the box's agent CLIs
+    private const string NoLabeling = "  labeling: { enabled: false }\n";
+
     private string LockPath => Path.Combine(_locks, "heavy-job.lock");
 
     /// <summary>Fake clusters (graphify is a heavy-lane test) and a lock directory of the test's own, whatever the heavy wrapper exported.</summary>
@@ -44,6 +49,9 @@ public sealed class ContextReviewApiTests : IDisposable
     {
         _ = services.RemoveAll<IClusterSource>();
         _ = services.AddSingleton<IClusterSource>(new FakeClusterSource());
+        // why: home features give the build files to read symbol vectors for, and the box has no code index
+        _ = services.RemoveAll<ISymbolVectors>();
+        _ = services.AddSingleton<ISymbolVectors>(new FakeSymbolVectors());
         _ = services.RemoveAll<HeavyLockSettings>();
         _ = services.AddSingleton(new HeavyLockSettings(LockPath, 2, Held: false));
         _ = services.RemoveAll<IHeavyJobLock>();
@@ -51,7 +59,7 @@ public sealed class ContextReviewApiTests : IDisposable
     };
 
     private async Task<GoldenHost> Host(bool sessions, TimeSpan? wait = null) =>
-        await ContextHosts.Approved(_repo, sessions, TestContext.Current.CancellationToken, Wiring(wait));
+        await ContextHosts.Approved(_repo, sessions, TestContext.Current.CancellationToken, Wiring(wait), contextExtra: NoLabeling);
 
     private static (string Name, string Value)[] Terminal(GoldenHost host) => Human(host.Token.Value);
 

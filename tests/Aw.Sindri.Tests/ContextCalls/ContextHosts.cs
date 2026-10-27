@@ -17,9 +17,10 @@ internal static class ContextHosts
     /// <param name="ct">Cancels the start.</param>
     /// <param name="extra">More service registrations, or null.</param>
     /// <param name="name">The repo's name in the profile.</param>
+    /// <param name="contextExtra">More lines under 'context:' (two-space indented, each ending in a newline), or null.</param>
     /// <returns>The started host.</returns>
-    internal static async Task<GoldenHost> Approved(FixtureRepo repo, bool sessions, CancellationToken ct, Action<IServiceCollection>? extra = null, string name = "split-panes") =>
-        await Approved(repo.Path, sessions, ct, extra, name);
+    internal static async Task<GoldenHost> Approved(FixtureRepo repo, bool sessions, CancellationToken ct, Action<IServiceCollection>? extra = null, string name = "split-panes", string? contextExtra = null) =>
+        await Approved(repo.Path, sessions, ct, extra, name, contextExtra);
 
     /// <summary>A host whose profile maps the repo at <paramref name="repoPath"/> as <paramref name="name"/>, approved by the human, with one context-docs-refresh run done.</summary>
     /// <param name="repoPath">The repo's working tree.</param>

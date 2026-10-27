@@ -7,7 +7,7 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace Aw.Sindri.Ui.Tests.Setup;
 
-/// <summary>Home's Needs-you header and card agree on the setup rows while the first setup read is out, and after it (A-6, #1060).</summary>
+/// <summary>Home's Needs-you header and card agree on the setup rows whether or not the first setup read has answered (A-6, #1060).</summary>
 [Lane(TestLane.Unit)]
 public sealed class ShellSetupCountTests
 {
@@ -40,14 +40,14 @@ public sealed class ShellSetupCountTests
     }
 
     [Fact]
-    public Task While_the_first_setup_read_is_out_the_header_and_the_card_count_only_the_other_rows() => UiThread.Run(async () =>
+    public Task While_the_first_setup_read_is_out_the_header_and_the_card_both_count_every_row() => UiThread.Run(async () =>
     {
         _server.NeedsYouView = ThreeAndTwoSetup();
         _server.SetupGate = new TaskCompletionSource();
-        var shell = await Connected(s => s.NeedsYou.Count > 0 && s.Setup.IsFirstReadPending);
+        var shell = await Connected(s => s.NeedsYou.Count > 0 && s.Setup.IsReading);
 
-        Assert.Equal((3, 3), (shell.NeedsYou.Count, shell.NeedsYou.Rows.Count));
-        Assert.StartsWith("3 need you", shell.Attention.SummaryLine, StringComparison.Ordinal);
+        Assert.Equal((5, 5), (shell.NeedsYou.Count, shell.NeedsYou.Rows.Count));   // a read that has not answered holds nothing back: the header can't jump when it does
+        Assert.StartsWith("5 need you", shell.Attention.SummaryLine, StringComparison.Ordinal);
         _server.SetupGate.SetResult();
     }, Token);
 
@@ -68,7 +68,7 @@ public sealed class ShellSetupCountTests
     {
         _server.NeedsYouView = ThreeAndTwoSetup();
         _server.SetupAnswer = RouteAnswer.Api("setup", "all-done");
-        var shell = await Connected(s => s.Setup.IsFinished && !s.Setup.IsFirstReadPending);
+        var shell = await Connected(s => s.Setup.IsFinished);
 
         Assert.Equal((5, 5), (shell.NeedsYou.Count, shell.NeedsYou.Rows.Count));
         Assert.StartsWith("5 need you", shell.Attention.SummaryLine, StringComparison.Ordinal);

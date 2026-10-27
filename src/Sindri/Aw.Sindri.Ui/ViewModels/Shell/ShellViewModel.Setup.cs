@@ -27,8 +27,6 @@ internal sealed partial class ShellViewModel
         _ => false,
     };
 
-    private static bool SameName(string a, string b) => string.Equals(a, b, StringComparison.Ordinal);
-
     private void InitSetup()
     {
         Health.Follow(Setup.Refresh);
@@ -36,10 +34,9 @@ internal sealed partial class ShellViewModel
         Setup.ActionRequested += (_, e) => OpenSetupAction(e.Action);
         Setup.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is { } name && (SameName(name, nameof(SetupViewModel.IsHomeLineShown)) || SameName(name, nameof(SetupViewModel.HomeStepId)) || SameName(name, nameof(SetupViewModel.IsFirstReadPending)) || SameName(name, nameof(SetupViewModel.IsReading))))
+            if (string.Equals(e.PropertyName, nameof(SetupViewModel.IsHomeLineShown), StringComparison.Ordinal) || string.Equals(e.PropertyName, nameof(SetupViewModel.HomeStepId), StringComparison.Ordinal))
             {
                 UpdateNeedsYou();
-                Reattend();   // Home's summary counts the rows without the setup ones while the setup line stands for them (or is about to: the first read is out)
             }
         };
         Health.Catalog.PropertyChanged += (_, e) =>
@@ -75,6 +72,5 @@ internal sealed partial class ShellViewModel
     private bool ShownOnHome(NeedsYouEntry row) =>
         IsNeedsYouInbox
         || ((HomeFilter != HomeFilter.Decisions || row.DecisionId is not null)
-            && !(string.Equals(row.Kind, SetupRowKind, StringComparison.Ordinal) && (Setup.IsFirstReadPending   // the step the line will name isn't known yet: hold every setup row back (A-6)
-                || (Setup.IsHomeLineShown && string.Equals(row.Id, SetupRowKind + ":" + Setup.HomeStepId, StringComparison.Ordinal)))));
+            && !(Setup.IsHomeLineShown && string.Equals(row.Kind, SetupRowKind, StringComparison.Ordinal) && string.Equals(row.Id, SetupRowKind + ":" + Setup.HomeStepId, StringComparison.Ordinal)));
 }

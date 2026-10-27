@@ -5,6 +5,7 @@ using Aw.Context.Core.Facade;
 using Aw.Context.Core.History;
 using Aw.Context.Core.Lenses;
 using Aw.Context.Core.Locks;
+using Aw.Context.Core.Map;
 using Aw.Context.Core.Proposals;
 using Aw.Context.Core.Review;
 using Aw.Context.Core.Search;
@@ -54,6 +55,7 @@ internal static class ContextSlicesServiceCollectionExtensions
             .AddStepInput<ContextRetrieveInput>()
             .AddStepInput<ContextCodeInput>()
             .AddSingleton<IHeavyJobLock>(static sp => new SindriHeavyJobLock(sp.GetRequiredService<IHeavySlots>(), SindriHeavyJobLock.DefaultWait));
+        _ = services.AddScoped<IValidator<CheckContextMapStructureRequest>, AcceptAllValidator<CheckContextMapStructureRequest>>().AddCommand<CheckContextMapStructureRequest, MapChecksView, CheckContextMapStructureService>();
         _ = services.AddScoped<IValidator<PromoteContextMapRequest>, AcceptAllValidator<PromoteContextMapRequest>>().AddCommand<PromoteContextMapRequest, PromoteContextMapResponse, PromoteContextMapService>();
         _ = services.AddScoped<IValidator<ProposeContextMapRequest>, AcceptAllValidator<ProposeContextMapRequest>>().AddCommand<ProposeContextMapRequest, ProposeContextMapResponse, ProposeContextMapService>();
         _ = services.AddScoped<IValidator<ReviewContextMapRequest>, AcceptAllValidator<ReviewContextMapRequest>>().AddCommand<ReviewContextMapRequest, ReviewContextMapResponse, ReviewContextMapService>();

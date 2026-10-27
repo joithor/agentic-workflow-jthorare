@@ -18,8 +18,11 @@ public sealed class StripFocusReturnTests : FrameHost
     private static RouteAnswer AnswerableOffTheDesk()
     {
         var list = GoldenFiles.Node("workflow-instances", "root");
-        var row = list["instances"]!.AsArray().Single(r => r!["answer"]?["class"]?.GetValue<string>() == "protected")!;
+        var rows = list["instances"]!.AsArray();
+        var row = rows.Single(r => r!["answer"]?["class"]?.GetValue<string>() == "protected")!;
         row["answer"]!["class"] = "pause";
+        rows.Remove(row);
+        rows.Insert(0, row);   // the strip shows the first few open rows in served order; this one is eighth
         return new RouteAnswer(HttpStatusCode.OK, list.ToJsonString());
     }
 

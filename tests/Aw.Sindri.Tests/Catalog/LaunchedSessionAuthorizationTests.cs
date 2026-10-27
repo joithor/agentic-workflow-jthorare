@@ -19,6 +19,7 @@ public sealed class LaunchedSessionAuthorizationTests
     [InlineData("ApplyCommand:takeover")]
     [InlineData("StartInstance")]
     [InlineData("ApplyCommand:cancel")]
+    [InlineData("EndLearnMode")]
     public void A_launched_session_is_refused_a_human_verb_an_owner_started_session_may_run(string action)
     {
         var row = Row(action);

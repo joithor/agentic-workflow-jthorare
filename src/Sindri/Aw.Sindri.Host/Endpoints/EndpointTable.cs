@@ -26,6 +26,7 @@ internal static class EndpointTable
         _ = queries.MapGetJob();
         _ = queries.MapGetLaunch();
         _ = queries.MapGetLaunchTargets();
+        _ = queries.MapListDenials();
         _ = queries.MapListJobs();
         _ = queries.MapGetItemTimeline();
         _ = queries.MapGetItemScope();
@@ -121,7 +122,7 @@ internal static class EndpointTable
         _ = commands.MapApproveProfile();
         _ = commands.MapCancelJob();
         _ = commands.MapCloseItem();
-        _ = commands.MapDeferOnyx();
+        _ = commands.MapDeferOnyx().MapEndLearnMode();
         _ = commands.MapSetupOnyx();
         _ = commands.MapConnectOnyx();
         _ = commands.MapOpenItem();
@@ -135,7 +136,7 @@ internal static class EndpointTable
         _ = commands.MapFileRequest();
         _ = commands.MapRebuildViews();
         _ = commands.MapImportContextMap();
-        _ = commands.MapPromoteContextMap();
+        _ = commands.MapPromoteContextMap().MapCheckContextMapStructure();
         _ = commands.MapProposeContextMap();
         _ = commands.MapReviewContextMap();
         _ = commands.MapShowLineHoldout();

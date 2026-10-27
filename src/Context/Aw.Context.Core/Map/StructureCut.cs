@@ -45,6 +45,10 @@ internal static class StructureCut
 
     private static bool IsFileLink(GraphEdge e) => e is { Type: EdgeType.Implements or EdgeType.Tags, From.Kind: NodeKind.Code, To.Kind: NodeKind.Feature };
 
+    // An edge a pin declared in the profile (spec 2026-10-27 §10.3): the build makes it again from the profile's pins, so one whose entry was removed leaves nothing behind.
+    private static bool IsDeclared(GraphEdge e) =>
+        e is { Provenance: Provenance.Human, From.Kind: NodeKind.Concept } && e.EvidenceOrEmpty.Any(x => x.Key.Value.StartsWith("profile:index.concepts.", StringComparison.Ordinal));
+
     // A deterministic feature is a home or a group; a model feature is the build's own when every file link into it is the model's.
     private static HashSet<string> Purged(GraphSnapshot graph)
     {
@@ -58,8 +62,8 @@ internal static class StructureCut
     // The edges of a feature the build makes again (a deterministic file link into a feature a person or an import wrote is theirs and stays). A person's edge to one of those features stays when the feature comes back.
     private static bool IsDropped(GraphEdge e, HashSet<string> purged, HashSet<string> remade)
     {
-        // A roll-up edge has a count, only the build writes one, and it writes every roll-up edge again.
-        if (e.Count is not null)
+        // A roll-up edge has a count, only the build writes one, and it writes every roll-up edge again; a pin's declared edge is made again from the profile.
+        if (e.Count is not null || IsDeclared(e))
         {
             return true;
         }

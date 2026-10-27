@@ -148,6 +148,72 @@ public sealed class ModelPickLaunchTests : IDisposable
         Expect.Equal("sonnet,sonnet", string.Join(',', rig.Launcher.Requests.Select(r => r.Step?.Model)));
     }
 
+    [Fact(Timeout = 120_000)]
+    public async Task A_cheap_pick_with_a_stronger_model_allowed_can_escalate_and_reports_its_model()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+        _ = rig.Judge.Chooses("m1");
+
+        var launched = await rig.Launch(Run(1), floor: null, ct);
+
+        Expect.Equal("haiku/True", launched.Model + "/" + launched.CanEscalate);
+    }
+
+    [Theory(Timeout = 120_000)]
+    [InlineData("m3", null, null)]       // opus is the strongest model there is
+    [InlineData("m2", "sonnet", null)]   // the cap leaves nothing above sonnet
+    [InlineData(null, null, "sonnet")]   // a pin leaves one model
+    public async Task A_pick_with_nothing_stronger_allowed_cannot_escalate(string? key, string? cap, string? pin)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true, Cap: cap, Pin: pin), ct);
+        _ = rig.Judge.Chooses(key ?? "m1");
+
+        var launched = await rig.Launch(Run(1), floor: null, ct);
+
+        Assert.False(launched.CanEscalate);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_step_that_names_its_model_cannot_escalate()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+
+        var launched = await rig.Launch(Run(1), floor: null, ct, model: "haiku");
+
+        Assert.False(launched.CanEscalate);
+    }
+
+    /// <summary>A Step that reads a workspace would retry in the failed run's dirty worktree (spec 5), so it does not escalate.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_step_that_reads_a_workspace_cannot_escalate()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+        _ = rig.Judge.Chooses("m1");
+
+        var launched = await rig.Launch(Run(1), floor: null, ct, workspace: _harness.Fact("/work/phase"));
+
+        Expect.Equal("haiku/False", launched.Model + "/" + launched.CanEscalate);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task An_escalation_picks_above_the_failed_model_records_why_and_cannot_escalate_again()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+        _ = rig.Judge.Chooses("m1");
+        var retry = Run(1) with { Escalation = 1 };
+
+        var launched = await rig.Launch(retry, floor: null, ct, previous: new PreviousRun("haiku", "refused", Check: null, Tokens: 300), escalation: 1);
+
+        Expect.Equal("sonnet,opus", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
+        Expect.Equal("sonnet/False", launched.Model + "/" + launched.CanEscalate);   // opus is still allowed, but one retry is all there is
+        Expect.Equal("haiku/refused", await rig.Picked("escalatedFrom", "escalatedFromKind", ct));
+    }
+
     [Theory(Timeout = 120_000)]
     [InlineData("below-threshold", "below-threshold")]
     [InlineData("unavailable", "judge-unavailable")]
@@ -178,6 +244,34 @@ public sealed class ModelPickLaunchTests : IDisposable
         Expect.Equal("no failure", launched.Failure is { } failure ? failure.Code + ": " + failure.Message : "no failure");
         Expect.Equal("haiku,sonnet", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
         Expect.Equal("haiku", rig.Launcher.Requests[0].Step?.Model);
+    }
+
+    /// <summary>The retry of a challenger keeps the drafter's exclusion (#1008, spec 4.1): above the failed model and not the drafter's model, so with the drafter on opus there is nothing above sonnet.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_cannot_escalate_to_the_drafters_model()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
+        _ = rig.Judge.Chooses("m2");   // haiku, sonnet are left: sonnet
+
+        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+
+        Expect.Equal("sonnet/False", launched.Model + "/" + launched.CanEscalate);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_challengers_escalation_picks_above_the_failed_model_without_the_drafters()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("sonnet"));
+        _ = rig.Judge.Chooses("m1");
+        var first = await rig.Launch(Challenge(1), floor: null, ct);   // haiku, opus are left: haiku, and opus is above it
+        var retry = Challenge(1) with { Escalation = 1 };
+
+        var launched = await rig.Launch(retry, floor: null, ct, previous: new PreviousRun("haiku", "refused", Check: null, Tokens: 300), escalation: 1);
+
+        Expect.Equal("haiku/True", first.Model + "/" + first.CanEscalate);
+        Expect.Equal("opus/False", launched.Model + "/" + launched.CanEscalate);   // sonnet is the drafter's: opus is the only model left
     }
 
     [Fact(Timeout = 120_000)]
@@ -288,8 +382,8 @@ public sealed class ModelPickLaunchTests : IDisposable
 
         public FakeModelPickJudge Judge { get; } = judge;
 
-        public Task<AgentLaunched> Launch(AgentStepRun run, string? floor, CancellationToken ct, string? model = null) =>
-            sindri.GetRequiredService<AgentLaunching>().Launch(new AgentLaunchRun(run, item, Model: model, Floor: floor), ct);
+        public Task<AgentLaunched> Launch(AgentStepRun run, string? floor, CancellationToken ct, string? model = null, PreviousRun? previous = null, int escalation = 0, FactValue? workspace = null) =>
+            sindri.GetRequiredService<AgentLaunching>().Launch(new AgentLaunchRun(run, item, workspace, Model: model, Previous: previous, Escalation: escalation, Floor: floor), ct);
 
         public async Task<IReadOnlyList<LedgerEvent>> Rows(CancellationToken ct) => (await sindri.GetRequiredService<ILedgerStore>().ReadAfter(0, 500, ct)).Value;
 

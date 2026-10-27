@@ -12,7 +12,7 @@ public sealed class LearnWindowTests
     [Fact, Lane(TestLane.Unit)]
     public void No_history_learns_for_seven_days_from_now()
     {
-        var (mode, until) = LearnWindow.Decide(NetworkMode.Learn, new LearnHistory(null, 0, null), _first);
+        var (mode, until) = LearnWindow.Decide(NetworkMode.Learn, new LearnHistory(FirstLearnRun: null, LearnRuns: 0, EndedAt: null), _first);
 
         Assert.Equal(NetworkMode.Learn, mode);
         Assert.Equal(_first.AddDays(7), until);
@@ -23,7 +23,7 @@ public sealed class LearnWindowTests
     [InlineData(10, NetworkMode.Enforce)]
     public void The_tenth_learn_run_closes_the_window(int runs, NetworkMode expected)
     {
-        var (mode, _) = LearnWindow.Decide(NetworkMode.Learn, new LearnHistory(_first, runs, null), _first.AddDays(1));
+        var (mode, _) = LearnWindow.Decide(NetworkMode.Learn, new LearnHistory(_first, runs, EndedAt: null), _first.AddDays(1));
 
         Assert.Equal(expected, mode);
     }
@@ -35,7 +35,7 @@ public sealed class LearnWindowTests
     {
         var now = _first.AddDays(days).AddSeconds(offsetSeconds);
 
-        var (mode, until) = LearnWindow.Decide(NetworkMode.Learn, new LearnHistory(_first, 3, null), now);
+        var (mode, until) = LearnWindow.Decide(NetworkMode.Learn, new LearnHistory(_first, LearnRuns: 3, EndedAt: null), now);
 
         Assert.Equal(expected, mode);
         Assert.Equal(expected == NetworkMode.Learn ? _first.AddDays(7) : null, until);
@@ -55,7 +55,7 @@ public sealed class LearnWindowTests
     [InlineData(null)]
     public void A_profile_that_enforces_never_learns(NetworkMode? profile)
     {
-        var (mode, until) = LearnWindow.Decide(profile, new LearnHistory(null, 0, null), _first);
+        var (mode, until) = LearnWindow.Decide(profile, new LearnHistory(FirstLearnRun: null, LearnRuns: 0, EndedAt: null), _first);
 
         Assert.Equal(NetworkMode.Enforce, mode);
         Assert.Null(until);

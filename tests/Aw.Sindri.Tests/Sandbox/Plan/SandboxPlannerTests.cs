@@ -287,7 +287,7 @@ public sealed class SandboxPlannerTests
         var request = Req.ReadOnly with
         {
             Settings = new SandboxSettings(Network: new SandboxNetwork(Mode: NetworkMode.Learn)),
-            Learn = new LearnContext(new LearnHistory(now.AddDays(-2), 4, null), now),
+            Learn = new LearnContext(new LearnHistory(now.AddDays(-2), LearnRuns: 4, EndedAt: null), now),
         };
 
         var plan = Build(request);
@@ -303,7 +303,7 @@ public sealed class SandboxPlannerTests
         var request = Req.ReadOnly with
         {
             Settings = new SandboxSettings(Network: new SandboxNetwork(Mode: NetworkMode.Learn)),
-            Learn = new LearnContext(new LearnHistory(now.AddDays(-8), 4, null), now),
+            Learn = new LearnContext(new LearnHistory(now.AddDays(-8), LearnRuns: 4, EndedAt: null), now),
         };
 
         var plan = Build(request);

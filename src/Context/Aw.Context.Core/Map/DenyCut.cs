@@ -216,7 +216,11 @@ internal sealed class DenyCut
         IsDeniedKey(n.Key, repos, mapped) || deniedDecisions.Contains(n.Key.Value) || (n.Provenance != Provenance.Human && OnlyDenied(n.EvidenceOrEmpty, repos));
 
     private static bool IsCut(GraphEdge e, HashSet<string> removed, IReadOnlyList<ContextRepo> repos) =>
-        removed.Contains(e.From.Value) || removed.Contains(e.To.Value) || (e.Provenance != Provenance.Human && OnlyDenied(e.EvidenceOrEmpty, repos));
+        removed.Contains(e.From.Value) || removed.Contains(e.To.Value) || (e.Provenance != Provenance.Human && OnlyDenied(e.EvidenceOrEmpty, repos)) || DeniedRollUp(e, repos);
+
+    // A roll-up edge (a count) is summed over files, so it can't be recomputed per file: it goes as soon as any file it cites is denied, a 'depends-on' pair's imported file (the span) included.
+    private static bool DeniedRollUp(GraphEdge e, IReadOnlyList<ContextRepo> repos) =>
+        e.Count is not null && e.EvidenceOrEmpty.Any(r => Denies(r, repos) || (r.Span is { } target && target.StartsWith("repo:", StringComparison.Ordinal) && DeniesKey(target, repos)));
 
     private static bool IsDeniedKey(NodeKey key, IReadOnlyList<ContextRepo> repos, IReadOnlyList<ContextRepo> mapped) =>
         (key.Kind == NodeKind.Code && mapped.Any(r => r.Denies(key.Value["code:".Length..]))) || (key.Kind == NodeKind.Record && DeniesKey(key.Value["record:".Length..], repos));

@@ -199,7 +199,7 @@ public static class MapAccess
         var orphaned = OverrideApplier.Apply(graph, overrides).Orphaned;
         var o = StringComparer.Ordinal;
         return new MapDocument(
-            MapDocumentValidator.SchemaVersions[^1], MapDocumentKind.Export, version.Repo,
+            SchemaVersionFor(graph), MapDocumentKind.Export, version.Repo,
             [.. graph.Nodes.Where(n => n.Key.Kind != NodeKind.Decision).OrderBy(n => n.Key.Value, o)],
             [.. graph.Edges.Where(e => e.Type != EdgeType.Quotes).OrderBy(e => e.From.Value, o).ThenBy(e => e.To.Value, o).ThenBy(e => e.Type).ThenBy(e => e.Order)],
             [.. graph.Aliases.OrderBy(a => a.Alias.Value, o)],
@@ -208,4 +208,8 @@ public static class MapAccess
             version.KeyVersion, version.Commit, version.Number, exportedAt,
             [.. orphaned.Select(x => x.Target).DistinctBy(k => k.Value, o).OrderBy(k => k.Value, o)]);
     }
+
+    // Version 2 only when the map holds a 'tags' edge or a roll-up count, so a plain map still reads in a build that knows only version 1 (spec 2026-10-27 §3).
+    private static int SchemaVersionFor(GraphSnapshot graph) =>
+        graph.Edges.Any(e => e.Type == EdgeType.Tags || e.Count is not null) ? MapDocumentValidator.SchemaVersions[^1] : MapDocumentValidator.SchemaVersions[0];
 }

@@ -64,7 +64,7 @@ public sealed class SessionCapTests : IDisposable
         var one = Cap();
         var two = Cap(); // a second instance: only the lock file is shared, as between two serve threads
 
-        async Task<Result<int>> Launch(FileSessionCap c, string unit) => await c.Start<int>(1, async Task<Result<int>> (inner) =>
+        async Task<Result<int>> Launch(FileSessionCap c, string unit) => await c.Start(1, async Task<Result<int>> (inner) =>
         {
             await Task.Delay(150, inner);
             _scopes.Add(unit);

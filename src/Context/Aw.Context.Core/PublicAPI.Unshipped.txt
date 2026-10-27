@@ -1188,6 +1188,7 @@ Aw.Context.Core.Extract.ExtractedMap.ExtractedMap(System.Collections.Generic.IRe
 Aw.Context.Core.Extract.ExtractedMap.Nodes.get -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.GraphNode!>!
 Aw.Context.Core.Extract.ExtractedMap.Nodes.init -> void
 Aw.Context.Core.Extract.ExtractedMap.Plus(Aw.Context.Core.Extract.ExtractedMap! other) -> Aw.Context.Core.Extract.ExtractedMap!
+Aw.Context.Core.Extract.FeatureRollup
 Aw.Context.Core.Extract.FileCluster
 Aw.Context.Core.Extract.FileCluster.<Clone>$() -> Aw.Context.Core.Extract.FileCluster!
 Aw.Context.Core.Extract.FileCluster.Confidence.get -> double
@@ -1234,6 +1235,23 @@ Aw.Context.Core.Extract.LabelPass.Equals(Aw.Context.Core.Extract.LabelPass? othe
 Aw.Context.Core.Extract.LabelPass.LabelPass(System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Extract.ClusterLabel!>! Labels, bool Complete = true, string? Unavailable = null) -> void
 Aw.Context.Core.Extract.LabelPass.Unavailable.get -> string?
 Aw.Context.Core.Extract.LabelPass.Unavailable.init -> void
+Aw.Context.Core.Graph.EdgeDetail.Count.get -> int?
+Aw.Context.Core.Graph.EdgeDetail.Count.init -> void
+Aw.Context.Core.Graph.EdgeDetail.Deconstruct(out Aw.Context.Core.Graph.NodeKey From, out Aw.Context.Core.Graph.EdgeType Type, out Aw.Context.Core.Graph.NodeKey To, out Aw.Context.Core.Results.Provenance Provenance, out bool Confirmed, out Aw.Context.Core.Results.Trust Trust, out int? Order, out Aw.Context.Core.Graph.NodeKind OtherKind, out string? OtherLabel, out int? Count, out string? Example) -> void
+Aw.Context.Core.Graph.EdgeDetail.EdgeDetail(Aw.Context.Core.Graph.NodeKey From, Aw.Context.Core.Graph.EdgeType Type, Aw.Context.Core.Graph.NodeKey To, Aw.Context.Core.Results.Provenance Provenance, bool Confirmed, Aw.Context.Core.Results.Trust Trust, int? Order, Aw.Context.Core.Graph.NodeKind OtherKind, string? OtherLabel, int? Count = null, string? Example = null) -> void
+Aw.Context.Core.Graph.EdgeDetail.Example.get -> string?
+Aw.Context.Core.Graph.EdgeDetail.Example.init -> void
+Aw.Context.Core.Graph.EdgeFact.Count.get -> int?
+Aw.Context.Core.Graph.EdgeFact.Count.init -> void
+Aw.Context.Core.Graph.EdgeFact.Deconstruct(out Aw.Context.Core.Graph.NodeKey From, out Aw.Context.Core.Graph.EdgeType Type, out Aw.Context.Core.Graph.NodeKey To, out Aw.Context.Core.Results.Provenance Provenance, out bool Confirmed, out Aw.Context.Core.Results.Trust Trust, out int? Order, out int? Count, out string? Example) -> void
+Aw.Context.Core.Graph.EdgeFact.EdgeFact(Aw.Context.Core.Graph.NodeKey From, Aw.Context.Core.Graph.EdgeType Type, Aw.Context.Core.Graph.NodeKey To, Aw.Context.Core.Results.Provenance Provenance, bool Confirmed, Aw.Context.Core.Results.Trust Trust, int? Order = null, int? Count = null, string? Example = null) -> void
+Aw.Context.Core.Graph.EdgeFact.Example.get -> string?
+Aw.Context.Core.Graph.EdgeFact.Example.init -> void
+Aw.Context.Core.Graph.GraphEdge.Count.get -> int?
+Aw.Context.Core.Graph.GraphEdge.Count.init -> void
+Aw.Context.Core.Graph.GraphEdge.Deconstruct(out Aw.Context.Core.Graph.NodeKey From, out Aw.Context.Core.Graph.NodeKey To, out Aw.Context.Core.Graph.EdgeType Type, out Aw.Context.Core.Results.Provenance Provenance, out double Confidence, out System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.EvidenceRef!>? Evidence, out int? Order, out System.DateTimeOffset? At, out int? Count) -> void
+Aw.Context.Core.Graph.GraphEdge.GraphEdge(Aw.Context.Core.Graph.NodeKey From, Aw.Context.Core.Graph.NodeKey To, Aw.Context.Core.Graph.EdgeType Type, Aw.Context.Core.Results.Provenance Provenance = Aw.Context.Core.Results.Provenance.Human, double Confidence = 1, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.EvidenceRef!>? Evidence = null, int? Order = null, System.DateTimeOffset? At = null, int? Count = null) -> void
+const Aw.Context.Core.Extract.FeatureRollup.EvidencePairs = 5 -> int
 const Aw.Context.Core.Extract.LabelPass.NoModelFix = "log in to an agent CLI (claude, codex or cursor-agent) so Sindri can ask it, or set 'context.labeling.enabled: false' in the profile" -> string!
 Aw.Context.Core.Extract.LabelPass.Labels.get -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Extract.ClusterLabel!>!
 Aw.Context.Core.Extract.LabelPass.Labels.init -> void
@@ -1406,16 +1424,12 @@ Aw.Context.Core.Graph.EdgeDetail.OtherKind.get -> Aw.Context.Core.Graph.NodeKind
 Aw.Context.Core.Graph.EdgeDetail.OtherKind.init -> void
 Aw.Context.Core.Graph.EdgeDetail.OtherLabel.get -> string?
 Aw.Context.Core.Graph.EdgeDetail.OtherLabel.init -> void
-Aw.Context.Core.Graph.EdgeDetail.Deconstruct(out Aw.Context.Core.Graph.NodeKey From, out Aw.Context.Core.Graph.EdgeType Type, out Aw.Context.Core.Graph.NodeKey To, out Aw.Context.Core.Results.Provenance Provenance, out bool Confirmed, out Aw.Context.Core.Results.Trust Trust, out int? Order, out Aw.Context.Core.Graph.NodeKind OtherKind, out string? OtherLabel) -> void
 Aw.Context.Core.Graph.EdgeDetail.Equals(Aw.Context.Core.Graph.EdgeDetail? other) -> bool
-Aw.Context.Core.Graph.EdgeDetail.EdgeDetail(Aw.Context.Core.Graph.NodeKey From, Aw.Context.Core.Graph.EdgeType Type, Aw.Context.Core.Graph.NodeKey To, Aw.Context.Core.Results.Provenance Provenance, bool Confirmed, Aw.Context.Core.Results.Trust Trust, int? Order, Aw.Context.Core.Graph.NodeKind OtherKind, string? OtherLabel) -> void
 Aw.Context.Core.Graph.EdgeDetail.ToFact() -> Aw.Context.Core.Graph.EdgeFact!
 Aw.Context.Core.Graph.EdgeFact
 Aw.Context.Core.Graph.EdgeFact.<Clone>$() -> Aw.Context.Core.Graph.EdgeFact!
 Aw.Context.Core.Graph.EdgeFact.Confirmed.get -> bool
 Aw.Context.Core.Graph.EdgeFact.Confirmed.init -> void
-Aw.Context.Core.Graph.EdgeFact.Deconstruct(out Aw.Context.Core.Graph.NodeKey From, out Aw.Context.Core.Graph.EdgeType Type, out Aw.Context.Core.Graph.NodeKey To, out Aw.Context.Core.Results.Provenance Provenance, out bool Confirmed, out Aw.Context.Core.Results.Trust Trust, out int? Order) -> void
-Aw.Context.Core.Graph.EdgeFact.EdgeFact(Aw.Context.Core.Graph.NodeKey From, Aw.Context.Core.Graph.EdgeType Type, Aw.Context.Core.Graph.NodeKey To, Aw.Context.Core.Results.Provenance Provenance, bool Confirmed, Aw.Context.Core.Results.Trust Trust, int? Order = null) -> void
 Aw.Context.Core.Graph.EdgeFact.Equals(Aw.Context.Core.Graph.EdgeFact? other) -> bool
 Aw.Context.Core.Graph.EdgeFact.From.get -> Aw.Context.Core.Graph.NodeKey
 Aw.Context.Core.Graph.EdgeFact.From.init -> void
@@ -1460,14 +1474,12 @@ Aw.Context.Core.Graph.GraphEdge.At.get -> System.DateTimeOffset?
 Aw.Context.Core.Graph.GraphEdge.At.init -> void
 Aw.Context.Core.Graph.GraphEdge.Confidence.get -> double
 Aw.Context.Core.Graph.GraphEdge.Confidence.init -> void
-Aw.Context.Core.Graph.GraphEdge.Deconstruct(out Aw.Context.Core.Graph.NodeKey From, out Aw.Context.Core.Graph.NodeKey To, out Aw.Context.Core.Graph.EdgeType Type, out Aw.Context.Core.Results.Provenance Provenance, out double Confidence, out System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.EvidenceRef!>? Evidence, out int? Order, out System.DateTimeOffset? At) -> void
 Aw.Context.Core.Graph.GraphEdge.Equals(Aw.Context.Core.Graph.GraphEdge? other) -> bool
 Aw.Context.Core.Graph.GraphEdge.Evidence.get -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.EvidenceRef!>?
 Aw.Context.Core.Graph.GraphEdge.Evidence.init -> void
 Aw.Context.Core.Graph.GraphEdge.EvidenceOrEmpty.get -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.EvidenceRef!>!
 Aw.Context.Core.Graph.GraphEdge.From.get -> Aw.Context.Core.Graph.NodeKey
 Aw.Context.Core.Graph.GraphEdge.From.init -> void
-Aw.Context.Core.Graph.GraphEdge.GraphEdge(Aw.Context.Core.Graph.NodeKey From, Aw.Context.Core.Graph.NodeKey To, Aw.Context.Core.Graph.EdgeType Type, Aw.Context.Core.Results.Provenance Provenance = Aw.Context.Core.Results.Provenance.Human, double Confidence = 1, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.EvidenceRef!>? Evidence = null, int? Order = null, System.DateTimeOffset? At = null) -> void
 Aw.Context.Core.Graph.GraphEdge.Order.get -> int?
 Aw.Context.Core.Graph.GraphEdge.Order.init -> void
 Aw.Context.Core.Graph.GraphEdge.Provenance.get -> Aw.Context.Core.Results.Provenance
@@ -5780,6 +5792,7 @@ static Aw.Context.Core.Extract.ClusterSet.operator ==(Aw.Context.Core.Extract.Cl
 static Aw.Context.Core.Extract.ExtractedMap.Empty.get -> Aw.Context.Core.Extract.ExtractedMap!
 static Aw.Context.Core.Extract.ExtractedMap.operator !=(Aw.Context.Core.Extract.ExtractedMap? left, Aw.Context.Core.Extract.ExtractedMap? right) -> bool
 static Aw.Context.Core.Extract.ExtractedMap.operator ==(Aw.Context.Core.Extract.ExtractedMap? left, Aw.Context.Core.Extract.ExtractedMap? right) -> bool
+static Aw.Context.Core.Extract.FeatureRollup.Apply(Aw.Context.Core.Extract.ExtractedMap! map) -> Aw.Context.Core.Extract.ExtractedMap!
 static Aw.Context.Core.Extract.FileCluster.operator !=(Aw.Context.Core.Extract.FileCluster? left, Aw.Context.Core.Extract.FileCluster? right) -> bool
 static Aw.Context.Core.Extract.FileCluster.operator ==(Aw.Context.Core.Extract.FileCluster? left, Aw.Context.Core.Extract.FileCluster? right) -> bool
 static Aw.Context.Core.Extract.Found.operator !=(Aw.Context.Core.Extract.Found? left, Aw.Context.Core.Extract.Found? right) -> bool
@@ -8363,3 +8376,30 @@ Aw.Context.Core.Engine.SlackSource.SlackSource() -> void
 Aw.Context.Core.Engine.SlackSource.Token.get -> string?
 Aw.Context.Core.Engine.SlackSource.Token.init -> void
 override Aw.Context.Core.Engine.SlackSource.ToString() -> string!
+Aw.Context.Core.Chunking.Chunker
+const Aw.Context.Core.Chunking.Chunker.MaxUnitChars = 100 -> int
+const Aw.Context.Core.Chunking.Chunker.OverlapTokens = 40 -> int
+const Aw.Context.Core.Chunking.Chunker.WindowTokens = 400 -> int
+static Aw.Context.Core.Chunking.Chunker.Estimate(int words, int chars) -> int
+static Aw.Context.Core.Chunking.Chunker.Key(string! recordKey, int seq) -> string!
+static Aw.Context.Core.Chunking.Chunker.Split(string! text) -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Chunking.TextChunk!>!
+Aw.Context.Core.Chunking.TextChunk
+Aw.Context.Core.Chunking.TextChunk.<Clone>$() -> Aw.Context.Core.Chunking.TextChunk!
+Aw.Context.Core.Chunking.TextChunk.Deconstruct(out int Seq, out string! Text, out int Tokens, out int LineStart, out int LineEnd) -> void
+Aw.Context.Core.Chunking.TextChunk.Equals(Aw.Context.Core.Chunking.TextChunk? other) -> bool
+Aw.Context.Core.Chunking.TextChunk.LineEnd.get -> int
+Aw.Context.Core.Chunking.TextChunk.LineEnd.init -> void
+Aw.Context.Core.Chunking.TextChunk.LineStart.get -> int
+Aw.Context.Core.Chunking.TextChunk.LineStart.init -> void
+Aw.Context.Core.Chunking.TextChunk.Seq.get -> int
+Aw.Context.Core.Chunking.TextChunk.Seq.init -> void
+Aw.Context.Core.Chunking.TextChunk.Text.get -> string!
+Aw.Context.Core.Chunking.TextChunk.Text.init -> void
+Aw.Context.Core.Chunking.TextChunk.Tokens.get -> int
+Aw.Context.Core.Chunking.TextChunk.Tokens.init -> void
+Aw.Context.Core.Chunking.TextChunk.TextChunk(int Seq, string! Text, int Tokens, int LineStart, int LineEnd) -> void
+override Aw.Context.Core.Chunking.TextChunk.Equals(object? obj) -> bool
+override Aw.Context.Core.Chunking.TextChunk.GetHashCode() -> int
+override Aw.Context.Core.Chunking.TextChunk.ToString() -> string!
+static Aw.Context.Core.Chunking.TextChunk.operator !=(Aw.Context.Core.Chunking.TextChunk? left, Aw.Context.Core.Chunking.TextChunk? right) -> bool
+static Aw.Context.Core.Chunking.TextChunk.operator ==(Aw.Context.Core.Chunking.TextChunk? left, Aw.Context.Core.Chunking.TextChunk? right) -> bool

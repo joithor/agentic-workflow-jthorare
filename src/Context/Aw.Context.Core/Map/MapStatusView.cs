@@ -24,6 +24,10 @@ public sealed record MapStatusView(
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool RulesOlder { get; init; }
 
+    /// <summary>The structure reason the build kept with this map (<see cref="MapVersion.Checks"/>); absent for a map that built clean or before it was recorded.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Checks { get; init; }
+
     /// <summary>Per repo, the indexed files each configured role matches and the role-like files no glob covers (issue 1105); left out when no repo in scope configures a role or has such a file.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<RepoRoles>? Roles { get; init; }

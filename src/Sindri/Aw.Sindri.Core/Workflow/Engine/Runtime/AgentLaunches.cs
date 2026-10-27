@@ -34,7 +34,7 @@ public static class AgentLaunches
         return LaunchId.From("LCH-" + Convert.ToHexStringLower(digest)[..32]);
     }
 
-    /// <summary>The worktree the run works in: the workspace the Step reads when it names one ('fact:workspace', an existing worktree the launcher then uses as it is), else the one the launcher creates, '&lt;repo&gt;/.claude/worktrees/sindri-&lt;instance&gt;-&lt;run&gt;'.</summary>
+    /// <summary>The worktree the run works in: the workspace the Step reads when it names one ('fact:workspace', an existing worktree the launcher then uses as it is), else the one the launcher creates, '&lt;repo&gt;/.claude/worktrees/sindri-&lt;instance&gt;-&lt;run&gt;' ('-e1' after it for the retry on a stronger model).</summary>
     /// <param name="run">The run.</param>
     /// <param name="target">Where it runs.</param>
     /// <param name="workspace">The workspace the Step reads; null when it reads none.</param>
@@ -43,7 +43,7 @@ public static class AgentLaunches
     {
         ArgumentNullException.ThrowIfNull(run);
         ArgumentNullException.ThrowIfNull(target);
-        return !string.IsNullOrWhiteSpace(workspace) ? workspace : target.RepoPath.TrimEnd('/') + "/.claude/worktrees/sindri-" + run.Workflow.Value + "-" + run.Run.Value;
+        return !string.IsNullOrWhiteSpace(workspace) ? workspace : target.RepoPath.TrimEnd('/') + "/.claude/worktrees/sindri-" + run.Workflow.Value + "-" + run.Run.Value + (run.Escalation > 0 ? string.Create(CultureInfo.InvariantCulture, $"-e{run.Escalation}") : string.Empty);   // why: the retry works in a fresh worktree, not the failed run's
     }
 
     /// <summary>The launcher's request: unattended, Open, the worktree, the Step's reference and the policy its capability gives.</summary>

@@ -88,7 +88,7 @@ internal sealed class ScopeRunRecords(ILedgerReader ledger, EventFactory events,
         for (var entry = 1; entry <= transitions + 1; entry++)
         {
             var candidate = RunToken.For(entry, number);
-            if (AgentLaunches.LaunchIdFor(instance, candidate) == started.Launch)
+            if (AgentLaunches.LaunchIdFor(instance, candidate) == started.Launch || AgentLaunches.LaunchIdFor(instance, candidate, escalation: 1) == started.Launch)   // the retry on a stronger model has the run's token and its own launch id
             {
                 return candidate.Value;
             }

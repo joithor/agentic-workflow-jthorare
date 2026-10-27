@@ -126,7 +126,7 @@ public static class ContextFeaturesServiceCollectionExtensions
         .AddScoped<IService<ListNeighborsRequest, NeighborsView>, ListNeighborsService>()
         .AddScoped<IService<FindPathRequest, PathView>, FindPathService>()
         .AddSingleton<MapBuildGate>()
-        .AddScoped<IService<BuildMapRequest, MapBuildReport>, BuildMapService>()
+        .AddBuildSlices()
         .AddReviewSlices()
         .AddPromoteSlices()
         .AddScoped<IService<ProposeFromScopeRequest, ProposeResult>, ProposeFromScopeService>()
@@ -145,6 +145,12 @@ public static class ContextFeaturesServiceCollectionExtensions
         .AddScoped<IContextLenses>(static sp => sp.GetRequiredService<ContextGraph>())
         .AddScoped<IContextEngine, ContextEngine>()
         .AddLensSlices();
+
+    // The build, and the structure checks that share its reading.
+    private static IServiceCollection AddBuildSlices(this IServiceCollection services) => services
+        .AddScoped<BuildMapService>()
+        .AddScoped<IService<BuildMapRequest, MapBuildReport>>(static sp => sp.GetRequiredService<BuildMapService>())
+        .AddScoped<IService<CheckStructureRequest, MapChecksView>, CheckStructureService>();
 
     private static IServiceCollection AddReviewSlices(this IServiceCollection services) => services
         .AddScoped<IService<ReviewQueueRequest, ReviewQueueView>, ReviewQueueService>()

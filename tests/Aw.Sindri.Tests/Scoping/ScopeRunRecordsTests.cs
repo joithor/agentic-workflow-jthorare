@@ -51,6 +51,22 @@ public sealed class ScopeRunRecordsTests : ScopeRunRecordsContract
             new WorkflowEventPayload(run.Value, state, "done", TriggerNames.StepCompleted, "drafted", string.Create(CultureInfo.InvariantCulture, $"1.{number}")),
             string.Create(CultureInfo.InvariantCulture, $"workflow:{run.Value}:run:{state}-{number}"));
 
+    /// <summary>The retry of a run on a stronger model has the run's token and its own launch id (model-pick spec 5): its record still names the run.</summary>
+    /// <returns>The test.</returns>
+    [Fact]
+    public async Task An_escalated_launch_carries_the_run_id_it_was_retried_under()
+    {
+        var records = await Create();
+        var scoping = InstanceAddress.From("T-1/scoping/1");
+        var id = AgentLaunches.LaunchIdFor(WorkflowInstanceId.Of(scoping), RunToken.For(entry: 1, number: 1), escalation: 1);
+
+        await Launched(records, new ScopeLaunch(scoping, "draft", "step.scope.draft", "claude-sonnet-5-5", 1, id));
+
+        var read = await records.Of(scoping, TestContext.Current.CancellationToken);
+
+        Assert.Equal("1.1", Assert.Single(read.Value, static r => r.Via == "agent").RunToken);
+    }
+
     private async ValueTask Append<T>(string type, T payload, string key)
     {
         var appended = await _slice.Store.Append(_slice.Events.Entry(type, payload, key, A.FirstItemId.Value), _grant!, TestContext.Current.CancellationToken);   // why: Create ran first

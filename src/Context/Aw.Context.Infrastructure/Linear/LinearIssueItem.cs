@@ -5,7 +5,7 @@ using Aw.Context.Core.Sync;
 
 namespace Aw.Context.Infrastructure.Linear;
 
-/// <summary>An issue as the record feed hands it over: Linear's state type normalised and its own word kept, the closing time, the team as the audience, and the parent and relations as links.</summary>
+/// <summary>An issue as the record feed hands it over: its text is the description, the newest 20 comments (where decisions live), the project and the relations, as <see cref="LinearText"/> joins them; Linear's state type normalised and its own word kept, the closing time, the team as the audience, and the parent and relations as links.</summary>
 internal static class LinearIssueItem
 {
     private const string Prefix = "linear:issue/";
@@ -17,7 +17,7 @@ internal static class LinearIssueItem
     {
         ArgumentNullException.ThrowIfNull(issue);
         return new RecordItem(
-            RecordKey.From(Prefix + issue.Id), RecordKind.Issue, issue.Title, issue.Description ?? string.Empty, issue.Creator?.Name, issue.Url, State(issue.State?.Type), issue.State?.Name,
+            RecordKey.From(Prefix + issue.Id), RecordKind.Issue, issue.Title, LinearText.Of(issue), issue.Creator?.Name, issue.Url, State(issue.State?.Type), issue.State?.Name,
             issue.CreatedAt, issue.UpdatedAt, issue.CompletedAt ?? issue.CanceledAt, SourceVersion.From(issue.UpdatedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)),
             Links(issue), Repo: null, issue.Team is { } team && AudienceKey.TryFrom("linear:" + team.Id, out var audience) ? audience : null);
     }

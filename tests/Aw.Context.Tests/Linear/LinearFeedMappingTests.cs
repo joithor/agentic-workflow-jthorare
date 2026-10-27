@@ -108,4 +108,18 @@ public sealed class LinearFeedMappingTests
         Assert.NotNull(fake.Variables[0]["filter"]?["updatedAt"]?["gte"]);
         Assert.Equal("SPL", fake.Variables[0]["filter"]?["team"]?["key"]?["in"]?[0]?.GetValue<string>());
     }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task The_text_is_the_description_and_the_comments_the_way_the_linear_source_joins_them()
+    {
+        var item = await One(n => n["comments"] = new JsonObject
+        {
+            ["nodes"] = new JsonArray(
+                new JsonObject { ["id"] = "c1", ["body"] = "Decided: ship the flag off.", ["createdAt"] = "2026-10-01T09:00:00Z", ["user"] = new JsonObject { ["id"] = "u1", ["name"] = "Ada" } }),
+            ["pageInfo"] = new JsonObject { ["hasNextPage"] = false },
+        });
+
+        Assert.StartsWith("Text a1", item.Text, StringComparison.Ordinal);
+        Assert.Contains("- Ada (2026-10-01): Decided: ship the flag off.", item.Text, StringComparison.Ordinal);
+    }
 }

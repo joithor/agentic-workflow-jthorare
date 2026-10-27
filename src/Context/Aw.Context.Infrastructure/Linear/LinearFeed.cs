@@ -14,7 +14,7 @@ namespace Aw.Context.Infrastructure.Linear;
 /// <param name="deadline">How long each call gets.</param>
 internal sealed class LinearFeed(LinearClient client, TimeSpan deadline) : RecordFeed(SourceId.From("linear"))
 {
-    private const int MaxPage = 50;   // why: each issue brings its relations, and Linear caps the cost of one query
+    private const int MaxPage = 25;   // why: each issue brings its newest 20 comments and its relations, and Linear caps the cost of one query
 
     /// <inheritdoc />
     public override async ValueTask<Result<RecordPage>> Pull(RecordPull pull, CancellationToken cancellationToken)

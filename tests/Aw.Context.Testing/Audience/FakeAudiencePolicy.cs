@@ -10,5 +10,6 @@ namespace Aw.Context.Testing.Audience;
 public sealed class FakeAudiencePolicy(IReadOnlyDictionary<ContextRepoName, IReadOnlyList<AudienceKey>> byRepo) : IAudiencePolicy
 {
     /// <inheritdoc />
-    public ValueTask<Result<AudienceScope>> For(ContextRepoName repo, CancellationToken cancellationToken) => throw new NotSupportedException($"{byRepo.Count} repos");
+    public ValueTask<Result<AudienceScope>> For(ContextRepoName repo, CancellationToken cancellationToken) =>
+        ValueTask.FromResult<Result<AudienceScope>>(byRepo.TryGetValue(repo, out var allowed) ? new AudienceScope(allowed.ToHashSet()) : AudienceScope.None);
 }

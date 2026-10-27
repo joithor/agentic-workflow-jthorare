@@ -20562,3 +20562,21 @@ static Aw.Sindri.Core.Sandbox.Denials.DenialObservation.operator !=(Aw.Sindri.Co
 static Aw.Sindri.Core.Sandbox.Denials.DenialObservation.operator ==(Aw.Sindri.Core.Sandbox.Denials.DenialObservation? left, Aw.Sindri.Core.Sandbox.Denials.DenialObservation? right) -> bool
 static Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.operator !=(Aw.Sindri.Core.Sandbox.Denials.DenialOverflow? left, Aw.Sindri.Core.Sandbox.Denials.DenialOverflow? right) -> bool
 static Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.operator ==(Aw.Sindri.Core.Sandbox.Denials.DenialOverflow? left, Aw.Sindri.Core.Sandbox.Denials.DenialOverflow? right) -> bool
+Aw.Sindri.Core.Sandbox.ILearnHistory
+Aw.Sindri.Core.Sandbox.ILearnHistory.Read(string! repo, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Sindri.Core.Sandbox.LearnHistory!>
+Aw.Sindri.Core.Sandbox.LearnHistory
+Aw.Sindri.Core.Sandbox.LearnHistory.<Clone>$() -> Aw.Sindri.Core.Sandbox.LearnHistory!
+Aw.Sindri.Core.Sandbox.LearnHistory.Deconstruct(out System.DateTimeOffset? FirstLearnRun, out int LearnRuns, out System.DateTimeOffset? EndedAt) -> void
+Aw.Sindri.Core.Sandbox.LearnHistory.EndedAt.get -> System.DateTimeOffset?
+Aw.Sindri.Core.Sandbox.LearnHistory.EndedAt.init -> void
+Aw.Sindri.Core.Sandbox.LearnHistory.Equals(Aw.Sindri.Core.Sandbox.LearnHistory? other) -> bool
+Aw.Sindri.Core.Sandbox.LearnHistory.FirstLearnRun.get -> System.DateTimeOffset?
+Aw.Sindri.Core.Sandbox.LearnHistory.FirstLearnRun.init -> void
+Aw.Sindri.Core.Sandbox.LearnHistory.LearnHistory(System.DateTimeOffset? FirstLearnRun, int LearnRuns, System.DateTimeOffset? EndedAt) -> void
+Aw.Sindri.Core.Sandbox.LearnHistory.LearnRuns.get -> int
+Aw.Sindri.Core.Sandbox.LearnHistory.LearnRuns.init -> void
+override Aw.Sindri.Core.Sandbox.LearnHistory.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.LearnHistory.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.LearnHistory.ToString() -> string!
+static Aw.Sindri.Core.Sandbox.LearnHistory.operator !=(Aw.Sindri.Core.Sandbox.LearnHistory? left, Aw.Sindri.Core.Sandbox.LearnHistory? right) -> bool
+static Aw.Sindri.Core.Sandbox.LearnHistory.operator ==(Aw.Sindri.Core.Sandbox.LearnHistory? left, Aw.Sindri.Core.Sandbox.LearnHistory? right) -> bool

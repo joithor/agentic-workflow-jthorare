@@ -6,7 +6,7 @@ using Aw.Context.Core.Results;
 
 namespace Aw.Context.Testing.Map;
 
-/// <summary>Graphs built for the structure checks (map structure spec §4.4): leaf home features with exact file counts and exact numbers of isolated ones, built as graphs, not extractor output.</summary>
+/// <summary>Graphs built for the structure checks (the features are a person's: a build drops the deterministic home features of the map it keeps and makes them again from the repo, so seeded deterministic ones would be gone before the checks ran) (map structure spec §4.4): leaf home features with exact file counts and exact numbers of isolated ones, built as graphs, not extractor output.</summary>
 public static class StructureGraphs
 {
     /// <summary>The repo the graphs map.</summary>
@@ -24,12 +24,12 @@ public static class StructureGraphs
     {
         ArgumentNullException.ThrowIfNull(files);
         var hub = NodeKey.From("feature:hub");
-        var nodes = new List<GraphNode> { new(hub, "hub", Provenance.Deterministic) };
+        var nodes = new List<GraphNode> { new(hub, "hub", Provenance.Human) };
         var edges = new List<GraphEdge>();
         for (var i = 0; i < files.Count; i++)
         {
             var feature = NodeKey.From(string.Create(CultureInfo.InvariantCulture, $"feature:pkg{i}"));
-            nodes.Add(new GraphNode(feature, string.Create(CultureInfo.InvariantCulture, $"pkg{i}"), Provenance.Deterministic));
+            nodes.Add(new GraphNode(feature, string.Create(CultureInfo.InvariantCulture, $"pkg{i}"), Provenance.Human));
             for (var j = 0; j < files[i]; j++)
             {
                 var code = NodeKey.From(string.Create(CultureInfo.InvariantCulture, $"code:pkg{i}/f{j}.ts"));

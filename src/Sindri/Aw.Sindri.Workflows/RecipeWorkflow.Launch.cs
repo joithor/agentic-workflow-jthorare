@@ -11,6 +11,9 @@ namespace Aw.Sindri.Infrastructure.Workflows;
 /// <summary>The launch phase of the agent runtime (engine P8 U3, U9): launches the session, waits out a full session cap, and routes a refused launch.</summary>
 internal sealed partial class RecipeWorkflow
 {
+    private bool? _launchRoutes;
+    private bool LaunchRoutes => _launchRoutes ??= Workflow.Patched("sandbox-u9-launch-v1");   // U9: a full session cap is waited out and a no-runtime or launch-park refusal is routed; a history without the marker fails every refused launch as a Step failure, as it was recorded
+
     // Launches the session. Done is true when the run ended first or the launch failed; the instance is then the decided one, else it has its launch filled in.
     private async Task<(WorkflowInstance Instance, bool Done)> LaunchPhase(WorkflowInstance instance, OpenRun open, Interpreting context)
     {
@@ -18,6 +21,7 @@ internal sealed partial class RecipeWorkflow
         var run = AgentRunOf(instance, open, step);
         var item = instance.Facts.TryGetValue(FactKey.From("fact:item"), out var fact) ? fact : null;
         var workspace = (step.Use == _ciFix ? AgentWorkspace : PhaseWorkspaceLaunch) && instance.Facts.TryGetValue(_workspaceKey, out var held) ? held : null;   // LN-WF2: an instance that holds a workspace (the phase's worktree, or docs sync's own) runs its agent Steps there
+        _ = LaunchRoutes;   // read before the first launch command, so the marker sits at one place in every history
         _launchedAt = _launchedAt?.Entry == open.Token.Entry ? _launchedAt : (open.Token.Entry, new DateTimeOffset(Workflow.UtcNow));
         var (applied, launched) = await LaunchUntilSettled(instance, open, state, Launch(run, item, step, instance, workspace), context).ConfigureAwait(true);
         if (launched is null)
@@ -51,7 +55,7 @@ internal sealed partial class RecipeWorkflow
             }
 
             var launched = await Launching(launching).ConfigureAwait(true);
-            if (!launched.Waiting)
+            if (!launched.Waiting || !LaunchRoutes)
             {
                 return (applied, launched);
             }
@@ -64,7 +68,7 @@ internal sealed partial class RecipeWorkflow
     private async Task<WorkflowInstance> ClosedByRefusal(WorkflowInstance instance, AgentRunning running, StepUse step, AgentLaunchFailure failure, Interpreting context)
     {
         var actor = "service:agent:" + step.Use.Value;
-        Trigger? refusal = failure.Kind switch
+        Trigger? refusal = !LaunchRoutes ? null : failure.Kind switch
         {
             AgentLaunchFailureKind.NoRuntime => new RuntimeUnavailable(actor, running.Open.Token, failure.Code, failure.Reason, failure.Source, failure.Message),
             AgentLaunchFailureKind.LaunchPark => new LaunchRefused(actor, running.Open.Token, failure.Code, failure.Reason, failure.Source, failure.Message),

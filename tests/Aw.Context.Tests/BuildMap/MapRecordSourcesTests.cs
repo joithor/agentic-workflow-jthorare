@@ -208,6 +208,16 @@ public sealed class MapRecordSourcesTests
     }
 
     [Fact, Trait("Lane", "unit")]
+    public async Task A_lower_case_name_with_a_call_or_member_shape_is_looked_up_by_its_last_part()
+    {
+        var store = await Store(Doc("docs/guide.md", "b1", "Call `config.load` then `render()`, never `true` or `value`."));
+        var reading = await Read(store, symbols: Index(Class("load", "src/billing/Tax.cs"), Class("render", "src/billing/Invoice.cs")));
+
+        Assert.Equal(["code:src/billing/Invoice.cs", "code:src/billing/Tax.cs"], [.. reading.Map.Edges.Select(e => e.To.Value).Order(StringComparer.Ordinal)], StringComparer.Ordinal);
+        AssertNote(reading, "citations: 2 resolved, 0 unresolved (0 missing, 0 other repo, 0 ambiguous)");
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public async Task A_source_stated_link_between_two_stored_records_is_a_mentions_edge_carrying_the_link_kind_and_makes_both_ends_nodes()
     {
         var issue = Tracker("linear:issue/abc", "Tax is wrong");

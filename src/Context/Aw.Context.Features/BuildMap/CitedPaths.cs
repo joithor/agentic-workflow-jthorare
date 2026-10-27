@@ -34,7 +34,24 @@ internal static partial class CitedPaths
     internal static IReadOnlyList<string> FindSymbols(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
-        return [.. Backticked.Matches(text).Select(m => m.Groups["t"].Value).Where(t => SymbolShape.IsMatch(t)).Distinct(StringComparer.Ordinal)];
+        return [.. Backticked.Matches(text).Select(m => Symbol(m.Groups["t"].Value)).OfType<string>().Distinct(StringComparer.Ordinal)];
+    }
+
+    // A backticked name that looks like code: an upper-case letter or an underscore (`TaxCalculator`, `MAX_ROWS`, `parse_args`), or a call or
+    // member shape (`render()`, `config.load`, `a::b`), which names its last part. Plain words (`true`, `value`) and paths are not looked up.
+    private static string? Symbol(string token)
+    {
+        var call = token.EndsWith("()", StringComparison.Ordinal);
+        var name = call ? token[..^2] : token;
+        var parts = name.Split(["::", "."], StringSplitOptions.None);
+        var member = parts.Length > 1;
+        if ((member && Normalize(name) is not null) || !parts.All(Identifier.IsMatch))
+        {
+            return null;
+        }
+
+        var last = parts[^1];
+        return SymbolShape.IsMatch(last) || ((call || member) && last.Length >= 3) ? last : null;
     }
 
     private static string? Normalize(string candidate)
@@ -68,6 +85,9 @@ internal static partial class CitedPaths
 
     [GeneratedRegex("^(?=[A-Za-z0-9_]*[A-Z_])[A-Za-z_][A-Za-z0-9_]{2,}\\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
     private static partial Regex SymbolShape { get; }
+
+    [GeneratedRegex("^[A-Za-z_][A-Za-z0-9_]*\\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex Identifier { get; }
 
     [GeneratedRegex(":[0-9]+(?:-[0-9]+)?\\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
     private static partial Regex Suffix { get; }

@@ -93,7 +93,8 @@ public static partial class SettingsReader
                     Ranker = RankerRules.Read(section.Ranker),
                     ConceptScan = ConceptScanRules.Read(section.ConceptScan),
                     HistoryDeadline = HistoryDeadline(section.History),
-                    Checks = ChecksModeOf(section.Checks) ?? ChecksMode.Refuse,
+                    Checks = ChecksRules.ModeOf(section.Checks?.Mode) ?? ChecksMode.Refuse,
+                    CheckLimits = ChecksRules.Limits(section.Checks),
                 },
                 section.Code,
                 codeDeadline.Value),
@@ -177,17 +178,9 @@ public static partial class SettingsReader
     private static IReadOnlyList<ProfileRecognizer> Recognizers(ExtractSection? extract) =>
         [.. (extract?.Recognizers ?? []).OfType<RecognizerEntry>().Select(e => new ProfileRecognizer(e.Kind!, e.Glob!, e.Pattern!, e.KeyFrom!))];   // why: RecognizerRules refused a missing field
 
-    private static Error? Refused(ContextSection section, IReadOnlyList<string> globs) => Problem(section, globs) ?? RecognizerRules.Problem(section.Extract?.Recognizers) ?? GraphifyRules.Problem(section.Extract?.Graphify);
+    private static Error? Refused(ContextSection section, IReadOnlyList<string> globs) => Problem(section, globs) ?? ChecksRules.Problem(section.Checks) ?? RecognizerRules.Problem(section.Extract?.Recognizers) ?? GraphifyRules.Problem(section.Extract?.Graphify);
 
     private static PublishSettings Publish(PublishSection? section) => new() { WaitForIndexMinutes = section?.WaitForIndexMinutes ?? PublishSettings.DefaultWaitMinutes };
-
-    // 'refuse' or 'warn', nothing else; an unset key is the default.
-    private static ChecksMode? ChecksModeOf(string? written) => written switch
-    {
-        null or "refuse" => ChecksMode.Refuse,
-        "warn" => ChecksMode.Warn,
-        _ => null,
-    };
 
     private static bool Adjudicates(EvalSection? section) => section?.Adjudicator ?? false;
 
@@ -233,7 +226,6 @@ public static partial class SettingsReader
             { MinHits: < 0 or > 50 } => Invalid("context.minHits", "is 0 to 50"),
             { Labeling.MaxTokens: < 1_000 or > 20_000_000 } => Invalid("context.labeling.maxTokens", "is 1000 to 20000000 tokens"),
             { Labeling.MaxTokensPerSync: < 1 or > 20_000_000 } => Invalid("context.labeling.maxTokensPerSync", "is 1 to 20000000 tokens"),
-            { Checks: { } mode } when ChecksModeOf(mode) is null => Invalid("context.checks", "is 'refuse' (a map whose structure checks fail is not built) or 'warn' (it is built with a degraded note)"),
             { Publish.WaitForIndexMinutes: < 0 or > PublishSettings.MaxWaitMinutes } => Invalid("context.publish.waitForIndexMinutes", "is 0 to 240 minutes (0: don't wait for the code index)"),
             _ => CascadeProblem(section),
         };

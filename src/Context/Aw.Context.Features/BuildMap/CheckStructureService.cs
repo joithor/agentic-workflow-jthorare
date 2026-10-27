@@ -28,13 +28,13 @@ internal sealed class CheckStructureService(IGraphStore store, BuildMapService b
             return settings.Error;
         }
 
-        var mode = settings.Value.Checks;
+        var (mode, limits) = (settings.Value.Checks, settings.Value.CheckLimits);
         return request.Source == MapChecksSource.Build
             ? await Build(request, mode, cancellationToken).ConfigureAwait(false)
-            : await Stored(request.Source == MapChecksSource.Draft, mode, cancellationToken).ConfigureAwait(false);
+            : await Stored(request.Source == MapChecksSource.Draft, (mode, limits), cancellationToken).ConfigureAwait(false);
     }
 
-    private async ValueTask<Result<MapChecksView>> Stored(bool draft, ChecksMode mode, CancellationToken cancellationToken)
+    private async ValueTask<Result<MapChecksView>> Stored(bool draft, (ChecksMode Mode, MapCheckLimits Limits) checks, CancellationToken cancellationToken)
     {
         var snapshot = await store.Snapshot(draft, cancellationToken).ConfigureAwait(false);
         if (snapshot.IsError)
@@ -43,7 +43,7 @@ internal sealed class CheckStructureService(IGraphStore store, BuildMapService b
         }
 
         return snapshot.Value is { } found
-            ? new MapChecksView(draft ? MapChecksSource.Draft : MapChecksSource.Current, found.Version.Number, mode, MapChecks.Measure(found.Graph))
+            ? new MapChecksView(draft ? MapChecksSource.Draft : MapChecksSource.Current, found.Version.Number, checks.Mode, MapChecks.Measure(found.Graph, checks.Limits))
             : draft
                 ? ContextErrors.NoDraftMap.With("there is no draft map (fix: sindri context map build, or measure what a build would save: sindri context map checks --build)")
                 : ContextErrors.NoMap.With("there is no map yet (fix: sindri context map import <file>, or measure what a build would save: sindri context map checks --build)");

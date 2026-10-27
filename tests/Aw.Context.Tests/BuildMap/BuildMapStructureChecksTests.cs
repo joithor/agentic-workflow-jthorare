@@ -13,7 +13,7 @@ public sealed class BuildMapStructureChecksTests : IDisposable
 
     private static ContextScope Refusing => MapWorld.HumanWith(MapWorld.OnlyFixtureRepo);
 
-    private static ContextScope Warning => MapWorld.HumanWith("""{"repos":["aw-split-panes"],"checks":"warn"}""");
+    private static ContextScope Warning => MapWorld.HumanWith("""{"repos":["aw-split-panes"],"checks":{"mode":"warn"}}""");
 
     public void Dispose() => _world.Dispose();
 
@@ -120,11 +120,11 @@ public sealed class BuildMapStructureChecksTests : IDisposable
     public void The_checks_key_takes_refuse_or_warn_and_nothing_else()
     {
         Assert.Equal(ChecksMode.Refuse, Read("{}").Value.Checks);
-        Assert.Equal(ChecksMode.Refuse, Read("""{"checks":"refuse"}""").Value.Checks);
-        Assert.Equal(ChecksMode.Warn, Read("""{"checks":"warn"}""").Value.Checks);
-        var wrong = Read("""{"checks":"off"}""");
+        Assert.Equal(ChecksMode.Refuse, Read("""{"checks":{"mode":"refuse"}}""").Value.Checks);
+        Assert.Equal(ChecksMode.Warn, Read("""{"checks":{"mode":"warn"}}""").Value.Checks);
+        var wrong = Read("""{"checks":{"mode":"off"}}""");
         Assert.Equal("SND-CONTEXT-001", wrong.Error.Code);
-        Assert.Contains("context.checks", wrong.Error.Message, StringComparison.Ordinal);
+        Assert.Contains("context.checks.mode", wrong.Error.Message, StringComparison.Ordinal);
     }
 
     private static Kernel.Result<ContextSettings> Read(string json)

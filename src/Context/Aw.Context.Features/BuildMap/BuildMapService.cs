@@ -98,7 +98,7 @@ internal sealed partial class BuildMapService(
         // A namer or a code index that can't answer leaves the deterministic names or the plain grouping and says so as a degraded note.
         // The structure checks (map structure spec §4) run on the joined graph before the concept pass and before any write: a refused build pays for neither and leaves the last draft and the current map as they were.
         var joined = Join(WithoutDerivedConcepts(kept), read.Found);
-        var measured = MapChecks.Measure(joined);
+        var measured = MapChecks.Measure(joined, read.Settings.CheckLimits);
         var checks = measured.Decide(read.Settings.Checks);
         if (checks.Refusal is { } refused)
         {

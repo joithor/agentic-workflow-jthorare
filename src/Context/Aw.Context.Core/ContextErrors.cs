@@ -147,10 +147,10 @@ public static class ContextErrors
     /// <summary>SND-CONTEXT-059: a sync stopped at its time cap: the run is partial and resumes from its cursor next time (degraded, exit 0).</summary>
     public static readonly ErrorDefinition SyncCapped = new("SND-CONTEXT-059", ErrorKind.Unavailable, "A sync stopped at its time cap");
 
-    /// <summary>SND-CONTEXT-060: a map build whose features are mostly unconnected (more than the refuse limit have no link to another feature or a table) is refused before any write; the last draft and the current map stay (map structure spec §4.3). 'context.checks: warn' turns it into a degraded note.</summary>
+    /// <summary>SND-CONTEXT-060: a map build whose features are mostly unconnected (more than the refuse limit have no link to another feature or a table) is refused before any write; the last draft and the current map stay (map structure spec §4.3). 'context.checks.mode: warn' turns it into a degraded note.</summary>
     public static readonly ErrorDefinition MapUnconnected = new("SND-CONTEXT-060", ErrorKind.Invalid, "Map structure is mostly unconnected");
 
-    /// <summary>SND-CONTEXT-061: a map build with too many features over the size cap is refused before any write (map structure spec §4.3). 'context.checks: warn' turns it into a degraded note.</summary>
+    /// <summary>SND-CONTEXT-061: a map build with too many features over the size cap is refused before any write (map structure spec §4.3). 'context.checks.mode: warn' turns it into a degraded note.</summary>
     public static readonly ErrorDefinition MapOversized = new("SND-CONTEXT-061", ErrorKind.Invalid, "Features are over the size cap");
 
     /// <summary>SND-CONTEXT-080: no eligible backtest sample (no merge carries an issue key of a profile team in the window, or every candidate was left out; the message gives the counts).</summary>

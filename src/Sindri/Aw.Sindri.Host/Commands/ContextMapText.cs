@@ -38,7 +38,7 @@ internal static class ContextMapText
             MapChecksSource.Current => string.Create(CultureInfo.InvariantCulture, $"current map v{view.Version}"),
             _ => throw new ArgumentOutOfRangeException(nameof(view), view.Source, "an unknown map source"),
         };
-        var text = new System.Text.StringBuilder().Append(title).Append(" (context.checks: ").Append(view.Mode == ChecksMode.Warn ? "warn" : "refuse").Append(")\n");
+        var text = new System.Text.StringBuilder().Append(title).Append(" (context.checks.mode: ").Append(view.Mode == ChecksMode.Warn ? "warn" : "refuse").Append(")\n");
         _ = text.Append(Measure(report.Isolated, "features with no link to another feature or a table")).Append(Measure(report.OverCap, string.Create(CultureInfo.InvariantCulture, $"features over {MapChecks.SizeCap} files")));
         if (report.NoFileEdges)
         {

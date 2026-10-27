@@ -37,7 +37,7 @@ internal sealed partial class BuildMapService
         }
 
         var cut = await CutBasis(read.Value, scope.Repos, mappedRepos, cancellationToken).ConfigureAwait(false);
-        return cut.IsError ? cut.Error : MapChecks.Measure(Join(WithoutDerivedConcepts(cut.Value.Kept), read.Value.Found));
+        return cut.IsError ? cut.Error : MapChecks.Measure(Join(WithoutDerivedConcepts(cut.Value.Kept), read.Value.Found), settings.CheckLimits);
     }
 
     private static Result<(ContextSettings Settings, IReadOnlyList<ContextRepo> Repos)> Mapped(ContextScope scope)

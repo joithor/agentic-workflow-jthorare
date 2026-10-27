@@ -88,4 +88,7 @@ public sealed record ContextSettings
 
     /// <summary>Whether a build whose structure checks would refuse the map stops ('refuse', the default) or saves a degraded note ('warn'); 'context.checks'.</summary>
     public ChecksMode Checks { get; init; } = ChecksMode.Refuse;
+
+    /// <summary>The limits of the structure checks ('context.checks.isolated' and '.overCap'): the shares that make a map degraded or refused.</summary>
+    public MapCheckLimits CheckLimits { get; init; } = new();
 }

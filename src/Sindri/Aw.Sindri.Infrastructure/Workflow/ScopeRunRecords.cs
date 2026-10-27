@@ -74,7 +74,7 @@ internal sealed class ScopeRunRecords(ILedgerReader ledger, EventFactory events,
     }
 
     private static ScopeRunRecord AgentRecord(InstanceAddress run, int transitions, LaunchStarted started, StateAsk ask, (long Tokens, string? Model) spent) => new(
-        ask.Step, started.State!, started.Attempt ?? 1, Agent, spent.Model, ask.Requested, VendorOf(spent.Model), spent.Tokens, started.Launch.Value, RunTokenOf(run, transitions, started));   // why: Launches keeps only launches that name their state
+        ask.Step, started.State!, started.Attempt ?? 1, Agent, spent.Model, ask.Requested, VendorOf(spent.Model), spent.Tokens, started.Launch.Value, RunTokenOf(run, transitions, started), started.Target.Value);   // why: Launches keeps only launches that name their state
 
     // The launch id is a hash of the instance and the run token, and the event keeps only the token's number. Every frame entry follows a transition the ledger holds for the instance, so the entry is at most that many plus one.
     private static string? RunTokenOf(InstanceAddress run, int transitions, LaunchStarted started)

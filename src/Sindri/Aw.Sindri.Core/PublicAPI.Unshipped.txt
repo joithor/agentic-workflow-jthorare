@@ -20736,3 +20736,6 @@ Aw.Sindri.Core.Sandbox.ISessionCap.Start<T>(int cap, System.Func<System.Threadin
 Aw.Sindri.Core.Locks.IHeavyLockSweep
 Aw.Sindri.Core.Locks.IHeavyLockSweep.Sweep(string! locksDir) -> int
 Aw.Sindri.Core.Launches.LaunchSessionEvents.LimitHit(Aw.Sindri.Core.Workflow.Engine.LaunchId launch, Aw.Sindri.Core.Events.LimitHitKind kind, long peak, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>
+Aw.Sindri.Core.Launch.AgentTargetWarning
+const Aw.Sindri.Core.Launch.AgentTargetWarning.Name = "agent:target" -> string!
+static Aw.Sindri.Core.Launch.AgentTargetWarning.For(Aw.Sindri.Core.Profile.SindriProfile! profile, Aw.Sindri.Core.Launch.IAgentCatalog! catalog) -> string?

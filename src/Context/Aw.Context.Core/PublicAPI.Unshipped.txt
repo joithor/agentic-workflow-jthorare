@@ -1303,6 +1303,7 @@ Aw.Context.Core.Map.MapChecksReport.Offenders.get -> System.Collections.Generic.
 Aw.Context.Core.Map.MapChecksReport.Offenders.init -> void
 Aw.Context.Core.Map.MapChecksReport.OverCap.get -> Aw.Context.Core.Map.CheckMeasure!
 Aw.Context.Core.Map.MapChecksReport.OverCap.init -> void
+Aw.Context.Core.Map.MapChecksReport.Summary.get -> string!
 Aw.Context.Core.Map.MapChecksReport.Verdict.get -> Aw.Context.Core.Map.CheckVerdict
 Aw.Context.Core.Map.MapImport.Checks.get -> string?
 Aw.Context.Core.Map.MapImport.Checks.init -> void
@@ -6188,6 +6189,7 @@ static Aw.Context.Core.Map.MapChecksOutcome.operator !=(Aw.Context.Core.Map.MapC
 static Aw.Context.Core.Map.MapChecksOutcome.operator ==(Aw.Context.Core.Map.MapChecksOutcome? left, Aw.Context.Core.Map.MapChecksOutcome? right) -> bool
 static Aw.Context.Core.Map.MapChecksReport.operator !=(Aw.Context.Core.Map.MapChecksReport? left, Aw.Context.Core.Map.MapChecksReport? right) -> bool
 static Aw.Context.Core.Map.MapChecksReport.operator ==(Aw.Context.Core.Map.MapChecksReport? left, Aw.Context.Core.Map.MapChecksReport? right) -> bool
+static Aw.Context.Core.Map.MapChecksReport.Percent(int permille) -> string!
 static Aw.Context.Core.Map.MapCounts.Of(Aw.Context.Core.Graph.GraphSnapshot! graph, int overrides) -> Aw.Context.Core.Map.MapCounts!
 static Aw.Context.Core.Map.MapCounts.operator !=(Aw.Context.Core.Map.MapCounts? left, Aw.Context.Core.Map.MapCounts? right) -> bool
 static Aw.Context.Core.Map.MapCounts.operator ==(Aw.Context.Core.Map.MapCounts? left, Aw.Context.Core.Map.MapCounts? right) -> bool

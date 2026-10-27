@@ -106,9 +106,18 @@ internal sealed class BuildMapService(
         undo = UndoAlso(undo, open.Value, cuts);
         // The concepts ('index.concepts' pins of the mapped repos first) are derived over the whole joined graph (records and decisions included) and saved in the draft, so reads never call a model.
         // A namer or a code index that can't answer leaves the deterministic names or the plain grouping and says so as a degraded note.
-        var concepts = await namers.Concepts.Run(read.Settings, Join(WithoutDerivedConcepts(kept), read.Found), [.. mappedRepos.SelectMany(r => r.Concepts)], mappedRepos, cancellationToken).ConfigureAwait(false);
-        var draft = await store.SaveDraft(new MapImport(read.Name, read.Commit, concepts.Graph, undo, read.Heads) { Ruleset = ruleset, Dropped = read.Dropped }, at, cancellationToken).ConfigureAwait(false);
-        return draft.IsError ? draft.Error : new MapBuildReport(draft.Value, Proposed(kept, read.Found), [.. read.Degraded, .. concepts.Notes], read.Heads);
+        // The structure checks (map structure spec §4) run on the joined graph before the concept pass and before any write: a refused build pays for neither and leaves the last draft and the current map as they were.
+        var joined = Join(WithoutDerivedConcepts(kept), read.Found);
+        var structure = MapChecks.Measure(joined);
+        var checks = structure.Decide(read.Settings.Checks);
+        if (checks.Refusal is { } refused)
+        {
+            return refused;
+        }
+
+        var concepts = await namers.Concepts.Run(read.Settings, joined, [.. mappedRepos.SelectMany(r => r.Concepts)], mappedRepos, cancellationToken).ConfigureAwait(false);
+        var draft = await store.SaveDraft(new MapImport(read.Name, read.Commit, concepts.Graph, undo, read.Heads) { Ruleset = ruleset, Dropped = read.Dropped, Checks = checks.Stored }, at, cancellationToken).ConfigureAwait(false);
+        return draft.IsError ? draft.Error : new MapBuildReport(draft.Value, Proposed(kept, read.Found), [.. read.Degraded, .. checks.Notes, .. concepts.Notes], read.Heads) { Structure = structure };
     }
 
     private sealed record Reading(ExtractedMap Found, IReadOnlyList<string> Degraded, ContextRepoName Name, string Commit, IReadOnlyList<MapHead> Heads, ContextSettings Settings)

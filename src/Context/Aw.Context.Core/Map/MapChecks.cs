@@ -1,4 +1,5 @@
 using Aw.Context.Core.Graph;
+using Aw.Context.Core.Results;
 
 namespace Aw.Context.Core.Map;
 
@@ -30,8 +31,62 @@ public static class MapChecks
     /// <summary>Features over the cap above this many tenths of a percent refuse the map.</summary>
     public const int OverCapRefusePermille = 100;
 
+    private const int Listed = 5;
+
     /// <summary>Measures a built graph.</summary>
     /// <param name="graph">The joined graph a build is about to save.</param>
     /// <returns>The measures.</returns>
-    public static MapChecksReport Measure(GraphSnapshot graph) => throw new NotSupportedException();
+    public static MapChecksReport Measure(GraphSnapshot graph)
+    {
+        ArgumentNullException.ThrowIfNull(graph);
+        var files = graph.Edges
+            .Where(static e => e is { Type: EdgeType.Implements, Provenance: Provenance.Deterministic, From.Kind: NodeKind.Code, To.Kind: NodeKind.Feature })
+            .GroupBy(static e => e.To.Value, StringComparer.Ordinal)
+            .ToDictionary(static g => g.Key, static g => g.Select(static e => e.From.Value).Distinct(StringComparer.Ordinal).Count(), StringComparer.Ordinal);
+        var linked = Linked(graph);
+        var fileEdges = graph.Edges.Any(static e => e is { Provenance: Provenance.Deterministic, From.Kind: NodeKind.Code, Type: EdgeType.DependsOn or EdgeType.Reads or EdgeType.Writes });
+        var measured = files.Where(static f => f.Value >= MinFilesIsolated).ToList();
+        var noFileEdges = measured.Count >= MinFeaturesIsolated && !fileEdges;
+        var isolated = measured.Where(f => !linked.Contains(f.Key)).ToList();
+        var over = files.Where(static f => f.Value > SizeCap).ToList();
+        var isolatedMeasure = measured.Count < MinFeaturesIsolated
+            ? new CheckMeasure(IsolatedName, Count: 0, Total: 0, IsolatedDegradedPermille, IsolatedRefusePermille, Skipped: $"fewer than {MinFeaturesIsolated.ToString(System.Globalization.CultureInfo.InvariantCulture)} features of at least {MinFilesIsolated.ToString(System.Globalization.CultureInfo.InvariantCulture)} files")
+            : noFileEdges
+                ? new CheckMeasure(IsolatedName, Count: 0, Total: 0, IsolatedDegradedPermille, IsolatedRefusePermille, Skipped: "no file edges (imports and data stores not extracted)")
+                : new CheckMeasure(IsolatedName, isolated.Count, measured.Count, IsolatedDegradedPermille, IsolatedRefusePermille);
+        var overMeasure = new CheckMeasure(OverCapName, over.Count, files.Count, OverCapDegradedPermille, OverCapRefusePermille, files.Count == 0 ? "no home features" : null);
+        return new MapChecksReport(isolatedMeasure, overMeasure, noFileEdges, [.. Largest(IsolatedName, isolatedMeasure.Skipped is null ? isolated : []), .. Largest(OverCapName, over)]);
+    }
+
+    /// <summary>The measure's name for the features with no link.</summary>
+    internal const string IsolatedName = "isolated";
+
+    /// <summary>The measure's name for the features over the cap.</summary>
+    internal const string OverCapName = "over-cap";
+
+    // The home features a deterministic roll-up edge touches: a depends-on between features (either end), or a reads or writes from one.
+    private static HashSet<string> Linked(GraphSnapshot graph)
+    {
+        var linked = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var e in graph.Edges.Where(static e => e.Provenance == Provenance.Deterministic))
+        {
+            switch (e)
+            {
+                case { Type: EdgeType.DependsOn, From.Kind: NodeKind.Feature, To.Kind: NodeKind.Feature }:
+                    _ = linked.Add(e.From.Value);
+                    _ = linked.Add(e.To.Value);
+                    break;
+                case { Type: EdgeType.Reads or EdgeType.Writes, From.Kind: NodeKind.Feature }:
+                    _ = linked.Add(e.From.Value);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return linked;
+    }
+
+    private static IEnumerable<CheckOffender> Largest(string measure, IEnumerable<KeyValuePair<string, int>> features) =>
+        features.OrderByDescending(static f => f.Value).ThenBy(static f => f.Key, StringComparer.Ordinal).Take(Listed).Select(f => new CheckOffender(measure, f.Key, f.Value));
 }

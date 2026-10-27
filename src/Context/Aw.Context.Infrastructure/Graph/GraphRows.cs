@@ -61,6 +61,7 @@ internal static class GraphRows
             {
                 Ruleset = Text(r, 6),
                 Dropped = DroppedText.Read(Text(r, 7)),
+                Checks = Text(r, 8),
             };
         }
     }

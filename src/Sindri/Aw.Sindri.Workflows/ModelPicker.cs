@@ -45,7 +45,7 @@ internal sealed class ModelPicker(IModelPickSettings settings, IModelCatalog cat
 
         var models = config.Models ?? await catalog.ModelsOf(agent, cancellationToken).ConfigureAwait(false);
         var ladder = ModelBands.Rank(models);
-        var selection = ModelCandidates.For(ladder, new ModelConstraints(Floor(run.Floor), config.Cap, config.Pin, Drafter: null, run.Previous?.Model));
+        var selection = ModelCandidates.For(ladder, new ModelConstraints(Floor(run.Floor), config.Cap, config.Pin, work.Drafter, run.Previous?.Model));
         if (ladder.Count == 0)
         {
             return await Record(work, Picked(work, model: null, ModelPickedBy.Default, []), cancellationToken).ConfigureAwait(false);   // the agent reports no models: its own default

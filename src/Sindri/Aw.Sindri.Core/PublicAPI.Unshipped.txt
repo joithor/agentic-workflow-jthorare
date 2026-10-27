@@ -5933,7 +5933,7 @@ const Aw.Sindri.Core.Views.ViewNames.NeedsYou = "needs_you" -> string!
 const Aw.Sindri.Core.Views.ViewNames.Profile = "profile" -> string!
 const Aw.Sindri.Core.Views.ViewNames.Requests = "requests" -> string!
 const Aw.Sindri.Core.Views.ViewNames.Services = "services" -> string!
-const Aw.Sindri.Core.Views.ViewSchema.Version = 16 -> int
+const Aw.Sindri.Core.Views.ViewSchema.Version = 17 -> int
 const Aw.Sindri.Core.Workflow.Engine.Effects.OutboxEvents.Cancelled = "outbox.cancelled" -> string!
 const Aw.Sindri.Core.Workflow.Engine.Effects.OutboxEvents.Dispatched = "outbox.dispatched" -> string!
 const Aw.Sindri.Core.Workflow.Engine.Effects.OutboxEvents.Pending = "outbox.pending" -> string!
@@ -12565,6 +12565,8 @@ Aw.Sindri.Core.Launches.LaunchEnd.Limit.get -> long?
 Aw.Sindri.Core.Launches.LaunchEnd.Limit.init -> void
 Aw.Sindri.Core.Launches.LaunchEnd.Peak.get -> long?
 Aw.Sindri.Core.Launches.LaunchEnd.Peak.init -> void
+Aw.Sindri.Core.Launches.LaunchRow.Model.get -> string?
+Aw.Sindri.Core.Launches.LaunchRow.Model.init -> void
 Aw.Sindri.Core.Launches.LaunchRow.Reason.get -> string?
 Aw.Sindri.Core.Launches.LaunchRow.Reason.init -> void
 Aw.Sindri.Core.Launches.LaunchRow.Source.get -> string?
@@ -12957,7 +12959,7 @@ Aw.Sindri.Core.Scoping.ProposedScopeSurface.Title.get -> string!
 Aw.Sindri.Core.Scoping.ProposedScopeSurface.Title.init -> void
 Aw.Sindri.Core.Scoping.ScopeRunRecord
 Aw.Sindri.Core.Scoping.ScopeRunRecord.<Clone>$() -> Aw.Sindri.Core.Scoping.ScopeRunRecord!
-Aw.Sindri.Core.Scoping.ScopeRunRecord.Deconstruct(out string! Step, out string! State, out int Round, out string! Via, out string? Model, out string? Requested, out string? Vendor, out long Tokens, out string? Launch, out string? RunToken) -> void
+Aw.Sindri.Core.Scoping.ScopeRunRecord.Deconstruct(out string! Step, out string! State, out int Round, out string! Via, out string? Model, out string? Requested, out string? Vendor, out long Tokens, out string? Launch, out string? RunToken, out string? Target) -> void
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Equals(Aw.Sindri.Core.Scoping.ScopeRunRecord? other) -> bool
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Launch.get -> string?
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Launch.init -> void
@@ -12969,11 +12971,13 @@ Aw.Sindri.Core.Scoping.ScopeRunRecord.Requested.get -> string?
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Requested.init -> void
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Round.get -> int
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Round.init -> void
-Aw.Sindri.Core.Scoping.ScopeRunRecord.ScopeRunRecord(string! Step, string! State, int Round, string! Via, string? Model, string? Requested, string? Vendor, long Tokens, string? Launch, string? RunToken = null) -> void
+Aw.Sindri.Core.Scoping.ScopeRunRecord.ScopeRunRecord(string! Step, string! State, int Round, string! Via, string? Model, string? Requested, string? Vendor, long Tokens, string? Launch, string? RunToken = null, string? Target = null) -> void
 Aw.Sindri.Core.Scoping.ScopeRunRecord.State.get -> string!
 Aw.Sindri.Core.Scoping.ScopeRunRecord.State.init -> void
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Step.get -> string!
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Step.init -> void
+Aw.Sindri.Core.Scoping.ScopeRunRecord.Target.get -> string?
+Aw.Sindri.Core.Scoping.ScopeRunRecord.Target.init -> void
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Tokens.get -> long
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Tokens.init -> void
 Aw.Sindri.Core.Scoping.ScopeRunRecord.Vendor.get -> string?
@@ -20543,6 +20547,7 @@ static Aw.Sindri.Core.Launch.ModelPickSettings.Off.get -> Aw.Sindri.Core.Launch.
 static Aw.Sindri.Core.Launch.ModelPickSettings.operator !=(Aw.Sindri.Core.Launch.ModelPickSettings? left, Aw.Sindri.Core.Launch.ModelPickSettings? right) -> bool
 static Aw.Sindri.Core.Launch.ModelPickSettings.operator ==(Aw.Sindri.Core.Launch.ModelPickSettings? left, Aw.Sindri.Core.Launch.ModelPickSettings? right) -> bool
 static readonly Aw.Sindri.Core.SindriErrors.ModelNoneAllowed -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Sindri.Core.SindriErrors.LaunchNoUsableAgent -> Aw.Kernel.ErrorDefinition!
 Aw.Sindri.Core.Sandbox.CgroupSample
 Aw.Sindri.Core.Sandbox.CgroupSample.CgroupSample(long OomKills, long MemoryCurrent, long MemoryPeak, int Pids, long CpuMicroseconds, long PidsMax = 0, long PidsPeak = 0) -> void
 Aw.Sindri.Core.Sandbox.CgroupSample.<Clone>$() -> Aw.Sindri.Core.Sandbox.CgroupSample!

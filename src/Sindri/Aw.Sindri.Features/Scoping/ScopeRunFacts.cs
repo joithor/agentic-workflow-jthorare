@@ -29,6 +29,11 @@ internal static class ScopeRunFacts
                 ["tokens"] = record.Tokens,
                 ["launch"] = record.Launch,
             };
+            if (record.Target is { } target)
+            {
+                run["target"] = target;
+            }
+
             if (record.RunToken is { } token)
             {
                 run["runToken"] = token;

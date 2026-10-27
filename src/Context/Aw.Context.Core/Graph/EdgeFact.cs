@@ -21,6 +21,19 @@ public sealed record EdgeFact(NodeKey From, EdgeType Type, NodeKey To, Provenanc
     {
         ArgumentNullException.ThrowIfNull(edge);
         var confirmed = edge.Provenance == Provenance.Human;
-        return new EdgeFact(edge.From, edge.Type, edge.To, edge.Provenance, confirmed, TrustPolicy.For(edge.Provenance, confirmed), edge.Order);
+        return new EdgeFact(edge.From, edge.Type, edge.To, edge.Provenance, confirmed, TrustPolicy.For(edge.Provenance, confirmed), edge.Order, edge.Count, Example(edge));
+    }
+
+    // The first cited pair or file of a roll-up edge as repo-relative paths: a 'depends-on' pair is the importing file (key) and the imported file (span), a 'reads' or 'writes' citation one file.
+    private static string? Example(GraphEdge edge)
+    {
+        if (edge.Count is null || edge.EvidenceOrEmpty.Count == 0)
+        {
+            return null;
+        }
+
+        static string Path(string record) => record.StartsWith("repo:", StringComparison.Ordinal) && record.IndexOf('/', StringComparison.Ordinal) is var slash and > 0 ? record[(slash + 1)..] : record;
+        var first = edge.EvidenceOrEmpty[0];
+        return first.Span is { } target && target.StartsWith("repo:", StringComparison.Ordinal) ? Path(first.Key.Value) + " -> " + Path(target) : Path(first.Key.Value);
     }
 }

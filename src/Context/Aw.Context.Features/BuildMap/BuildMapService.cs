@@ -79,6 +79,8 @@ internal sealed class BuildMapService(
             heads.Add(new MapHead(repo.Name, one.Value.Commit, await OnDefault(repo, one.Value.Commit, cancellationToken).ConfigureAwait(false)));
         }
 
+        // why: an import can cross repos only when its target file is in the map, so the file edges roll up on the joined map, after every repo has contributed its homes and edges
+        found = FeatureRollup.Apply(found);
         // why: mappedRepos is not empty, so the loop set the primary
         return MapHead.Check(heads) is { } invalid ? invalid : new Reading(found, degraded, primary!.Value.Name, primary.Value.Commit, heads, settings) { Dropped = dropped };
     }

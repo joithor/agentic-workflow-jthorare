@@ -48,7 +48,7 @@ internal static class StructureCut
     // The build's own file links and the edges of a feature it makes again. A person's edge to one of those features stays when the feature comes back.
     private static bool IsDropped(GraphEdge e, HashSet<string> purged, HashSet<string> remade)
     {
-        if (IsFileLink(e) && e.Provenance == Provenance.Deterministic)
+        if ((IsFileLink(e) && e.Provenance == Provenance.Deterministic) || e.Count is not null)   // why: only the build writes a count, and it writes every roll-up edge again
         {
             return true;
         }

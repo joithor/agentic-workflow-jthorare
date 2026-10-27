@@ -50,6 +50,15 @@ public sealed record ContextSettings
     /// <summary>The checked 'context.sources.linear' entry for the native Linear adapter (S-6), or null when the profile names no Linear token.</summary>
     public LinearSettings? Linear { get; init; }
 
+    /// <summary>'context.index' (owned index spec §5.5, §5.6, §6, §8): the window, the chunk ceiling, retention, the dense floors and the Onyx leftover acknowledgement.</summary>
+    public ContextIndexSettings Index { get; init; } = new();
+
+    /// <summary>The checked 'context.sources.github' entry, or null when the profile names none.</summary>
+    public GitHubSource? GitHub { get; init; }
+
+    /// <summary>The checked 'context.sources.slack' entry, or null when the profile names none.</summary>
+    public SlackSource? Slack { get; init; }
+
     /// <summary>The Linear team keys ('context.sources.linear.teams') an Onyx identifier alias may name; empty for none.</summary>
     public IReadOnlyList<string> LinearTeams { get; init; } = [];
 
@@ -85,4 +94,10 @@ public sealed record ContextSettings
 
     /// <summary>'context.ranker': the feature stage and the rerank arm of the query (Phase 8). Both off by default.</summary>
     public RankerSettings Ranker { get; init; } = new();
+
+    /// <summary>Whether a build whose structure checks would refuse the map stops ('refuse', the default) or saves a degraded note ('warn'); 'context.checks'.</summary>
+    public ChecksMode Checks { get; init; } = ChecksMode.Refuse;
+
+    /// <summary>The limits of the structure checks ('context.checks.isolated' and '.overCap'): the shares that make a map degraded or refused.</summary>
+    public MapCheckLimits CheckLimits { get; init; } = new();
 }

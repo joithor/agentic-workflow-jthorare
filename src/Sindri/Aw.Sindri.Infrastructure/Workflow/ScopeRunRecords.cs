@@ -73,8 +73,9 @@ internal sealed class ScopeRunRecords(ILedgerReader ledger, EventFactory events,
         return [.. launched.Concat(atTheDesk).OrderBy(static r => r.Sequence).Select(static r => r.Record)];
     }
 
+    // why: a picked launch (model-pick M-7) has the pick's model on 'launch.started'; it stands in when the session reported none and the recipe names none
     private static ScopeRunRecord AgentRecord(InstanceAddress run, int transitions, LaunchStarted started, StateAsk ask, (long Tokens, string? Model) spent) => new(
-        ask.Step, started.State!, started.Attempt ?? 1, Agent, spent.Model, ask.Requested, VendorOf(spent.Model), spent.Tokens, started.Launch.Value, RunTokenOf(run, transitions, started), started.Target.Value);   // why: Launches keeps only launches that name their state
+        ask.Step, started.State!, started.Attempt ?? 1, Agent, spent.Model ?? started.Model, ask.Requested ?? started.Model, VendorOf(spent.Model), spent.Tokens, started.Launch.Value, RunTokenOf(run, transitions, started), started.Target.Value);   // why: Launches keeps only launches that name their state
 
     // The launch id is a hash of the instance and the run token, and the event keeps only the token's number. Every frame entry follows a transition the ledger holds for the instance, so the entry is at most that many plus one.
     private static string? RunTokenOf(InstanceAddress run, int transitions, LaunchStarted started)
@@ -88,7 +89,7 @@ internal sealed class ScopeRunRecords(ILedgerReader ledger, EventFactory events,
         for (var entry = 1; entry <= transitions + 1; entry++)
         {
             var candidate = RunToken.For(entry, number);
-            if (AgentLaunches.LaunchIdFor(instance, candidate) == started.Launch)
+            if (AgentLaunches.LaunchIdFor(instance, candidate) == started.Launch || AgentLaunches.LaunchIdFor(instance, candidate, escalation: 1) == started.Launch)   // the retry on a stronger model has the run's token and its own launch id
             {
                 return candidate.Value;
             }

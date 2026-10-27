@@ -1,3 +1,4 @@
+using System.Globalization;
 using Aw.Context.Core.Concepts;
 using Aw.Context.Core.ConceptScan;
 using Aw.Context.Core.Engine;
@@ -42,11 +43,22 @@ internal sealed class ConceptPass(IConceptNamer namer, ISymbolVectors vectors, I
         }
 
         var concepts = ConceptDeriver.Derive(joined, pins, names, glossary, hints);
-        return new ConceptOutcome(joined with
+        var withConcepts = joined with
         {
             Nodes = [.. joined.Nodes.Concat(concepts.Nodes).DistinctBy(n => n.Key.Value, StringComparer.Ordinal)],
             Edges = [.. joined.Edges.Concat(concepts.Edges).DistinctBy(e => (e.From.Value, e.To.Value, e.Type))],
-        }, notes);
+        };
+        // The pins' concept edges (spec 2026-10-27 §10.2 and §10.3): the roll-up and what the owner declared, one edge per key, made fresh on every build. What the declared edges and the code disagree on, and the entries
+        // with no endpoint in the map, are report lines and never degraded states (Open question 13).
+        var declared = PinEdges.Declared(withConcepts, pins);
+        var rolled = PinRollup.Apply(withConcepts, pins, declared);
+        var reportNotes = new List<string>(rolled.Notes);
+        if (declared.Skipped > 0)
+        {
+            reportNotes.Add(string.Create(CultureInfo.InvariantCulture, $"pin edges skipped: {declared.Skipped}"));
+        }
+
+        return new ConceptOutcome(withConcepts with { Edges = [.. rolled.Edges.Concat(withConcepts.Edges).DistinctBy(e => (e.From.Value, e.To.Value, e.Type))] }, notes, reportNotes);
     }
 
     // The concept hints of the newest map version the scan has looked at; a store that can't answer, or a version with none, shapes nothing.

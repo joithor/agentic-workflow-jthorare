@@ -25,6 +25,7 @@ namespace Aw.Sindri.Core.Sandbox.Plan;
 /// <param name="Login">The prepared login, or null for a plan built only to check the form.</param>
 /// <param name="OmitGroups">Groups the Step removes from itself (a Step only tightens).</param>
 /// <param name="ExtraDeny">More denied paths from the line's capability policy (holdout store, other runs' worktrees).</param>
+/// <param name="Learn">The repo's learn history and the launch time; null plans with the profile's mode as it is, with no window.</param>
 public sealed record SandboxRequest(
     LaunchId Launch,
     ItemId Item,
@@ -43,4 +44,5 @@ public sealed record SandboxRequest(
     SandboxSettings? Settings,
     PreparedLogin? Login,
     IReadOnlyList<string>? OmitGroups = null,
-    IReadOnlyList<string>? ExtraDeny = null);
+    IReadOnlyList<string>? ExtraDeny = null,
+    LearnContext? Learn = null);

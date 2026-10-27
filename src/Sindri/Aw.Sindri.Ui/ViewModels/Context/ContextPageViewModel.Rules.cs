@@ -11,6 +11,7 @@ internal sealed partial class ContextPageViewModel
     private const string RefreshAction = "RefreshContextMap";
     private WholeMapView? _rulesChecked;
     private bool _rulesOlder;
+    private string? _structure;
 
     /// <summary>The line by the head: the map was built under older map rules and a refresh rebuilds it.</summary>
     public string RulesOlderText { get; } = Labels.ContextRulesOlder;
@@ -20,6 +21,12 @@ internal sealed partial class ContextPageViewModel
 
     /// <summary>Whether the older-rules line shows: the whole map is on the stage and its status says the rules are older.</summary>
     public bool ShowRulesOlder => _rulesOlder && ShowWhole;
+
+    /// <summary>The structure reason the live map was kept with (numbers only), or empty.</summary>
+    public string StructureText => _structure is { } reason ? Labels.ContextStructurePrefix + reason : string.Empty;
+
+    /// <summary>Whether the structure line shows: the whole map is on the stage and its build was degraded on structure.</summary>
+    public bool ShowStructure => _structure is not null && ShowWhole;
 
     /// <summary>Whether the refresh button shows beside the line.</summary>
     public bool ShowRulesRefresh => ShowRulesOlder && RefreshControl is not null;
@@ -37,6 +44,7 @@ internal sealed partial class ContextPageViewModel
         _rulesChecked = answer;
         var status = await Ports.Api.MapStatus(api, anchor: null, cancellationToken).ConfigureAwait(true);
         _rulesOlder = status.IsSuccess && status.Value.RulesOlder;
+        _structure = status.IsSuccess ? status.Value.Checks : null;
         if (_rulesOlder)
         {
             Func<CancellationToken, Task<Result<CommandAcceptedView>>> send = StartRefresh;
@@ -45,6 +53,8 @@ internal sealed partial class ContextPageViewModel
 
         OnChanged(nameof(ShowRulesOlder));
         OnChanged(nameof(ShowRulesRefresh));
+        OnChanged(nameof(StructureText));
+        OnChanged(nameof(ShowStructure));
     }
 
     // One press starts one refresh; the build overlay then follows the job like a first build, and the status is read again with the map it leaves.

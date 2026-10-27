@@ -71,9 +71,17 @@ internal sealed partial class ShellViewModel
     {
         if (Strip.Rows.FirstOrDefault(r => string.Equals(r.Address, address, StringComparison.Ordinal)) is { } row)
         {
-            Navigate(row.Link);
-            OpenerStrip = row.Address;
+            OpenFromStrip(row);
         }
+    }
+
+    // The jump to Workflows: the strip isn't drawn there, so Esc returns to the instance's own row in the list (opening the sheet clears
+    // OpenerWorkflow, so it is set after). OpenerStrip stays for a sheet that opens over Home.
+    private void OpenFromStrip(StripRowViewModel row)
+    {
+        Navigate(row.Link);
+        OpenerStrip = row.Address;
+        OpenerWorkflow = row.Address;
     }
 
     /// <summary>The Answer button of a strip row: the same as A on it.</summary>
@@ -98,8 +106,7 @@ internal sealed partial class ShellViewModel
         switch (key)
         {
             case "Enter":
-                Navigate(row.Link);
-                OpenerStrip = row.Address;
+                OpenFromStrip(row);
                 return true;
             case "A" when row.CanAnswer:
                 Answer(row);

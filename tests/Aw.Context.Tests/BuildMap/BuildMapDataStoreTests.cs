@@ -45,7 +45,7 @@ public sealed class BuildMapDataStoreTests
                 "code:src/links/read.ts -Reads-> thing:shared-link",
                 "code:src/links/write.ts -Writes-> thing:audit-event",
             ],
-            draft.Graph.Edges.Where(e => e.Type is EdgeType.Reads or EdgeType.Writes).Select(e => $"{e.From.Value} -{e.Type}-> {e.To.Value}").Order(StringComparer.Ordinal),
+            draft.Graph.Edges.Where(e => e.Type is EdgeType.Reads or EdgeType.Writes && e.From.Kind == NodeKind.Code).Select(e => $"{e.From.Value} -{e.Type}-> {e.To.Value}").Order(StringComparer.Ordinal),
             StringComparer.Ordinal);
     }
 }

@@ -177,8 +177,11 @@ internal sealed partial class NodeCardViewModel(ContextPorts ports) : Observable
     {
         var node = map.Node(other);
         var kind = node is null ? string.Empty : " · " + Labels.ContextMapKindWord(node.Layout.Kind).ToLowerInvariant();
-        return new NodeLinkRow(other, node?.Label ?? other, Labels.ContextMapEdgeWord(edge.Type) + kind + (edge.Confirmed ? string.Empty : " · " + Labels.ContextInspNotConfirmed), !edge.Confirmed);
+        return new NodeLinkRow(other, node?.Label ?? other, Labels.ContextMapEdgeWord(edge.Type) + kind + RollUp(edge) + (edge.Confirmed ? string.Empty : " · " + Labels.ContextInspNotConfirmed), !edge.Confirmed);
     }
+
+    // "depends on · feature · 3 imports, e.g. a.ts -> b.ts": what a feature-to-feature edge sums over its files.
+    private static string RollUp(NodeEdge edge) => edge.Count is { } count ? " · " + Labels.ContextMapRollUp(edge.Type, count, edge.Example) : string.Empty;
 
     private void Refresh()
     {

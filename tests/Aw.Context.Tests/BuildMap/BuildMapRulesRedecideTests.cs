@@ -65,16 +65,15 @@ public sealed class BuildMapRulesRedecideTests : IDisposable
     }
 
     [Fact, Trait("Lane", "unit")]
-    public async Task A_person_accepted_edge_the_new_rules_no_longer_find_is_not_undone_by_the_rules_redecision()
+    public async Task A_person_accepted_edge_the_new_rules_no_longer_find_is_kept()
     {
         var accept = await BuildAcceptedPromotedMap("joi");
 
         var (kept, log) = await Rebuild(ChangedRules(), fileStillFound: false);
 
-        // The rules redecision never touches a person's accept. The cluster no longer proposes the tag, so the structure cut drops the link and undoes the accept with its own marker.
-        Assert.False(kept);
-        Assert.DoesNotContain(log, o => o.Action == OverrideAction.Undo && o.Who == MapOverride.RedecideMarker);
-        Assert.Contains(log, o => o.Action == OverrideAction.Undo && o.Who == MapOverride.StructureMarker && o.Undoes?.Value == accept.ToId().Value);
+        Assert.True(kept);
+        Assert.DoesNotContain(log, o => o.Action == OverrideAction.Undo && o.Undoes?.Value == accept.ToId().Value);
+        Assert.DoesNotContain(log, o => o.Action == OverrideAction.Undo && (string.Equals(o.Who, MapOverride.RedecideMarker, StringComparison.Ordinal) || string.Equals(o.Who, MapOverride.StructureMarker, StringComparison.Ordinal)));
     }
 
     [Fact, Trait("Lane", "unit")]

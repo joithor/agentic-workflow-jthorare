@@ -157,6 +157,28 @@ public sealed class StructurePurgeTests
     }
 
     [Fact, Trait("Lane", "unit")]
+    public void An_accepted_tags_link_whose_cluster_is_gone_stays_with_its_tag_feature_and_is_not_undone()
+    {
+        var stored = new GraphBuilder()
+            .Node("code:src/a.ts", provenance: Provenance.Deterministic).Node("code:src/b.ts", provenance: Provenance.Deterministic)
+            .Node("feature:tag:work:src", "Src", Provenance.Model, 0.7)
+            .Edge("code:src/a.ts", EdgeType.Tags, "feature:tag:work:src", provenance: Provenance.Model, confidence: 0.7, evidence: "repo:work/src/a.ts")
+            .Edge("code:src/b.ts", EdgeType.Tags, "feature:tag:work:src", provenance: Provenance.Model, confidence: 0.7, evidence: "repo:work/src/b.ts")
+            .Build();
+        var accepted = stored.Edges.Single(e => e.From.Value == "code:src/a.ts");
+        var accept = Decision(OverrideAction.Accept, accepted);
+        var homeOnly = HomeFeatures.Assign(HomeTree.Repo("work"), ["src/a.ts", "src/b.ts"]).Map;
+
+        var (graph, rows, counts) = MapAccess.WithoutBuiltStructure(stored, [accept], homeOnly, _at);
+
+        Assert.Contains(graph.Nodes, n => n.Key.Value == "feature:tag:work:src");
+        Assert.Contains(graph.Edges, e => e.From.Value == "code:src/a.ts" && e.To.Value == "feature:tag:work:src" && e.Type == EdgeType.Tags);
+        Assert.DoesNotContain(graph.Edges, e => e.From.Value == "code:src/b.ts" && e.Type == EdgeType.Tags);
+        Assert.Empty(rows);
+        Assert.Equal(0, counts.Undone);
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public void A_second_build_over_the_first_ones_result_changes_nothing()
     {
         var stored = Old().Build();

@@ -55,6 +55,7 @@ internal static class NoticeWords
         ParkReason.SpecConflict => "the spec conflicts with the code",
         ParkReason.NoRuntime => "no runtime is available for it",
         ParkReason.Unavailable => "it needs a look",
+        ParkReason.Launch => "its step can't start in the sandbox",
         null or _ => "it needs a look",
     };
 }

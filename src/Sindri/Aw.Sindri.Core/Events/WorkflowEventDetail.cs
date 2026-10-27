@@ -176,6 +176,9 @@ public sealed record WorkflowEventDetail(
         {
             Tokens = recorded.Trigger.Tokens,
             FailureKind = (trigger as StepFailed)?.FailureKind,
-        };
+        }.Ran(recorded.Trigger);
     }
+
+    // The agent and model an agent run ran on, from the trigger record (#1269).
+    private WorkflowEventDetail Ran(TriggerRecord trigger) => this with { Agent = trigger.Agent, Model = trigger.Model };
 }

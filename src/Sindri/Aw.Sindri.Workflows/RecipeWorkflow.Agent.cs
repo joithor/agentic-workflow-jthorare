@@ -145,7 +145,7 @@ internal sealed partial class RecipeWorkflow
         _report = null;
         _reportId = null;
         var closed = await Close(running, measure: true).ConfigureAwait(true);
-        return await Decided(instance, running.Open, report with { Tokens = closed.Tokens, EmptyDiff = closed.EmptyDiff }, reportId, context).ConfigureAwait(true);
+        return await Decided(instance, running.Open, report with { Tokens = closed.Tokens, EmptyDiff = closed.EmptyDiff, Agent = running.Launched?.Agent, Model = running.Launched?.Model }, reportId, context).ConfigureAwait(true);
     }
 
     // Decides the trigger like RunDeskStep and RunBlockStep: mirror the change, emit its effects, and hand the result to the 'complete' Update that carried a report.

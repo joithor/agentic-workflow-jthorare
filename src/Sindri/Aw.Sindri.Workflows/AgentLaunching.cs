@@ -89,7 +89,7 @@ internal sealed class AgentLaunching(AgentLaunchWaiting launcher, AgentPlacing p
             case StartedLaunch started:
                 await recorder.Started(request, started, cancellationToken).ConfigureAwait(false);
                 var head = await diff.Head(request.Worktree!, cancellationToken).ConfigureAwait(false);   // why: RequestFor always names the worktree
-                return new AgentLaunched(request.Worktree, head.IsError ? null : head.Value, Failure: null);   // a worktree with no HEAD leaves the diff signal unmeasured
+                return new AgentLaunched(request.Worktree, head.IsError ? null : head.Value, Failure: null, Model: request.Step?.Model, Agent: request.Agent.Value);   // a worktree with no HEAD leaves the diff signal unmeasured
             case FailedLaunch failed:
                 await recorder.Failed(request, failed, cancellationToken).ConfigureAwait(false);
                 return new AgentLaunched(Worktree: null, StartHead: null, AgentLaunchFailures.Of(failed));

@@ -121,6 +121,7 @@ internal static class EndpointTable
         _ = commands.MapCancelJob();
         _ = commands.MapCloseItem();
         _ = commands.MapDeferOnyx();
+        _ = commands.MapEndLearnMode();
         _ = commands.MapSetupOnyx();
         _ = commands.MapConnectOnyx();
         _ = commands.MapOpenItem();

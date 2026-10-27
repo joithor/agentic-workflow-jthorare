@@ -1,0 +1,74 @@
+using Aw.Kernel;
+using Aw.Sindri.Core.Events;
+using Aw.Sindri.Core.Ledger;
+using Aw.Sindri.Core.Sandbox;
+
+namespace Aw.Sindri.Infrastructure.Sandbox;
+
+/// <summary>
+/// A repo's learn-mode history, read from the ledger (sandbox spec §3.6, Q13): never views.db, whose projector may lag, so the plan builder closes the window on what was recorded.
+/// 'launch.started' names an item, not a repo, so the repo's items come first from 'item.created'; the runs are then the repo's 'launch.started' rows whose sandbox summary ran in
+/// learn mode. The window ends at the latest 'sandbox.learn-ended' for the repo or for every repo.
+/// </summary>
+/// <param name="ledger">The ledger, read-only.</param>
+/// <param name="events">Reads a payload.</param>
+internal sealed class LedgerLearnHistory(ILedgerReader ledger, EventFactory events) : ILearnHistory
+{
+    private const int Page = 500;
+
+    /// <summary>What an unreadable ledger reads as: a window that cannot be proven open is closed (the run cap is spent), never an empty history that would open it.</summary>
+    private static readonly LearnHistory Unreadable = new(FirstLearnRun: null, LearnRuns: int.MaxValue, EndedAt: null);
+
+    public async ValueTask<LearnHistory> Read(string repo, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(repo);
+        var created = await Rows(EventTypes.ItemCreated, cancellationToken).ConfigureAwait(false);
+        var started = await Rows(EventTypes.LaunchStarted, cancellationToken).ConfigureAwait(false);
+        var ended = await Rows(EventTypes.SandboxLearnEnded, cancellationToken).ConfigureAwait(false);
+        if (created.IsError || started.IsError || ended.IsError)
+        {
+            return Unreadable;
+        }
+
+        var items = created.Value
+            .Select(row => events.Payload<ItemCreated>(row))
+            .Where(p => p.IsSuccess && p.Value.Repo is { } own && string.Equals(own.Value, repo, StringComparison.Ordinal))
+            .Select(p => p.Value.Item.Value)
+            .ToHashSet(StringComparer.Ordinal);
+        var learnRuns = started.Value
+            .Where(row => row.Item is { } item && items.Contains(item)
+                && events.Payload<LaunchStarted>(row) is { IsSuccess: true, Value.Sandbox.NetworkMode: NetworkMode.Learn })
+            .Select(static row => row.Envelope.OccurredAt)
+            .ToList();
+        var ends = ended.Value
+            .Select(row => events.Payload<SandboxLearnEnded>(row))
+            .Where(p => p.IsSuccess && (p.Value.Repo is not { } scope || string.Equals(scope.Value, repo, StringComparison.Ordinal)))
+            .Select(static p => p.Value.At)
+            .ToList();
+        return new LearnHistory(learnRuns.Count == 0 ? null : learnRuns.Min(), learnRuns.Count, ends.Count == 0 ? null : ends.Max());
+    }
+
+    /// <summary>Every row of one type, oldest first.</summary>
+    private async ValueTask<Result<List<LedgerEvent>>> Rows(string type, CancellationToken cancellationToken)
+    {
+        var filter = new LedgerFilter(TypeFilter.Parse(type).Value, Item: null);
+        var rows = new List<LedgerEvent>();
+        var cursor = 0L;
+        while (true)
+        {
+            var scan = await ledger.Scan(cursor, Page, filter, cancellationToken).ConfigureAwait(false);
+            if (scan.IsError)
+            {
+                return scan.Error;
+            }
+
+            rows.AddRange(scan.Value.Events);
+            if (scan.Value.ScannedTo <= cursor)
+            {
+                return rows;
+            }
+
+            cursor = scan.Value.ScannedTo;
+        }
+    }
+}

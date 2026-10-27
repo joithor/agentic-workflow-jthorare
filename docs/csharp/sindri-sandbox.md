@@ -35,6 +35,7 @@ mistakes, not a deliberate escape (spec §2).
 | `IModelCredentialSource`, `LoginStatus`, `LoginState`, `PreparedLogin`, `LoginMount`, `LoginHandle` | `Sandbox/Credentials/` (its own namespace: it needs `AgentId` from `Launch`, which uses `Sandbox`) | The credential port (SB18). `Prepare` returns plain data the plan builder consumes. The fake, the contract base and the adapters are SB-1 and SB-2. |
 | `SandboxReasons`, `SandboxCodes`, `SandboxRefusal`, `LaunchCodeKind` | `Sandbox/` | The closed reason sets, the kind table (with the `step.failed` reason of a step-failure code: `limit` for `-019`, `launch` for `-018` and `-021`), and the factory that puts `reason`, `source` and named details (`which`, `tool`, `path`, `cap`, `running`, ...) on the error as extensions. `ReasonOf(error)` and `SourceOf(error)` read them back. |
 | `SandboxDenied`, `SandboxLimitHit` | `Events/` | The `sandbox.denied` and `sandbox.limit-hit` payloads (emitted from SB-4b/SB-5a). |
+| `SandboxLearnEnded` | `Events/` | The `sandbox.learn-ended` payload (`sindri sandbox learn off`). |
 | `SandboxSettings` and its records | `Profile/` | The profile's `sandbox:` section. |
 | `SandboxEnvironment` | `Sandbox/` | The three test-redirect variable names. |
 
@@ -67,6 +68,7 @@ words "scope", "plan", "canary" and "confined" never appear.
 | `session.ended` | `reason: limit` adds `kind`, `limit`, `peak` and `peaks`; a final usage sample precedes it. Written by `LaunchSessionEvents.EndByLimit`; the launches view's `ended` carries `kind`, `limit` and `peak` only: the tripped limit is what the limit ending shows, so `peaks` stays on the event |
 | `sandbox.denied` | `{launchId, kind: network\|policy\|path, target, rule, count}`; the 1st, 10th and 100th denial of each (kind, target) per run; at most 200 distinct targets, then one event per `kind` (the key includes the kind, so up to three) with `overflow: true`, an empty `target`, rule `overflow` and `count` the denials not counted by target; a denied command line is never recorded whole |
 | `sandbox.limit-hit` | `{launchId, kind: pids\|memory\|disk, peak}` |
+| `sandbox.learn-ended` | `{repo?, at}`; the owner ended network learn mode early (`repo` left out: every repo). Public, invalidates no view. Key `sandbox.learn-ended:<repo\|all>:<at ticks>` |
 
 Wire shapes are goldens under `Golden/Sandbox/events/`. The spec writes `launchId` in these payloads; on the wire the field is `launch`, as in every other launch event.
 
@@ -278,6 +280,10 @@ rewritten (temp file and rename) about once a second while anything changed, and
 status **70** if either is not running 0.2 s later (the launcher reads that as `-016 net-forward`), exports `NO_PROXY=127.0.0.1,localhost,::1`, and runs the agent as
 its **child**, with the init's standard input (held on fd 3, because a shell without job control gives a background command `/dev/null`): the sandbox has no PID namespace, so an `exec` would leave the forwarders running after the agent. A TERM, INT or HUP to the init reaches the agent; the
 init waits for it, stops both forwarders and exits with the agent's status. The self-check of the spec's start order is a second run of the same script with a check argv. The script needs a POSIX `sh` (tested under `sh`, `dash` and `bash`); on Linux it reads `/proc/<pid>/stat` to tell a dead forwarder from a zombie, elsewhere `kill -0` alone (a zombie then looks alive, so a macOS profile that reuses the script needs a `ps` fallback; SB-9). The agent starts with SIGINT and SIGQUIT ignored, the POSIX rule for a background command; the launcher sends TERM. Without `ps`: nothing needs it.
+
+### Learn off (SB-4b)
+
+`sindri sandbox learn off [--repo <repo>] [--json]` ends network learn mode early for one repo, or for every repo without `--repo`. It goes through the running control plane (`POST /sindri/sandbox/learn-off`, body `{repo?}`; exit 0 done, 1 when Sindri isn't running, 2 on a bad repo name or a refusal) and appends `sandbox.learn-ended`. It only tightens, so it needs no approval. It is a desk command: a session Sindri launched for a Step is refused `SND-AUTH-002`; an owner-started session is not (owner decision q93). `LedgerLearnHistory` (the `ILearnHistory` adapter) reads the ledger, not `views.db`: the repo's items come from `item.created`, its learn runs are the `launch.started` rows of those items whose sandbox summary has `networkMode: learn` (`LearnRuns`, and the earliest as `FirstLearnRun`), and `EndedAt` is the latest `sandbox.learn-ended` for the repo or for every repo. A ledger that cannot be read answers with the run cap spent, so the window stays closed. The launcher passes the history into planning in SB-5a.
 
 ## SB-3a: wall and memory
 

@@ -42,7 +42,7 @@ public sealed class MapDocumentTests
     }
 
     [Theory, Trait("Lane", "unit")]
-    [InlineData("  - {from: \"feature:a\", to: \"thing:t\", type: reads}\n", "SND-CONTEXT-031", "edges[0].type: 'reads' doesn't go from a feature to a thing")]
+    [InlineData("  - {from: \"thing:t\", to: \"feature:a\", type: reads}\n", "SND-CONTEXT-031", "edges[0].type: 'reads' doesn't go from a thing to a feature")]
     [InlineData("  - {from: \"feature:a\", to: \"feature:missing\", type: part-of}\n", "SND-CONTEXT-032", "edges[0].to: 'feature:missing' isn't defined")]
     [InlineData("  - {from: \"feature:a\", to: \"feature:b\", type: depends-on, confidence: 2}\n", "SND-CONTEXT-031", "edges[0].confidence: 2 is outside 0 to 1")]
     public void A_bad_edge_names_its_key_path_and_nothing_is_imported(string edge, string code, string message)

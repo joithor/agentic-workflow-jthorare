@@ -17,7 +17,7 @@ internal static class RollupFixture
         data: [("b1", EdgeType.Writes, "invoices"), ("b2", EdgeType.Reads, "invoices"), ("b3", EdgeType.Writes, "orders_t"), ("o1", EdgeType.Reads, "invoices"), ("o2", EdgeType.Writes, "orders_t"), ("u1", EdgeType.Reads, "orders_t")]);
 
     /// <summary>A file's path: 'billing/b1.ts' for 'b1' homed in billing.</summary>
-    internal static string Path(string file, IEnumerable<(string File, string Module)> homes) => homes.First(h => h.File == file).Module + "/" + file + ".ts";
+    internal static string Path(string file, IEnumerable<(string File, string Module)> homes) => (homes.FirstOrDefault(h => h.File == file).Module ?? "nohome") + "/" + file + ".ts";
 
     internal static ExtractedMap Files(IReadOnlyList<(string File, string Module)> homes, IReadOnlyList<(string From, string To)> imports, IReadOnlyList<(string File, EdgeType Type, string Thing)> data)
     {

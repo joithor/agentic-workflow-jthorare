@@ -37,7 +37,7 @@ public sealed class GoldenHost : IAsyncDisposable
     public const string ProfileYaml = "schemaVersion: 1\nuser: golden\nservices:\n  heartbeat: { every: 5s }\n";
 
     private readonly TempHome? _ownHome;
-    private readonly List<IDisposable> _owned = [];
+    private readonly List<Func<ValueTask>> _owned = [];
     private readonly TempHome? _elsewhere;
     private WebApplication? _app;
 
@@ -103,7 +103,15 @@ public sealed class GoldenHost : IAsyncDisposable
 
     /// <summary>Hands the host something to dispose after it stops (a fixture repo the profile maps).</summary>
     /// <param name="resource">The resource.</param>
-    public void Own(IDisposable resource) => _owned.Add(resource);
+    public void Own(IDisposable resource) => _owned.Add(() =>
+    {
+        resource.Dispose();
+        return ValueTask.CompletedTask;
+    });
+
+    /// <summary>Hands the host something to dispose asynchronously after it stops, awaited before the home is deleted (a background task that writes under the home).</summary>
+    /// <param name="resource">The resource.</param>
+    public void Own(IAsyncDisposable resource) => _owned.Add(resource.DisposeAsync);
 
     /// <summary>The live profile's hash.</summary>
     /// <param name="ct">Cancellation.</param>
@@ -113,6 +121,12 @@ public sealed class GoldenHost : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        // why: owned resources (a views pump) call into the app and write under the home, so they stop, and are waited for, before either goes away
+        foreach (var owned in _owned)
+        {
+            await owned();
+        }
+
         Http.Dispose();
         if (_app is not null)
         {
@@ -122,7 +136,6 @@ public sealed class GoldenHost : IAsyncDisposable
 
         _ownHome?.Dispose();
         _elsewhere?.Dispose();
-        _owned.ForEach(o => o.Dispose());
     }
 
     private async Task Run(CancellationToken ct)

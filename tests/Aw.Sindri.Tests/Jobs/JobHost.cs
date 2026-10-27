@@ -174,16 +174,23 @@ internal static class JobHost
     /// Keeps the views at the ledger's head while a test runs. A running job appends events by itself, and the golden host hosts no projector: a command
     /// that waits for the views (every command that reads them) would wait on the fake clock for ever.
     /// </summary>
-    private sealed class ViewsPump : IDisposable
+    private sealed class ViewsPump : IAsyncDisposable
     {
         private readonly CancellationTokenSource _stop = new();
+        private readonly Task _pump;
 
         public ViewsPump(GoldenHost host)
         {
-            _ = Task.Run(() => Pump(host, _stop.Token), CancellationToken.None);
+            _pump = Task.Run(() => Pump(host, _stop.Token), CancellationToken.None);
         }
 
-        public void Dispose() => _stop.Cancel();
+        /// <summary>Stops the pump and waits for its last pass to finish, so nothing it touches is still in use afterwards.</summary>
+        public async ValueTask DisposeAsync()
+        {
+            await _stop.CancelAsync();
+            await _pump;
+            _stop.Dispose();
+        }
 
         private static async Task Pump(GoldenHost host, CancellationToken stop)
         {

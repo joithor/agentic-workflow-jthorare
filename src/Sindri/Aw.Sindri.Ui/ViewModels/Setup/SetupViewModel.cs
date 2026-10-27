@@ -109,6 +109,9 @@ internal sealed partial class SetupViewModel : ObservableObject
     /// <summary>True when Home shows its one line: there are steps, and one is still open. Home then hides the setup rows of Needs you, which the line stands for.</summary>
     public bool IsHomeLineShown { get; private set => Set(ref field, value); }
 
+    /// <summary>True from the start of the first read until its answer: Home holds the setup rows back meanwhile, since the line that stands for them may be about to show (A-6).</summary>
+    public bool IsFirstReadPending => IsReading && _reads > 0;
+
     /// <summary>True until the first answer.</summary>
     public bool IsReading { get; private set => Set(ref field, value); } = true;
 

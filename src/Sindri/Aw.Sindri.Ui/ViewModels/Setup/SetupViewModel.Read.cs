@@ -26,6 +26,7 @@ internal sealed partial class SetupViewModel
     private async Task Read(Uri url, CancellationToken cancellationToken)
     {
         var read = ++_reads;
+        OnChanged(nameof(IsFirstReadPending));
         var answer = await _api.Setup(url, cancellationToken).ConfigureAwait(true);
         if (read != _reads)
         {

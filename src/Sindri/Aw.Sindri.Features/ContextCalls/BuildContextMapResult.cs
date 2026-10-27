@@ -5,4 +5,8 @@ namespace Aw.Sindri.Features.ContextCalls;
 /// <param name="Draft">The draft's version number.</param>
 /// <param name="Proposed">How many nodes the build proposed.</param>
 /// <param name="Degraded">What degraded, at most 20 lines (no labeling, a cluster pass that failed).</param>
-public sealed record BuildContextMapResult(string Repo, int Draft, int Proposed, IReadOnlyList<string> Degraded);
+public sealed record BuildContextMapResult(string Repo, int Draft, int Proposed, IReadOnlyList<string> Degraded)
+{
+    /// <summary>The structure measures as one line of numbers (map structure spec §4.3), on every build; null when the build did not measure.</summary>
+    public string? Structure { get; init; }
+}

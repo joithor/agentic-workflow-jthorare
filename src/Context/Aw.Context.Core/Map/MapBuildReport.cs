@@ -13,4 +13,7 @@ public sealed record MapBuildReport(MapVersion Draft, IReadOnlyList<ProposedNode
 
     /// <summary>What the build's structure cut replaced: the cluster features and links of the last build, and what became of the decisions on them (spec 2026-10-27 §5).</summary>
     public StructureCounts Structure { get; init; } = StructureCounts.None;
+
+    /// <summary>Lines about the map that are not degraded states: what the pins declare against what the code shows, and declared entries skipped (spec 2026-10-27 §10.3).</summary>
+    public IReadOnlyList<string> Notes { get; init; } = [];
 }

@@ -83,7 +83,7 @@ public sealed class ConceptHintTests
     [Fact]
     public void A_pinned_feature_stays_in_its_pin_and_a_feature_the_map_lacks_is_ignored()
     {
-        var pin = new ConceptPin(ConceptId.From("pinned"), "Pinned", Summary: null, ["feature:sched.one"], []);
+        var pin = new ConceptPin(ConceptId.From("pinned"), "Pinned", Summary: null, ["feature:sched.one"], [], [], []);
 
         var map = ConceptDeriver.Derive(Product(), [pin], names: null, glossary: null, [Hint("Tab work", 0.9, "feature:tabs", "feature:sched.one", "feature:made.up", "feature:billing.one")]);
 

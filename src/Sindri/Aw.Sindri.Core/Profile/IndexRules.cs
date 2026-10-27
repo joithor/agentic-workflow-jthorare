@@ -16,10 +16,10 @@ internal static class IndexRules
     private const string FeaturePrefix = "feature:";
 
     internal static Error? Check(SindriProfile profile) =>
-        Section("index", profile.Index)
-        ?? (profile.Repos ?? []).Select(r => Section($"repos.{r.Name}.index", r.Index) ?? SharedIds($"repos.{r.Name}.index.concepts", profile.Index?.Concepts, r.Index?.Concepts)).FirstOrDefault(static e => e is not null);
+        Section("index", profile.Index, inherited: [.. (profile.Repos ?? []).SelectMany(r => Ids(r.Index?.Concepts))])
+        ?? (profile.Repos ?? []).Select(r => Section($"repos.{r.Name}.index", r.Index, Ids(profile.Index?.Concepts)) ?? SharedIds($"repos.{r.Name}.index.concepts", profile.Index?.Concepts, r.Index?.Concepts)).FirstOrDefault(static e => e is not null);
 
-    private static Error? Section(string path, IndexSettings? index)
+    private static Error? Section(string path, IndexSettings? index, HashSet<string> inherited)
     {
         if (index is null)
         {
@@ -31,19 +31,24 @@ internal static class IndexRules
             ?? Range($"{path}.graph.maxMB", index.Graph?.MaxMB, MaxGraphMegabytes)
             ?? Embeddings($"{path}.embeddings", index.Embeddings)
             ?? Globs($"{path}.utilityGlobs", index.UtilityGlobs)
-            ?? Concepts($"{path}.concepts", index.Concepts);
+            ?? Concepts($"{path}.concepts", index.Concepts, inherited);
     }
 
     private const int MaxName = 200;
 
-    private static Error? Concepts(string path, IReadOnlyList<ConceptSettings>? concepts)
+    private static HashSet<string> Ids(IReadOnlyList<ConceptSettings>? concepts) =>
+        [.. (concepts ?? []).Select(c => c.Id?.Value).OfType<string>()];
+
+    private static Error? Concepts(string path, IReadOnlyList<ConceptSettings>? concepts, HashSet<string> inherited)
     {
+        var known = Ids(concepts);
+        known.UnionWith(inherited);
         var seen = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < (concepts?.Count ?? 0); i++)
         {
             var at = string.Create(CultureInfo.InvariantCulture, $"{path}[{i}]");
             // why: the loop bound is zero when concepts is null
-            if (Pin(at, concepts![i]) is { } problem)
+            if (Pin(at, concepts![i], known) is { } problem)
             {
                 return problem;
             }
@@ -57,8 +62,38 @@ internal static class IndexRules
         return null;
     }
 
-    private static Error? Pin(string at, ConceptSettings pin) =>
-        Name($"{at}.name", pin.Name) ?? Reserved($"{at}.id", pin.Id) ?? Features($"{at}.features", pin.Features) ?? Globs($"{at}.paths", pin.Paths);
+    private static Error? Pin(string at, ConceptSettings pin, HashSet<string> known) =>
+        Name($"{at}.name", pin.Name) ?? Reserved($"{at}.id", pin.Id) ?? Features($"{at}.features", pin.Features) ?? Globs($"{at}.paths", pin.Paths)
+        ?? DependsOn($"{at}.dependsOn", pin.DependsOn, known) ?? Owns($"{at}.owns", pin.Owns);
+
+    private static Error? DependsOn(string path, IReadOnlyList<string>? ids, HashSet<string> known)
+    {
+        for (var i = 0; i < (ids?.Count ?? 0); i++)
+        {
+            // why: the loop bound is zero when ids is null
+            if (!known.Contains(ids![i]))
+            {
+                return Invalid(string.Create(CultureInfo.InvariantCulture, $"{path}[{i}]"), $"names no pin: '{ids[i]}' is not the id of an entry in index.concepts (the profile's or this repo's)");
+            }
+        }
+
+        return null;
+    }
+
+    // A store name the data-store extractor can key: at least one letter or digit, no control characters.
+    private static Error? Owns(string path, IReadOnlyList<string>? names)
+    {
+        for (var i = 0; i < (names?.Count ?? 0); i++)
+        {
+            // why: the loop bound is zero when names is null
+            if (!names![i].Any(char.IsLetterOrDigit) || names[i].Any(char.IsControl) || names[i].Length > MaxName)
+            {
+                return Invalid(string.Create(CultureInfo.InvariantCulture, $"{path}[{i}]"), "must be a data store name with a letter or digit in it, like 'invoices' or 'payments_t'");
+            }
+        }
+
+        return null;
+    }
 
     private static Error? Name(string path, string? name) =>
         string.IsNullOrWhiteSpace(name) || name.Length > MaxName || name.Any(char.IsControl)

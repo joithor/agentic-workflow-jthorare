@@ -1,5 +1,4 @@
 using System.Globalization;
-using Aw.Context.Core.Concepts;
 using Aw.Context.Core.Engine;
 using Aw.Context.Core.Map;
 using Aw.Context.Core.Overrides;
@@ -46,28 +45,14 @@ internal sealed class CheckMapService(IGraphStore store) : IService<CheckMapRequ
         var (shown, layer) = seen is { } ok ? (ok.Value.Graph, ok.Value.Overrides) : (graph.Value, overrides.Value);
         var detail = string.Create(CultureInfo.InvariantCulture,
             $"map v{version.Number} current ({version.Repo}, whole map: {shown.Nodes.Count} nodes, {shown.Edges.Count} edges); commits behind HEAD: unknown until a build records its commit");
-        return Verdict(version, detail, OverrideApplier.Apply(shown, layer).Orphaned.Count, request.Scope, UnmatchedPins(shown, request.Scope));
+        return Verdict(version, detail, OverrideApplier.Apply(shown, layer).Orphaned.Count, request.Scope, PinHealth.Of(shown, request.Scope));
     }
 
-    // The pins of the mapped repos (the profile's first, each once) that no feature of the map matches: a pin written for a cluster key stops matching when features come from directories.
-    private static List<string> UnmatchedPins(Core.Graph.GraphSnapshot graph, ContextScope? scope)
+    private static MapHealth Verdict(MapVersion version, string detail, int orphaned, ContextScope? scope, PinHealth pins)
     {
-        if (scope is null || SettingsReader.Read(scope.Settings) is not { IsError: false } settings)
+        if (pins.Notes.Count > 0 && orphaned == 0)
         {
-            return [];
-        }
-
-        var pins = ScopeRules.Mapped(settings.Value, scope.Repos).SelectMany(r => r.Concepts).DistinctBy(p => p.Id?.Value ?? p.Name, StringComparer.Ordinal).ToList();
-        return [.. ConceptPins.Unmatched(graph, pins).Select(p => p.Id?.Value ?? p.Name)];
-    }
-
-    private static MapHealth Verdict(MapVersion version, string detail, int orphaned, ContextScope? scope, List<string> unmatched)
-    {
-        if (unmatched.Count > 0 && orphaned == 0)
-        {
-            var names = string.Join(", ", unmatched.Select(n => $"'{n}'"));
-            return new MapHealth(Name, MapHealthState.Warn, $"{detail}; concept pin {names} matches no feature",
-                "edit the pin's features or paths under index.concepts in the profile (a pin written for a model cluster key matches nothing now: features come from directories), then approve it");
+            return new MapHealth(Name, MapHealthState.Warn, $"{detail}; {string.Join("; ", pins.Notes)}", string.Join("; ", pins.Fixes));
         }
 
         if (orphaned > 0)

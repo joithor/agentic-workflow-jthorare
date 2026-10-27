@@ -222,7 +222,9 @@ Each entry pins one concept: it takes its members first, derived concepts fill t
 | `name` | text | yes | none | What the map shows. Not empty |
 | `summary` | text | no | none | A line about the concept |
 | `features` | string[] | no | none | Feature node keys or key globs (`feature:shifts`, `feature:shifts.*`); each must start with `feature:` |
-| `paths` | string[] | no | none | Repo-relative file globs (same rules as `denyPaths`); the features implemented there belong to the concept |
+| `paths` | string[] | no | none | Repo-relative file globs (same rules as `denyPaths`); the features implemented there belong to the concept. A file two entries both match belongs to the first one in the list (the profile's entries, then the repo's); `sindri doctor` warns on a pair that overlaps on real files |
+| `dependsOn` | string[] | no | none | Ids of other entries this one depends on (`orders`); each becomes a hand-declared `depends-on` edge between the two concepts, made fresh on every build. An id that names no entry is refused |
+| `owns` | string[] | no | none | Names of the data stores this entry owns, as the map names them (`invoices`, `payments_t`); each becomes a hand-declared `writes` edge from the concept to the table. A name with no letter or digit is refused; one the map has no table for is skipped and counted in the build report |
 
 ```yaml
 index:
@@ -232,7 +234,11 @@ index:
       summary: Shifts, swaps and time off
       features: ["feature:shifts", "feature:shifts.*"]
       paths: ["apps/web/src/Schedule/**"]
+      dependsOn: ["orders"]
+      owns: ["shifts"]
 ```
+
+Entries also shape the home features: a directory whose files fall in two entries (or one entry and none) is split into one feature per entry, keyed `feature:<repo>.<dir>~<id>`, and each is `belongs-to` its concept.
 
 A bad entry is refused with its key path (`index.concepts[0].features[1]: must be a feature: key or glob, like 'feature:shifts' or 'feature:shifts.*'`).
 

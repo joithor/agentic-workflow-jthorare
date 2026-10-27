@@ -52,7 +52,7 @@ public sealed class DiskDenialFilesTests : IDisposable
 
         var files = await Files().List(launch: null, Token);
 
-        Assert.Equal(new[] { DenialsRendererTests.LaunchTwo, DenialsRendererTests.LaunchOne }, files.Select(static f => f.LaunchId.Value));
+        Assert.Equal([DenialsRendererTests.LaunchTwo, DenialsRendererTests.LaunchOne], files.Select(static f => f.LaunchId.Value), StringComparer.Ordinal);
     }
 
     [Fact, Trait("Lane", "integration")]
@@ -71,7 +71,7 @@ public sealed class DiskDenialFilesTests : IDisposable
     {
         Launch(DenialsRendererTests.LaunchOne, Path.Combine(_home.Path, "areas", "one"), counter: null);
         Launch(DenialsRendererTests.LaunchTwo, Path.Combine(_home.Path, "areas", "two"), counter: null);
-        File.WriteAllText(Path.Combine(_home.Path, "areas", "two", "denials.json"), "{ not json");
+        await File.WriteAllTextAsync(Path.Combine(_home.Path, "areas", "two", "denials.json"), "{ not json", Token);
 
         var files = await Files().List(launch: null, Token);
 

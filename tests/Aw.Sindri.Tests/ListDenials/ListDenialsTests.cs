@@ -30,8 +30,8 @@ public sealed class ListDenialsTests
 
         Assert.True(result.IsSuccess);
         var only = Assert.Single(result.Value.Launches);
-        Assert.Equal(new[] { fresh }, only.Entries);
-        Assert.Equal(new[] { new DenialOverflow(DenialKind.Path, 2) }, only.Overflow);   // the file was updated since, so its overflow stays
+        Assert.Equal([fresh], only.Entries);
+        Assert.Equal([new DenialOverflow(DenialKind.Path, 2)], only.Overflow);   // the file was updated since, so its overflow stays
     }
 
     [Fact]

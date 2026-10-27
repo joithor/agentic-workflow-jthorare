@@ -96,19 +96,19 @@ public sealed class SandboxExplainCliTests : IDisposable
         Assert.Equal(2, exit);
         Assert.Empty(_out.ToString());
         Assert.StartsWith("SND-CLI-003 ", _error.ToString(), StringComparison.Ordinal);
-        Assert.Single(_error.ToString().TrimEnd().Split('\n'));
+        _ = Assert.Single(_error.ToString().TrimEnd().Split('\n'));
     }
 
     [Fact, Trait("Lane", "integration")]
     public async Task An_unreadable_plan_file_is_a_one_line_error_with_exit_2()
     {
         var file = Path.Combine(_work.Path, "broken.json");
-        File.WriteAllText(file, "{ not a plan");
+        await File.WriteAllTextAsync(file, "{ not a plan", TestContext.Current.CancellationToken);
 
         var exit = await CommandTable.Run(["sandbox", "explain", "evil.example", "--plan", file], Environment(plan: null), TimeProvider.System);
 
         Assert.Equal(2, exit);
         Assert.StartsWith("SND-CLI-003 ", _error.ToString(), StringComparison.Ordinal);
-        Assert.Single(_error.ToString().TrimEnd().Split('\n'));
+        _ = Assert.Single(_error.ToString().TrimEnd().Split('\n'));
     }
 }

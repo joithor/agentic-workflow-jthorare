@@ -255,7 +255,7 @@ public sealed class ModelPickLaunchTests : IDisposable
         await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
         _ = rig.Judge.Chooses("m2");   // haiku, sonnet are left: sonnet
 
-        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+        var launched = await rig.Launch(Challenge(1), floor: null, ct, agent: new StateAgent(DifferentFrom: "draft"));
 
         Expect.Equal("sonnet/False", launched.Model + "/" + launched.CanEscalate);
     }
@@ -266,10 +266,10 @@ public sealed class ModelPickLaunchTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
         await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("sonnet"));
         _ = rig.Judge.Chooses("m1");
-        var first = await rig.Launch(Challenge(1), floor: null, ct);   // haiku, opus are left: haiku, and opus is above it
+        var first = await rig.Launch(Challenge(1), floor: null, ct, agent: new StateAgent(DifferentFrom: "draft"));   // haiku, opus are left: haiku, and opus is above it
         var retry = Challenge(1) with { Escalation = 1 };
 
-        var launched = await rig.Launch(retry, floor: null, ct, previous: new PreviousRun("haiku", "refused", Check: null, Tokens: 300), escalation: 1);
+        var launched = await rig.Launch(retry, floor: null, ct, previous: new PreviousRun("haiku", "refused", Check: null, Tokens: 300), escalation: 1, agent: new StateAgent(DifferentFrom: "draft"));
 
         Expect.Equal("haiku/True", first.Model + "/" + first.CanEscalate);
         Expect.Equal("opus/False", launched.Model + "/" + launched.CanEscalate);   // sonnet is the drafter's: opus is the only model left

@@ -61,4 +61,8 @@ public enum EdgeType
     /// <summary>Feature, Record or Decision → Concept.</summary>
     [JsonStringEnumMemberName("belongs-to")]
     BelongsTo,
+
+    /// <summary>CodeUnit → Feature: a cross-cutting name the model gave a file. Never walked by a lens; it comes last because the store and map files key by the enum's names (spec 2026-10-27 §2.3).</summary>
+    [JsonStringEnumMemberName("tags")]
+    Tags,
 }

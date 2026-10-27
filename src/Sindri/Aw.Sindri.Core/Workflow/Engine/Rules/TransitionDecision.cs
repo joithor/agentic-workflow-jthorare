@@ -141,7 +141,7 @@ public static partial class TransitionDecision
         }
 
         var step = d.Recipe.States[instance.State].Step?.Use.Value ?? instance.State;
-        if (!d.Context.LegacyUnavailable)
+        if (!d.Context.LegacyUnavailable && !Unavailables.IsLimitKill(failed))   // a limit kill is the owner's to retry or take to the desk, never the engine's (sandbox spec E1-I1)
         {
             return Unavailable(d, instance, failed, step);
         }

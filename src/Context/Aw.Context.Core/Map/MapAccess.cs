@@ -177,6 +177,15 @@ public static class MapAccess
     public static (GraphSnapshot Graph, IReadOnlyList<MapOverride> Undo) WithoutLostEngineAccepts(GraphSnapshot graph, IReadOnlyList<MapOverride> overrides, ExtractedMap found, bool rulesChanged, DateTimeOffset at) =>
         RulesRedecide.Apply(graph, overrides, found, rulesChanged, at);
 
+    /// <summary>What a build keeps of a graph once the structure it generates itself is dropped (spec 2026-10-27 §2.3 and §5): the home and group features and their links, and every cluster-made feature and link. The build writes them again; a decision on a file link is carried to its new 'tags' link or undone.</summary>
+    /// <param name="graph">The graph a build keeps, as stored (no overrides applied).</param>
+    /// <param name="overrides">Every override of that graph's map.</param>
+    /// <param name="found">What this build found.</param>
+    /// <param name="at">When the build runs.</param>
+    /// <returns>The cut graph, the rows to write with the draft (undo rows, and the carried decisions) and what was replaced.</returns>
+    public static (GraphSnapshot Graph, IReadOnlyList<MapOverride> Rows, StructureCounts Counts) WithoutBuiltStructure(GraphSnapshot graph, IReadOnlyList<MapOverride> overrides, ExtractedMap found, DateTimeOffset at) =>
+        StructureCut.Apply(graph, overrides, found, at);
+
     /// <summary>The export document for a version's visible graph: decision nodes and 'quotes' edges are left to the decisions, which imply them.</summary>
     /// <param name="version">The version.</param>
     /// <param name="graph">The visible graph.</param>
@@ -190,7 +199,7 @@ public static class MapAccess
         var orphaned = OverrideApplier.Apply(graph, overrides).Orphaned;
         var o = StringComparer.Ordinal;
         return new MapDocument(
-            MapDocumentValidator.SchemaVersions[^1], MapDocumentKind.Export, version.Repo,
+            SchemaVersionFor(graph), MapDocumentKind.Export, version.Repo,
             [.. graph.Nodes.Where(n => n.Key.Kind != NodeKind.Decision).OrderBy(n => n.Key.Value, o)],
             [.. graph.Edges.Where(e => e.Type != EdgeType.Quotes).OrderBy(e => e.From.Value, o).ThenBy(e => e.To.Value, o).ThenBy(e => e.Type).ThenBy(e => e.Order)],
             [.. graph.Aliases.OrderBy(a => a.Alias.Value, o)],
@@ -199,4 +208,8 @@ public static class MapAccess
             version.KeyVersion, version.Commit, version.Number, exportedAt,
             [.. orphaned.Select(x => x.Target).DistinctBy(k => k.Value, o).OrderBy(k => k.Value, o)]);
     }
+
+    // Version 2 only when the map holds a 'tags' edge or a roll-up count, so a plain map still reads in a build that knows only version 1 (spec 2026-10-27 §3).
+    private static int SchemaVersionFor(GraphSnapshot graph) =>
+        graph.Edges.Any(e => e.Type == EdgeType.Tags || e.Count is not null) ? MapDocumentValidator.SchemaVersions[^1] : MapDocumentValidator.SchemaVersions[0];
 }

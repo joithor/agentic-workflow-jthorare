@@ -11,7 +11,7 @@ namespace Aw.Context.Features.BuildMap;
 /// <param name="Symbols">The code index.</param>
 internal sealed record MapRecordSources(IRecordStore Records, ICodeSymbolSource Symbols)
 {
-    /// <summary>Most resolved paths a pull request keeps as edges.</summary>
+    /// <summary>Most resolved paths a pull request keeps as edges; a pull request with more has none.</summary>
     internal const int TouchCap = 50;
 
     private const int ListPage = 1000;
@@ -30,7 +30,7 @@ internal sealed record MapRecordSources(IRecordStore Records, ICodeSymbolSource 
             return stamps.IsError ? stamps.Error : stored.Error;
         }
 
-        var pass = new RecordPass(Records, input, stored.Value);
+        var pass = new RecordPass(Records, Symbols, input, stored.Value);
         return await pass.Run(cancellationToken).ConfigureAwait(false) is { } failed ? failed : pass.Reading(stamps.Value.RecordStamp);
     }
 

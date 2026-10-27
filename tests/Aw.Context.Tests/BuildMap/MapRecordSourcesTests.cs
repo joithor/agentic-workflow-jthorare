@@ -5,6 +5,7 @@ using Aw.Context.Core.Graph;
 using Aw.Context.Core.Records;
 using Aw.Context.Core.Results;
 using Aw.Context.Core.Sources;
+using Aw.Context.Core.Symbols;
 using Aw.Context.Features.BuildMap;
 using Aw.Context.Testing.Records;
 using Aw.Context.Testing.Symbols;
@@ -42,9 +43,14 @@ public sealed class MapRecordSourcesTests
         [new MapRepoFiles(_app, _appPaths, new Dictionary<string, string>(StringComparer.Ordinal) { ["docs/guide.md"] = "b1", ["src/billing/AGENTS.md"] = "b2" }), .. lib ? [new MapRepoFiles(_lib, _libPaths, new Dictionary<string, string>(StringComparer.Ordinal))] : Array.Empty<MapRepoFiles>()],
         _docGlobs, _names, RecordSamples.Now);
 
-    private static async Task<MapRecordReading> Read(FakeRecordStore store, bool lib = false)
+    private static FakeCodeSymbolSource Index(params SymbolSite[] symbols) =>
+        new([new FakeIndexedRepo(_app, CodeIndexState.Ok, "7c3e1a2f4b5d6e7081920a1b2c3d4e5f60718293", symbols, [])]);
+
+    private static SymbolSite Class(string name, string path) => new($"{path}#{name}", name, "class", path, 1, 40, Signature: null, Exported: true);
+
+    private static async Task<MapRecordReading> Read(FakeRecordStore store, bool lib = false, FakeCodeSymbolSource? symbols = null)
     {
-        var result = await new MapRecordSources(store, new FakeCodeSymbolSource([])).Read(Input(lib), CancellationToken.None);
+        var result = await new MapRecordSources(store, symbols ?? new FakeCodeSymbolSource([])).Read(Input(lib), CancellationToken.None);
         return result.Value;
     }
 
@@ -144,16 +150,61 @@ public sealed class MapRecordSourcesTests
     }
 
     [Fact, Trait("Lane", "unit")]
-    public async Task A_pull_request_over_the_cap_keeps_the_first_fifty_paths_in_order_and_reports_the_rest_as_cut()
+    public async Task A_pull_request_over_the_cap_gets_no_file_edges_and_is_counted_with_its_paths()
     {
         var paths = Enumerable.Range(0, 60).Select(i => string.Create(CultureInfo.InvariantCulture, $"src/gen/F{i:D2}.cs")).ToList();
         var pr = Tracker("github:pr/acme/app/8", "Big rename", RecordKind.Pr, _app, [.. paths.Select(p => new RecordLink("path:app/" + p, RecordLinkKind.Touches, Title: null))]);
         var input = new MapRecordInput([new MapRepoFiles(_app, paths, new Dictionary<string, string>(StringComparer.Ordinal))], _docGlobs, _names, RecordSamples.Now);
         var reading = (await new MapRecordSources(await Store(pr), new FakeCodeSymbolSource([])).Read(input, CancellationToken.None)).Value;
 
-        Assert.Equal(MapRecordSources.TouchCap, Targets(reading, "record:github:pr/acme/app/8").Count);
-        Assert.Equal(["code:src/gen/F00.cs", "code:src/gen/F49.cs"], [Targets(reading, "record:github:pr/acme/app/8")[0], Targets(reading, "record:github:pr/acme/app/8")[^1]], StringComparer.Ordinal);
-        AssertNote(reading, "touches: 1 PRs over the cap (10 paths cut)");
+        Assert.Empty(reading.Map.Edges);
+        Assert.DoesNotContain(reading.Map.Nodes, n => n.Key.Value.Contains("pr/acme/app/8", StringComparison.Ordinal));
+        AssertNote(reading, "touches: 1 PRs over the cap (60 paths)");
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_pull_request_with_exactly_the_cap_keeps_every_file_edge()
+    {
+        var paths = Enumerable.Range(0, MapRecordSources.TouchCap).Select(i => string.Create(CultureInfo.InvariantCulture, $"src/gen/F{i:D2}.cs")).ToList();
+        var pr = Tracker("github:pr/acme/app/10", "Rename", RecordKind.Pr, _app, [.. paths.Select(p => new RecordLink("path:app/" + p, RecordLinkKind.Touches, Title: null))]);
+        var input = new MapRecordInput([new MapRepoFiles(_app, paths, new Dictionary<string, string>(StringComparer.Ordinal))], _docGlobs, _names, RecordSamples.Now);
+        var reading = (await new MapRecordSources(await Store(pr), new FakeCodeSymbolSource([])).Read(input, CancellationToken.None)).Value;
+
+        Assert.Equal(MapRecordSources.TouchCap, Targets(reading, "record:github:pr/acme/app/10").Count);
+        Assert.DoesNotContain(reading.Notes, n => n.StartsWith("touches:", StringComparison.Ordinal));
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_cited_symbol_the_code_index_knows_is_a_mentions_edge_to_the_file_that_defines_it()
+    {
+        var store = await Store(Doc("docs/guide.md", "b1", "The `TaxCalculator` does it."));
+        var reading = await Read(store, symbols: Index(Class("TaxCalculator", "src/billing/Tax.cs")));
+
+        Assert.Equal(["code:src/billing/Tax.cs"], Targets(reading, Doc1("docs/guide.md")), StringComparer.Ordinal);
+        AssertNote(reading, "citations: 1 resolved, 0 unresolved (0 missing, 0 other repo, 0 ambiguous)");
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_cited_symbol_stays_unresolved_and_counted_when_the_code_index_is_off_or_does_not_know_it()
+    {
+        var store = await Store(Doc("docs/guide.md", "b1", "The `TaxCalculator` and `Unknown_Thing`."));
+        var off = await Read(store);
+        var unknown = await Read(store, symbols: Index(Class("TaxCalculator", "src/billing/Tax.cs")));
+
+        Assert.Empty(off.Map.Edges);
+        AssertNote(off, "citations: 0 resolved, 2 unresolved (2 missing, 0 other repo, 0 ambiguous)");
+        Assert.Equal(["code:src/billing/Tax.cs"], Targets(unknown, Doc1("docs/guide.md")), StringComparer.Ordinal);
+        AssertNote(unknown, "citations: 1 resolved, 1 unresolved (1 missing, 0 other repo, 0 ambiguous)");
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_symbol_defined_in_two_files_is_ambiguous_and_makes_no_edge_and_a_plain_word_is_not_looked_up()
+    {
+        var store = await Store(Doc("docs/guide.md", "b1", "The `Handler` and `true` and `value`."));
+        var reading = await Read(store, symbols: Index(Class("Handler", "src/billing/Tax.cs"), Class("Handler", "src/billing/Invoice.cs")));
+
+        Assert.Empty(reading.Map.Edges);
+        AssertNote(reading, "citations: 0 resolved, 1 unresolved (0 missing, 0 other repo, 1 ambiguous)");
     }
 
     [Fact, Trait("Lane", "unit")]

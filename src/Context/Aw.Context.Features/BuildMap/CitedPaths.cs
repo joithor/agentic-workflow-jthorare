@@ -28,6 +28,15 @@ internal static partial class CitedPaths
         return [.. found.Distinct(StringComparer.Ordinal)];
     }
 
+    /// <summary>Finds the backticked names that look like a symbol: an identifier of three or more characters with an upper-case letter or an underscore, so `true` and `value` are not looked up.</summary>
+    /// <param name="text">The doc's text.</param>
+    /// <returns>The distinct names, in order of first mention.</returns>
+    internal static IReadOnlyList<string> FindSymbols(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return [.. Backticked.Matches(text).Select(m => m.Groups["t"].Value).Where(t => SymbolShape.IsMatch(t)).Distinct(StringComparer.Ordinal)];
+    }
+
     private static string? Normalize(string candidate)
     {
         var path = Suffix.Replace(candidate, string.Empty);
@@ -56,6 +65,9 @@ internal static partial class CitedPaths
 
     [GeneratedRegex("(?<![\\w/.:-])(?<t>(?:[\\w.-]+/)*[\\w-]+\\.[A-Za-z0-9]{1,8}:[0-9]+(?:-[0-9]+)?)(?![\\w/])", RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1000)]
     private static partial Regex WithLine { get; }
+
+    [GeneratedRegex("^(?=[A-Za-z0-9_]*[A-Z_])[A-Za-z_][A-Za-z0-9_]{2,}\\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex SymbolShape { get; }
 
     [GeneratedRegex(":[0-9]+(?:-[0-9]+)?\\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
     private static partial Regex Suffix { get; }

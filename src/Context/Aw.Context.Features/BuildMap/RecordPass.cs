@@ -1,16 +1,18 @@
 using System.Globalization;
 using Aw.Context.Core.Docs;
+using Aw.Context.Core.Engine;
 using Aw.Context.Core.Extract;
 using Aw.Context.Core.Graph;
 using Aw.Context.Core.Records;
 using Aw.Context.Core.Results;
 using Aw.Context.Core.Sources;
+using Aw.Context.Core.Symbols;
 using Aw.Kernel;
 
 namespace Aw.Context.Features.BuildMap;
 
 /// <summary>One read of the store for one build: the nodes and edges it finds and the counts the report prints. Not thread-safe; a build makes one per read.</summary>
-internal sealed class RecordPass(IRecordStore records, MapRecordInput input, IReadOnlyList<StoredRecord> stored)
+internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols, MapRecordInput input, IReadOnlyList<StoredRecord> stored)
 {
     private static readonly RecordLinkKind[] _linkKinds = [RecordLinkKind.Parent, RecordLinkKind.Blocks, RecordLinkKind.Duplicates, RecordLinkKind.Relates, RecordLinkKind.Closes, RecordLinkKind.Attachment];
 
@@ -19,11 +21,12 @@ internal sealed class RecordPass(IRecordStore records, MapRecordInput input, IRe
     private readonly Dictionary<string, GraphNode> _nodes = new(StringComparer.Ordinal);
     private readonly Dictionary<(string From, string To), GraphEdge> _edges = [];
     private readonly Dictionary<CitationOutcome, int> _cited = [];
+    private readonly Dictionary<(string Repo, string Name), IReadOnlyList<string>> _symbolFiles = [];
     private int _notSynced;
     private int _older;
     private int _removedTouches;
     private int _overCap;
-    private int _cut;
+    private int _overCapPaths;
 
     /// <summary>Reads the docs, then the tracker records.</summary>
     /// <param name="cancellationToken">Cancels the read.</param>
@@ -118,15 +121,43 @@ internal sealed class RecordPass(IRecordStore records, MapRecordInput input, IRe
             return (0, chunks.Error);
         }
 
+        var text = string.Join('\n', chunks.Value.Select(c => c.Text));
         var made = 0;
-        foreach (var path in CitedPaths.Find(string.Join('\n', chunks.Value.Select(c => c.Text))))
+        foreach (var path in CitedPaths.Find(text))
         {
             var outcome = _paths.Resolve(record.Repo, path);
             _cited[outcome] = _cited.GetValueOrDefault(outcome) + 1;
             made += outcome == CitationOutcome.Resolved && AddCode(from, path, record.Key) ? 1 : 0;
         }
 
+        foreach (var name in CitedPaths.FindSymbols(text))
+        {
+            var files = await SymbolFiles(record.Repo, name, cancellationToken).ConfigureAwait(false);
+            var outcome = files.Count switch { 0 => CitationOutcome.Missing, 1 => CitationOutcome.Resolved, _ => CitationOutcome.Ambiguous };
+            _cited[outcome] = _cited.GetValueOrDefault(outcome) + 1;
+            made += outcome == CitationOutcome.Resolved && AddCode(from, files[0], record.Key) ? 1 : 0;
+        }
+
         return (made, null);
+    }
+
+    // The files that define a symbol of this exact name, in the record's repo or (a record naming none) in every mapped repo. A code index that is off, doesn't know the name or can't be read answers none: the citation is counted, never guessed.
+    private async ValueTask<IReadOnlyList<string>> SymbolFiles(ContextRepoName? repo, string name, CancellationToken cancellationToken)
+    {
+        var key = (repo?.Value ?? string.Empty, name);
+        if (_symbolFiles.TryGetValue(key, out var known))
+        {
+            return known;
+        }
+
+        var found = new SortedSet<string>(StringComparer.Ordinal);
+        foreach (var scope in input.Repos.Where(r => repo is not { } own || r.Name == own))
+        {
+            var hits = await symbols.FindSymbols(scope.Name, new SymbolQuery(name, Prefix: false, Max: 10), asOf: null, cancellationToken).ConfigureAwait(false);
+            found.UnionWith(hits.IsError ? [] : hits.Value.Rows.Where(h => _paths.Has(scope.Name.Value, h.Site.Path)).Select(h => h.Site.Path));
+        }
+
+        return _symbolFiles[key] = [.. found];
     }
 
     // Source-stated links between two stored records; a target the store doesn't hold, or a doc outside the path list, makes no edge.
@@ -160,7 +191,7 @@ internal sealed class RecordPass(IRecordStore records, MapRecordInput input, IRe
         return key;
     }
 
-    // A pull request's changed files: those in the path list, the first TouchCap of them in path order; a path since removed is a count of its own.
+    // A pull request's changed files that are in the path list; past TouchCap it gets none (the per-feature roll-up is the next PR) and is counted. A path since removed is a count of its own.
     private int Touches(StoredRecord record, NodeKey from)
     {
         var resolved = new SortedSet<string>(StringComparer.Ordinal);
@@ -179,10 +210,11 @@ internal sealed class RecordPass(IRecordStore records, MapRecordInput input, IRe
         if (resolved.Count > MapRecordSources.TouchCap)
         {
             _overCap++;
-            _cut += resolved.Count - MapRecordSources.TouchCap;
+            _overCapPaths += resolved.Count;
+            return 0;
         }
 
-        return resolved.Take(MapRecordSources.TouchCap).Count(path => AddCode(from, path, record.Key));
+        return resolved.Count(path => AddCode(from, path, record.Key));
     }
 
     private bool AddCode(NodeKey from, string path, RecordKey evidence) =>
@@ -203,7 +235,7 @@ internal sealed class RecordPass(IRecordStore records, MapRecordInput input, IRe
         var ambiguous = _cited.GetValueOrDefault(CitationOutcome.Ambiguous);
         AddIf(notes, resolved + missing + other + ambiguous, _ => Line($"citations: {resolved} resolved, {missing + other + ambiguous} unresolved ({missing} missing, {other} other repo, {ambiguous} ambiguous)"));
         AddIf(notes, _removedTouches, n => Line($"touched files since removed: {n}"));
-        AddIf(notes, _overCap, n => Line($"touches: {n} PRs over the cap ({_cut} paths cut)"));
+        AddIf(notes, _overCap, n => Line($"touches: {n} PRs over the cap ({_overCapPaths} paths)"));
         return notes;
     }
 

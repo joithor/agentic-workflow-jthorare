@@ -45,10 +45,11 @@ internal static class StructureCut
     private static bool Purges(GraphNode feature, List<GraphEdge> links) =>
         feature.Provenance == Provenance.Deterministic || (feature.Provenance == Provenance.Model && links.Count > 0 && links.TrueForAll(e => e.Provenance == Provenance.Model));
 
-    // The build's own file links and the edges of a feature it makes again. A person's edge to one of those features stays when the feature comes back.
+    // The edges of a feature the build makes again (a deterministic file link into a feature a person or an import wrote is theirs and stays). A person's edge to one of those features stays when the feature comes back.
     private static bool IsDropped(GraphEdge e, HashSet<string> purged, HashSet<string> remade)
     {
-        if ((IsFileLink(e) && e.Provenance == Provenance.Deterministic) || e.Count is not null)   // why: only the build writes a count, and it writes every roll-up edge again
+        // A roll-up edge has a count, only the build writes one, and it writes every roll-up edge again.
+        if (e.Count is not null)
         {
             return true;
         }

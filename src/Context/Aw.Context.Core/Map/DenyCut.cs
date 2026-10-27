@@ -221,15 +221,36 @@ internal sealed class DenyCut
     private static bool IsDeniedKey(NodeKey key, IReadOnlyList<ContextRepo> repos, IReadOnlyList<ContextRepo> mapped) =>
         (key.Kind == NodeKind.Code && mapped.Any(r => r.Denies(key.Value["code:".Length..]))) || (key.Kind == NodeKind.Record && DeniesKey(key.Value["record:".Length..], repos));
 
-    // The model-made features left with no implementing file once the cut edges are gone, accepted or not: a person accepting a model feature doesn't give its denied file back.
-    // Only stored implements edges count (a merge's remapped edge goes with the merge, which is dropped when its node is cut). A feature a person wrote stays.
+    // The derived features left with no file link once the cut edges are gone, accepted or not: a person accepting a model feature doesn't give its denied file back. Derived means made by the build:
+    // a model feature (a cluster's or a proposal's), a tag feature, a home feature, and a group feature all of whose child features are gone. Only stored 'implements' and 'tags' edges count (a merge's remapped edge goes
+    // with the merge, which is dropped when its node is cut). A feature a person wrote stays.
     private static HashSet<string> OrphanedFeatures(Dictionary<string, List<GraphNode>> origin, GraphSnapshot stored, List<GraphEdge> cut, HashSet<string> removed)
     {
+        static bool FileLink(GraphEdge e) => e.Type is EdgeType.Implements or EdgeType.Tags;
         var cutSet = cut.ToHashSet();
-        var stillImplemented = stored.Edges.Where(e => e.Type == EdgeType.Implements && !cutSet.Contains(e)).Select(e => e.To.Value).ToHashSet(StringComparer.Ordinal);
-        return cut.Where(e => e.Type == EdgeType.Implements).Select(e => e.To.Value)
-            .Where(feature => origin.TryGetValue(feature, out var forms) && forms[0] is { Provenance: Provenance.Model, Key.Kind: NodeKind.Feature } && !removed.Contains(feature) && !stillImplemented.Contains(feature))
-            .ToHashSet(StringComparer.Ordinal);
+        var stillLinked = stored.Edges.Where(e => FileLink(e) && !cutSet.Contains(e)).Select(e => e.To.Value).ToHashSet(StringComparer.Ordinal);
+        bool Derived(string feature) => origin.TryGetValue(feature, out var forms) && forms[0] is { Provenance: Provenance.Model or Provenance.Deterministic, Key.Kind: NodeKind.Feature } && !removed.Contains(feature);
+        var orphans = cut.Where(FileLink).Select(e => e.To.Value).Where(feature => Derived(feature) && !stillLinked.Contains(feature)).ToHashSet(StringComparer.Ordinal);
+        AddEmptiedGroups(origin, stored, removed, orphans, stillLinked);
+        return orphans;
+    }
+
+    // A group feature (deterministic, holding no file) all of whose child features are gone goes too, up the chain.
+    private static void AddEmptiedGroups(Dictionary<string, List<GraphNode>> origin, GraphSnapshot stored, HashSet<string> removed, HashSet<string> orphans, HashSet<string> stillLinked)
+    {
+        var children = stored.Edges.Where(e => e is { Type: EdgeType.PartOf, From.Kind: NodeKind.Feature, To.Kind: NodeKind.Feature }).ToLookup(e => e.To.Value, e => e.From.Value, StringComparer.Ordinal);
+        bool Emptied(string group) =>
+            !removed.Contains(group) && !orphans.Contains(group) && !stillLinked.Contains(group)
+            && origin.TryGetValue(group, out var forms) && forms[0] is { Provenance: Provenance.Deterministic, Key.Kind: NodeKind.Feature }
+            && children[group].All(c => removed.Contains(c) || orphans.Contains(c));
+        for (var grew = true; grew;)
+        {
+            grew = false;
+            foreach (var group in children.Select(g => g.Key).Where(Emptied).ToList())
+            {
+                grew |= orphans.Add(group);
+            }
+        }
     }
 
     // A record key such as 'repo:work-app/private/notes.md' is denied when the repo it names denies the path after the repo.

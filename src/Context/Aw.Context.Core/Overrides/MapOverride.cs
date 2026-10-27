@@ -48,6 +48,9 @@ public sealed record MapOverride(
     /// <summary>The 'who' of an undo row a build writes for an engine accept of an edge the new map rules no longer find (see <see cref="UndoingRedecide"/>).</summary>
     public const string RedecideMarker = "service:rules-redecide";
 
+    /// <summary>The 'who' of an undo row a build writes for a decision whose target the structure cut took out and the build did not make again (see <see cref="UndoingStructure"/>).</summary>
+    public const string StructureMarker = "service:structure-cut";
+
     /// <summary>Whether this is an undo row a deny cut wrote (never a person's).</summary>
     [JsonIgnore]
     public bool IsCutUndo => Action == OverrideAction.Undo && Who == CutMarker;
@@ -80,6 +83,16 @@ public sealed record MapOverride(
     {
         ArgumentNullException.ThrowIfNull(decision);
         return new MapOverride(OverrideAction.Undo, decision.Target, RedecideMarker, at, Undoes: decision.ToId());
+    }
+
+    /// <summary>The undo row that takes a decision out with a feature or file link the structure cut dropped and the build did not find again.</summary>
+    /// <param name="decision">The decision.</param>
+    /// <param name="at">When.</param>
+    /// <returns>The undo row, marked as the structure cut's.</returns>
+    public static MapOverride UndoingStructure(MapOverride decision, DateTimeOffset at)
+    {
+        ArgumentNullException.ThrowIfNull(decision);
+        return new MapOverride(OverrideAction.Undo, decision.Target, StructureMarker, at, Undoes: decision.ToId());
     }
 
     /// <summary>Whether this reject names a proposal of the given <see cref="RejectionIdentity"/>: any proposal when it has no identity, otherwise by the identity it was written with or the one the deny cut gave it.</summary>

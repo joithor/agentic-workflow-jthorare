@@ -21,17 +21,18 @@ public static class HomeFeatures
     /// <param name="repo">The repo: its name joins the keys, its deny, demote and role globs say which files get no home.</param>
     /// <param name="paths">The repo's full path list (before the readable-file filter, so a '.csproj' can mark a module root).</param>
     /// <param name="extracted">The deterministic extraction: a surface is 'part-of' the home feature of its defining file; null claims none.</param>
+    /// <param name="pins">Every concept pin of the build, in the order the ids are made in (the ids are unique across it); null takes the repo's own pins.</param>
     /// <returns>The features, their links and the directory-to-feature lookup.</returns>
-    public static HomeAssignment Assign(ContextRepo repo, IReadOnlyList<string> paths, ExtractedMap? extracted = null)
+    public static HomeAssignment Assign(ContextRepo repo, IReadOnlyList<string> paths, ExtractedMap? extracted = null, IReadOnlyList<ConceptPin>? pins = null)
     {
         ArgumentNullException.ThrowIfNull(repo);
         ArgumentNullException.ThrowIfNull(paths);
         var all = paths.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
         var modules = all.Where(IsModuleMarker).Select(DirectoryOf).Where(d => !InOutput(d)).ToHashSet(StringComparer.Ordinal);
-        var slots = new List<Slot>();
+        var slots = new List<HomeSlot>();
         foreach (var module in all.Where(p => IsHomed(repo, p)).GroupBy(p => ModuleOf(p, modules), StringComparer.Ordinal).OrderBy(g => g.Key, StringComparer.Ordinal))
         {
-            var root = new Dir(module.Key);
+            var root = new HomeDir(module.Key);
             foreach (var file in module)
             {
                 root.Add(module.Key.Length == 0 ? file : file[(module.Key.Length + 1)..], file);
@@ -40,10 +41,46 @@ public static class HomeFeatures
             Plan(root, isModuleRoot: true, parent: null, slots);
         }
 
-        return Build(repo, slots, extracted);
+        var resolved = PinIds.Resolve(pins ?? repo.Concepts);
+        return Build(repo, SplitByPins(slots, PinIds.Of(resolved, repo.Concepts)), extracted);
     }
 
-    private static void Plan(Dir node, bool isModuleRoot, Slot? parent, List<Slot> slots)
+    // A pin splits the final leaves (spec 2026-10-27 §10.1): a leaf whose files all belong to one pin, or to none, keeps its plain key; one that spans pins gets a leaf per pin ('~<id>') and the unpinned rest keeps the plain key.
+    private static List<HomeSlot> SplitByPins(List<HomeSlot> slots, IReadOnlyList<ResolvedPin> pins)
+    {
+        if (pins.Count == 0)
+        {
+            return slots;
+        }
+
+        var result = new List<HomeSlot>(slots.Count);
+        var order = pins.Select(p => p.Id).ToList();
+        foreach (var slot in slots)
+        {
+            if (slot.Group || slot.Files.Count == 0)
+            {
+                result.Add(slot);
+                continue;
+            }
+
+            var byPin = slot.Files.GroupBy(f => pins.FirstOrDefault(p => PathDenylist.MatchesExactCase(f, p.Pin.Paths))?.Id, StringComparer.Ordinal).ToList();
+            if (byPin.Count == 1)
+            {
+                slot.PinId = byPin[0].Key;
+                result.Add(slot);
+                continue;
+            }
+
+            foreach (var part in byPin.OrderBy(g => g.Key is null ? -1 : order.IndexOf(g.Key)))
+            {
+                result.Add(new HomeSlot(slot.Path, slot.Loose, group: false, [.. part], slot.Parent) { PinId = part.Key, Suffixed = part.Key is not null });
+            }
+        }
+
+        return result;
+    }
+
+    private static void Plan(HomeDir node, bool isModuleRoot, HomeSlot? parent, List<HomeSlot> slots)
     {
         if (node.Total == 0)
         {
@@ -52,18 +89,18 @@ public static class HomeFeatures
 
         if (node.Total <= SizeCap || node.Children.Count == 0)
         {
-            slots.Add(new Slot(node.Path, loose: false, group: false, node.AllFiles(), parent));
+            slots.Add(new HomeSlot(node.Path, loose: false, group: false, node.AllFiles(), parent));
             return;
         }
 
-        var group = new Slot(node.Path, loose: false, group: true, [], parent);
+        var group = new HomeSlot(node.Path, loose: false, group: true, [], parent);
         slots.Add(group);
         if (isModuleRoot && node.Children.TryGetValue("src", out var src) && node.Total - src.Total <= SizeCap)
         {
             var rest = node.Loose.Concat(node.Children.Where(c => c.Key != "src").SelectMany(c => c.Value.AllFiles())).Order(StringComparer.Ordinal).ToList();
             if (rest.Count > 0)
             {
-                slots.Add(new Slot(node.Path, loose: true, group: false, rest, group));
+                slots.Add(new HomeSlot(node.Path, loose: true, group: false, rest, group));
             }
 
             Plan(src, isModuleRoot: false, group, slots);
@@ -72,7 +109,7 @@ public static class HomeFeatures
 
         if (node.Loose.Count > 0)
         {
-            slots.Add(new Slot(node.Path, loose: true, group: false, [.. node.Loose.Order(StringComparer.Ordinal)], group));
+            slots.Add(new HomeSlot(node.Path, loose: true, group: false, [.. node.Loose.Order(StringComparer.Ordinal)], group));
         }
 
         foreach (var child in node.Children.OrderBy(c => c.Key, StringComparer.Ordinal))
@@ -81,7 +118,7 @@ public static class HomeFeatures
         }
     }
 
-    private static HomeAssignment Build(ContextRepo repo, List<Slot> slots, ExtractedMap? extracted)
+    private static HomeAssignment Build(ContextRepo repo, List<HomeSlot> slots, ExtractedMap? extracted)
     {
         var keys = Keys(repo.Name, slots);
         var nodes = new List<GraphNode>();
@@ -94,15 +131,7 @@ public static class HomeFeatures
         {
             var key = keys[slot];
             nodes.Add(new GraphNode(key, LabelOf(repo.Name, slot), Provenance.Deterministic));
-            if (!slot.Loose)
-            {
-                directories[slot.Path] = key;
-            }
-
-            if (slot.Parent is { } parent)
-            {
-                edges.Add(new GraphEdge(key, keys[parent], EdgeType.PartOf, Provenance.Deterministic));
-            }
+            Link(slot, key, keys, directories, edges);
 
             if (slot.Files.Count == 0)
             {
@@ -122,6 +151,32 @@ public static class HomeFeatures
 
         edges.AddRange(Claims(extracted, files));
         return new HomeAssignment(ExtractedMap.Empty.Plus(new ExtractedMap(nodes, edges)), directories, files, requests, requested);
+    }
+
+    // A directory split by pins is named by its unpinned rest, else by its first pin's leaf; a leaf belongs to its pin and is part of its parent group.
+    private static void Link(HomeSlot slot, NodeKey key, Dictionary<HomeSlot, NodeKey> keys, Dictionary<string, NodeKey> directories, List<GraphEdge> edges)
+    {
+        if (!slot.Loose)
+        {
+            if (slot.Suffixed)
+            {
+                _ = directories.TryAdd(slot.Path, key);
+            }
+            else
+            {
+                directories[slot.Path] = key;
+            }
+        }
+
+        if (slot.PinId is { } pinId)
+        {
+            edges.Add(new GraphEdge(key, NodeKey.From("concept:" + pinId), EdgeType.BelongsTo, Provenance.Deterministic));
+        }
+
+        if (slot.Parent is { } parent)
+        {
+            edges.Add(new GraphEdge(key, keys[parent], EdgeType.PartOf, Provenance.Deterministic));
+        }
     }
 
     private static GraphEdge HomeEdge(ContextRepoName repo, string file, NodeKey home)
@@ -151,7 +206,7 @@ public static class HomeFeatures
     }
 
     // Every key comes from the repo name and the path alone. A key two paths share once the key function has lowercased it gets a hash of its path on every holder, so a new sibling never renames an old key.
-    private static Dictionary<Slot, NodeKey> Keys(ContextRepoName repo, List<Slot> slots)
+    private static Dictionary<HomeSlot, NodeKey> Keys(ContextRepoName repo, List<HomeSlot> slots)
     {
         var bases = slots.ToDictionary(s => s, s => Fit(Base(repo, s), s, 8));
         var shared = slots.GroupBy(s => Normal(bases[s]), StringComparer.Ordinal).Where(g => g.Skip(1).Any()).SelectMany(g => g).ToHashSet();
@@ -162,13 +217,14 @@ public static class HomeFeatures
 
     private static NodeKey KeyOf(string raw) => EntryKey.For(NodeKey.From(raw));
 
-    private static string Base(ContextRepoName repo, Slot slot) =>
-        "feature:" + Escape(repo.Value) + (slot.Path.Length > 0 ? "." + string.Join('.', slot.Path.Split('/').Select(Escape)) : "") + (slot.Loose ? "._" : "");
+    private static string Base(ContextRepoName repo, HomeSlot slot) =>
+        "feature:" + Escape(repo.Value) + (slot.Path.Length > 0 ? "." + string.Join('.', slot.Path.Split('/').Select(Escape)) : "") + (slot.Loose ? "._" : "") + slot.KeySuffix;
 
     // A '_' in a name is written '__' and a '.' '_', so a/b.c, a/b_c and a.b/c differ and no escaped name ends in a lone '_'.
-    private static string Escape(string name) => name.Replace("_", "__", StringComparison.Ordinal).Replace('.', '_');
+    // A '~' in a name is written '~~', so the pin suffix '~<id>' is never part of a directory name.
+    private static string Escape(string name) => name.Replace("_", "__", StringComparison.Ordinal).Replace("~", "~~", StringComparison.Ordinal).Replace('.', '_');
 
-    private static string Fit(string raw, Slot slot, int hex)
+    private static string Fit(string raw, HomeSlot slot, int hex)
     {
         if (raw.Length <= MaxKeyLength)
         {
@@ -186,11 +242,12 @@ public static class HomeFeatures
 
     private static string Hash(string text, int length) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(text)))[..length];
 
-    private static string LabelOf(ContextRepoName repo, Slot slot)
+    private static string LabelOf(ContextRepoName repo, HomeSlot slot)
     {
         var name = slot.Path.Length == 0 ? repo.Value : slot.Path[(slot.Path.LastIndexOf('/') + 1)..];
         var label = ClusterFeatures.Humanize(name);
-        return slot.Loose ? label + " (loose files)" : label;
+        label = slot.Loose ? label + " (loose files)" : label;
+        return slot.Suffixed ? $"{label} ({slot.PinId})" : label;
     }
 
     private static bool IsHomed(ContextRepo repo, string path) =>
@@ -221,68 +278,5 @@ public static class HomeFeatures
         }
 
         return dir;
-    }
-
-    private sealed class Slot(string path, bool loose, bool group, List<string> files, Slot? parent)
-    {
-        public string Path { get; } = path;
-
-        public bool Loose { get; } = loose;
-
-        public bool Group { get; } = group;
-
-        public List<string> Files { get; } = files;
-
-        public Slot? Parent { get; } = parent;
-
-        public string Identity => Loose ? Path + "\0loose" : Path;
-    }
-
-    private sealed class Dir(string path)
-    {
-        public string Path { get; } = path;
-
-        public List<string> Loose { get; } = [];
-
-        public Dictionary<string, Dir> Children { get; } = new(StringComparer.Ordinal);
-
-        public int Total { get; private set; }
-
-        public void Add(string relative, string file)
-        {
-            Total++;
-            var slash = relative.IndexOf('/', StringComparison.Ordinal);
-            if (slash < 0)
-            {
-                Loose.Add(file);
-                return;
-            }
-
-            var name = relative[..slash];
-            if (!Children.TryGetValue(name, out var child))
-            {
-                child = new Dir(Path.Length == 0 ? name : Path + "/" + name);
-                Children[name] = child;
-            }
-
-            child.Add(relative[(slash + 1)..], file);
-        }
-
-        public List<string> AllFiles()
-        {
-            var files = new List<string>(Total);
-            Collect(files);
-            files.Sort(StringComparer.Ordinal);
-            return files;
-        }
-
-        private void Collect(List<string> into)
-        {
-            into.AddRange(Loose);
-            foreach (var child in Children.Values)
-            {
-                child.Collect(into);
-            }
-        }
     }
 }

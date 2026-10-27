@@ -331,6 +331,24 @@
       "confirm": null
     },
     {
+      "action": "CheckContextMapStructure",
+      "class": "desk",
+      "allowedCallers": [
+        "human+terminal",
+        "human",
+        "session"
+      ],
+      "terminal": false,
+      "method": "POST",
+      "route": "/sindri/context/map/checks",
+      "cli": "sindri context map checks [--draft] [--build]",
+      "ui": "ready",
+      "destructive": false,
+      "readsViews": false,
+      "shortcut": null,
+      "confirm": null
+    },
+    {
       "action": "CloseItem:cancelled",
       "class": "desk",
       "allowedCallers": [
@@ -485,6 +503,24 @@
       "method": null,
       "route": null,
       "cli": "sindri services run code-index-embed",
+      "ui": "ready",
+      "destructive": false,
+      "readsViews": false,
+      "shortcut": null,
+      "confirm": null
+    },
+    {
+      "action": "EndLearnMode",
+      "class": "desk",
+      "allowedCallers": [
+        "human+terminal",
+        "human",
+        "session"
+      ],
+      "terminal": false,
+      "method": "POST",
+      "route": "/sindri/sandbox/learn-off",
+      "cli": "sindri sandbox learn off [--repo <repo>] [--json]",
       "ui": "ready",
       "destructive": false,
       "readsViews": false,

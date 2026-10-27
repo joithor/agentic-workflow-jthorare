@@ -213,6 +213,9 @@ public sealed class FakeContextEngine : IContextEngine
         ValueTask.FromResult(Results.Success(new MapHealth("context:map", MapHealthState.Warn, "no map yet", "sindri context map import <file>")));
 
     /// <inheritdoc/>
+    public ValueTask<Result<MapChecksView>> MapStructure(MapChecksSource source, IProgress<string>? progress, ContextScope scope, CancellationToken cancellationToken) => NoMap<MapChecksView>();
+
+    /// <inheritdoc/>
     public ValueTask<Result<MapHealth>> CheckRetention(CancellationToken cancellationToken) =>
         ValueTask.FromResult(Results.Success(new MapHealth("context:retention", MapHealthState.Ok, "nothing to purge", Fix: null)));
 

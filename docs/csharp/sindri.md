@@ -241,6 +241,7 @@ foreign browser `Origin` a 403):
 | `POST /sindri/decisions/{decisionId}` | `Decide` (class `decision`; a session may settle one too, owner decision q93): body `{choice, note}`; answers `{commandId, sequence}`; appends one `decision.recorded` |
 | `POST /sindri/items` | `CreateItem` (desk, API P3; `{title, repo?, body?, link?}`): appends one `item.created`; answers `{accepted: {commandId, sequence}, itemId}` |
 | `POST /sindri/items/{itemId}/close` | `CloseItem` (desk, reads views; `{reason, itemVersion}`, `reason` the name `done` or `cancelled`, a number is 400 `SND-CLI-003`; `itemVersion` at least 1): appends one `item.state-changed` keyed to the version; answers `{commandId, sequence}`; a stale version or an item already closed is 409 `SND-ITEM-409`; refused 503 while the views stall (`SND-VIEW-001`) or rebuild (`SND-API-010`) |
+| `POST /sindri/sandbox/learn-off` | `EndLearnMode` (desk; `{repo?}`, `sindri sandbox learn off [--repo <repo>]`): appends one `sandbox.learn-ended` for the repo, or for every repo without one; no approval, it only tightens; answers `{commandId, sequence}`; a launched session is refused `SND-AUTH-002` |
 | `POST /sindri/views/rebuild` | `RebuildViews` (desk class): records `views.rebuilt` and tells the projector to replay the ledger; answers `{commandId, sequence}` |
 | `GET /sindri/ping` | `PingProcess`: `{pid, epoch}` |
 | `GET /sindri/commands` | `ListCommands`: the command catalog (Command catalog, below) |
@@ -746,6 +747,7 @@ There is no decision, desk, protected, job or step-report tool, and no `sindri_c
 | `SND-LAUNCH-025` | The launcher's host is `t3` and T3 Code can't be reached: not running, its `t3` CLI missing, or a tool call failed or answered something Sindri can't read; nothing starts, or a stop records nothing (`docs/csharp/sindri-launcher.md` "The t3 host") |
 | `SND-LAUNCH-026` | The launcher's host is `t3` and no T3 Code project's folder holds the item's repo; nothing starts (fix: `t3 project add <repo>`) |
 | `SND-LAUNCH-027` | The launcher's host is `t3` and T3 Code has no enabled provider for the launch's agent (`claude-code` → Claude, `codex` → Codex, `cursor` → Cursor); nothing starts (fix: enable it in T3's settings, or open with another `--agent`) |
+| `SND-LAUNCH-028` | No agent in the catalog may run an unattended Step, so a challenger (the scoping second opinion) has nowhere to run; the Step parks (fix: `sindri launch show`, put an agent's argvHash under `agents.<id>.stepArgvHash`, approve the profile). With one usable agent the challenger stays on it and the model pick takes the drafter's model out of the candidates (`SND-MODEL-003` when none is left) |
 | `SND-LAUNCH-029` | A fact a Step reads would be written over a file git tracks in the Step's worktree; the launch is refused and the file is left as it is (`docs/csharp/sindri-launcher.md` "Fact files"; fix: rename or untrack that file, or the fact) |
 | `SND-LAUNCH-030` | The agent entry's `sessionIdPattern` timed out on a session id (2 s limit, non-backtracking), so the id was refused unjudged, not as a mismatch: an argv build (open or resume) fails with it, a heartbeat or exit report that carries the id returns it (the heartbeat still counts and the exit still ends the session), and `session wrap` prints it on stderr when a hook file or a scanned file hit the limit. `-014` is reserved by the sandbox spec (a gap, not a reuse) (launcher L-9) |
 | `SND-LAUNCH-404` | No launch has that id: `GET /sindri/launches/{launchId}` (404; API P10a) |
@@ -908,7 +910,7 @@ blocked renders. `workflow-recipe/workflow.no-outputs`' `fact:context` is a real
 
 The sandbox's types, codes, goldens and profile keys are specified in `docs/csharp/sindri-sandbox.md`. In this page's terms: `session.ended` gains
 the reason `limit` with `kind`, `limit`, `peak` and `peaks` (all left out of the JSON when null), `launch.started` gains an optional `sandbox`
-summary, and `sandbox.denied` and `sandbox.limit-hit` are public events that invalidate the `launch` and `item` views. The codes `-014` to
+summary, and `sandbox.denied` and `sandbox.limit-hit` are public events that invalidate the `launch` and `item` views; `sandbox.learn-ended` (from `sindri sandbox learn off`) is public and invalidates none. The codes `-014` to
 `-021` are in the table above. No sandbox behavior exists before SB-1; the product Host refuses every Step launch with `-014` until SB-5a.
 
 ## Scrub and the pre-commit hook (cutover unit 4.1)

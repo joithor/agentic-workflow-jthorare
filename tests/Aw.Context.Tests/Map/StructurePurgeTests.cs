@@ -139,6 +139,24 @@ public sealed class StructurePurgeTests
     }
 
     [Fact, Trait("Lane", "unit")]
+    public void The_cut_keeps_the_data_things_and_the_code_reads_and_writes_edges_the_file_level_extraction_made()
+    {
+        var stored = Old()
+            .Node("thing:orders", "orders", Provenance.Deterministic)
+            .Edge("code:src/a.ts", EdgeType.Reads, "thing:orders", provenance: Provenance.Deterministic)
+            .Edge("code:src/b.ts", EdgeType.Writes, "thing:orders", provenance: Provenance.Deterministic)
+            .Edge("code:src/a.ts", EdgeType.DependsOn, "code:src/b.ts", provenance: Provenance.Deterministic)
+            .Build();
+
+        var (graph, _, _) = MapAccess.WithoutBuiltStructure(stored, [], Found(), _at);
+
+        Assert.Contains(graph.Nodes, n => n.Key.Value == "thing:orders");
+        Assert.Contains(graph.Edges, e => e is { Type: EdgeType.Reads } && e.From.Value == "code:src/a.ts" && e.To.Value == "thing:orders");
+        Assert.Contains(graph.Edges, e => e is { Type: EdgeType.Writes } && e.From.Value == "code:src/b.ts");
+        Assert.Contains(graph.Edges, e => e is { Type: EdgeType.DependsOn } && e.From.Value == "code:src/a.ts");
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public void A_second_build_over_the_first_ones_result_changes_nothing()
     {
         var stored = Old().Build();

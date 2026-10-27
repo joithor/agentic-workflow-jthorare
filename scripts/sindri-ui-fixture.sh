@@ -374,13 +374,13 @@ workflows() {
   start_on_new_item workflow.dev-desk-round-trip "Fixture work two" >/dev/null
 }
 
-park-timeout() {
+park_timeout() {
   approve_dev_recipe workflow.dev-timeout || return
   start_on_new_item workflow.dev-timeout "Fixture timeout park"
 }
 
 # The older version of a shipped workflow, approved by the owner so the shipped one waits for its own approval (it can do more): a "workflow . changed" row.
-changed-recipe() {
+changed_recipe() {
   local dir="$AW_SINDRI_HOME/ui-fixture-recipes" file out
   mkdir -p "$dir" || return
   file="$dir/workflow.hand-test.yaml"

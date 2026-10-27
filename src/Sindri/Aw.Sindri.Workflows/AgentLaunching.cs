@@ -13,14 +13,14 @@ namespace Aw.Sindri.Infrastructure.Workflows;
 /// What 'LaunchAgentStep' does (engine P8 D4, D8, D12): resolves the target, asks the launcher for the unattended session of <see cref="AgentLaunches.RequestFor"/>, records the outcome,
 /// and reads the worktree's HEAD as the run's start. The launcher is idempotent per launch id, so a retry or a replay starts no second session.
 /// </summary>
-/// <param name="launcher">The launcher.</param>
+/// <param name="launcher">The launcher, waiting out a full session cap (SND-LAUNCH-020).</param>
 /// <param name="targets">Where the Step runs.</param>
 /// <param name="recorder">Records 'launch.started' and 'launch.failed'.</param>
 /// <param name="diff">Reads the start commit.</param>
 /// <param name="catalog">The blocks' descriptors, for the Step's brief.</param>
 /// <param name="inputs">What a launch reads beside the target: the pack bundles, the stored facts and the Steps' instructions.</param>
 /// <param name="picker">Picks the model the session runs on (model-pick spec 5).</param>
-internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver targets, AgentLaunchRecorder recorder, IRunDiff diff, BlockCatalog catalog, AgentLaunchInputs inputs, ModelPicker picker)
+internal sealed class AgentLaunching(AgentLaunchWaiting launcher, AgentTargetResolver targets, AgentLaunchRecorder recorder, IRunDiff diff, BlockCatalog catalog, AgentLaunchInputs inputs, ModelPicker picker)
 {
     /// <summary>Launches the run's session.</summary>
     /// <param name="run">The run.</param>
@@ -71,6 +71,11 @@ internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver tar
     private async Task<AgentLaunched> Start(LaunchRequest request, CancellationToken cancellationToken)
     {
         var result = await launcher.Launch(request, cancellationToken).ConfigureAwait(false);
+        if (result is null)
+        {
+            return new AgentLaunched(Worktree: null, StartHead: null, Failure: null, Waiting: true);   // the cap is still reached: nothing is recorded, the workflow asks again
+        }
+
         switch (result)
         {
             case StartedLaunch started:

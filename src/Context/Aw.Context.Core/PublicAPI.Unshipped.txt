@@ -8468,6 +8468,68 @@ const Aw.Context.Core.Overrides.MapOverride.StructureMarker = "service:structure
 static Aw.Context.Core.Overrides.MapOverride.UndoingStructure(Aw.Context.Core.Overrides.MapOverride! decision, System.DateTimeOffset at) -> Aw.Context.Core.Overrides.MapOverride!
 Aw.Context.Core.Map.MapBuildReport.Structure.get -> Aw.Context.Core.Map.StructureCounts!
 Aw.Context.Core.Map.MapBuildReport.Structure.init -> void
+Aw.Context.Core.Engine.ContextIndexSettings
+Aw.Context.Core.Engine.ContextIndexSettings.AcknowledgeOnyxLeftover.get -> bool
+Aw.Context.Core.Engine.ContextIndexSettings.AcknowledgeOnyxLeftover.init -> void
+Aw.Context.Core.Engine.ContextIndexSettings.ContextIndexSettings() -> void
+Aw.Context.Core.Engine.ContextIndexSettings.Floors.get -> Aw.Context.Core.Engine.DenseFloors!
+Aw.Context.Core.Engine.ContextIndexSettings.Floors.init -> void
+Aw.Context.Core.Engine.ContextIndexSettings.MaxChunks.get -> int
+Aw.Context.Core.Engine.ContextIndexSettings.MaxChunks.init -> void
+Aw.Context.Core.Engine.ContextIndexSettings.RetainDays.get -> int?
+Aw.Context.Core.Engine.ContextIndexSettings.RetainDays.init -> void
+Aw.Context.Core.Engine.ContextIndexSettings.WindowDays.get -> int
+Aw.Context.Core.Engine.ContextIndexSettings.WindowDays.init -> void
+const Aw.Context.Core.Engine.ContextIndexSettings.DefaultMaxChunks = 60000 -> int
+const Aw.Context.Core.Engine.ContextIndexSettings.DefaultWindowDays = 183 -> int
+Aw.Context.Core.Engine.ContextSettings.GitHub.get -> Aw.Context.Core.Engine.GitHubSource?
+Aw.Context.Core.Engine.ContextSettings.GitHub.init -> void
+Aw.Context.Core.Engine.ContextSettings.Index.get -> Aw.Context.Core.Engine.ContextIndexSettings!
+Aw.Context.Core.Engine.ContextSettings.Index.init -> void
+Aw.Context.Core.Engine.ContextSettings.Slack.get -> Aw.Context.Core.Engine.SlackSource?
+Aw.Context.Core.Engine.ContextSettings.Slack.init -> void
+Aw.Context.Core.Engine.DenseFloors
+Aw.Context.Core.Engine.DenseFloors.DenseFloors() -> void
+Aw.Context.Core.Engine.DenseFloors.KeepDistance.get -> double
+Aw.Context.Core.Engine.DenseFloors.KeepDistance.init -> void
+Aw.Context.Core.Engine.DenseFloors.RescueDistance.get -> double
+Aw.Context.Core.Engine.DenseFloors.RescueDistance.init -> void
+Aw.Context.Core.Engine.DenseFloors.RescueHits.get -> int
+Aw.Context.Core.Engine.DenseFloors.RescueHits.init -> void
+Aw.Context.Core.Engine.GitHubSource
+Aw.Context.Core.Engine.GitHubSource.AllowPrivateHost.get -> bool
+Aw.Context.Core.Engine.GitHubSource.AllowPrivateHost.init -> void
+Aw.Context.Core.Engine.GitHubSource.GitHubSource() -> void
+Aw.Context.Core.Engine.GitHubSource.Host.get -> string?
+Aw.Context.Core.Engine.GitHubSource.Host.init -> void
+Aw.Context.Core.Engine.GitHubSource.Repos.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Context.Core.Engine.GitHubSource.Repos.init -> void
+Aw.Context.Core.Engine.GitHubSource.Token.get -> string?
+Aw.Context.Core.Engine.GitHubSource.Token.init -> void
+override Aw.Context.Core.Engine.GitHubSource.ToString() -> string!
+Aw.Context.Core.Engine.SlackChannel
+Aw.Context.Core.Engine.SlackChannel.Deconstruct(out string! Channel, out string! Name) -> void
+Aw.Context.Core.Engine.SlackChannel.Channel.get -> string!
+Aw.Context.Core.Engine.SlackChannel.Channel.init -> void
+Aw.Context.Core.Engine.SlackChannel.Name.get -> string!
+Aw.Context.Core.Engine.SlackChannel.Name.init -> void
+Aw.Context.Core.Engine.SlackChannel.SlackChannel(string! Channel, string! Name) -> void
+Aw.Context.Core.Engine.SlackChannel.Equals(Aw.Context.Core.Engine.SlackChannel? other) -> bool
+override Aw.Context.Core.Engine.SlackChannel.Equals(object? obj) -> bool
+override Aw.Context.Core.Engine.SlackChannel.GetHashCode() -> int
+override Aw.Context.Core.Engine.SlackChannel.ToString() -> string!
+static Aw.Context.Core.Engine.SlackChannel.operator !=(Aw.Context.Core.Engine.SlackChannel? left, Aw.Context.Core.Engine.SlackChannel? right) -> bool
+static Aw.Context.Core.Engine.SlackChannel.operator ==(Aw.Context.Core.Engine.SlackChannel? left, Aw.Context.Core.Engine.SlackChannel? right) -> bool
+Aw.Context.Core.Engine.SlackChannel.<Clone>$() -> Aw.Context.Core.Engine.SlackChannel!
+Aw.Context.Core.Engine.SlackSource
+Aw.Context.Core.Engine.SlackSource.Channels.get -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Engine.SlackChannel!>!
+Aw.Context.Core.Engine.SlackSource.Channels.init -> void
+Aw.Context.Core.Engine.SlackSource.RetainDays.get -> int?
+Aw.Context.Core.Engine.SlackSource.RetainDays.init -> void
+Aw.Context.Core.Engine.SlackSource.SlackSource() -> void
+Aw.Context.Core.Engine.SlackSource.Token.get -> string?
+Aw.Context.Core.Engine.SlackSource.Token.init -> void
+override Aw.Context.Core.Engine.SlackSource.ToString() -> string!
 Aw.Context.Core.Audience.AudienceScope
 Aw.Context.Core.Audience.AudienceScope.<Clone>$() -> Aw.Context.Core.Audience.AudienceScope!
 Aw.Context.Core.Audience.AudienceScope.Allowed.get -> System.Collections.Generic.IReadOnlySet<Aw.Context.Core.Records.AudienceKey>!

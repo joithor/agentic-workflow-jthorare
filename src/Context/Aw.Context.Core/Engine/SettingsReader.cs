@@ -43,7 +43,7 @@ public static partial class SettingsReader
 
         if (UnknownKey(element) is { } unknown)
         {
-            return Invalid("context." + unknown, "is not a context setting this build knows (repos, docs, cascadeDepth, cascadeComponentFanOut, deadline, minHits, labeling, scrub, sessions, sources, eval, code, extract, publish, ranker, history, conceptScan, checks)");
+            return Invalid("context." + unknown, "is not a context setting this build knows (repos, docs, cascadeDepth, cascadeComponentFanOut, deadline, minHits, labeling, scrub, sessions, sources, eval, code, extract, publish, ranker, history, conceptScan, checks, index)");
         }
 
         if (CodeUnknownKey(element) is { } codeKey)
@@ -67,13 +67,15 @@ public static partial class SettingsReader
         var deadline = section.Deadline is null ? settings.Deadline : Duration(section.Deadline);
         var codeDeadline = CodeDeadline(section.Code, settings);
         var sources = SourcesReader.Check(section.Sources);
+        var index = IndexRules.Index(section.Index);
         return (Refused(section, globs), deadline, codeDeadline, sources) switch
         {
             ({ } problem, _, _, _) => problem,
             (_, null, _, _) => Invalid("context.deadline", "is a duration from 100ms to 300s, such as 10s or 500ms"),
             (_, _, null, _) => Invalid("context.code.deadline", "is a duration from 100ms to 86400s, such as 180s or 90s"),
             (_, _, _, { IsError: true }) => sources.Error,
-            _ => WithCode(
+            _ when index.IsError => index.Error,
+            _ => WithOwnedIndex(WithCode(
                 WithFanOut(settings, section) with
                 {
                     Repos = section.Repos?.Select(ContextRepoName.From).ToList(),
@@ -97,9 +99,12 @@ public static partial class SettingsReader
                     CheckLimits = ChecksRules.Limits(section.Checks),
                 },
                 section.Code,
-                codeDeadline.Value),
+                codeDeadline.Value), sources.Value.GitHub, sources.Value.Slack, index.Value),
         };
     }
+
+    private static ContextSettings WithOwnedIndex(ContextSettings settings, GitHubSource? github, SlackSource? slack, ContextIndexSettings index) =>
+        settings with { GitHub = github, Slack = slack, Index = index };
 
     private const int MaxCodeGlobs = 500;
     private const int MaxCodeGlobLength = 2_000;
@@ -251,7 +256,7 @@ public static partial class SettingsReader
 
     private static string? UnknownKey(JsonElement element)
     {
-        string[] known = ["repos", "docs", "cascadeDepth", "cascadeComponentFanOut", "deadline", "maxBudget", "minHits", "labeling", "scrub", "sessions", "sources", "eval", "code", "extract", "publish", "ranker", "history", "conceptScan", "checks"];
+        string[] known = ["repos", "docs", "cascadeDepth", "cascadeComponentFanOut", "deadline", "maxBudget", "minHits", "labeling", "scrub", "sessions", "sources", "eval", "code", "extract", "publish", "ranker", "history", "conceptScan", "checks", "index"];
         return element.EnumerateObject().Select(p => p.Name).FirstOrDefault(n => !known.Contains(n, StringComparer.Ordinal)) is { } name ? Printable(name) : null;
     }
 

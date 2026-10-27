@@ -50,6 +50,15 @@ public sealed record ContextSettings
     /// <summary>The checked 'context.sources.linear' entry for the native Linear adapter (S-6), or null when the profile names no Linear token.</summary>
     public LinearSettings? Linear { get; init; }
 
+    /// <summary>'context.index' (owned index spec §5.5, §5.6, §6, §8): the window, the chunk ceiling, retention, the dense floors and the Onyx leftover acknowledgement.</summary>
+    public ContextIndexSettings Index { get; init; } = new();
+
+    /// <summary>The checked 'context.sources.github' entry, or null when the profile names none.</summary>
+    public GitHubSource? GitHub { get; init; }
+
+    /// <summary>The checked 'context.sources.slack' entry, or null when the profile names none.</summary>
+    public SlackSource? Slack { get; init; }
+
     /// <summary>The Linear team keys ('context.sources.linear.teams') an Onyx identifier alias may name; empty for none.</summary>
     public IReadOnlyList<string> LinearTeams { get; init; } = [];
 

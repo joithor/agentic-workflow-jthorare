@@ -92,7 +92,7 @@ internal static class GraphRows
     {
         public (long, GraphEdge) Map(SqliteDataReader r) => (r.GetInt64(0), new GraphEdge(
             NodeKey.From(r.GetString(1)), NodeKey.From(r.GetString(2)), GraphText.EdgeType(r.GetString(3)), GraphText.Provenance(r.GetString(4)),
-            r.GetDouble(5), Evidence: null, Order: r.IsDBNull(6) ? null : r.GetInt32(6), At: GraphText.Time(Text(r, 7))));
+            r.GetDouble(5), Evidence: null, Order: r.IsDBNull(6) ? null : r.GetInt32(6), At: GraphText.Time(Text(r, 7)), Count: r.IsDBNull(8) ? null : r.GetInt32(8)));
     }
 
     private sealed class AliasMapper : IRowMapper<NodeAlias>

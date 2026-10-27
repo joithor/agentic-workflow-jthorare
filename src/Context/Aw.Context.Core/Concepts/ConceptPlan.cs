@@ -15,7 +15,8 @@ internal static class ConceptPlan
 
     internal static (IReadOnlyList<PlannedConcept> Pinned, IReadOnlyList<PlannedConcept> Derived) Build(GraphSnapshot graph, IReadOnlyList<ConceptPin> pins, MapGlossary? glossary = null, IReadOnlyList<ConceptHint>? hints = null)
     {
-        var features = graph.Nodes.Where(n => n.Key.Kind == NodeKind.Feature).Select(n => n.Key.Value).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
+        var tags = TagFeatures.Of(graph);
+        var features = graph.Nodes.Where(n => n.Key.Kind == NodeKind.Feature && !tags.Contains(n.Key.Value)).Select(n => n.Key.Value).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
         var taken = new HashSet<string>(StringComparer.Ordinal) { ConceptKeys.Other["concept:".Length..] };
         var pinned = pins.Select(p => new PlannedConcept(ConceptSlug.Unique(p.Id?.Value ?? p.Name, taken), "", p, Pinned(graph, features, p))).Select(WithSeed).Select(c => WithTerms(c, glossary)).ToList();
         var left = features.Except(pinned.SelectMany(p => p.Features), StringComparer.Ordinal).ToList();

@@ -18,10 +18,17 @@ internal sealed partial class RecipeWorkflow
     private bool? _escalation;
     private bool EscalationPatched => _escalation ??= Workflow.Patched("model-pick-escalation-v1");   // read only when a run failed on a model with a stronger one allowed; a history without it fails the run as it did
 
-    // The watch is over without a report: recover what the output folder proves, close the run, and decide it, or retry it on a stronger model first.
+    // The session ended with no report: found ended by the first poll after a suspension it was kept through, the Step runs again (sandbox spec §7); else its output folder may prove a result,
+    // a refused or check-failed run is retried once on a stronger model, and any other end fails the Step with how it ended.
     private async Task<WorkflowInstance> Ended(WorkflowInstance instance, AgentRunning running, StepUse step, AgentSessionState ended, Interpreting context)
     {
         var open = running.Open;
+        if (ended.FoundEnded)
+        {
+            var gone = await Close(running, measure: true).ConfigureAwait(true);   // the session is gone: this reads what it spent
+            return await Decided(instance, open, new SessionLost("service:agent:" + step.Use.Value, open.Token) { Tokens = gone.Tokens }, reportId: null, context).ConfigureAwait(true);
+        }
+
         var recovery = await Recover(running).ConfigureAwait(true);
         var closed = await Close(running, measure: true).ConfigureAwait(true);
         if (recovery?.Outcome is { } outcome)
@@ -31,14 +38,20 @@ internal sealed partial class RecipeWorkflow
         }
 
         var kind = AgentFailureKinds.Of(ended.Refused, checkFailed: recovery?.Reason is not null);
-        if (open.Escalation == 0 && !string.Equals(kind, AgentFailureKinds.Crashed, StringComparison.Ordinal) && running.Launched is { CanEscalate: true, Model: { } failedModel } && EscalationPatched)
+        if (RetryAfter(running, kind, closed.Tokens) is { } previous)
         {
-            return await Escalate(instance, open, new PreviousRun(failedModel, kind, Check: null, closed.Tokens), context).ConfigureAwait(true);
+            return await Escalate(instance, open, previous, context).ConfigureAwait(true);
         }
 
         var failed = AgentFailed(open, step, AgentEndReasons.Of(ended.EndedAs), closed.Tokens, recovery?.Reason ?? ended.Detail) with { FailureKind = kind };
         return await Decided(instance, open, failed, reportId: null, context).ConfigureAwait(true);
     }
+
+    // The failed run the one retry follows, or null when there is none: only a refused or check-failed first launch whose pick says a stronger model is allowed is retried.
+    private PreviousRun? RetryAfter(AgentRunning running, string kind, int tokens) =>
+        running.Open.Escalation == 0 && !string.Equals(kind, AgentFailureKinds.Crashed, StringComparison.Ordinal) && running.Launched is { CanEscalate: true, Model: { } failedModel } && EscalationPatched
+            ? new PreviousRun(failedModel, kind, Check: null, tokens)
+            : null;
 
     // Launches the run again on a stronger model, then watches and closes it as usual. The reset: no held launch, no launch time, and the run's launch is the retry's.
     private async Task<WorkflowInstance> Escalate(WorkflowInstance instance, OpenRun open, PreviousRun previous, Interpreting context)

@@ -21,7 +21,7 @@ internal static class DemoteCut
         ArgumentNullException.ThrowIfNull(graph);
         ArgumentNullException.ThrowIfNull(overrides);
         ArgumentNullException.ThrowIfNull(mapped);
-        bool IsDropped(GraphEdge e) => e.Type == EdgeType.Implements && DemotedCode.IsDemoted(e.From, mapped);
+        bool IsDropped(GraphEdge e) => e.Type is EdgeType.Implements or EdgeType.Tags && DemotedCode.IsDemoted(e.From, mapped);
         var dropped = graph.Edges.Where(IsDropped).ToList();
         if (dropped.Count == 0)
         {

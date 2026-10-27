@@ -52,11 +52,11 @@ internal static class ConceptGrouping
 
     private static int Total(Dictionary<string, List<string>> groups) => groups.Values.Sum(g => g.Count);
 
-    // Each node's neighbours over every edge but belongs-to, in both directions.
+    // Each node's neighbours over every edge but belongs-to and tags (a tag is no link between modules), in both directions.
     private static Dictionary<string, HashSet<string>> Neighbors(GraphSnapshot graph)
     {
         var neighbors = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-        foreach (var edge in graph.Edges.Where(e => e.Type != EdgeType.BelongsTo))
+        foreach (var edge in graph.Edges.Where(e => e.Type is not (EdgeType.BelongsTo or EdgeType.Tags)))
         {
             Add(neighbors, edge.From.Value, edge.To.Value);
             Add(neighbors, edge.To.Value, edge.From.Value);

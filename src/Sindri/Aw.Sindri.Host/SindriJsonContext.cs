@@ -72,6 +72,7 @@ using Aw.Sindri.Features.GetItemScope;
 using Aw.Sindri.Features.GetItemTimeline;
 using Aw.Sindri.Features.GetJob;
 using Aw.Sindri.Features.GetLaunch;
+using Aw.Sindri.Features.GetLaunchPicks;
 using Aw.Sindri.Features.GetLaunchTargets;
 using Aw.Sindri.Features.GetNeedsYou;
 using Aw.Sindri.Features.GetProfile;
@@ -105,6 +106,7 @@ using Aw.Sindri.Features.PauseService;
 using Aw.Sindri.Features.ProbeLaunchTargets;
 using Aw.Sindri.Features.ReadLedger;
 using Aw.Sindri.Features.RebuildViews;
+using Aw.Sindri.Features.RecordLimitHit;
 using Aw.Sindri.Features.RegisterMcp;
 using Aw.Sindri.Features.RegisterRecipe;
 using Aw.Sindri.Features.ResumeService;
@@ -182,6 +184,7 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(FleetChanged))]
 [JsonSerializable(typeof(Features.CodeIndexReads.CodeIndexStatusView)), JsonSerializable(typeof(Features.CodeIndexReads.RepoHealth)), JsonSerializable(typeof(CodeIndex.Core.Facade.FindSymbolsAnswer)), JsonSerializable(typeof(CodeIndex.Core.Values.RepoName), TypeInfoPropertyName = "CodeIndexRepoName"), JsonSerializable(typeof(Features.CodeIndexReads.CodeCallsView)), JsonSerializable(typeof(CodeIndex.Core.Facade.RepoStatus), TypeInfoPropertyName = "CodeIndexRepoStatus")]   // code-index reads (CI-10a)
 [JsonSerializable(typeof(SessionList)), JsonSerializable(typeof(SessionView)), JsonSerializable(typeof(SessionRow)), JsonSerializable(typeof(EndedSessionRow)), JsonSerializable(typeof(SessionStatus))]   // collector spec CA-1, CA-2, CA-8
+[JsonSerializable(typeof(LaunchPicks)), JsonSerializable(typeof(LaunchPickView)), JsonSerializable(typeof(StateEscalation)), JsonSerializable(typeof(PickRunRow)), JsonSerializable(typeof(PickRunDetail)), JsonSerializable(typeof(PickRunDelta)), JsonSerializable(typeof(PickRunFrame))]   // model-pick spec §6.1: GET /sindri/launch/picks
 [JsonSerializable(typeof(DeskNotice))]   // engine P6 unit (c): a line of notifications.jsonl
 [JsonSerializable(typeof(EffectRow))]            // engine P6: an effect's ledger row (§5.7)
 [JsonSerializable(typeof(RoutedItem))]           // engine P7 plan D8: the router stub's item.routed event
@@ -235,6 +238,7 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(ModelHistoryRow)), JsonSerializable(typeof(RunScope)), JsonSerializable(typeof(RunModel)), JsonSerializable(typeof(StateOrder))]   // model-pick M-4: the model-history and model-runs views
 [JsonSerializable(typeof(LaunchRow)), JsonSerializable(typeof(LaunchEnd)), JsonSerializable(typeof(LaunchViewer)), JsonSerializable(typeof(LaunchViewerPublic))]   // API P10a (U8): the launches view
 [JsonSerializable(typeof(OpenItemRequest)), JsonSerializable(typeof(OpenItemBody)), JsonSerializable(typeof(LaunchRequested)), JsonSerializable(typeof(GetLaunchRequest)), JsonSerializable(typeof(LaunchView))]
+[JsonSerializable(typeof(RecordLimitHitRequest)), JsonSerializable(typeof(RecordLimitHitResponse)), JsonSerializable(typeof(LimitHitBody))]
 [JsonSerializable(typeof(GetRunSuspensionRequest)), JsonSerializable(typeof(RunSuspensionView))]
 [JsonSerializable(typeof(SessionHeartbeatBody)), JsonSerializable(typeof(SessionHeartbeatResponse)), JsonSerializable(typeof(SessionExitBody)), JsonSerializable(typeof(SessionExitResponse)), JsonSerializable(typeof(CaptureRule))]   // API P10a (U10)
 // Two LaunchId types meet here: the collector's looser one (Core.Launch) and the engine's 'LCH-…' one the launch events carry (SYSLIB1031).

@@ -50,6 +50,7 @@ internal static class EndpointTable
         _ = queries.MapReadLedger();
         _ = queries.MapShowRecipe();
         _ = queries.MapGetRecipeStats();
+        _ = queries.MapGetLaunchPicks();
         _ = queries.MapStreamEvents();
         _ = MapEngineQueries(queries);
         _ = MapInstanceQueries(queries);
@@ -153,7 +154,7 @@ internal static class EndpointTable
         _ = commands.MapApplyCommand();
         _ = commands.MapCompleteStep();
         _ = commands.MapSessionHeartbeat();
-        _ = commands.MapSessionExit();
+        _ = commands.MapSessionExit().MapRecordLimitHit();   // the wrap's calls, proven by the launch secret
         return commands;
     }
 }

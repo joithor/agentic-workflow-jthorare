@@ -4,6 +4,7 @@ using Aw.Sindri.Core;
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Launch.Argv;
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Workflow.Engine;
 
 namespace Aw.Sindri.Infrastructure.Launch;
@@ -43,7 +44,23 @@ internal sealed partial class Launcher
             var hashFile = LaunchSecrets.PathFor(parts.Options.SecretsDirectory, request.Launch);
             var prior = File.Exists(hashFile) ? await File.ReadAllBytesAsync(hashFile, cancellationToken).ConfigureAwait(false) : null;   // a live session of this launch may own it
             LaunchSecrets.Write(parts.Options.SecretsDirectory, request.Launch, secret);
-            return new Prepared(workDir, composed.Value.Argv, Environment(request, workDir), composed.Value.Session?.Value) { PriorHash = prior, Seed = composed.Value.Seed };
+            var env = Environment(request, workDir);
+            var argv = composed.Value.Argv;
+            SandboxSummary? summary = null;
+            if (!request.Attended && parts.Sandbox is { } sandbox)
+            {
+                var confined = await sandbox.Prepare(request, argv, cancellationToken).ConfigureAwait(false);   // a refusal carries its SND-LAUNCH-014..017 or -020 code; Start cleans up (and releases) after it
+                if (confined.IsError)
+                {
+                    return confined.Error;
+                }
+
+                argv = confined.Value.Argv;
+                env["AW_SINDRI_HOME"] = confined.Value.SessionHome;   // the agent sees the session home, never the real one
+                summary = confined.Value.Summary;
+            }
+
+            return new Prepared(workDir, argv, env, composed.Value.Session?.Value) { PriorHash = prior, Seed = composed.Value.Seed, Sandbox = summary };
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -235,6 +252,25 @@ internal sealed partial class Launcher
         LaunchFileStore.DeleteIn(parts.Options.PolicyDirectory, StepPolicyFile.PathFor(parts.Options.PolicyDirectory, launch));
         LaunchFileStore.DeleteIn(parts.Options.LaunchDirectory, McpLaunchConfig.PathFor(parts.Options.LaunchDirectory, launch));
         _ = await parts.Scratch.Remove(ScratchPath(launch), CancellationToken.None).ConfigureAwait(false);   // the evaluator's checkout; none for any other launch
+        await ReleaseSandbox(launch).ConfigureAwait(false);
+    }
+
+    /// <summary>Releases the launch's sandbox (egress, session home, denials) once its session is over or its start failed; a no-op for a launch with none, and a failure never fails the stop.</summary>
+    private async ValueTask ReleaseSandbox(LaunchId launch)
+    {
+        if (parts.Sandbox is not { } sandbox)
+        {
+            return;
+        }
+
+        try
+        {
+            await sandbox.Release(launch, CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            // what the release left behind is the crash sweep's; the stop itself went through
+        }
     }
 
     private string ScratchPath(LaunchId launch) => Path.Combine(parts.Options.ScratchDirectory, "eval-" + launch.Value);
@@ -246,6 +282,9 @@ internal sealed partial class Launcher
 
         /// <summary>The first message, for a host that runs the agent itself (T3) rather than the argv.</summary>
         public string? Seed { get; init; }
+
+        /// <summary>The sandbox summary of a confined Step launch (<c lang="text">launch.started</c>'s sandbox field), or null when it ran unconfined.</summary>
+        public SandboxSummary? Sandbox { get; init; }
     }
 
     /// <summary>The start clashed with a session of this launch's name: it is the launch's own and stays untouched. The hash the live wrap checks is put back (and the session answered as started), or, with no hash to put back, the minted pair is removed and the launch fails.</summary>

@@ -241,6 +241,7 @@ foreign browser `Origin` a 403):
 | `POST /sindri/decisions/{decisionId}` | `Decide` (class `decision`; a session may settle one too, owner decision q93): body `{choice, note}`; answers `{commandId, sequence}`; appends one `decision.recorded` |
 | `POST /sindri/items` | `CreateItem` (desk, API P3; `{title, repo?, body?, link?}`): appends one `item.created`; answers `{accepted: {commandId, sequence}, itemId}` |
 | `POST /sindri/items/{itemId}/close` | `CloseItem` (desk, reads views; `{reason, itemVersion}`, `reason` the name `done` or `cancelled`, a number is 400 `SND-CLI-003`; `itemVersion` at least 1): appends one `item.state-changed` keyed to the version; answers `{commandId, sequence}`; a stale version or an item already closed is 409 `SND-ITEM-409`; refused 503 while the views stall (`SND-VIEW-001`) or rebuild (`SND-API-010`) |
+| `POST /sindri/sandbox/learn-off` | `EndLearnMode` (desk; `{repo?}`, `sindri sandbox learn off [--repo <repo>]`): appends one `sandbox.learn-ended` for the repo, or for every repo without one; no approval, it only tightens; answers `{commandId, sequence}`; a launched session is refused `SND-AUTH-002` |
 | `POST /sindri/views/rebuild` | `RebuildViews` (desk class): records `views.rebuilt` and tells the projector to replay the ledger; answers `{commandId, sequence}` |
 | `GET /sindri/ping` | `PingProcess`: `{pid, epoch}` |
 | `GET /sindri/commands` | `ListCommands`: the command catalog (Command catalog, below) |
@@ -908,7 +909,7 @@ blocked renders. `workflow-recipe/workflow.no-outputs`' `fact:context` is a real
 
 The sandbox's types, codes, goldens and profile keys are specified in `docs/csharp/sindri-sandbox.md`. In this page's terms: `session.ended` gains
 the reason `limit` with `kind`, `limit`, `peak` and `peaks` (all left out of the JSON when null), `launch.started` gains an optional `sandbox`
-summary, and `sandbox.denied` and `sandbox.limit-hit` are public events that invalidate the `launch` and `item` views. The codes `-014` to
+summary, and `sandbox.denied` and `sandbox.limit-hit` are public events that invalidate the `launch` and `item` views; `sandbox.learn-ended` (from `sindri sandbox learn off`) is public and invalidates none. The codes `-014` to
 `-021` are in the table above. No sandbox behavior exists before SB-1; the product Host refuses every Step launch with `-014` until SB-5a.
 
 ## Scrub and the pre-commit hook (cutover unit 4.1)

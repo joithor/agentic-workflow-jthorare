@@ -62,12 +62,12 @@ public static partial class TransitionDecision
     private static BlockId StepOf(RecipeState state, WorkflowInstance instance) =>
         state.Step?.Use ?? throw new InvalidOperationException($"'{instance.Frame.State}' has an agent run but no Step");   // why: only an active state opens a run
 
-    private static Suspension ParkFor(ParkReason reason, ParkKind? kind, BlockId step, LaunchRefusal refusal) => new(
+    private static Suspension ParkFor(ParkReason reason, ParkKind? kind, BlockId step, ILaunchRefusal refusal) => new(
         SuspensionKind.Park, reason, kind, Escalation: null,
         $"{step.Value} can't start: {refusal.Code}{(refusal.Reason is null ? string.Empty : $" ({refusal.Reason})")}: {refusal.Detail}", refusal.Actor, Mirrors: null,
         new ResumeAction(ResumeKind.Rerun, Withheld: null, Gate: null, Effects: []))
     {
-        Sandbox = refusal.Marker,
+        Sandbox = new SandboxPark(refusal.Code, refusal.Reason, refusal.Source),
     };
 
     /// <summary>

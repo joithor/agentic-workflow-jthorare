@@ -1,4 +1,4 @@
-namespace Aw.Sindri.Core.Workflow.Engine.Instances;
+namespace Aw.Sindri.Core.Workflow.Engine;
 
 /// <summary>The sandbox refusal a park carries (sandbox spec §6): the code, its reason and, for -017, the credential source.</summary>
 /// <param name="Code">'SND-LAUNCH-014' to '-017'.</param>

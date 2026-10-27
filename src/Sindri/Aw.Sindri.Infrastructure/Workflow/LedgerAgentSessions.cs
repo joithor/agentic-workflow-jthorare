@@ -41,11 +41,14 @@ internal sealed class LedgerAgentSessions(ILaunchViews views, ILedgerReader ledg
             SessionEndReason.Lost => new AgentSessionState(AgentSessionEnd.Lost, payload.Value.ExitCode),
             SessionEndReason.Idle => new AgentSessionState(AgentSessionEnd.Idle, ExitCode: null, IdleDetail),
             SessionEndReason.Limit when payload.Value is { Kind: { } kind, Limit: { } limit, Peak: { } peak } =>
-                new AgentSessionState(AgentSessionEnd.Limit, ExitCode: null, new AgentSessionLimit(kind, limit, peak).Detail, Refused: false, new AgentSessionLimit(kind, limit, peak)),
+                new AgentSessionState(AgentSessionEnd.Limit, ExitCode: null, Of(kind, limit, peak).Detail, Refused: false, Of(kind, limit, peak)),
             SessionEndReason.Limit => throw new InvalidOperationException("the ledger holds session.ended reason Limit without its kind, limit and peak"),
             _ => throw new InvalidOperationException($"the ledger holds session.ended reason {payload.Value.Reason}, which this build does not know"),
         };
     }
+
+    private static AgentSessionLimit Of(LimitKind kind, long limit, long peak) =>
+        new(kind == LimitKind.Memory ? AgentSessionLimit.Memory : AgentSessionLimit.Wall, limit, peak);
 
     public async ValueTask<Result<long>> Usage(LaunchId launch, CancellationToken cancellationToken)
     {

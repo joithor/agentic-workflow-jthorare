@@ -96,7 +96,7 @@ public abstract class AgentSessionsContract
 
         var state = await sessions.Watch(A.FirstLaunchId, Token);
 
-        Expect.True(state.IsSuccess && state.Value is { IsLive: false, EndedAs: AgentSessionEnd.Limit, ExitCode: null, Limit: { Kind: LimitKind.Memory, Limit: 2_147_483_648, Peak: 2_300_000_000 } });
+        Expect.True(state.IsSuccess && state.Value is { IsLive: false, EndedAs: AgentSessionEnd.Limit, ExitCode: null, Limit: { Limit: 2_147_483_648, Peak: 2_300_000_000 } } && string.Equals(state.Value.Limit.Kind, AgentSessionLimit.Memory, StringComparison.Ordinal));
     }
 
     /// <summary>Spend is the latest sample, and another launch's samples don't count.</summary>

@@ -7,7 +7,7 @@ namespace Aw.Sindri.Core.Workflow.Engine.Triggers;
 /// <param name="Reason">The refusal's reason, or null.</param>
 /// <param name="Source">The credential source for -017, otherwise null.</param>
 /// <param name="Detail">The launcher's message, scrubbed.</param>
-public sealed record RuntimeUnavailable(string Actor, RunToken Run, string Code, string? Reason, string? Source, string Detail) : LaunchRefusal(Actor, Run, Code, Reason, Source, Detail)
+public sealed record RuntimeUnavailable(string Actor, RunToken Run, string Code, string? Reason, string? Source, string Detail) : Trigger(Actor), ILaunchRefusal
 {
     /// <inheritdoc/>
     public override string Name => TriggerNames.RuntimeUnavailable;

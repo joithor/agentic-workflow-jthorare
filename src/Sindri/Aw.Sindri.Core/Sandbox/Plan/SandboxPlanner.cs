@@ -35,7 +35,7 @@ public static class SandboxPlanner
             request.RunNamespace,
             request.Paths.RunDirectory,
             PlanMounts.Build(c),
-            new PlanNetwork(request.Settings?.Network?.Mode ?? SandboxDefaults.Network, c.Groups, request.Net.SindriPort, request.Net.ProxyPort, request.Net.NetDir),
+            Network(request, c),
             PlanEnvironment.Build(c),
             c.Limits,
             c.Github,
@@ -45,6 +45,15 @@ public static class SandboxPlanner
             PlanPolicy.Build(c, hooks),
             hooks);
         return plan with { PlanHash = PlanHasher.Hash(plan, PerLaunchPaths(request)) };
+    }
+
+    private static PlanNetwork Network(SandboxRequest request, PlanContext c)
+    {
+        var profileMode = request.Settings?.Network?.Mode;
+        var (mode, until) = request.Learn is { } learn
+            ? LearnWindow.Decide(profileMode, learn.History, learn.Now)
+            : (profileMode ?? SandboxDefaults.Network, null);
+        return new PlanNetwork(mode, c.Groups, request.Net.SindriPort, request.Net.ProxyPort, request.Net.NetDir, until);
     }
 
     private static void RequireConsistentKind(SandboxRequest request)

@@ -8,6 +8,9 @@ namespace Aw.Sindri.Core.Workflow.Engine.Triggers;
 /// <param name="Run">The agent run whose session ended; a trigger for another run is stale.</param>
 public sealed record SessionLost(string Actor, RunToken Run) : Trigger(Actor)
 {
+    /// <summary>The tokens the lost run's session spent; the engine charges them to the budget (0 when they could not be read).</summary>
+    public int Tokens { get; init; }
+
     /// <inheritdoc/>
     public override string Name => TriggerNames.SessionLost;
 

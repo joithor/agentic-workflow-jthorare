@@ -151,6 +151,16 @@ public sealed class LaunchRefusalDecisionTests
     }
 
     [Fact]
+    public void The_tokens_a_lost_session_spent_reach_the_budget()
+    {
+        var before = Running();
+
+        var applied = Assert.IsType<Applied>(Decide(before, new SessionLost("service:agent:" + ProduceStep, _run) { Tokens = 250 }, Deskable()));
+
+        Assert.Equal(before.Spent.Total + 250, applied.Changes[0].After.Spent.Total);
+    }
+
+    [Fact]
     public void A_lost_session_of_a_run_that_is_not_open_is_stale_and_one_under_a_park_is_not_allowed()
     {
         var stale = Assert.IsType<Rejected>(Decide(Running(), new SessionLost("service:agent:" + ProduceStep, RunToken.For(1, 9)), Deskable()));

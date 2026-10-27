@@ -81,6 +81,13 @@ public static partial class TransitionDecision
             return rejected;
         }
 
-        return RerunAfterAnswer(d, instance, new ResumeAction(ResumeKind.Rerun, Withheld: null, Gate: null, Effects: []));   // the session ran, so the new run counts a round like any rerun; the launch parks do not (the Step never ran)
+        var spend = d.Rules.Spend(instance, d.Recipe, lost.Tokens);   // the session really spent them
+        var spent = instance with { Spent = spend.Spent };
+        if (spend.Park is { } budget)
+        {
+            return d.Changed(d.Rules.Suspend(spent, Caused(budget, d.Trigger, transition: null)));
+        }
+
+        return RerunAfterAnswer(d, spent, new ResumeAction(ResumeKind.Rerun, Withheld: null, Gate: null, Effects: []));   // the session ran, so the new run counts a round like any rerun; the launch parks do not (the Step never ran)
     }
 }

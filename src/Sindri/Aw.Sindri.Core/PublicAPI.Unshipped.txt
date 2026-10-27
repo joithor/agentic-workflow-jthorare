@@ -20591,3 +20591,5 @@ static Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.operator !=(Aw
 static Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable.operator ==(Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable? left, Aw.Sindri.Core.Workflow.Engine.Triggers.RuntimeUnavailable? right) -> bool
 static Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.operator !=(Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost? left, Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost? right) -> bool
 static Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.operator ==(Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost? left, Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost? right) -> bool
+Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Tokens.get -> int
+Aw.Sindri.Core.Workflow.Engine.Triggers.SessionLost.Tokens.init -> void

@@ -121,8 +121,8 @@ internal sealed partial class RecipeWorkflow
         var open = running.Open;
         if (ended.FoundEnded)
         {
-            _ = await Close(running, measure: true).ConfigureAwait(true);   // the session is gone: this reads what it spent
-            return await Decided(applied, open, new SessionLost("service:agent:" + step.Use.Value, open.Token), reportId: null, context).ConfigureAwait(true);
+            var gone = await Close(running, measure: true).ConfigureAwait(true);   // the session is gone: this reads what it spent
+            return await Decided(applied, open, new SessionLost("service:agent:" + step.Use.Value, open.Token) { Tokens = gone.Tokens }, reportId: null, context).ConfigureAwait(true);
         }
 
         var recovery = await Recover(running).ConfigureAwait(true);

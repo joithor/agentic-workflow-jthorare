@@ -8247,7 +8247,6 @@ Aw.Context.Core.Concepts.ConceptPins
 Aw.Context.Core.Extract.HomeAssignment
 Aw.Context.Core.Extract.HomeAssignment.Directories.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Aw.Context.Core.Graph.NodeKey>!
 Aw.Context.Core.Extract.HomeAssignment.Files.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Aw.Context.Core.Graph.NodeKey>!
-Aw.Context.Core.Extract.HomeAssignment.HomeAssignment() -> void
 Aw.Context.Core.Extract.HomeAssignment.LabelRequests.get -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Extract.FileCluster!>!
 Aw.Context.Core.Extract.HomeAssignment.Map.get -> Aw.Context.Core.Extract.ExtractedMap!
 Aw.Context.Core.Extract.HomeAssignment.WithLabels(System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Extract.ClusterLabel!>! labels) -> Aw.Context.Core.Extract.HomeAssignment!

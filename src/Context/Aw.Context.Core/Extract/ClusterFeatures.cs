@@ -141,7 +141,7 @@ public static class ClusterFeatures
         return dot > 0 ? name[..dot] : name;
     }
 
-    private static string Humanize(string text)
+    internal static string Humanize(string text)
     {
         var words = text.Replace('-', ' ').Replace('_', ' ').Replace('.', ' ');
         return words.Length == 0 ? text : string.Concat(words[..1].ToUpper(System.Globalization.CultureInfo.InvariantCulture), words.AsSpan(1));

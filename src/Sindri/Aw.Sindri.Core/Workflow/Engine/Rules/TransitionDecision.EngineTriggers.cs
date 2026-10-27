@@ -34,6 +34,9 @@ public static partial class TransitionDecision
             OpenRequested open => OpenRequest(d, instance, open),
             OutboxRefused refused => OutboxRefusal(d, instance, refused),
             RecipeWake wake => Woken(d, instance, wake),
+            RuntimeUnavailable unavailable => NoRuntimeForLaunch(d, instance, unavailable),
+            LaunchRefused refused => LaunchParked(d, instance, refused),
+            SessionLost lost => SessionGone(d, instance, lost),
             _ => throw new NotSupportedException($"{d.Trigger.Name} is decided by the engine-owned rules its phase adds."),
         };
     }

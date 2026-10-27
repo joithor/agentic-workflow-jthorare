@@ -8301,3 +8301,30 @@ const Aw.Context.Core.Overrides.MapOverride.StructureMarker = "service:structure
 static Aw.Context.Core.Overrides.MapOverride.UndoingStructure(Aw.Context.Core.Overrides.MapOverride! decision, System.DateTimeOffset at) -> Aw.Context.Core.Overrides.MapOverride!
 Aw.Context.Core.Map.MapBuildReport.Structure.get -> Aw.Context.Core.Map.StructureCounts!
 Aw.Context.Core.Map.MapBuildReport.Structure.init -> void
+Aw.Context.Core.Chunking.Chunker
+const Aw.Context.Core.Chunking.Chunker.MaxUnitChars = 100 -> int
+const Aw.Context.Core.Chunking.Chunker.OverlapTokens = 40 -> int
+const Aw.Context.Core.Chunking.Chunker.WindowTokens = 400 -> int
+static Aw.Context.Core.Chunking.Chunker.Estimate(int words, int chars) -> int
+static Aw.Context.Core.Chunking.Chunker.Key(string! recordKey, int seq) -> string!
+static Aw.Context.Core.Chunking.Chunker.Split(string! text) -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Chunking.TextChunk!>!
+Aw.Context.Core.Chunking.TextChunk
+Aw.Context.Core.Chunking.TextChunk.<Clone>$() -> Aw.Context.Core.Chunking.TextChunk!
+Aw.Context.Core.Chunking.TextChunk.Deconstruct(out int Seq, out string! Text, out int Tokens, out int LineStart, out int LineEnd) -> void
+Aw.Context.Core.Chunking.TextChunk.Equals(Aw.Context.Core.Chunking.TextChunk? other) -> bool
+Aw.Context.Core.Chunking.TextChunk.LineEnd.get -> int
+Aw.Context.Core.Chunking.TextChunk.LineEnd.init -> void
+Aw.Context.Core.Chunking.TextChunk.LineStart.get -> int
+Aw.Context.Core.Chunking.TextChunk.LineStart.init -> void
+Aw.Context.Core.Chunking.TextChunk.Seq.get -> int
+Aw.Context.Core.Chunking.TextChunk.Seq.init -> void
+Aw.Context.Core.Chunking.TextChunk.Text.get -> string!
+Aw.Context.Core.Chunking.TextChunk.Text.init -> void
+Aw.Context.Core.Chunking.TextChunk.Tokens.get -> int
+Aw.Context.Core.Chunking.TextChunk.Tokens.init -> void
+Aw.Context.Core.Chunking.TextChunk.TextChunk(int Seq, string! Text, int Tokens, int LineStart, int LineEnd) -> void
+override Aw.Context.Core.Chunking.TextChunk.Equals(object? obj) -> bool
+override Aw.Context.Core.Chunking.TextChunk.GetHashCode() -> int
+override Aw.Context.Core.Chunking.TextChunk.ToString() -> string!
+static Aw.Context.Core.Chunking.TextChunk.operator !=(Aw.Context.Core.Chunking.TextChunk? left, Aw.Context.Core.Chunking.TextChunk? right) -> bool
+static Aw.Context.Core.Chunking.TextChunk.operator ==(Aw.Context.Core.Chunking.TextChunk? left, Aw.Context.Core.Chunking.TextChunk? right) -> bool

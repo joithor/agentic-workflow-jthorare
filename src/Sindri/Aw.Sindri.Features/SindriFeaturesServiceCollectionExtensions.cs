@@ -252,7 +252,7 @@ public static class SindriFeaturesServiceCollectionExtensions
         .AddScoped<IService<RunDoctorRequest, RunDoctorResponse>>(static sp =>
             new WithMoreChecks(sp.GetRequiredService<RunDoctorService>(), sp.GetServices<IDoctorChecks>()))
         .AddScoped<IDoctorChecks, ContextDoctorChecks>()
-        .AddScoped<IDoctorChecks, LauncherDoctorChecks>()
+        .AddScoped<IDoctorChecks, LauncherDoctorChecks>().AddScoped<IDoctorChecks, AgentTargetDoctor>()   // #1428: `agent:target`
         .AddScoped<IDoctorChecks, PrWatchDoctorChecks>()                                   // PB spec API15: the PR watcher's last run
         .AddScoped<IDoctorChecks, SetupDoctor>()                                           // SO-A6: `setup`, ok when every step is done or skipped
         .AddScoped<IDoctorChecks, OnyxStackDoctor>()                                       // Onyx P2: `onyx:stack`, after the context rows, only once `onyx up` has run

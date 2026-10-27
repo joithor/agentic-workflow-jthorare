@@ -12,7 +12,7 @@ using Aw.Sindri.Testing.Launch;
 
 namespace Aw.Sindri.Tests.Workflows;
 
-/// <summary>The second opinion runs on an agent other than the drafter's and carries the drafter's newest launch to the model pick (#1008). What happens with no second usable agent is the lead's call and has no test yet.</summary>
+/// <summary>The second opinion runs on an agent other than the drafter's and carries the drafter's newest launch to the model pick (#1008).</summary>
 [Lane(TestLane.Unit)]
 public sealed class ChallengerPickTests
 {
@@ -73,6 +73,29 @@ public sealed class ChallengerPickTests
 
         Assert.Equal("claude-code", picked.Value.Agent.Value);
         Assert.Null(picked.Value.Drafter);
+    }
+
+    [Fact]
+    public async Task With_no_agent_the_Step_may_use_the_pick_parks_with_SND_LAUNCH_028()
+    {
+        // aider is an added entry with no approved argv hash: nothing in the catalog may run an unattended Step
+        var pick = await Pick([AgentEntries.Aider], drafted: ("claude-code", "opus"));
+
+        var picked = await pick.Pick(Ask(), TestContext.Current.CancellationToken);
+
+        Assert.Equal("SND-LAUNCH-028", picked.Error.Code);
+    }
+
+    [Fact]
+    public async Task One_usable_agent_is_not_a_park_it_stays_on_the_drafters_agent()
+    {
+        var pick = await Pick([AgentEntries.ClaudeCode], drafted: ("claude-code", "opus"));
+
+        var picked = await pick.Pick(Ask(), TestContext.Current.CancellationToken);
+
+        Assert.True(picked.IsSuccess);
+        Assert.Equal("claude-code", picked.Value.Agent.Value);
+        Assert.Equal(new DrafterModel(SameAgent: true, Model: "opus"), picked.Value.Drafter);
     }
 
     private static ChallengerAsk Ask() => new(A.FirstItemId, _instance, _challenge, "draft", AgentId.From("claude-code"));

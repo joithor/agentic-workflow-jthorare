@@ -20906,3 +20906,57 @@ static Aw.Sindri.Core.Sandbox.Denials.DenialsRenderer.Fix(Aw.Sindri.Core.Events.
 Aw.Sindri.Core.Sandbox.Denials.IDenialFiles
 Aw.Sindri.Core.Sandbox.Denials.IDenialFiles.List(Aw.Sindri.Core.Workflow.Engine.LaunchId? launch, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialFile!>!>
 const Aw.Sindri.Core.Sandbox.SandboxEnvironment.Plan = "AW_SANDBOX_PLAN" -> string!
+Aw.Sindri.Core.Launch.ISandboxLaunch
+Aw.Sindri.Core.Launch.ISandboxLaunch.Prepare(Aw.Sindri.Core.Launch.LaunchRequest! request, System.Collections.Generic.IReadOnlyList<string!>! argv, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Launch.PreparedSandbox!>!>
+Aw.Sindri.Core.Launch.ISandboxLaunch.Release(Aw.Sindri.Core.Workflow.Engine.LaunchId launch, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Aw.Sindri.Core.Launch.PreparedSandbox
+Aw.Sindri.Core.Launch.PreparedSandbox.Argv.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Core.Launch.PreparedSandbox.Argv.init -> void
+Aw.Sindri.Core.Launch.PreparedSandbox.<Clone>$() -> Aw.Sindri.Core.Launch.PreparedSandbox!
+Aw.Sindri.Core.Launch.PreparedSandbox.Deconstruct(out Aw.Sindri.Core.Sandbox.SandboxSummary! Summary, out System.Collections.Generic.IReadOnlyList<string!>! Argv, out string! SessionHome, out string! RunArea) -> void
+Aw.Sindri.Core.Launch.PreparedSandbox.Equals(Aw.Sindri.Core.Launch.PreparedSandbox? other) -> bool
+Aw.Sindri.Core.Launch.PreparedSandbox.PreparedSandbox(Aw.Sindri.Core.Sandbox.SandboxSummary! Summary, System.Collections.Generic.IReadOnlyList<string!>! Argv, string! SessionHome, string! RunArea) -> void
+Aw.Sindri.Core.Launch.PreparedSandbox.RunArea.get -> string!
+Aw.Sindri.Core.Launch.PreparedSandbox.RunArea.init -> void
+Aw.Sindri.Core.Launch.PreparedSandbox.SessionHome.get -> string!
+Aw.Sindri.Core.Launch.PreparedSandbox.SessionHome.init -> void
+Aw.Sindri.Core.Launch.PreparedSandbox.Summary.get -> Aw.Sindri.Core.Sandbox.SandboxSummary!
+Aw.Sindri.Core.Launch.PreparedSandbox.Summary.init -> void
+Aw.Sindri.Core.Sandbox.ISandboxChecks
+Aw.Sindri.Core.Sandbox.ISandboxChecks.Run(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Sindri.Core.Sandbox.SandboxCheckReport!>
+Aw.Sindri.Core.Sandbox.SandboxBlocker
+Aw.Sindri.Core.Sandbox.SandboxBlocker.<Clone>$() -> Aw.Sindri.Core.Sandbox.SandboxBlocker!
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Code.get -> Aw.Sindri.Core.Sandbox.SandboxCode!
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Code.init -> void
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Deconstruct(out Aw.Sindri.Core.Sandbox.SandboxCode! Code, out string! Reason, out string? Source) -> void
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Equals(Aw.Sindri.Core.Sandbox.SandboxBlocker? other) -> bool
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Reason.get -> string!
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Reason.init -> void
+Aw.Sindri.Core.Sandbox.SandboxBlocker.SandboxBlocker(Aw.Sindri.Core.Sandbox.SandboxCode! Code, string! Reason, string? Source = null) -> void
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Source.get -> string?
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Source.init -> void
+Aw.Sindri.Core.Sandbox.SandboxCheckReport
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.Blockers.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlocker!>!
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.Blockers.init -> void
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.<Clone>$() -> Aw.Sindri.Core.Sandbox.SandboxCheckReport!
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlocker!>! Blockers, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId>! ReadyToResume) -> void
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.Equals(Aw.Sindri.Core.Sandbox.SandboxCheckReport? other) -> bool
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.Ready.get -> bool
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.ReadyToResume.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId>!
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.ReadyToResume.init -> void
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.SandboxCheckReport(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlocker!>! Blockers, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId>! ReadyToResume) -> void
+override Aw.Sindri.Core.Launch.PreparedSandbox.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Launch.PreparedSandbox.GetHashCode() -> int
+override Aw.Sindri.Core.Launch.PreparedSandbox.ToString() -> string!
+override Aw.Sindri.Core.Sandbox.SandboxBlocker.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.SandboxBlocker.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.SandboxBlocker.ToString() -> string!
+override Aw.Sindri.Core.Sandbox.SandboxCheckReport.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.SandboxCheckReport.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.SandboxCheckReport.ToString() -> string!
+static Aw.Sindri.Core.Launch.PreparedSandbox.operator !=(Aw.Sindri.Core.Launch.PreparedSandbox? left, Aw.Sindri.Core.Launch.PreparedSandbox? right) -> bool
+static Aw.Sindri.Core.Launch.PreparedSandbox.operator ==(Aw.Sindri.Core.Launch.PreparedSandbox? left, Aw.Sindri.Core.Launch.PreparedSandbox? right) -> bool
+static Aw.Sindri.Core.Sandbox.SandboxBlocker.operator !=(Aw.Sindri.Core.Sandbox.SandboxBlocker? left, Aw.Sindri.Core.Sandbox.SandboxBlocker? right) -> bool
+static Aw.Sindri.Core.Sandbox.SandboxBlocker.operator ==(Aw.Sindri.Core.Sandbox.SandboxBlocker? left, Aw.Sindri.Core.Sandbox.SandboxBlocker? right) -> bool
+static Aw.Sindri.Core.Sandbox.SandboxCheckReport.operator !=(Aw.Sindri.Core.Sandbox.SandboxCheckReport? left, Aw.Sindri.Core.Sandbox.SandboxCheckReport? right) -> bool
+static Aw.Sindri.Core.Sandbox.SandboxCheckReport.operator ==(Aw.Sindri.Core.Sandbox.SandboxCheckReport? left, Aw.Sindri.Core.Sandbox.SandboxCheckReport? right) -> bool

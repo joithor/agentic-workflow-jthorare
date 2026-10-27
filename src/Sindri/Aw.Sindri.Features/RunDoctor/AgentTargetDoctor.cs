@@ -10,7 +10,7 @@ internal sealed class AgentTargetDoctor(IApprovedProfile approved, IAgentCatalog
     public async ValueTask<IReadOnlyList<DoctorCheck>> Run(CancellationToken cancellationToken)
     {
         var latest = await approved.Latest(cancellationToken).ConfigureAwait(false);
-        return latest is { IsSuccess: true, Value: { } loaded } && AgentTargetWarning.For(loaded.Profile, catalog) is { } line
+        return latest is { IsSuccess: true, Value: { } loaded } && AgentTargetWarning.For(loaded.Profile.Workflow?.Agent?.Target, catalog) is { } line
             ? [new DoctorCheck(AgentTargetWarning.Name, CheckState.Warn, line, "set workflow.agent.target to an agent whose policy form is supported, then sindri profile approve")]
             : [];
     }

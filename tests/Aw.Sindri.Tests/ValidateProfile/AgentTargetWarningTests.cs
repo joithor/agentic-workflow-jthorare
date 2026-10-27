@@ -1,6 +1,9 @@
+using Aw.Context.Testing.Engine;
+using Aw.Kernel;
 using Aw.Sindri.Core.Doctor;
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Launch;
+using Aw.Sindri.Core.Launch.Argv;
 using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Features.RunDoctor;
 using Aw.Sindri.Features.ValidateProfile;
@@ -22,7 +25,7 @@ public sealed class AgentTargetWarningTests
     [InlineData("reserved")]
     public void A_target_whose_policy_form_cant_be_used_is_warned_with_SND_LAUNCH_013(string target)
     {
-        var line = AgentTargetWarning.For(WithTarget(target), _catalog);
+        var line = AgentTargetWarning.For(AgentId.From(target), _catalog);
 
         Assert.NotNull(line);
         Assert.Contains($"workflow.agent.target '{target}'", line, StringComparison.Ordinal);
@@ -30,20 +33,20 @@ public sealed class AgentTargetWarningTests
     }
 
     [Fact, Trait("Lane", "unit")]
-    public void A_target_with_a_policy_form_is_not_warned() => Assert.Null(AgentTargetWarning.For(WithTarget("claude-code"), _catalog));
+    public void A_target_with_a_policy_form_is_not_warned() => Assert.Null(AgentTargetWarning.For(AgentId.From("claude-code"), _catalog));
 
     [Fact, Trait("Lane", "unit")]
-    public void A_target_not_in_this_boxs_catalog_is_not_warned() => Assert.Null(AgentTargetWarning.For(WithTarget("aider"), _catalog));
+    public void A_target_not_in_this_boxs_catalog_is_not_warned() => Assert.Null(AgentTargetWarning.For(AgentId.From("aider"), _catalog));
 
     [Fact, Trait("Lane", "unit")]
-    public void No_target_is_not_warned() => Assert.Null(AgentTargetWarning.For(new SindriProfile(1, "thor"), _catalog));
+    public void No_target_is_not_warned() => Assert.Null(AgentTargetWarning.For(target: null, _catalog));
 
     [Fact, Trait("Lane", "unit")]
     public async Task Validate_lists_the_warning_and_still_succeeds()
     {
         var h = new SliceHarness();
         h.Profiles.Live = Loaded("cursor");
-        var service = new ValidateProfileService(h.Profiles, h.Profiles, h.Store, h.Events, Aw.Context.Testing.Engine.FakeContextEngine.Instance, agents: _catalog);
+        var service = new ValidateProfileService(h.Profiles, h.Profiles, h.Store, h.Events, FakeContextEngine.Instance, agents: _catalog);
 
         var validated = await service.Handle(new ValidateProfileRequest(), Token);
 
@@ -57,7 +60,7 @@ public sealed class AgentTargetWarningTests
     {
         var h = new SliceHarness();
         h.Profiles.Live = Loaded("claude-code");
-        var service = new ValidateProfileService(h.Profiles, h.Profiles, h.Store, h.Events, Aw.Context.Testing.Engine.FakeContextEngine.Instance, agents: _catalog);
+        var service = new ValidateProfileService(h.Profiles, h.Profiles, h.Store, h.Events, FakeContextEngine.Instance, agents: _catalog);
 
         Assert.Null((await service.Handle(new ValidateProfileRequest(), Token)).Value.Warnings);
     }
@@ -90,7 +93,7 @@ public sealed class AgentTargetWarningTests
     {
         var step = new StepArgs(Model: null, Policy: new StepPolicy([], StepPermissionMode.ReadOnly, "/tmp/step"), new StepRef("draft", "agent"));
 
-        var result = Aw.Sindri.Core.Launch.Argv.StepForms.Arguments(_cursor, step, policyFilePath: null);
+        var result = StepForms.Arguments(_cursor, step, policyFilePath: null);
 
         Assert.Equal("SND-LAUNCH-013", result.Error.Code);
     }
@@ -111,6 +114,6 @@ public sealed class AgentTargetWarningTests
 
     private sealed class Approved(LoadedProfile? profile) : IApprovedProfile
     {
-        public ValueTask<Aw.Kernel.Result<LoadedProfile?>> Latest(CancellationToken cancellationToken) => ValueTask.FromResult<Aw.Kernel.Result<LoadedProfile?>>(profile);
+        public ValueTask<Result<LoadedProfile?>> Latest(CancellationToken cancellationToken) => ValueTask.FromResult<Result<LoadedProfile?>>(profile);
     }
 }

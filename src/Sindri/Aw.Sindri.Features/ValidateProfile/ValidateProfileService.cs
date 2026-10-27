@@ -3,8 +3,8 @@ using Aw.Context.Core.Facade;
 using Aw.Kernel;
 using Aw.Kernel.Services;
 using Aw.Sindri.Core.Events;
-using Aw.Sindri.Core.Ledger;
 using Aw.Sindri.Core.Launch;
+using Aw.Sindri.Core.Ledger;
 using Aw.Sindri.Core.Profile;
 
 namespace Aw.Sindri.Features.ValidateProfile;
@@ -48,7 +48,7 @@ internal sealed class ValidateProfileService(IProfileSource live, IApprovals app
     }
 
     private IReadOnlyList<string>? Warnings(SindriProfile profile) =>
-        agents is not null && AgentTargetWarning.For(profile, agents) is { } line ? [line] : null;
+        agents is not null && AgentTargetWarning.For(profile.Workflow?.Agent?.Target, agents) is { } line ? [line] : null;
 
     private async ValueTask<Error?> ModelProblem(SindriProfile profile, CancellationToken cancellationToken) =>
         models is null ? null : await models.Models(profile, cancellationToken).ConfigureAwait(false);

@@ -75,6 +75,24 @@ public sealed class MapChecksTests
     }
 
     [Fact, Trait("Lane", "unit")]
+    public void A_code_to_table_read_alone_is_a_file_edge_so_the_isolation_measure_applies()
+    {
+        var graph = StructureGraphs.Isolated(total: 40, isolated: 40, fileEdges: false);
+        var table = NodeKey.From("thing:orders");
+        graph = graph with
+        {
+            Nodes = [.. graph.Nodes, new GraphNode(table, "orders", Aw.Context.Core.Results.Provenance.Deterministic)],
+            Edges = [.. graph.Edges, new GraphEdge(NodeKey.From("code:pkg0/f0.ts"), table, EdgeType.Reads, Aw.Context.Core.Results.Provenance.Deterministic)],
+        };
+
+        var report = MapChecks.Measure(graph);
+
+        Assert.False(report.NoFileEdges);
+        Assert.Null(report.Isolated.Skipped);
+        Assert.Equal((40, 40, CheckVerdict.Refuse), (report.Isolated.Count, report.Isolated.Total, report.Isolated.Verdict));
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public void A_map_with_no_home_features_passes_with_nothing_to_say()
     {
         var report = MapChecks.Measure(GraphSnapshot.Empty);

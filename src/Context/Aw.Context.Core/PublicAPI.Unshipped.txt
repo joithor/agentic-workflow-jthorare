@@ -8547,7 +8547,8 @@ Aw.Context.Core.Records.VectorWrite.Vec.init -> void
 Aw.Context.Core.Records.VectorWrite.VectorWrite(Aw.Context.Core.Records.VectorSpace Space, string! Key, string! Model, string! TextHash, System.ReadOnlyMemory<float> Vec) -> void
 Aw.Context.Core.Sources.RecordKind.Pr = 6 -> Aw.Context.Core.Sources.RecordKind
 Aw.Context.Core.Sync.RecordFeed
-Aw.Context.Core.Sync.RecordFeed.RecordFeed() -> void
+Aw.Context.Core.Sync.RecordFeed.RecordFeed(Aw.Context.Core.Sources.SourceId source) -> void
+Aw.Context.Core.Sync.RecordFeed.Source.get -> Aw.Context.Core.Sources.SourceId
 Aw.Context.Core.Sync.RecordItem
 Aw.Context.Core.Sync.RecordItem.<Clone>$() -> Aw.Context.Core.Sync.RecordItem!
 Aw.Context.Core.Sync.RecordItem.Audience.get -> Aw.Context.Core.Records.AudienceKey?
@@ -8643,7 +8644,6 @@ Aw.Context.Core.Vectors.VectorMatrix.Keys.get -> System.Collections.Generic.IRea
 Aw.Context.Core.Vectors.VectorMatrix.Keys.init -> void
 Aw.Context.Core.Vectors.VectorMatrix.VectorMatrix(int Dim, System.ReadOnlyMemory<float> Data, System.Collections.Generic.IReadOnlyList<string!>! Keys) -> void
 abstract Aw.Context.Core.Sync.RecordFeed.Pull(Aw.Context.Core.Sync.RecordPull! pull, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Sync.RecordPage!>!>
-abstract Aw.Context.Core.Sync.RecordFeed.Source.get -> Aw.Context.Core.Sources.SourceId
 override Aw.Context.Core.Audience.AudienceScope.Equals(object? obj) -> bool
 override Aw.Context.Core.Audience.AudienceScope.GetHashCode() -> int
 override Aw.Context.Core.Audience.AudienceScope.ToString() -> string!

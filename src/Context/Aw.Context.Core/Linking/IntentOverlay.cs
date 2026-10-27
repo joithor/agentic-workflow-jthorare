@@ -30,7 +30,7 @@ public static class IntentOverlay
     {
         private readonly List<GraphNode> _nodes = [.. graph.Nodes];
         private readonly List<GraphEdge> _edges = [.. graph.Edges];
-        private readonly HashSet<(string From, string To, EdgeType Type)> _edgeKeys = [.. graph.Edges.Select(e => (e.From.Value, e.To.Value, e.Type))];
+        private readonly HashSet<(string From, string To)> _mentionKeys = [.. graph.Edges.Where(e => e.Type == EdgeType.Mentions).Select(e => (e.From.Value, e.To.Value))];
         private readonly List<IntentLink> _orphaned = [];
         private readonly List<NodeAlias> _newAliases = [];
         private readonly HashSet<string> _present = graph.Nodes.Select(n => n.Key.Value).ToHashSet(StringComparer.Ordinal);
@@ -83,7 +83,7 @@ public static class IntentOverlay
 
             foreach (var m in mentions.OrderBy(m => m.Key.From, StringComparer.Ordinal).ThenBy(m => m.Key.To, StringComparer.Ordinal))
             {
-                AddEdge(new GraphEdge(NodeKey.From(m.Key.From), NodeKey.From(m.Key.To), EdgeType.Mentions, m.Value.Suggested ? Provenance.Model : Provenance.Deterministic, m.Value.Confidence, m.Value.Evidence));
+                AddMention(new GraphEdge(NodeKey.From(m.Key.From), NodeKey.From(m.Key.To), EdgeType.Mentions, m.Value.Suggested ? Provenance.Model : Provenance.Deterministic, m.Value.Confidence, m.Value.Evidence));
             }
         }
 
@@ -91,14 +91,14 @@ public static class IntentOverlay
         {
             foreach (var decision in layer.Decisions.Where(d => _present.Contains(RecordNode(d.Record).Value)))
             {
-                AddEdge(new GraphEdge(decision.ToKey(), RecordNode(decision.Record), EdgeType.Quotes, decision.Provenance, At: decision.At));
+                _edges.Add(new GraphEdge(decision.ToKey(), RecordNode(decision.Record), EdgeType.Quotes, decision.Provenance, At: decision.At));
             }
 
             foreach (var edge in layer.DecisionEdges.Where(e => _present.Contains(e.From.Value)))
             {
                 if (Resolve(edge.To) is { } to)
                 {
-                    AddEdge(edge with { To = to });
+                    _edges.Add(edge with { To = to });
                 }
             }
         }
@@ -111,10 +111,10 @@ public static class IntentOverlay
             return new IntentOverlayResult(new GraphSnapshot(_nodes, _edges, [.. graph.Aliases, .. _newAliases.Where(a => taken.Add(a.Alias.Value))], decisions), _orphaned);
         }
 
-        // An edge the graph already stores (a doc record's cited-path mentions, #1373) is not added twice: a lens would count it twice.
-        private void AddEdge(GraphEdge edge)
+        // A 'mentions' edge the graph already stores (a record's cited-path mentions, #1373) is not added twice: a lens would count it twice. Decision edges are not deduped: a second 'quotes' edge may carry its own evidence or time.
+        private void AddMention(GraphEdge edge)
         {
-            if (_edgeKeys.Add((edge.From.Value, edge.To.Value, edge.Type)))
+            if (_mentionKeys.Add((edge.From.Value, edge.To.Value)))
             {
                 _edges.Add(edge);
             }

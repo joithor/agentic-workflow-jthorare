@@ -140,4 +140,16 @@ public sealed class IntentOverlayTests
 
         Assert.Equal(1, result.Graph.Edges.Count(e => e.Type == EdgeType.Mentions && e.From.Value == "record:" + _r103.Value && e.To.Value == target));
     }
+
+    [Fact, Trait("Lane", "unit")]
+    public void Two_decision_edges_between_the_same_ends_are_both_kept()
+    {
+        var decision = new DecisionRow(_r103, "keeps the focused pane first", "Toggling keeps focus first.", Provenance.Model, DateTimeOffset.Parse("2026-07-23T09:00:00Z", System.Globalization.CultureInfo.InvariantCulture));
+        var first = new GraphEdge(decision.ToKey(), NodeKey.From("feature:layout.split-pane.orientation"), EdgeType.Decides, Provenance.Model, 0.9, [new EvidenceRef(_r103, "aa")]);
+        var second = first with { Evidence = [new EvidenceRef(_r103, "bb")] };
+
+        var result = IntentOverlay.Apply(Map(), new IntentLayer([_record], [], [decision], [first, second]));
+
+        Assert.Equal(2, result.Graph.Edges.Count(e => e.Type == EdgeType.Decides));
+    }
 }

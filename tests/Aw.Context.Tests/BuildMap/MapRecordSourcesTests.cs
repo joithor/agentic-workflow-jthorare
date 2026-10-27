@@ -121,7 +121,7 @@ public sealed class MapRecordSourcesTests
     }
 
     [Fact, Trait("Lane", "unit")]
-    public async Task A_citation_is_resolved_against_the_records_own_repo_then_counted_as_other_repo_or_ambiguous_never_guessed()
+    public async Task A_citation_is_resolved_against_the_records_own_repo_then_the_one_other_repo_that_has_it_and_is_ambiguous_when_several_do()
     {
         var store = await Store(
             Doc("docs/guide.md", "b1", "uses `src/shared/Util.cs`"),
@@ -131,8 +131,8 @@ public sealed class MapRecordSourcesTests
 
         Assert.Equal(["code:src/shared/Util.cs"], Targets(reading, "record:github:issue/acme/app/3"), StringComparer.Ordinal);
         Assert.Equal(["code:src/common/Both.cs"], Targets(reading, "record:github:issue/acme/app/4"), StringComparer.Ordinal);
-        Assert.Empty(Targets(reading, Doc1("docs/guide.md")));
-        AssertNote(reading, "citations: 2 resolved, 2 unresolved (0 missing, 1 other repo, 1 ambiguous)");
+        Assert.Equal(["code:src/shared/Util.cs"], Targets(reading, Doc1("docs/guide.md")), StringComparer.Ordinal);
+        AssertNote(reading, "citations: 3 resolved, 1 unresolved (0 missing, 0 other repo, 1 ambiguous)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -215,6 +215,73 @@ public sealed class MapRecordSourcesTests
 
         Assert.Equal(["code:src/billing/Invoice.cs", "code:src/billing/Tax.cs"], [.. reading.Map.Edges.Select(e => e.To.Value).Order(StringComparer.Ordinal)], StringComparer.Ordinal);
         AssertNote(reading, "citations: 2 resolved, 0 unresolved (0 missing, 0 other repo, 0 ambiguous)");
+    }
+
+    private static string Gen(int i) => string.Create(CultureInfo.InvariantCulture, $"src/gen/F{i:D2}.cs");
+
+    private static MapRecordInput Many(IEnumerable<string> paths) => new([new MapRepoFiles(_app, [.. paths], new Dictionary<string, string>(StringComparer.Ordinal))], _docGlobs, _names, RecordSamples.Now);
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task The_cap_counts_touched_and_cited_files_together_so_a_record_over_it_gets_no_file_edge()
+    {
+        var all = Enumerable.Range(0, 70).Select(Gen).ToList();
+        var pr = Tracker("github:pr/acme/app/11", string.Join(' ', all.Skip(40).Select(p => $"`{p}`")), RecordKind.Pr, _app, [.. all.Take(40).Select(p => new RecordLink("path:app/" + p, RecordLinkKind.Touches, Title: null))]);
+        var reading = (await new MapRecordSources(await Store(pr), new FakeCodeSymbolSource([])).Read(Many(all), CancellationToken.None)).Value;
+
+        Assert.Empty(reading.Map.Edges);
+        AssertNote(reading, "touches: 1 PRs over the cap (70 paths)");
+        AssertNote(reading, "citations: 30 resolved, 0 unresolved (0 missing, 0 other repo, 0 ambiguous)");
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task One_relative_path_in_two_repos_is_two_files_for_the_cap()
+    {
+        var shared = Enumerable.Range(0, 26).Select(Gen).ToList();
+        var links = shared.SelectMany(p => new[] { new RecordLink("path:app/" + p, RecordLinkKind.Touches, Title: null), new RecordLink("path:lib/" + p, RecordLinkKind.Touches, Title: null) });
+        var pr = Tracker("github:pr/acme/app/12", "Rename", RecordKind.Pr, _app, [.. links]);
+        var input = new MapRecordInput(
+            [new MapRepoFiles(_app, shared, new Dictionary<string, string>(StringComparer.Ordinal)), new MapRepoFiles(_lib, shared, new Dictionary<string, string>(StringComparer.Ordinal))], _docGlobs, _names, RecordSamples.Now);
+        var reading = (await new MapRecordSources(await Store(pr), new FakeCodeSymbolSource([])).Read(input, CancellationToken.None)).Value;
+
+        Assert.Empty(reading.Map.Edges);
+        AssertNote(reading, "touches: 1 PRs over the cap (52 paths)");
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_symbol_defined_at_the_same_relative_path_in_two_repos_is_ambiguous()
+    {
+        var store = await Store(Tracker("github:issue/acme/app/13", "The `Handler` is slow."));
+        var symbols = new FakeCodeSymbolSource(
+        [
+            new FakeIndexedRepo(_app, CodeIndexState.Ok, "7c3e1a2f4b5d6e7081920a1b2c3d4e5f60718293", [Class("Handler", "src/common/Both.cs")], []),
+            new FakeIndexedRepo(_lib, CodeIndexState.Ok, "7c3e1a2f4b5d6e7081920a1b2c3d4e5f60718294", [Class("Handler", "src/common/Both.cs")], []),
+        ]);
+        var reading = await Read(store, lib: true, symbols: symbols);
+
+        Assert.Empty(reading.Map.Edges);
+        AssertNote(reading, "citations: 0 resolved, 1 unresolved (0 missing, 0 other repo, 1 ambiguous)");
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_common_symbol_whose_first_hits_are_in_unmapped_files_still_finds_its_mapped_file()
+    {
+        var store = await Store(Doc("docs/guide.md", "b1", "The `Handler` does it."));
+        var unmapped = Enumerable.Range(0, 12).Select(i => Class("Handler", string.Create(CultureInfo.InvariantCulture, $"a/vendor/H{i:D2}.cs")));
+        var reading = await Read(store, symbols: Index([.. unmapped, Class("Handler", "src/billing/Tax.cs")]));
+
+        Assert.Equal(["code:src/billing/Tax.cs"], Targets(reading, Doc1("docs/guide.md")), StringComparer.Ordinal);
+        AssertNote(reading, "citations: 1 resolved, 0 unresolved (0 missing, 0 other repo, 0 ambiguous)");
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Two_link_kinds_to_the_same_record_are_one_edge_carrying_both_kinds_as_evidence()
+    {
+        var issue = Tracker("linear:issue/abc", "Tax is wrong");
+        var pr = Tracker("github:pr/acme/app/9", "Fix tax", RecordKind.Pr, _app, new RecordLink("linear:issue/abc", RecordLinkKind.Parent, Title: null), new RecordLink("linear:issue/abc", RecordLinkKind.Relates, Title: null));
+        var reading = await Read(await Store(issue, pr));
+
+        var edge = Assert.Single(reading.Map.Edges, e => e.To.Value == "record:linear:issue/abc");
+        Assert.Equal(["parent", "relates"], edge.EvidenceOrEmpty.Select(e => e.Span!), StringComparer.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]

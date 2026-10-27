@@ -14,20 +14,24 @@ internal sealed class RepoPaths
         _longestFirst = [.. _byRepo.Keys.OrderByDescending(n => n.Length).ThenBy(n => n, StringComparer.Ordinal)];
     }
 
-    /// <summary>Resolves a cited path.</summary>
+    /// <summary>Resolves a cited path: the record's own repo first, then the one other repo that has it.</summary>
     /// <param name="repo">The citing record's repo, or null for a record that names none.</param>
     /// <param name="path">The path.</param>
-    /// <returns>How it fared.</returns>
-    internal CitationOutcome Resolve(ContextRepoName? repo, string path)
+    /// <returns>How it fared and, when resolved, the repo that holds the file.</returns>
+    internal (CitationOutcome Outcome, string? Repo) Resolve(ContextRepoName? repo, string path)
     {
         var holders = _byRepo.Where(r => r.Value.Contains(path)).Select(r => r.Key).ToList();
-        return (repo, holders.Count) switch
+        if (holders.Count == 0)
         {
-            (_, 0) => CitationOutcome.Missing,
-            ({ } own, _) => holders.Contains(own.Value, StringComparer.Ordinal) ? CitationOutcome.Resolved : CitationOutcome.OtherRepo,
-            (null, 1) => CitationOutcome.Resolved,
-            _ => CitationOutcome.Ambiguous,
-        };
+            return (CitationOutcome.Missing, null);
+        }
+
+        if (repo is { } own && holders.Contains(own.Value, StringComparer.Ordinal))
+        {
+            return (CitationOutcome.Resolved, own.Value);
+        }
+
+        return holders.Count == 1 ? (CitationOutcome.Resolved, holders[0]) : (CitationOutcome.Ambiguous, null);
     }
 
     /// <summary>Splits a 'touches' link's 'path:&lt;repo&gt;/&lt;path&gt;' (a repo name may hold '/').</summary>

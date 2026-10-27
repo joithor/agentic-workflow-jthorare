@@ -14,6 +14,8 @@ namespace Aw.Context.Features.BuildMap;
 /// <summary>One read of the store for one build: the nodes and edges it finds and the counts the report prints. Not thread-safe; a build makes one per read.</summary>
 internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols, MapRecordInput input, IReadOnlyList<StoredRecord> stored)
 {
+    private const int SymbolHitsAsked = 200;
+
     private static readonly RecordLinkKind[] _linkKinds = [RecordLinkKind.Parent, RecordLinkKind.Blocks, RecordLinkKind.Duplicates, RecordLinkKind.Relates, RecordLinkKind.Closes, RecordLinkKind.Attachment];
 
     private readonly RepoPaths _paths = new(input.Repos);
@@ -21,7 +23,7 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
     private readonly Dictionary<string, GraphNode> _nodes = new(StringComparer.Ordinal);
     private readonly Dictionary<(string From, string To), GraphEdge> _edges = [];
     private readonly Dictionary<CitationOutcome, int> _cited = [];
-    private readonly Dictionary<(string Repo, string Name), IReadOnlyList<string>> _symbolFiles = [];
+    private readonly Dictionary<(string Repo, string Name), IReadOnlyList<(string Repo, string Path)>> _symbolFiles = [];
     private int _notSynced;
     private int _older;
     private int _removedTouches;
@@ -76,9 +78,15 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
             {
                 _older++;
             }
-            else if (!doc.Blocked && await Cite(doc, node.Key, cancellationToken).ConfigureAwait(false) is { Error: { } failed })
+            else if (!doc.Blocked)
             {
-                return failed;
+                var targets = new HashSet<(string Repo, string Path)>();
+                if (await Cite(doc, targets, cancellationToken).ConfigureAwait(false) is { } failed)
+                {
+                    return failed;
+                }
+
+                _ = Emit(doc.Key, node.Key, targets);
             }
         }
 
@@ -92,19 +100,14 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
             return null;
         }
 
-        var made = Links(record, from) + Touches(record, from);
-        if (!record.Blocked)
+        var targets = new HashSet<(string Repo, string Path)>();
+        Touches(record, targets);
+        if (!record.Blocked && await Cite(record, targets, cancellationToken).ConfigureAwait(false) is { } failed)
         {
-            var cited = await Cite(record, from, cancellationToken).ConfigureAwait(false);
-            if (cited.Error is { } failed)
-            {
-                return failed;
-            }
-
-            made += cited.Made;
+            return failed;
         }
 
-        if (made > 0)
+        if (Links(record, from) + Emit(record.Key, from, targets) > 0)
         {
             _ = _nodes.TryAdd(from.Value, Node(record, from));
         }
@@ -112,22 +115,24 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
         return null;
     }
 
-    // The paths a record's text cites, resolved against the path lists: an exact match is an edge, anything else a count.
-    private async ValueTask<(int Made, Error? Error)> Cite(StoredRecord record, NodeKey from, CancellationToken cancellationToken)
+    // The paths and symbols a record's text cites, resolved against the path lists: an exact match joins the record's file targets, anything else is a count.
+    private async ValueTask<Error?> Cite(StoredRecord record, HashSet<(string Repo, string Path)> targets, CancellationToken cancellationToken)
     {
         var chunks = await records.Chunks(record.Key, cancellationToken).ConfigureAwait(false);
         if (chunks.IsError)
         {
-            return (0, chunks.Error);
+            return chunks.Error;
         }
 
         var text = string.Join('\n', chunks.Value.Select(c => c.Text));
-        var made = 0;
         foreach (var path in CitedPaths.Find(text))
         {
-            var outcome = _paths.Resolve(record.Repo, path);
+            var (outcome, holder) = _paths.Resolve(record.Repo, path);
             _cited[outcome] = _cited.GetValueOrDefault(outcome) + 1;
-            made += outcome == CitationOutcome.Resolved && AddCode(from, path, record.Key) ? 1 : 0;
+            if (holder is not null)
+            {
+                _ = targets.Add((holder, path));
+            }
         }
 
         foreach (var name in CitedPaths.FindSymbols(text))
@@ -135,14 +140,17 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
             var files = await SymbolFiles(record.Repo, name, cancellationToken).ConfigureAwait(false);
             var outcome = files.Count switch { 0 => CitationOutcome.Missing, 1 => CitationOutcome.Resolved, _ => CitationOutcome.Ambiguous };
             _cited[outcome] = _cited.GetValueOrDefault(outcome) + 1;
-            made += outcome == CitationOutcome.Resolved && AddCode(from, files[0], record.Key) ? 1 : 0;
+            if (outcome == CitationOutcome.Resolved)
+            {
+                _ = targets.Add(files[0]);
+            }
         }
 
-        return (made, null);
+        return null;
     }
 
-    // The files that define a symbol of this exact name, in the record's repo or (a record naming none) in every mapped repo. A code index that is off, doesn't know the name or can't be read answers none: the citation is counted, never guessed.
-    private async ValueTask<IReadOnlyList<string>> SymbolFiles(ContextRepoName? repo, string name, CancellationToken cancellationToken)
+    // The mapped files that define a symbol of this exact name, in the record's repo or (a record naming none) in every mapped repo, as (repo, path); two are enough to call it ambiguous. A code index that is off, doesn't know the name or can't be read answers none: the citation is counted, never guessed.
+    private async ValueTask<IReadOnlyList<(string Repo, string Path)>> SymbolFiles(ContextRepoName? repo, string name, CancellationToken cancellationToken)
     {
         var key = (repo?.Value ?? string.Empty, name);
         if (_symbolFiles.TryGetValue(key, out var known))
@@ -150,14 +158,25 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
             return known;
         }
 
-        var found = new SortedSet<string>(StringComparer.Ordinal);
+        var found = new List<(string Repo, string Path)>();
         foreach (var scope in input.Repos.Where(r => repo is not { } own || r.Name == own))
         {
-            var hits = await symbols.FindSymbols(scope.Name, new SymbolQuery(name, Prefix: false, Max: 10), asOf: null, cancellationToken).ConfigureAwait(false);
-            found.UnionWith(hits.IsError ? [] : hits.Value.Rows.Where(h => _paths.Has(scope.Name.Value, h.Site.Path)).Select(h => h.Site.Path));
+            var hits = await symbols.FindSymbols(scope.Name, new SymbolQuery(name, Prefix: false, Max: SymbolHitsAsked), asOf: null, cancellationToken).ConfigureAwait(false);
+            if (hits.IsError)
+            {
+                continue;
+            }
+
+            foreach (var path in hits.Value.Rows.Select(h => h.Site.Path).Where(p => _paths.Has(scope.Name.Value, p)).Distinct(StringComparer.Ordinal))
+            {
+                if (found.Count < 2 && !found.Contains((scope.Name.Value, path)))
+                {
+                    found.Add((scope.Name.Value, path));
+                }
+            }
         }
 
-        return _symbolFiles[key] = [.. found];
+        return _symbolFiles[key] = found;
     }
 
     // Source-stated links between two stored records; a target the store doesn't hold, or a doc outside the path list, makes no edge.
@@ -191,36 +210,56 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
         return key;
     }
 
-    // A pull request's changed files that are in the path list; past TouchCap it gets none (the per-feature roll-up is the next PR) and is counted. A path since removed is a count of its own.
-    private int Touches(StoredRecord record, NodeKey from)
+    // A pull request's changed files that are in the path list join its file targets. A path since removed is a count of its own.
+    private void Touches(StoredRecord record, HashSet<(string Repo, string Path)> targets)
     {
-        var resolved = new SortedSet<string>(StringComparer.Ordinal);
         foreach (var touched in record.Links.Where(l => l.Kind == RecordLinkKind.Touches).Select(l => _paths.Touched(l.ToRef)).OfType<(string Repo, string Path)>())
         {
             if (_paths.Has(touched.Repo, touched.Path))
             {
-                _ = resolved.Add(touched.Path);
+                _ = targets.Add(touched);
             }
             else
             {
                 _removedTouches++;
             }
         }
+    }
 
-        if (resolved.Count > MapRecordSources.TouchCap)
+    // A record's file edges, from everything it touched, cited or defined: past TouchCap (counted by (repo, path), so one relative path in two repos is two) it gets none (the per-feature roll-up is the next PR) and is counted.
+    private int Emit(RecordKey evidence, NodeKey from, HashSet<(string Repo, string Path)> targets)
+    {
+        if (targets.Count > MapRecordSources.TouchCap)
         {
             _overCap++;
-            _overCapPaths += resolved.Count;
+            _overCapPaths += targets.Count;
             return 0;
         }
 
-        return resolved.Count(path => AddCode(from, path, record.Key));
+        return targets.OrderBy(t => t.Path, StringComparer.Ordinal).ThenBy(t => t.Repo, StringComparer.Ordinal).Count(t => AddCode(from, t.Path, evidence));
     }
 
     private bool AddCode(NodeKey from, string path, RecordKey evidence) =>
         NodeKey.TryFrom("code:" + path, out var code) && AddEdge(new GraphEdge(from, code, EdgeType.Mentions, Provenance.Deterministic, 1.0, [new EvidenceRef(evidence)]));
 
-    private bool AddEdge(GraphEdge edge) => _edges.TryAdd((edge.From.Value, edge.To.Value), edge);
+    // One edge per (from, to): a second link kind to the same record, or a path cited twice, adds its evidence to that edge. True when the edge is new.
+    private bool AddEdge(GraphEdge edge)
+    {
+        var key = (edge.From.Value, edge.To.Value);
+        if (!_edges.TryGetValue(key, out var kept))
+        {
+            _edges[key] = edge;
+            return true;
+        }
+
+        var more = edge.EvidenceOrEmpty.Where(e => !kept.EvidenceOrEmpty.Contains(e)).ToList();
+        if (more.Count > 0)
+        {
+            _edges[key] = kept with { Evidence = [.. kept.EvidenceOrEmpty, .. more] };
+        }
+
+        return false;
+    }
 
     private static GraphNode Node(StoredRecord record, NodeKey key) => new(key, record.Title, Provenance.Deterministic, At: record.UpdatedAt);
 

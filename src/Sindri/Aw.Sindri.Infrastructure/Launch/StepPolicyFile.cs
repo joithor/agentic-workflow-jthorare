@@ -15,8 +15,9 @@ internal static class StepPolicyFile
 
     /// <summary>The file's text for <paramref name="policy"/>.</summary>
     /// <param name="policy">The Step's policy.</param>
+    /// <param name="sandbox">The sandbox plan's contribution (its rules, 'dontAsk', bypass disabled, the CLI's own sandbox switch), or null for an unconfined launch.</param>
     /// <returns>The settings JSON.</returns>
-    internal static byte[] Render(StepPolicy policy)
+    internal static byte[] Render(StepPolicy policy, SandboxPolicyOverlay? sandbox = null)
     {
         ArgumentNullException.ThrowIfNull(policy);
         var allow = new List<string>(policy.AllowedTools);
@@ -45,7 +46,14 @@ internal static class StepPolicyFile
             DefaultMode = policy.Mode == StepPermissionMode.Default ? null : "plan",
             AdditionalDirectories = directories,
         };
-        return [.. AwJson.Serialize(new ClaudeSettingsDocument(permissions, TurnHooks()), _json), .. "\n"u8];
+        var document = sandbox is null
+            ? new ClaudeSettingsDocument(permissions, TurnHooks())
+            : new ClaudeSettingsDocument(SandboxPolicyFiles.Merge(permissions, policy.Mode, sandbox), TurnHooks())
+            {
+                DisableBypassPermissionsMode = "disable",
+                Sandbox = new ClaudeSandbox(sandbox.InnerSandboxOn),
+            };
+        return [.. AwJson.Serialize(document, _json), .. "\n"u8];
     }
 
     // The Step's session tells Sindri when its turn ends (the Stop hook touches launches/<launch>.turn-ended; StopFailure, which runs instead of Stop when an API error ends the turn, touches .turn-failed) and starts
@@ -80,12 +88,13 @@ internal static class StepPolicyFile
     /// <param name="directory">The launcher's policy directory.</param>
     /// <param name="launch">The launch.</param>
     /// <param name="policy">The Step's policy.</param>
+    /// <param name="sandbox">The sandbox plan's contribution, or null for an unconfined launch.</param>
     /// <returns>The file's path.</returns>
-    internal static string Write(string directory, LaunchId launch, StepPolicy policy)
+    internal static string Write(string directory, LaunchId launch, StepPolicy policy, SandboxPolicyOverlay? sandbox = null)
     {
         OwnerOnly.EnsureDirectory(directory);
         var path = PathFor(directory, launch);
-        OwnerOnly.WriteAtomically(path, Render(policy));
+        OwnerOnly.WriteAtomically(path, Render(policy, sandbox));
         return path;
     }
 

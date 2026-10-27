@@ -1,6 +1,23 @@
+using System.Text.Json.Serialization;
+
 namespace Aw.Sindri.Infrastructure.Launch;
 
 /// <summary>The settings file the launcher writes for Claude Code's 'claude-settings-file' policy form: a permissions block, so it can only tighten the profile, and the two hooks that tell Sindri a turn ended or started.</summary>
 /// <param name="Permissions">The permissions block.</param>
 /// <param name="Hooks">The turn hooks.</param>
-internal sealed record ClaudeSettingsDocument(ClaudePermissions Permissions, ClaudeHooks Hooks);
+internal sealed record ClaudeSettingsDocument(ClaudePermissions Permissions, ClaudeHooks Hooks)
+{
+    /// <summary>'disable' for a sandboxed Step (the repo's own settings file spells the key at the top level), or absent.</summary>
+    [JsonPropertyName("disableBypassPermissionsMode")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? DisableBypassPermissionsMode { get; init; }
+
+    /// <summary>The CLI's own sandbox switch for a sandboxed Step, or absent.</summary>
+    [JsonPropertyName("sandbox")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ClaudeSandbox? Sandbox { get; init; }
+}
+
+/// <summary>Claude Code's 'sandbox' settings, as far as a Step uses them.</summary>
+/// <param name="Enabled">Whether the CLI's own sandbox runs inside Sindri's.</param>
+internal sealed record ClaudeSandbox(bool Enabled);

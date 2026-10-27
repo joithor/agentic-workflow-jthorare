@@ -183,6 +183,19 @@ public sealed class ModelPickLaunchTests : IDisposable
         Assert.False(launched.CanEscalate);
     }
 
+    /// <summary>A Step that reads a workspace would retry in the failed run's dirty worktree (spec 5), so it does not escalate.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_step_that_reads_a_workspace_cannot_escalate()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct);
+        _ = rig.Judge.Chooses("m1");
+
+        var launched = await rig.Launch(Run(1), floor: null, ct, workspace: _harness.Fact("/work/phase"));
+
+        Expect.Equal("haiku/False", launched.Model + "/" + launched.CanEscalate);
+    }
+
     [Fact(Timeout = 120_000)]
     public async Task An_escalation_picks_above_the_failed_model_records_why_and_cannot_escalate_again()
     {
@@ -256,8 +269,8 @@ public sealed class ModelPickLaunchTests : IDisposable
 
         public FakeModelPickJudge Judge { get; } = judge;
 
-        public Task<AgentLaunched> Launch(AgentStepRun run, string? floor, CancellationToken ct, string? model = null, PreviousRun? previous = null, int escalation = 0) =>
-            sindri.GetRequiredService<AgentLaunching>().Launch(new AgentLaunchRun(run, item, Model: model, Previous: previous, Escalation: escalation, Floor: floor), ct);
+        public Task<AgentLaunched> Launch(AgentStepRun run, string? floor, CancellationToken ct, string? model = null, PreviousRun? previous = null, int escalation = 0, FactValue? workspace = null) =>
+            sindri.GetRequiredService<AgentLaunching>().Launch(new AgentLaunchRun(run, item, workspace, Model: model, Previous: previous, Escalation: escalation, Floor: floor), ct);
 
         public async Task<IReadOnlyList<LedgerEvent>> Rows(CancellationToken ct) => (await sindri.GetRequiredService<ILedgerStore>().ReadAfter(0, 500, ct)).Value;
 

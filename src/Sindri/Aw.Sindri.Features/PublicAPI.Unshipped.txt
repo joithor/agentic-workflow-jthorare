@@ -5180,6 +5180,10 @@ static Aw.Sindri.Features.RecordLimitHit.RecordLimitHitRequest.operator !=(Aw.Si
 static Aw.Sindri.Features.RecordLimitHit.RecordLimitHitRequest.operator ==(Aw.Sindri.Features.RecordLimitHit.RecordLimitHitRequest? left, Aw.Sindri.Features.RecordLimitHit.RecordLimitHitRequest? right) -> bool
 static Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse.operator !=(Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse? left, Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse? right) -> bool
 static Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse.operator ==(Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse? left, Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse? right) -> bool
+Aw.Sindri.Features.GetInstanceEvents.InstanceEventFields.Agent.get -> string?
+Aw.Sindri.Features.GetInstanceEvents.InstanceEventFields.Agent.init -> void
+Aw.Sindri.Features.GetInstanceEvents.InstanceEventFields.Model.get -> string?
+Aw.Sindri.Features.GetInstanceEvents.InstanceEventFields.Model.init -> void
 Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest
 Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.<Clone>$() -> Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest!
 Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.Deconstruct(out Aw.Sindri.Core.Ids.RepoName? Repo) -> void

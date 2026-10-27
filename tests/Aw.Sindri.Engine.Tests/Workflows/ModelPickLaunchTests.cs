@@ -361,6 +361,22 @@ public sealed class ModelPickLaunchTests : IDisposable
         Expect.Equal("haiku,sonnet,opus", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
     }
 
+    /// <summary>An escalation retry of a 'differentFrom' state keeps the agent its first run was placed on (#1269), and its launch carries that agent and the retry's model.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task An_escalation_retry_of_a_differentFrom_state_stays_on_the_agent_of_its_first_run()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus", AgentId.From("codex")), agents: [AgentEntries.ClaudeCode, AgentEntries.Codex]);
+        _ = rig.Judge.Chooses("m1");
+        var retry = Challenge(1) with { Escalation = 1 };
+
+        var launched = await rig.Launch(retry, floor: null, ct, previous: new PreviousRun("haiku", "refused", Check: null, Tokens: 300), escalation: 1, agent: new StateAgent(DifferentFrom: "draft"));
+
+        Expect.Equal("no failure", launched.Failure is { } failure ? failure.Code + ": " + failure.Message : "no failure");
+        Expect.Equal("codex", rig.Launcher.Requests[0].Agent.Value);
+        Expect.Equal("codex/sonnet", launched.Agent + "/" + launched.Model);
+    }
+
     private static AgentStepRun Challenge(int attempt)
     {
         var address = InstanceAddress.From("T-9/step/" + attempt.ToString(CultureInfo.InvariantCulture));
@@ -391,7 +407,7 @@ public sealed class ModelPickLaunchTests : IDisposable
             _ = services.Replace(ServiceDescriptor.Singleton<IModelPickJudge>(judge));
             _ = services.Replace(ServiceDescriptor.Singleton<IModelPickSettings>(new FakeModelPickSettings { Settings = settings }));
             _ = services.Replace(ServiceDescriptor.Singleton<IModelPickHistory>(new FakeModelPickHistory()));
-            _ = services.Replace(ServiceDescriptor.Singleton<IModelCatalog>(new FakeModelCatalog().With(_claude, _three)));
+            _ = services.Replace(ServiceDescriptor.Singleton<IModelCatalog>(new FakeModelCatalog().With(_claude, _three).With(AgentId.From("codex"), _three)));
             _ = services.Replace(ServiceDescriptor.Singleton<IAgentCatalog>(new FixedAgentCatalog(agents ?? [AgentEntries.ClaudeCode])));   // one usable agent unless a test names more: the real catalog also has codex and cursor, which a challenger would move to
             if (drafter is not null)
             {
@@ -408,7 +424,7 @@ public sealed class ModelPickLaunchTests : IDisposable
     }
 
     /// <summary>The drafter's launch: on claude-code, in the challenger's instance, with the model it asked for (null: not recorded).</summary>
-    private sealed record DrafterRan(string? Model);
+    private sealed record DrafterRan(string? Model, AgentId? ChallengerAgent = null);
 
     /// <summary>The launches view with the one drafter launch every challenger Step of this file's addresses follows.</summary>
     private sealed class DraftedLaunches(DrafterRan drafter) : ILaunchViews
@@ -420,7 +436,15 @@ public sealed class ModelPickLaunchTests : IDisposable
             var row = new LaunchRow(LaunchId.From("LCH-" + new string('a', 32)), item, Repo: null, LaunchMode.Open, _claude, "engine", LaunchState.Started, DateTimeOffset.UnixEpoch, OutcomeAt: null,
                 Code: null, Message: null, Stage: null, SessionId: null, ReportedSessionId: null, TabTitle: null, Viewer: null, Late: false, Attach: null, CatalogSource: null, ArgvHash: null, Ended: null,
                 new LaunchStep(InstanceAddress.From("T-9/step/1"), "draft", Attempt: 1), Sequence: 1);
-            return ValueTask.FromResult(Results.Success<IReadOnlyList<LaunchRow>>([row with { Model = drafter.Model }]));
+            var drafted = row with { Model = drafter.Model };
+            if (drafter.ChallengerAgent is not { } ran)
+            {
+                return ValueTask.FromResult(Results.Success<IReadOnlyList<LaunchRow>>([drafted]));
+            }
+
+            // the challenger's own first launch, newest first: it was placed on another agent and the retry must stay there
+            var first = drafted with { Id = AgentLaunches.LaunchIdFor(Challenge(1)), Target = ran, Model = null, Step = new LaunchStep(InstanceAddress.From("T-9/step/1"), "challenge", Attempt: 1) };
+            return ValueTask.FromResult(Results.Success<IReadOnlyList<LaunchRow>>([first, drafted]));
         }
 
         public ValueTask<Result<IReadOnlyList<LaunchRow>>> ForRepo(RepoName repo, CancellationToken cancellationToken) => throw new NotSupportedException();

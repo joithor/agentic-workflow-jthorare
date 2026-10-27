@@ -38,6 +38,7 @@ public sealed class GoldenHost : IAsyncDisposable
 
     private readonly TempHome? _ownHome;
     private readonly List<IDisposable> _owned = [];
+    private readonly List<IAsyncDisposable> _running = [];
     private readonly TempHome? _elsewhere;
     private WebApplication? _app;
 
@@ -105,6 +106,10 @@ public sealed class GoldenHost : IAsyncDisposable
     /// <param name="resource">The resource.</param>
     public void Own(IDisposable resource) => _owned.Add(resource);
 
+    /// <summary>Hands the host a background task that calls into it and writes under the home (a views pump): it is stopped after the host, and waited for before the home is deleted.</summary>
+    /// <param name="resource">The resource.</param>
+    public void Own(IAsyncDisposable resource) => _running.Add(resource);
+
     /// <summary>The live profile's hash.</summary>
     /// <param name="ct">Cancellation.</param>
     /// <returns>The hash.</returns>
@@ -120,9 +125,16 @@ public sealed class GoldenHost : IAsyncDisposable
             await _app.DisposeAsync();
         }
 
+        // why: a background task (the views pump) writes under the home, so it is stopped and waited for before the recursive delete, which a late file fails (#1414)
+        foreach (var running in _running)
+        {
+            await running.DisposeAsync();
+        }
+
+        _running.Clear();   // a second dispose (a test's finally) must not stop them again
+        _owned.ForEach(o => o.Dispose());
         _ownHome?.Dispose();
         _elsewhere?.Dispose();
-        _owned.ForEach(o => o.Dispose());
     }
 
     private async Task Run(CancellationToken ct)

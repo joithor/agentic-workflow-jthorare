@@ -265,7 +265,7 @@ internal sealed class BuildMapService(
     private static List<NodeKey> Files(ExtractedMap found, GraphNode node, List<string> repoNames) =>
         [.. (node.Key.Kind == NodeKind.Thing
             ? node.EvidenceOrEmpty.Select(e => e.Key.Value).Select(r => DeclaringFile(r, repoNames)).OfType<NodeKey>()
-            : found.Edges.Where(e => e.Type == EdgeType.Implements && e.To.Value == node.Key.Value && e.From.Kind == NodeKind.Code).Select(e => e.From))
+            : found.Edges.Where(e => e.Type is EdgeType.Implements or EdgeType.Tags && e.To.Value == node.Key.Value && e.From.Kind == NodeKind.Code).Select(e => e.From))
             .DistinctBy(k => k.Value, StringComparer.Ordinal).OrderBy(k => k.Value, StringComparer.Ordinal)];
 
     // "repo:<name>/<path>" -> code:<path>, stripping the exact prefix of a mapped repo (a name may hold '/').

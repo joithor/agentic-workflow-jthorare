@@ -1,3 +1,4 @@
+using System.Globalization;
 using Aw.Context.Core.Concepts;
 using Aw.Context.Core.ConceptScan;
 using Aw.Context.Core.Engine;
@@ -42,11 +43,19 @@ internal sealed class ConceptPass(IConceptNamer namer, ISymbolVectors vectors, I
         }
 
         var concepts = ConceptDeriver.Derive(joined, pins, names, glossary, hints);
-        return new ConceptOutcome(joined with
+        var withConcepts = joined with
         {
             Nodes = [.. joined.Nodes.Concat(concepts.Nodes).DistinctBy(n => n.Key.Value, StringComparer.Ordinal)],
             Edges = [.. joined.Edges.Concat(concepts.Edges).DistinctBy(e => (e.From.Value, e.To.Value, e.Type))],
-        }, notes);
+        };
+        // The edges the owner declared on the pins (spec 2026-10-27 §10.3), made fresh on every build; an entry with no endpoint in the map is counted, never an edge.
+        var declared = PinEdges.Declared(withConcepts, pins);
+        if (declared.Skipped > 0)
+        {
+            notes.Add(string.Create(CultureInfo.InvariantCulture, $"pin edges skipped: {declared.Skipped}"));
+        }
+
+        return new ConceptOutcome(withConcepts with { Edges = [.. withConcepts.Edges.Concat(declared.Edges).DistinctBy(e => (e.From.Value, e.To.Value, e.Type))] }, notes);
     }
 
     // The concept hints of the newest map version the scan has looked at; a store that can't answer, or a version with none, shapes nothing.

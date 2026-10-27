@@ -7291,9 +7291,14 @@ Aw.Context.Core.Graph.ConceptKeys
 const Aw.Context.Core.Graph.ConceptKeys.Other = "concept:other" -> string!
 Aw.Context.Core.Engine.ConceptPin
 Aw.Context.Core.Engine.ConceptPin.<Clone>$() -> Aw.Context.Core.Engine.ConceptPin!
-Aw.Context.Core.Engine.ConceptPin.ConceptPin(Aw.Context.Core.Engine.ConceptId? Id, string! Name, string? Summary, System.Collections.Generic.IReadOnlyList<string!>! Features, System.Collections.Generic.IReadOnlyList<string!>! Paths) -> void
-Aw.Context.Core.Engine.ConceptPin.Deconstruct(out Aw.Context.Core.Engine.ConceptId? Id, out string! Name, out string? Summary, out System.Collections.Generic.IReadOnlyList<string!>! Features, out System.Collections.Generic.IReadOnlyList<string!>! Paths) -> void
+Aw.Context.Core.Engine.ConceptPin.ConceptPin(Aw.Context.Core.Engine.ConceptId? Id, string! Name, string? Summary, System.Collections.Generic.IReadOnlyList<string!>! Features, System.Collections.Generic.IReadOnlyList<string!>! Paths, System.Collections.Generic.IReadOnlyList<string!>! DependsOn, System.Collections.Generic.IReadOnlyList<string!>! Owns) -> void
+Aw.Context.Core.Engine.ConceptPin.Deconstruct(out Aw.Context.Core.Engine.ConceptId? Id, out string! Name, out string? Summary, out System.Collections.Generic.IReadOnlyList<string!>! Features, out System.Collections.Generic.IReadOnlyList<string!>! Paths, out System.Collections.Generic.IReadOnlyList<string!>! DependsOn, out System.Collections.Generic.IReadOnlyList<string!>! Owns) -> void
+Aw.Context.Core.Engine.ConceptPin.Declaring(System.Collections.Generic.IEnumerable<string!>? dependsOn, System.Collections.Generic.IEnumerable<string!>? owns) -> Aw.Context.Core.Engine.ConceptPin!
 Aw.Context.Core.Engine.ConceptPin.Equals(Aw.Context.Core.Engine.ConceptPin? other) -> bool
+Aw.Context.Core.Engine.ConceptPin.DependsOn.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Context.Core.Engine.ConceptPin.DependsOn.init -> void
+Aw.Context.Core.Engine.ConceptPin.Owns.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Context.Core.Engine.ConceptPin.Owns.init -> void
 Aw.Context.Core.Engine.ConceptPin.Features.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Aw.Context.Core.Engine.ConceptPin.Features.init -> void
 Aw.Context.Core.Engine.ConceptPin.Id.get -> Aw.Context.Core.Engine.ConceptId?
@@ -8270,7 +8275,7 @@ override Aw.Context.Core.Map.StructureCounts.Equals(object? obj) -> bool
 override Aw.Context.Core.Map.StructureCounts.GetHashCode() -> int
 override Aw.Context.Core.Map.StructureCounts.ToString() -> string!
 static Aw.Context.Core.Concepts.ConceptPins.Unmatched(Aw.Context.Core.Graph.GraphSnapshot! graph, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Engine.ConceptPin!>! pins) -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Engine.ConceptPin!>!
-static Aw.Context.Core.Extract.HomeFeatures.Assign(Aw.Context.Core.Engine.ContextRepo! repo, System.Collections.Generic.IReadOnlyList<string!>! paths, Aw.Context.Core.Extract.ExtractedMap? extracted = null) -> Aw.Context.Core.Extract.HomeAssignment!
+static Aw.Context.Core.Extract.HomeFeatures.Assign(Aw.Context.Core.Engine.ContextRepo! repo, System.Collections.Generic.IReadOnlyList<string!>! paths, Aw.Context.Core.Extract.ExtractedMap? extracted = null, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Engine.ConceptPin!>? pins = null) -> Aw.Context.Core.Extract.HomeAssignment!
 static Aw.Context.Core.Map.MapAccess.WithoutBuiltStructure(Aw.Context.Core.Graph.GraphSnapshot! graph, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Overrides.MapOverride!>! overrides, Aw.Context.Core.Extract.ExtractedMap! found, System.DateTimeOffset at) -> (Aw.Context.Core.Graph.GraphSnapshot! Graph, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Overrides.MapOverride!>! Rows, Aw.Context.Core.Map.StructureCounts! Counts)
 static Aw.Context.Core.Map.StructureCounts.None.get -> Aw.Context.Core.Map.StructureCounts!
 static Aw.Context.Core.Map.StructureCounts.operator !=(Aw.Context.Core.Map.StructureCounts? left, Aw.Context.Core.Map.StructureCounts? right) -> bool
@@ -8301,3 +8306,19 @@ const Aw.Context.Core.Overrides.MapOverride.StructureMarker = "service:structure
 static Aw.Context.Core.Overrides.MapOverride.UndoingStructure(Aw.Context.Core.Overrides.MapOverride! decision, System.DateTimeOffset at) -> Aw.Context.Core.Overrides.MapOverride!
 Aw.Context.Core.Map.MapBuildReport.Structure.get -> Aw.Context.Core.Map.StructureCounts!
 Aw.Context.Core.Map.MapBuildReport.Structure.init -> void
+Aw.Context.Core.Concepts.PinEdges
+static Aw.Context.Core.Concepts.PinEdges.Declared(Aw.Context.Core.Graph.GraphSnapshot! graph, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Engine.ConceptPin!>! pins) -> Aw.Context.Core.Concepts.DeclaredEdges!
+Aw.Context.Core.Concepts.DeclaredEdges
+Aw.Context.Core.Concepts.DeclaredEdges.<Clone>$() -> Aw.Context.Core.Concepts.DeclaredEdges!
+Aw.Context.Core.Concepts.DeclaredEdges.DeclaredEdges(System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.GraphEdge!>! Edges, int Skipped) -> void
+Aw.Context.Core.Concepts.DeclaredEdges.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.GraphEdge!>! Edges, out int Skipped) -> void
+Aw.Context.Core.Concepts.DeclaredEdges.Edges.get -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.GraphEdge!>!
+Aw.Context.Core.Concepts.DeclaredEdges.Edges.init -> void
+Aw.Context.Core.Concepts.DeclaredEdges.Equals(Aw.Context.Core.Concepts.DeclaredEdges? other) -> bool
+Aw.Context.Core.Concepts.DeclaredEdges.Skipped.get -> int
+Aw.Context.Core.Concepts.DeclaredEdges.Skipped.init -> void
+override Aw.Context.Core.Concepts.DeclaredEdges.Equals(object? obj) -> bool
+override Aw.Context.Core.Concepts.DeclaredEdges.GetHashCode() -> int
+override Aw.Context.Core.Concepts.DeclaredEdges.ToString() -> string!
+static Aw.Context.Core.Concepts.DeclaredEdges.operator !=(Aw.Context.Core.Concepts.DeclaredEdges? left, Aw.Context.Core.Concepts.DeclaredEdges? right) -> bool
+static Aw.Context.Core.Concepts.DeclaredEdges.operator ==(Aw.Context.Core.Concepts.DeclaredEdges? left, Aw.Context.Core.Concepts.DeclaredEdges? right) -> bool

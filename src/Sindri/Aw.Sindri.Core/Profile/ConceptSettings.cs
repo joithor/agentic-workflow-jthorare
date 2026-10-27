@@ -9,10 +9,14 @@ namespace Aw.Sindri.Core.Profile;
 /// <param name="Summary">A line about the concept.</param>
 /// <param name="Features">Feature node keys or key globs ('feature:shifts', 'feature:shifts.*').</param>
 /// <param name="Paths">Repo-relative file globs; the features implemented there belong to the concept.</param>
+/// <param name="DependsOn">Ids of the pins this one depends on; each becomes a hand-declared 'depends-on' edge.</param>
+/// <param name="Owns">Names of the data stores this pin owns, as the map names them; each becomes a hand-declared 'writes' edge.</param>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record ConceptSettings(
     ConceptPinId? Id = null,
     string? Name = null,
     string? Summary = null,
     IReadOnlyList<string>? Features = null,
-    IReadOnlyList<string>? Paths = null);
+    IReadOnlyList<string>? Paths = null,
+    IReadOnlyList<string>? DependsOn = null,
+    IReadOnlyList<string>? Owns = null);

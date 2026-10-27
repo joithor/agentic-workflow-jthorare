@@ -60,13 +60,14 @@ internal sealed class BuildMapService(
     private async ValueTask<Result<Reading>> ReadRepos(IProgress<string>? progress, ContextSettings settings, IReadOnlyList<ContextRepo> mappedRepos, CancellationToken cancellationToken)
     {
         var found = ExtractedMap.Empty;
+        var pins = mappedRepos.SelectMany(r => r.Concepts).ToList();
         var degraded = new List<string>();
         (string Commit, ContextRepoName Name)? primary = null;
         var heads = new List<MapHead>(mappedRepos.Count);
         var dropped = new List<RoleDropped>();
         foreach (var repo in mappedRepos)
         {
-            var one = await Extract(progress, settings, repo, cancellationToken).ConfigureAwait(false);
+            var one = await Extract(progress, settings, repo, pins, cancellationToken).ConfigureAwait(false);
             if (one.IsError)
             {
                 return one.Error;
@@ -129,7 +130,7 @@ internal sealed class BuildMapService(
             ? undo
             : [.. undo.Concat(cuts.Apply(openDraft.Graph, openDraft.Overrides).Undo).DistinctBy(o => o.Undoes?.Value ?? o.ToId().Value, StringComparer.Ordinal)];
 
-    private async ValueTask<Result<RepoExtraction>> Extract(IProgress<string>? progress, ContextSettings settings, ContextRepo repo, CancellationToken cancellationToken)
+    private async ValueTask<Result<RepoExtraction>> Extract(IProgress<string>? progress, ContextSettings settings, ContextRepo repo, IReadOnlyList<ConceptPin> pins, CancellationToken cancellationToken)
     {
         var recognizers = RecognizerSet.From(settings.Recognizers);
         var read = await ReadFiles(progress, repo, (recognizers, settings.SchemaGlobs), cancellationToken).ConfigureAwait(false);
@@ -140,7 +141,7 @@ internal sealed class BuildMapService(
 
         var (commit, files, paths) = read.Value;
         var (extracted, timedOut) = MapExtractor.Extract(repo.Name, files, recognizers, settings.SchemaGlobs);
-        var home = HomeFeatures.Assign(repo, paths, extracted);
+        var home = HomeFeatures.Assign(repo, paths, extracted, pins);
         var clusters = await Clusters(repo, commit, settings.Graphify, cancellationToken).ConfigureAwait(false);
         var labels = await Labels(progress, settings, home.LabelRequests, cancellationToken).ConfigureAwait(false);
         if (labels.IsError && labels.Error.Code == ContextErrors.LabelingUnavailable.Code)

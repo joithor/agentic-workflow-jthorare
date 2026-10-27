@@ -65,7 +65,7 @@ public sealed class MapBuildJobTextTests : IDisposable
     [Fact, Trait("Lane", "unit")]
     public void The_result_of_a_report_carries_its_notes_and_counts_and_caps_the_notes_at_twenty()
     {
-        var report = new Aw.Context.Core.Map.MapBuildReport(null!, [], ["clusters"], []) { Notes = [.. Enumerable.Range(0, 30).Select(i => "n" + i)], Structure = new Aw.Context.Core.Map.StructureCounts(1, 2, 0, 0) };
+        var report = new Aw.Context.Core.Map.MapBuildReport(null!, [], ["clusters"], []) { Notes = [.. Enumerable.Range(0, 30).Select(static i => "n" + i.ToString(System.Globalization.CultureInfo.InvariantCulture))], Structure = new Aw.Context.Core.Map.StructureCounts(1, 2, 0, 0) };
 
         var result = BuildContextMapResult.Of("web-app", 7, 42, report);
 

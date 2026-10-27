@@ -29,6 +29,7 @@ internal sealed partial class RecipeWorkflow
     private static readonly AgentCall _watchCall = new("agent-watch", TimeSpan.FromDays(7), TimeSpan.FromSeconds(10), new RetryPolicy { InitialInterval = TimeSpan.FromSeconds(1), MaximumInterval = TimeSpan.FromSeconds(10) });   // a heartbeat timeout or a restarted worker retries the watch, which attaches to the same session
     private static readonly AgentCall _closeCall = new("agent-close", ActivityBounds.Long, Heartbeat: null, new RetryPolicy { InitialInterval = TimeSpan.FromSeconds(1), MaximumAttempts = 3 });
     private AgentRunning? _held;   // the launched run whose session is still live, so the interpreter loop can stop it when the instance ends or the run is replaced while it is parked or taken over (D11)
+    private string? _suspendedRun;   // the token of the run whose watch a park or a takeover cancelled: its session was kept, so the resumed watch finds out whether it ended meanwhile (sandbox spec §7)
     private (string Token, AgentLaunched Launched)? _agent;   // the open run's launch, kept across a park or a takeover so the watch resumes without a second launch
 
     private static readonly BlockId _ciFix = BlockId.From("step.pr.ci-fix");   // launches in 'fact:workspace' on its own marker; every other agent Step does on the phase-workspace marker (LN-WF2)
@@ -84,57 +85,19 @@ internal sealed partial class RecipeWorkflow
         return await WatchPhase(instance, open, context).ConfigureAwait(true);
     }
 
-    // Launches the session. Done is true when the run ended first or the launch failed; the instance is then the decided one, else it has its launch filled in.
-    private async Task<(WorkflowInstance Instance, bool Done)> LaunchPhase(WorkflowInstance instance, OpenRun open, Interpreting context)
-    {
-        var (state, step) = StateOf(instance, context);
-        using var cancel = new CancellationTokenSource();
-        var run = AgentRunOf(instance, open, step);
-        var item = instance.Facts.TryGetValue(FactKey.From("fact:item"), out var fact) ? fact : null;
-        var workspace = (step.Use == _ciFix ? AgentWorkspace : PhaseWorkspaceLaunch) && instance.Facts.TryGetValue(_workspaceKey, out var held) ? held : null;   // LN-WF2: an instance that holds a workspace (the phase's worktree, or docs sync's own) runs its agent Steps there
-        _launchedAt = _launchedAt?.Entry == open.Token.Entry ? _launchedAt : (open.Token.Entry, new DateTimeOffset(Workflow.UtcNow));
-        var launching = Workflow.ExecuteActivityAsync((AgentStepActivities a) => a.LaunchAsync(Launch(run, item, step, instance, workspace)), AgentOptions(_launchCall, open, state, cancel.Token));
-        var (applied, end) = await AwaitAgent(instance, open, new Awaited(launching, cancel, Reports: false), context).ConfigureAwait(true);
-        if (end == AgentEnd.Over)
-        {
-            return (await StopIfClosed(applied, new AgentRunning(open, state, run, Launched: null)).ConfigureAwait(true), true);
-        }
-
-        var launched = await Launching(launching).ConfigureAwait(true);
-        if (launched.Failure is { } failure)
-        {
-            return (await Decided(applied, open, AgentFailed(open, step, StepFailed.LaunchReason, tokens: 0, $"{failure.Code}: {failure.Message}") with { Dependency = "the agent launcher", Code = failure.Code, FailureKind = AgentFailureKinds.Crashed }, reportId: null, context).ConfigureAwait(true), true);
-        }
-
-        _agent = (open.Token.Value, launched);
-        _held = new AgentRunning(open, state, run, launched);
-        var filled = applied with { Frame = applied.Frame with { Run = open with { Launch = AgentLaunches.LaunchIdFor(run).Value } } };
-        _instance = filled;   // why: the run's launch is part of the instance the Query and the validator read; no timer or state changed
-        return (filled, false);
-    }
-
-    private static async Task<AgentLaunched> Launching(Task<AgentLaunched> launching)
-    {
-        try
-        {
-            return await launching.ConfigureAwait(true);
-        }
-        catch (ActivityFailureException e)
-        {
-            return new AgentLaunched(Worktree: null, StartHead: null, new AgentLaunchFailure(AgentLaunchFailureKind.StepFailed, "SND-LAUNCH-007", $"the launch activity failed: {e.InnerException?.Message ?? e.Message}"));
-        }
-    }
-
     private async Task<WorkflowInstance> WatchPhase(WorkflowInstance instance, OpenRun open, Interpreting context)
     {
         var (state, step) = StateOf(instance, context);
         var running = new AgentRunning(open, state, AgentRunOf(instance, open, step), _agent!.Value.Launched);   // why: LaunchPhase set it for this run's token before the watch
         var launch = AgentLaunches.LaunchIdFor(running.Run).Value;
+        var resumed = string.Equals(_suspendedRun, open.Token.Value, StringComparison.Ordinal);
+        _suspendedRun = null;
         using var cancel = new CancellationTokenSource();
         var watching = Workflow.ExecuteActivityAsync((AgentStepActivities a) => a.WatchAsync(launch), AgentOptions(_watchCall, open, state, cancel.Token));
         var (applied, end) = await AwaitAgent(instance, open, new Awaited(watching, cancel, Reports: true), context).ConfigureAwait(true);
         if (end == AgentEnd.Over)
         {
+            _suspendedRun = SuspendedRun(applied, open);
             return await StopIfClosed(applied, running).ConfigureAwait(true);
         }
 
@@ -145,6 +108,23 @@ internal sealed partial class RecipeWorkflow
         }
 
         var ended = await watching.ConfigureAwait(true);
+        return await Ended(applied, running, step, resumed ? ended : ended with { FoundEnded = false }, context).ConfigureAwait(true);   // a session found ended means 'ended during the suspension' only for a watch that resumed one
+    }
+
+    // The token of the run a park or a takeover left open: its session is kept, and the resumed watch finds out whether it ended meanwhile.
+    private static string? SuspendedRun(WorkflowInstance instance, OpenRun open) =>
+        instance.Suspension is not null && instance.Frame.Run?.Token == open.Token ? open.Token.Value : null;
+
+    // The session ended with no report: found ended by the first poll after a suspension it was kept through, the Step runs again (sandbox spec §7); else it fails with how it ended, unless its output folder proves a result.
+    private async Task<WorkflowInstance> Ended(WorkflowInstance applied, AgentRunning running, StepUse step, AgentSessionState ended, Interpreting context)
+    {
+        var open = running.Open;
+        if (ended.FoundEnded)
+        {
+            var gone = await Close(running, measure: true).ConfigureAwait(true);   // the session is gone: this reads what it spent
+            return await Decided(applied, open, new SessionLost("service:agent:" + step.Use.Value, open.Token) { Tokens = gone.Tokens }, reportId: null, context).ConfigureAwait(true);
+        }
+
         var recovery = await Recover(running).ConfigureAwait(true);
         var closed = await Close(running, measure: true).ConfigureAwait(true);
         if (recovery?.Outcome is { } outcome)

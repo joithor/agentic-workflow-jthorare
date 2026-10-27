@@ -1,5 +1,7 @@
 using Aw.Kernel.Testing;
+using Aw.Sindri.Core.Events;
 using Aw.Sindri.Core.Workflow.Engine;
+using Aw.Sindri.Core.Workflow.Engine.Triggers;
 using Aw.Sindri.Infrastructure.Workflows;
 using Temporalio.Client;
 
@@ -48,6 +50,31 @@ public sealed class AgentParkedRunTests(SindriTimeSkippingServer skipping) : Age
 
             await WaitFor(() => _launcher.Stops.Contains(rig.Launch), ct);
             Assert.Equal(0, _launcher.SessionCount);
+        });
+    }
+
+    [Fact(Timeout = 300_000)]
+    public async Task A_session_lost_during_the_park_makes_the_answer_a_new_run_not_a_failure()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(ct, skipping.Environment);
+        await rig.Run(async handle =>
+        {
+            _ = await WorkflowsHarness.Until(handle, static v => v.Run is not null && v.State == "write");
+            await Launched(ct);
+            await SkipToPark(handle, ct);
+            _ = await WorkflowsHarness.Until(handle, static v => v.Question is not null);
+            var first = rig.Launch;
+            _sessions.End(first, SessionEndReason.Lost, exitCode: null);   // the session is gone while the park keeps it
+            var resume = new AnswerGiven("human:cli", new CommandStamp(CommandNonce.From(new string('4', 32)), new string('0', 64)), AnswerVariant.Resume, Text: null, Amount: null, Forwarded: null);
+
+            _ = await handle.ExecuteUpdateAsync(wf => wf.AnswerAsync(resume), new WorkflowUpdateOptions(new string('4', 32)));
+
+            var view = await WorkflowsHarness.Until(handle, static v => v.Run is { Number: 2 } && v.Question is null);
+            Assert.Equal("write", view.State);
+            await WaitFor(() => _launcher.Requests.Select(static r => r.Launch).Distinct().Take(3).Count() == 2, ct);   // a new session, not the lost one
+            _ = Assert.Single(await rig.Payloads("workflow.transition", ct), static p => p.Contains("\"trigger\":\"session.lost\"", StringComparison.Ordinal));
+            Assert.DoesNotContain(await rig.Payloads("workflow.transition", ct), static p => p.Contains("\"trigger\":\"step.failed\"", StringComparison.Ordinal));
         });
     }
 

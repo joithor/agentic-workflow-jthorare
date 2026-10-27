@@ -177,6 +177,15 @@ public static class MapAccess
     public static (GraphSnapshot Graph, IReadOnlyList<MapOverride> Undo) WithoutLostEngineAccepts(GraphSnapshot graph, IReadOnlyList<MapOverride> overrides, ExtractedMap found, bool rulesChanged, DateTimeOffset at) =>
         RulesRedecide.Apply(graph, overrides, found, rulesChanged, at);
 
+    /// <summary>What a build keeps of a graph once the structure it generates itself is dropped (spec 2026-10-27 §2.3 and §5): the home and group features and their links, and every cluster-made feature and link. The build writes them again; a decision on a file link is carried to its new 'tags' link or undone.</summary>
+    /// <param name="graph">The graph a build keeps, as stored (no overrides applied).</param>
+    /// <param name="overrides">Every override of that graph's map.</param>
+    /// <param name="found">What this build found.</param>
+    /// <param name="at">When the build runs.</param>
+    /// <returns>The cut graph, the rows to write with the draft (undo rows, and the carried decisions) and what was replaced.</returns>
+    public static (GraphSnapshot Graph, IReadOnlyList<MapOverride> Rows, StructureCounts Counts) WithoutBuiltStructure(GraphSnapshot graph, IReadOnlyList<MapOverride> overrides, ExtractedMap found, DateTimeOffset at) =>
+        StructureCut.Apply(graph, overrides, found, at);
+
     /// <summary>The export document for a version's visible graph: decision nodes and 'quotes' edges are left to the decisions, which imply them.</summary>
     /// <param name="version">The version.</param>
     /// <param name="graph">The visible graph.</param>

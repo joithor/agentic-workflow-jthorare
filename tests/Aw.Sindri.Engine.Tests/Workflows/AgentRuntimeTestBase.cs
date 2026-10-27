@@ -271,6 +271,27 @@ public abstract class AgentRuntimeTestBase : IDisposable
             return sessions;
         }
 
+        /// <summary>The payload text of every ledger row of <paramref name="type"/>.</summary>
+        public async Task<IReadOnlyList<string>> Payloads(string type, CancellationToken ct)
+        {
+            var rows = (await Sindri.GetRequiredService<ILedgerStore>().ReadAfter(0, 500, ct)).Value;
+            return [.. rows.Where(e => e.Envelope.Type == type).Select(static e => e.Envelope.Payload)];
+        }
+
+        /// <summary>The payloads of <paramref name="type"/> once at least one is recorded (the outcome follows the launch by a moment).</summary>
+        public async Task<IReadOnlyList<string>> PayloadsUntil(string type, CancellationToken ct)
+        {
+            var deadline = RealTime.NowDateTime.AddSeconds(30);
+            var rows = await Payloads(type, ct);
+            while (rows.Count == 0 && RealTime.NowDateTime < deadline)
+            {
+                await Task.Delay(50, ct);
+                rows = await Payloads(type, ct);
+            }
+
+            return rows;
+        }
+
         /// <summary>The reason of the instance's one 'step.failed' row.</summary>
         public async Task<string?> FailureReason(CancellationToken ct) => (await Failure(ct)).Reason;
 
@@ -357,7 +378,7 @@ public abstract class AgentRuntimeTestBase : IDisposable
             _ = services.Replace(ServiceDescriptor.Singleton<IAgentSessions>(test._sessions));
             _ = services.Replace(ServiceDescriptor.Singleton(test._diffSeen ?? test._diff));
             _ = services.Replace(ServiceDescriptor.Singleton<IStepOutputs>(test._outputs));
-            _ = services.Replace(ServiceDescriptor.Singleton(new AgentRuntimeOptions(PollInterval: TimeSpan.FromMilliseconds(100))));
+            _ = services.Replace(ServiceDescriptor.Singleton(new AgentRuntimeOptions(PollInterval: TimeSpan.FromMilliseconds(100)) { SlotRetry = TimeSpan.FromMilliseconds(50), SlotSlice = TimeSpan.FromMilliseconds(400) }));
         }
     }
 

@@ -203,6 +203,18 @@ public sealed class ModelPickLaunchTests : IDisposable
         Expect.Equal("SND-MODEL-003", launched.Failure?.Code ?? "no failure");
     }
 
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_moves_to_a_second_usable_agent_when_the_catalog_has_one()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"), agents: [AgentEntries.ClaudeCode, AgentEntries.Codex]);
+
+        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+
+        Expect.Equal("no failure", launched.Failure is { } failure ? failure.Code + ": " + failure.Message : "no failure");
+        Expect.Equal("codex", rig.Launcher.Requests[0].Agent.Value);
+    }
+
     private static AgentStepRun Challenge(int attempt)
     {
         var address = InstanceAddress.From("T-9/step/" + attempt.ToString(CultureInfo.InvariantCulture));
@@ -223,7 +235,7 @@ public sealed class ModelPickLaunchTests : IDisposable
         return new AgentStepRun(WorkflowInstanceId.Of(address), address, RunToken.From(attempt.ToString(CultureInfo.InvariantCulture) + ".1"), new StepRef("questions", "step.interview.questions"), WriteScope: false);
     }
 
-    private async Task<PickRig> Rig(ModelPickSettings settings, CancellationToken ct, DrafterRan? drafter = null)
+    private async Task<PickRig> Rig(ModelPickSettings settings, CancellationToken ct, DrafterRan? drafter = null, AgentEntry[]? agents = null)
     {
         var launcher = new FakeLauncher();
         var judge = new FakeModelPickJudge();
@@ -234,6 +246,7 @@ public sealed class ModelPickLaunchTests : IDisposable
             _ = services.Replace(ServiceDescriptor.Singleton<IModelPickSettings>(new FakeModelPickSettings { Settings = settings }));
             _ = services.Replace(ServiceDescriptor.Singleton<IModelPickHistory>(new FakeModelPickHistory()));
             _ = services.Replace(ServiceDescriptor.Singleton<IModelCatalog>(new FakeModelCatalog().With(_claude, _three)));
+            _ = services.Replace(ServiceDescriptor.Singleton<IAgentCatalog>(new FixedAgentCatalog(agents ?? [AgentEntries.ClaudeCode])));   // one usable agent unless a test names more: the real catalog also has codex and cursor, which a challenger would move to
             if (drafter is not null)
             {
                 _ = services.Replace(ServiceDescriptor.Singleton<ILaunchViews>(new DraftedLaunches(drafter)));

@@ -763,7 +763,7 @@
       "terminal": false,
       "method": "POST",
       "route": "/sindri/context/map/checks",
-      "cli": "sindri context map checks [--draft | --build]",
+      "cli": "sindri context map checks [--draft] [--build]",
       "ui": "ready",
       "destructive": false,
       "readsViews": false,

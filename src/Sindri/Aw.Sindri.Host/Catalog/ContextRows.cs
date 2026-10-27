@@ -32,7 +32,7 @@ internal static class ContextRows
         .. Review("delete", "sindri context map review delete <node>"),
         new(ActionId.From("CheckContextMapStructure"), typeof(CheckContextMapStructureRequest), Variant: null, ActionClass.Desk, ServiceGrants: [],
             NeedsTerminal: false, SelfAudited: false, Destructive: false, ReadsViews: false, Shortcut: null,
-            "POST", "/sindri/context/map/checks", ShellRows.Form("sindri context map checks [--draft | --build]"), "ready"),
+            "POST", "/sindri/context/map/checks", ShellRows.Form("sindri context map checks [--draft] [--build]"), "ready"),
         new(ActionId.From("PromoteContextMap"), typeof(PromoteContextMapRequest), Variant: null, ActionClass.Desk, ServiceGrants: [],
             NeedsTerminal: false, SelfAudited: false, Destructive: false, ReadsViews: false, Shortcut: null,
             "POST", "/sindri/context/map/promote", ShellRows.Form("sindri context map promote"), "ready", SessionOk: true),

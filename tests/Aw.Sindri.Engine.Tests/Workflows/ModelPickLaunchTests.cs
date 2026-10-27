@@ -2,8 +2,11 @@ using System.Globalization;
 using System.Text.Json;
 using Aw.Kernel.Json;
 using Aw.Kernel.Testing;
+using Aw.Kernel;
+using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Judge;
 using Aw.Sindri.Core.Launch;
+using Aw.Sindri.Core.Launches;
 using Aw.Sindri.Core.Ledger;
 using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Workflow.Engine;
@@ -162,6 +165,49 @@ public sealed class ModelPickLaunchTests : IDisposable
         Expect.Equal($"rules/{reason}", await rig.Picked("by", "reason", ct));
     }
 
+    /// <summary>The second opinion on the drafter's only agent (#1008): the drafter's model is out of the candidates, so the challenger runs on another one.</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_on_the_drafters_only_agent_is_picked_among_the_other_models()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
+        _ = rig.Judge.Chooses("m1");
+
+        _ = await rig.Launch(Challenge(1), floor: null, ct);
+
+        Expect.Equal("haiku,sonnet", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
+        Expect.Equal("haiku", rig.Launcher.Requests[0].Step?.Model);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_whose_only_model_is_the_drafters_parks_with_SND_MODEL_003()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true, Models: [new ModelFacts("sonnet", "Sonnet", ModelSource.Profile, 0)]), ct, drafter: new DrafterRan("sonnet"));
+
+        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+
+        Expect.Equal("SND-MODEL-003", launched.Failure?.Code);
+        Expect.Equal(0, rig.Launcher.Requests.Count);
+    }
+
+    [Fact(Timeout = 120_000)]
+    public async Task A_challenger_on_the_drafters_only_agent_parks_when_the_drafters_model_was_not_recorded()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan(Model: null));
+
+        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+
+        Expect.Equal("SND-MODEL-003", launched.Failure?.Code);
+    }
+
+    private static AgentStepRun Challenge(int attempt)
+    {
+        var address = InstanceAddress.From("T-9/step/" + attempt.ToString(CultureInfo.InvariantCulture));
+        return new AgentStepRun(WorkflowInstanceId.Of(address), address, RunToken.From(attempt.ToString(CultureInfo.InvariantCulture) + ".1"), new StepRef("challenge", "step.scope.challenge"), WriteScope: false);
+    }
+
     private static ChooseAnswer Answer(string scenario) => scenario switch
     {
         "below-threshold" => new ChooseAnswer(ChooseStatus.Escalated, Choice: null, "below-threshold", DecisionRef: "decision-2"),
@@ -176,7 +222,7 @@ public sealed class ModelPickLaunchTests : IDisposable
         return new AgentStepRun(WorkflowInstanceId.Of(address), address, RunToken.From(attempt.ToString(CultureInfo.InvariantCulture) + ".1"), new StepRef("questions", "step.interview.questions"), WriteScope: false);
     }
 
-    private async Task<PickRig> Rig(ModelPickSettings settings, CancellationToken ct)
+    private async Task<PickRig> Rig(ModelPickSettings settings, CancellationToken ct, DrafterRan? drafter = null)
     {
         var launcher = new FakeLauncher();
         var judge = new FakeModelPickJudge();
@@ -187,6 +233,10 @@ public sealed class ModelPickLaunchTests : IDisposable
             _ = services.Replace(ServiceDescriptor.Singleton<IModelPickSettings>(new FakeModelPickSettings { Settings = settings }));
             _ = services.Replace(ServiceDescriptor.Singleton<IModelPickHistory>(new FakeModelPickHistory()));
             _ = services.Replace(ServiceDescriptor.Singleton<IModelCatalog>(new FakeModelCatalog().With(_claude, _three)));
+            if (drafter is not null)
+            {
+                _ = services.Replace(ServiceDescriptor.Singleton<ILaunchViews>(new DraftedLaunches(drafter)));
+            }
         });
         await WorkflowsHarness.HoldLease(sindri, ct);
         var declared = new SindriProfile(SindriProfile.CurrentSchemaVersion, "tester", Repos: [new RepoEntry(Repo, Path.Combine(_harness.Home, "checkout"))], Workflow: new WorkflowSettings(Agent: new WorkflowAgentSettings(_claude)));
@@ -195,6 +245,27 @@ public sealed class ModelPickLaunchTests : IDisposable
         Assert.False(saved.IsError, saved.IsError ? saved.Error.Message : null);
         var item = _harness.Fact(JsonSerializer.Serialize(new { id = Item, repo = Repo, spec = (string?)null }));
         return new PickRig(sindri, item, launcher, judge);
+    }
+
+    /// <summary>The drafter's launch: on claude-code, in the challenger's instance, with the model it asked for (null: not recorded).</summary>
+    private sealed record DrafterRan(string? Model);
+
+    /// <summary>The launches view with the one drafter launch every challenger Step of this file's addresses follows.</summary>
+    private sealed class DraftedLaunches(DrafterRan drafter) : ILaunchViews
+    {
+        public ValueTask<Result<LaunchRow?>> Get(LaunchId launch, CancellationToken cancellationToken) => ValueTask.FromResult(Results.Success((LaunchRow?)null));
+
+        public ValueTask<Result<IReadOnlyList<LaunchRow>>> ForItem(ItemId item, CancellationToken cancellationToken)
+        {
+            var row = new LaunchRow(LaunchId.From("LCH-" + new string('a', 32)), item, Repo: null, LaunchMode.Open, _claude, "engine", LaunchState.Started, DateTimeOffset.UnixEpoch, OutcomeAt: null,
+                Code: null, Message: null, Stage: null, SessionId: null, ReportedSessionId: null, TabTitle: null, Viewer: null, Late: false, Attach: null, CatalogSource: null, ArgvHash: null, Ended: null,
+                new LaunchStep(InstanceAddress.From("T-9/step/1"), "draft", Attempt: 1), Sequence: 1);
+            return ValueTask.FromResult(Results.Success<IReadOnlyList<LaunchRow>>([row with { Model = drafter.Model }]));
+        }
+
+        public ValueTask<Result<IReadOnlyList<LaunchRow>>> ForRepo(RepoName repo, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public ValueTask<Result<IReadOnlyList<LaunchRow>>> Since(DateTimeOffset since, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private sealed class PickRig(ServiceProvider sindri, FactValue item, FakeLauncher launcher, FakeModelPickJudge judge) : IAsyncDisposable

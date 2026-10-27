@@ -88,7 +88,7 @@ internal sealed class ModelPicker(IModelPickSettings settings, IModelCatalog cat
         }
 
         var models = config.Models ?? await catalog.ModelsOf(work.Target.Agent, cancellationToken).ConfigureAwait(false);
-        return ModelCandidates.For(ModelBands.Rank(models), new ModelConstraints(Floor(run.Floor), config.Cap, config.Pin, Drafter: null, model)).Candidates.Count > 0;
+        return ModelCandidates.For(ModelBands.Rank(models), new ModelConstraints(Floor(run.Floor), config.Cap, config.Pin, work.Drafter, model)).Candidates.Count > 0;
     }
 
     private async Task<ModelPickOutcome> Choose(ModelPickWork work, ModelPickSettings config, IReadOnlyList<RankedModel> left, CancellationToken cancellationToken)

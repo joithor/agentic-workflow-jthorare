@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Text.Json;
+using Aw.Kernel;
 using Aw.Kernel.Json;
 using Aw.Kernel.Testing;
-using Aw.Kernel;
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Judge;
 using Aw.Sindri.Core.Launch;
@@ -173,8 +173,9 @@ public sealed class ModelPickLaunchTests : IDisposable
         await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
         _ = rig.Judge.Chooses("m1");
 
-        _ = await rig.Launch(Challenge(1), floor: null, ct);
+        var launched = await rig.Launch(Challenge(1), floor: null, ct);
 
+        Expect.Equal("no failure", launched.Failure is { } failure ? failure.Code + ": " + failure.Message : "no failure");
         Expect.Equal("haiku,sonnet", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
         Expect.Equal("haiku", rig.Launcher.Requests[0].Step?.Model);
     }
@@ -187,7 +188,7 @@ public sealed class ModelPickLaunchTests : IDisposable
 
         var launched = await rig.Launch(Challenge(1), floor: null, ct);
 
-        Expect.Equal("SND-MODEL-003", launched.Failure?.Code);
+        Expect.Equal("SND-MODEL-003", launched.Failure?.Code ?? "no failure");
         Expect.Equal(0, rig.Launcher.Requests.Count);
     }
 
@@ -199,7 +200,7 @@ public sealed class ModelPickLaunchTests : IDisposable
 
         var launched = await rig.Launch(Challenge(1), floor: null, ct);
 
-        Expect.Equal("SND-MODEL-003", launched.Failure?.Code);
+        Expect.Equal("SND-MODEL-003", launched.Failure?.Code ?? "no failure");
     }
 
     private static AgentStepRun Challenge(int attempt)

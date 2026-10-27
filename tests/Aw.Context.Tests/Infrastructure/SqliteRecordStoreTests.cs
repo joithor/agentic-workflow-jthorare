@@ -1,5 +1,4 @@
 using Aw.Context.Core.Records;
-using Aw.Context.Core.Sources;
 using Aw.Context.Testing.Records;
 
 namespace Aw.Context.Tests.Infrastructure;
@@ -91,7 +90,7 @@ public sealed class SqliteRecordStoreTests : IDisposable
         var back = await _world.Store.Commit(RecordSamples.Batch(RecordSamples.Linear, 3, RecordSamples.Write(record, "words")), TestContext.Current.CancellationToken);
         Assert.Equal(new CommitReport(1, 0, 0), back.Value);
         Assert.Null((await _world.Store.Get(record.Key, TestContext.Current.CancellationToken)).Value!.RemovedAt);
-        Assert.Single((await _world.Store.Chunks(record.Key, TestContext.Current.CancellationToken)).Value);
+        _ = Assert.Single((await _world.Store.Chunks(record.Key, TestContext.Current.CancellationToken)).Value);
     }
 
     [Fact, Trait("Lane", "integration")]

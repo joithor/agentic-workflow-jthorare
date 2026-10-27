@@ -8,7 +8,10 @@ internal sealed class RecordStoreWorld : IDisposable
 {
     private readonly TempHome _home = new();
 
-    public RecordStoreWorld() => Store = new SqliteRecordStore(_home.Database);
+    public RecordStoreWorld()
+    {
+        Store = new SqliteRecordStore(_home.Database);
+    }
 
     public SqliteRecordStore Store { get; }
 

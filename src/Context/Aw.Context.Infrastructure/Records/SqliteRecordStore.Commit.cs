@@ -1,6 +1,8 @@
+using System.Globalization;
 using Aw.Context.Core;
 using Aw.Context.Core.Records;
 using Aw.Kernel;
+using Aw.Context.Infrastructure.Store;
 using Aw.Kernel.Data;
 using Microsoft.Data.Sqlite;
 
@@ -36,7 +38,7 @@ internal sealed partial class SqliteRecordStore
 
             var (report, removedText) = written.Value;
             var failure = await Exec(begun.Value, RecordSql.SavePosition, PositionBinder(batch), cancellationToken).ConfigureAwait(false)
-                ?? (report.Written + report.Tombstoned > 0 ? await Exec(begun.Value, RecordSql.BumpRecordStamp, null, cancellationToken).ConfigureAwait(false) : null);
+                ?? (report.Written + report.Tombstoned > 0 ? await Exec(begun.Value, RecordSql.BumpRecordStamp, bind: null, cancellationToken: cancellationToken).ConfigureAwait(false) : null);
             if (failure is not null)
             {
                 return failure;
@@ -73,7 +75,7 @@ internal sealed partial class SqliteRecordStore
             {
                 if (write.Chunks[i].Seq != i)
                 {
-                    return $"record '{record.Key.Value}' has chunk number {write.Chunks[i].Seq} where {i} was expected";
+                    return $"record '{record.Key.Value}' has chunk number {write.Chunks[i].Seq.ToString(CultureInfo.InvariantCulture)} where {i.ToString(CultureInfo.InvariantCulture)} was expected";
                 }
             }
         }
@@ -90,8 +92,23 @@ internal sealed partial class SqliteRecordStore
 
     private static async ValueTask<Result<(CommitReport Report, bool RemovedText)>> WritePage(SqliteUnitOfWork session, RecordBatch batch, CancellationToken cancellationToken)
     {
-        int written = 0, unchanged = 0, tombstoned = 0;
-        var removedText = false;
+        var records = await WriteRecords(session, batch, cancellationToken).ConfigureAwait(false);
+        if (records.IsError)
+        {
+            return records.Error;
+        }
+
+        var tombstones = await Tombstone(session, batch, cancellationToken).ConfigureAwait(false);
+        return tombstones.IsError
+            ? tombstones.Error
+            : (new CommitReport(records.Value.Written, records.Value.Unchanged, tombstones.Value), records.Value.ChangedOld || tombstones.Value > 0);
+    }
+
+    // An old text, even a replaced one, may still sit in a freed page or an old full-text segment, hence ChangedOld.
+    private static async ValueTask<Result<(int Written, int Unchanged, bool ChangedOld)>> WriteRecords(SqliteUnitOfWork session, RecordBatch batch, CancellationToken cancellationToken)
+    {
+        int written = 0, unchanged = 0;
+        var changedOld = false;
         foreach (var write in batch.Records)
         {
             var key = write.Record.Key.Value;
@@ -102,22 +119,27 @@ internal sealed partial class SqliteRecordStore
             }
 
             var before = existing.Value.Count == 0 ? null : existing.Value[0];
-            if (before is not null && !before.Removed && Same(before, write.Record))
+            if (before is { Removed: false } && Same(before, write.Record))
             {
                 unchanged++;
                 continue;
             }
 
-            var failure = await WriteRecord(session, batch, write, isNew: before is null, cancellationToken).ConfigureAwait(false);
-            if (failure is not null)
+            if (await WriteRecord(session, batch, write, isNew: before is null, cancellationToken).ConfigureAwait(false) is { } failure)
             {
                 return failure;
             }
 
             written++;
-            removedText |= before is not null;   // an old text, even a replaced one, may still sit in a freed page or an old full-text segment
+            changedOld |= before is not null;
         }
 
+        return (written, unchanged, changedOld);
+    }
+
+    private static async ValueTask<Result<int>> Tombstone(SqliteUnitOfWork session, RecordBatch batch, CancellationToken cancellationToken)
+    {
+        var tombstoned = 0;
         foreach (var removed in batch.Removed)
         {
             var done = await Run(session, RecordSql.Tombstone, c => c.Bind("@key", removed.Value).Bind("@source", batch.Source.Value).Bind("@at", batch.At), cancellationToken).ConfigureAwait(false);
@@ -140,10 +162,9 @@ internal sealed partial class SqliteRecordStore
             }
 
             tombstoned++;
-            removedText = true;
         }
 
-        return (new CommitReport(written, unchanged, tombstoned), removedText);
+        return tombstoned;
     }
 
     private static bool Same(ExistingRecord stored, StoredRecord record) =>
@@ -170,9 +191,52 @@ internal sealed partial class SqliteRecordStore
                 ?? await Exec(session, RecordSql.ClearInboundTitles, c => c.Bind("@key", key), cancellationToken).ConfigureAwait(false);
         }
 
+        if (await WriteLinks(session, record, isNew, cancellationToken).ConfigureAwait(false) is { } linkFailure)
+        {
+            return linkFailure;
+        }
+
+        return await WriteChunks(session, write, cancellationToken).ConfigureAwait(false)
+            ?? await Exec(session, RecordSql.UpsertIntentRecord, c => c
+                .Bind("@key", key)
+                .Bind("@source", batch.Source.Value)
+                .Bind("@version", record.Version.Value)
+                .Bind("@title", record.Title)
+                .Bind("@at", batch.At)
+                .BindAt("@created", record.CreatedAt), cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async ValueTask<Error?> WriteChunks(SqliteUnitOfWork session, RecordWrite write, CancellationToken cancellationToken)
+    {
+        var key = write.Record.Key.Value;
+        foreach (var chunk in write.Chunks)
+        {
+            var chunkKey = new ChunkKey(write.Record.Key, chunk.Seq).ToString();
+            var failure = await Exec(session, RecordSql.UpsertChunk, c => c
+                .Bind("@chunk", chunkKey)
+                .Bind("@key", key)
+                .Bind("@seq", chunk.Seq)
+                .Bind("@text", chunk.Text)
+                .Bind("@tokens", chunk.Tokens)
+                .Bind("@hash", chunk.TextHash)
+                .Bind("@lineStart", chunk.LineStart)
+                .Bind("@lineEnd", chunk.LineEnd), cancellationToken).ConfigureAwait(false);
+            if (failure is not null)
+            {
+                return failure;
+            }
+        }
+
+        return await Exec(session, RecordSql.DeleteChunksFrom, c => c.Bind("@key", key).Bind("@from", write.Chunks.Count), cancellationToken).ConfigureAwait(false);
+    }
+
+    // Links are rewritten with their record; a link named before its target was stored is resolved by the target's own first write.
+    private static async ValueTask<Error?> WriteLinks(SqliteUnitOfWork session, StoredRecord record, bool isNew, CancellationToken cancellationToken)
+    {
+        var key = record.Key.Value;
         foreach (var link in record.Links)
         {
-            failure = await Exec(session, RecordSql.InsertLink, c => c
+            var failure = await Exec(session, RecordSql.InsertLink, c => c
                 .Bind("@key", key)
                 .Bind("@toRef", link.ToRef)
                 .Bind("@toKey", link.ToKey?.Value)
@@ -184,37 +248,7 @@ internal sealed partial class SqliteRecordStore
             }
         }
 
-        if (isNew && await Exec(session, RecordSql.ResolveInbound, c => c.Bind("@key", key), cancellationToken).ConfigureAwait(false) is { } unresolved)
-        {
-            return unresolved;
-        }
-
-        foreach (var chunk in write.Chunks)
-        {
-            var chunkKey = new ChunkKey(record.Key, chunk.Seq).ToString();
-            failure = await Exec(session, RecordSql.UpsertChunk, c => c
-                .Bind("@chunk", chunkKey)
-                .Bind("@key", key)
-                .Bind("@seq", chunk.Seq)
-                .Bind("@text", chunk.Text)
-                .Bind("@tokens", chunk.Tokens)
-                .Bind("@hash", chunk.TextHash)
-                .Bind("@lineStart", (long?)chunk.LineStart)
-                .Bind("@lineEnd", (long?)chunk.LineEnd), cancellationToken).ConfigureAwait(false);
-            if (failure is not null)
-            {
-                return failure;
-            }
-        }
-
-        return await Exec(session, RecordSql.DeleteChunksFrom, c => c.Bind("@key", key).Bind("@from", write.Chunks.Count), cancellationToken).ConfigureAwait(false)
-            ?? await Exec(session, RecordSql.UpsertIntentRecord, c => c
-                .Bind("@key", key)
-                .Bind("@source", batch.Source.Value)
-                .Bind("@version", record.Version.Value)
-                .Bind("@title", record.Title)
-                .Bind("@at", batch.At)
-                .BindAt("@created", record.CreatedAt), cancellationToken).ConfigureAwait(false);
+        return isNew ? await Exec(session, RecordSql.ResolveInbound, c => c.Bind("@key", key), cancellationToken).ConfigureAwait(false) : null;
     }
 
     private static void BindRecord(SqliteCommand c, StoredRecord record)

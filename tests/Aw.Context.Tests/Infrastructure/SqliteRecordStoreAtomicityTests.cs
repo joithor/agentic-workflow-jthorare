@@ -42,7 +42,7 @@ public sealed class SqliteRecordStoreAtomicityTests : IDisposable
 
         Assert.True(refused.IsError);
         Assert.Null((await _world.Store.Get(record.Key, TestContext.Current.CancellationToken)).Value!.RemovedAt);
-        Assert.Single((await _world.Store.Chunks(record.Key, TestContext.Current.CancellationToken)).Value);
+        _ = Assert.Single((await _world.Store.Chunks(record.Key, TestContext.Current.CancellationToken)).Value);
         Assert.Equal(SourceCursor.From("1"), (await _world.Store.Position(RecordSamples.Linear, TestContext.Current.CancellationToken)).Value.Cursor);
     }
 

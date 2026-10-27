@@ -93,7 +93,7 @@ public static partial class SettingsReader
                     Ranker = RankerRules.Read(section.Ranker),
                     ConceptScan = ConceptScanRules.Read(section.ConceptScan),
                     HistoryDeadline = HistoryDeadline(section.History),
-                    Checks = ChecksRules.ModeOf(section.Checks?.Mode) ?? ChecksMode.Refuse,
+                    Checks = ChecksRules.ModeOf(section.Checks),
                     CheckLimits = ChecksRules.Limits(section.Checks),
                 },
                 section.Code,

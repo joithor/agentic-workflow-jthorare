@@ -28,6 +28,12 @@ internal sealed class ModelPicker(IModelPickSettings settings, IModelCatalog cat
     public async Task<ModelPickOutcome> Pick(ModelPickWork work, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(work);
+        var outcome = await PickModel(work, cancellationToken).ConfigureAwait(false);
+        return outcome with { CanEscalate = await StrongerAllowed(work, outcome, cancellationToken).ConfigureAwait(false) };
+    }
+
+    private async Task<ModelPickOutcome> PickModel(ModelPickWork work, CancellationToken cancellationToken)
+    {
         var run = work.Run;
         var agent = work.Target.Agent;
         var state = run.Run.Step.State;
@@ -63,6 +69,26 @@ internal sealed class ModelPicker(IModelPickSettings settings, IModelCatalog cat
         }
 
         return await Choose(work, config, left, cancellationToken).ConfigureAwait(false);
+    }
+
+    // Whether the one retry may follow a failure of the picked model (spec 7.1): a model above it is still allowed inside the pin, the cap and the floor. A Step that names its model, one that reads
+    // a workspace (the retry would start in the failed run's dirty worktree) and the retry itself never escalate.
+    private async Task<bool> StrongerAllowed(ModelPickWork work, ModelPickOutcome outcome, CancellationToken cancellationToken)
+    {
+        var run = work.Run;
+        if (outcome is not { Refusal: null, Model: { } model } || run.Model is not null || run.Run.Escalation > 0 || run.Workspace is not null || !await settings.PickEnabled(cancellationToken).ConfigureAwait(false))
+        {
+            return false;
+        }
+
+        var config = await settings.For(work.Target.Agent, run.Run.Step.State, cancellationToken).ConfigureAwait(false);
+        if (!config.PickOn)
+        {
+            return false;
+        }
+
+        var models = config.Models ?? await catalog.ModelsOf(work.Target.Agent, cancellationToken).ConfigureAwait(false);
+        return ModelCandidates.For(ModelBands.Rank(models), new ModelConstraints(Floor(run.Floor), config.Cap, config.Pin, Drafter: null, model)).Candidates.Count > 0;
     }
 
     private async Task<ModelPickOutcome> Choose(ModelPickWork work, ModelPickSettings config, IReadOnlyList<RankedModel> left, CancellationToken cancellationToken)

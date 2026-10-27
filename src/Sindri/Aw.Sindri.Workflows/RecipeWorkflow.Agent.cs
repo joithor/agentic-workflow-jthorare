@@ -85,7 +85,7 @@ internal sealed partial class RecipeWorkflow
     }
 
     // Launches the session. Done is true when the run ended first or the launch failed; the instance is then the decided one, else it has its launch filled in.
-    private async Task<(WorkflowInstance Instance, bool Done)> LaunchPhase(WorkflowInstance instance, OpenRun open, Interpreting context)
+    private async Task<(WorkflowInstance Instance, bool Done)> LaunchPhase(WorkflowInstance instance, OpenRun open, Interpreting context, PreviousRun? previous = null)
     {
         var (state, step) = StateOf(instance, context);
         using var cancel = new CancellationTokenSource();
@@ -93,7 +93,8 @@ internal sealed partial class RecipeWorkflow
         var item = instance.Facts.TryGetValue(FactKey.From("fact:item"), out var fact) ? fact : null;
         var workspace = (step.Use == _ciFix ? AgentWorkspace : PhaseWorkspaceLaunch) && instance.Facts.TryGetValue(_workspaceKey, out var held) ? held : null;   // LN-WF2: an instance that holds a workspace (the phase's worktree, or docs sync's own) runs its agent Steps there
         _launchedAt = _launchedAt?.Entry == open.Token.Entry ? _launchedAt : (open.Token.Entry, new DateTimeOffset(Workflow.UtcNow));
-        var launching = Workflow.ExecuteActivityAsync((AgentStepActivities a) => a.LaunchAsync(Launch(run, item, step, instance, workspace)), AgentOptions(_launchCall, open, state, cancel.Token));
+        var request = Launch(run, item, step, instance, workspace) with { Previous = previous };   // why: the activity lambda is an expression tree, which takes no 'with'
+        var launching = Workflow.ExecuteActivityAsync((AgentStepActivities a) => a.LaunchAsync(request), AgentOptions(_launchCall, open, state, cancel.Token));
         var (applied, end) = await AwaitAgent(instance, open, new Awaited(launching, cancel, Reports: false), context).ConfigureAwait(true);
         if (end == AgentEnd.Over)
         {
@@ -144,17 +145,7 @@ internal sealed partial class RecipeWorkflow
             return await Reported(applied, running, context).ConfigureAwait(true);
         }
 
-        var ended = await watching.ConfigureAwait(true);
-        var recovery = await Recover(running).ConfigureAwait(true);
-        var closed = await Close(running, measure: true).ConfigureAwait(true);
-        if (recovery?.Outcome is { } outcome)
-        {
-            var recovered = new StepCompleted("agent:recovered", open.Token, OutcomeName.From(outcome), recovery.Outputs, closed.Tokens, StepRuntime.Agent, recovery.Sha!, EmptyDiff: closed.EmptyDiff);   // why: an outcome comes with its digest
-            return await Decided(applied, open, recovered, reportId: null, context).ConfigureAwait(true);
-        }
-
-        var reason = AgentEndReasons.Of(ended.EndedAs);
-        return await Decided(applied, open, AgentFailed(open, step, reason, closed.Tokens, recovery?.Reason ?? ended.Detail) with { FailureKind = AgentFailureKinds.Of(ended.Refused, checkFailed: recovery?.Reason is not null) }, reportId: null, context).ConfigureAwait(true);
+        return await Ended(applied, running, step, await watching.ConfigureAwait(true), context).ConfigureAwait(true);
     }
 
     // The session's own report: closes the run (usage, diff signal, stop), then decides it like a desk report and answers the Update that carried it.
@@ -171,6 +162,7 @@ internal sealed partial class RecipeWorkflow
     // Decides the trigger like RunDeskStep and RunBlockStep: mirror the change, emit its effects, and hand the result to the 'complete' Update that carried a report.
     private async Task<WorkflowInstance> Decided(WorkflowInstance instance, OpenRun open, Trigger trigger, string? reportId, Interpreting context)
     {
+        trigger = Carrying(open, trigger);
         var before = instance;
         var decision = TransitionDecision.Decide(new DecisionInput(instance, context.Recipe, trigger, GateAnswers.None, context.Decisions));
         if (decision is Rejected rejected)

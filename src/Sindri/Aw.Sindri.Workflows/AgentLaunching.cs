@@ -64,11 +64,11 @@ internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver tar
             return new AgentLaunched(Worktree: null, StartHead: null, new AgentLaunchFailure(AgentLaunchFailureKind.Park, refusal.Code, refusal.Message));   // SND-MODEL-003: no model is allowed, the owner fixes the cap or floor
         }
 
-        return await Start(string.Equals(chosen.Model, asked.Value.Request.Step?.Model, StringComparison.Ordinal) ? asked.Value.Request : asked.Value.WithModel(chosen.Model), cancellationToken).ConfigureAwait(false);
+        return await Start(string.Equals(chosen.Model, asked.Value.Request.Step?.Model, StringComparison.Ordinal) ? asked.Value.Request : asked.Value.WithModel(chosen.Model), chosen.CanEscalate, cancellationToken).ConfigureAwait(false);
     }
 
     // Asks the launcher for the session and records the outcome; the worktree and start commit, or the failure.
-    private async Task<AgentLaunched> Start(LaunchRequest request, CancellationToken cancellationToken)
+    private async Task<AgentLaunched> Start(LaunchRequest request, bool canEscalate, CancellationToken cancellationToken)
     {
         var result = await launcher.Launch(request, cancellationToken).ConfigureAwait(false);
         switch (result)
@@ -76,7 +76,7 @@ internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver tar
             case StartedLaunch started:
                 await recorder.Started(request, started, cancellationToken).ConfigureAwait(false);
                 var head = await diff.Head(request.Worktree!, cancellationToken).ConfigureAwait(false);   // why: RequestFor always names the worktree
-                return new AgentLaunched(request.Worktree, head.IsError ? null : head.Value, Failure: null);   // a worktree with no HEAD leaves the diff signal unmeasured
+                return new AgentLaunched(request.Worktree, head.IsError ? null : head.Value, Failure: null, request.Step?.Model, canEscalate);   // a worktree with no HEAD leaves the diff signal unmeasured
             case FailedLaunch failed:
                 await recorder.Failed(request, failed, cancellationToken).ConfigureAwait(false);
                 return new AgentLaunched(Worktree: null, StartHead: null, AgentLaunchFailures.Of(failed));

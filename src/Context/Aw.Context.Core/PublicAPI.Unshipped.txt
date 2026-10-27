@@ -8362,3 +8362,21 @@ override Aw.Context.Core.Chunking.TextChunk.GetHashCode() -> int
 override Aw.Context.Core.Chunking.TextChunk.ToString() -> string!
 static Aw.Context.Core.Chunking.TextChunk.operator !=(Aw.Context.Core.Chunking.TextChunk? left, Aw.Context.Core.Chunking.TextChunk? right) -> bool
 static Aw.Context.Core.Chunking.TextChunk.operator ==(Aw.Context.Core.Chunking.TextChunk? left, Aw.Context.Core.Chunking.TextChunk? right) -> bool
+Aw.Context.Core.Map.MapBuildReport.Notes.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Context.Core.Map.MapBuildReport.Notes.init -> void
+Aw.Context.Core.Concepts.PinRollup
+static Aw.Context.Core.Concepts.PinRollup.Apply(Aw.Context.Core.Graph.GraphSnapshot! graph, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Engine.ConceptPin!>! pins, Aw.Context.Core.Concepts.DeclaredEdges! declared) -> Aw.Context.Core.Concepts.PinRollupResult!
+Aw.Context.Core.Concepts.PinRollupResult
+Aw.Context.Core.Concepts.PinRollupResult.<Clone>$() -> Aw.Context.Core.Concepts.PinRollupResult!
+Aw.Context.Core.Concepts.PinRollupResult.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.GraphEdge!>! Edges, out System.Collections.Generic.IReadOnlyList<string!>! Notes) -> void
+Aw.Context.Core.Concepts.PinRollupResult.Edges.get -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.GraphEdge!>!
+Aw.Context.Core.Concepts.PinRollupResult.Edges.init -> void
+Aw.Context.Core.Concepts.PinRollupResult.Equals(Aw.Context.Core.Concepts.PinRollupResult? other) -> bool
+Aw.Context.Core.Concepts.PinRollupResult.Notes.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Context.Core.Concepts.PinRollupResult.Notes.init -> void
+Aw.Context.Core.Concepts.PinRollupResult.PinRollupResult(System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Graph.GraphEdge!>! Edges, System.Collections.Generic.IReadOnlyList<string!>! Notes) -> void
+override Aw.Context.Core.Concepts.PinRollupResult.Equals(object? obj) -> bool
+override Aw.Context.Core.Concepts.PinRollupResult.GetHashCode() -> int
+override Aw.Context.Core.Concepts.PinRollupResult.ToString() -> string!
+static Aw.Context.Core.Concepts.PinRollupResult.operator !=(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
+static Aw.Context.Core.Concepts.PinRollupResult.operator ==(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool

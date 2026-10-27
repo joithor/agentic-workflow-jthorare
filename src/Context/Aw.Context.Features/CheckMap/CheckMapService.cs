@@ -50,7 +50,7 @@ internal sealed class CheckMapService(IGraphStore store) : IService<CheckMapRequ
     }
 
     // The pins of the mapped repos (the profile's first, each once) that no feature of the map matches: a pin written for a cluster key stops matching when features come from directories.
-    private static List<string> UnmatchedPins(Aw.Context.Core.Graph.GraphSnapshot graph, ContextScope? scope)
+    private static List<string> UnmatchedPins(Core.Graph.GraphSnapshot graph, ContextScope? scope)
     {
         if (scope is null || SettingsReader.Read(scope.Settings) is not { IsError: false } settings)
         {

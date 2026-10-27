@@ -21,11 +21,11 @@ public sealed record EdgeFact(NodeKey From, EdgeType Type, NodeKey To, Provenanc
     {
         ArgumentNullException.ThrowIfNull(edge);
         var confirmed = edge.Provenance == Provenance.Human;
-        return new EdgeFact(edge.From, edge.Type, edge.To, edge.Provenance, confirmed, TrustPolicy.For(edge.Provenance, confirmed), edge.Order, edge.Count, Example(edge));
+        return new EdgeFact(edge.From, edge.Type, edge.To, edge.Provenance, confirmed, TrustPolicy.For(edge.Provenance, confirmed), edge.Order, edge.Count, ExampleOf(edge));
     }
 
     // The first cited pair or file of a roll-up edge as repo-relative paths: a 'depends-on' pair is the importing file (key) and the imported file (span), a 'reads' or 'writes' citation one file.
-    private static string? Example(GraphEdge edge)
+    private static string? ExampleOf(GraphEdge edge)
     {
         if (edge.Count is null || edge.EvidenceOrEmpty.Count == 0)
         {

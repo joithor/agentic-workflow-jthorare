@@ -1,3 +1,4 @@
+using System.Globalization;
 using Aw.Context.Core;
 using Aw.Context.Core.Graph;
 using Aw.Context.Core.Map;
@@ -12,7 +13,7 @@ public sealed class RollupMapFileTests : IDisposable
     public void Dispose() => _world.Dispose();
 
     private static string Rolled(int version, string edge) => MapWorld.Yaml(
-        $"schemaVersion: {version}", "kind: authored", "repo: aw-split-panes", "nodes:",
+        string.Create(CultureInfo.InvariantCulture, $"schemaVersion: {version}"), "kind: authored", "repo: aw-split-panes", "nodes:",
         "  - {key: \"feature:a\", label: \"A\"}", "  - {key: \"feature:b\", label: \"B\"}", "  - {key: \"thing:t\", label: \"T\"}", "  - {key: \"code:src/a.ts\", label: \"a.ts\"}",
         "edges:", edge);
 

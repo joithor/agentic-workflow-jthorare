@@ -14,7 +14,7 @@ public sealed class FeatureRollupTests
 
         Assert.Equal(
             [
-                (RollupFixture.Billing, EdgeType.DependsOn, RollupFixture.Orders, (int?)3, "billing/b1.ts -> orders/o1.ts billing/b2.ts -> orders/o1.ts billing/b2.ts -> orders/o2.ts"),
+                (RollupFixture.Billing, EdgeType.DependsOn, RollupFixture.Orders, 3, "billing/b1.ts -> orders/o1.ts billing/b2.ts -> orders/o1.ts billing/b2.ts -> orders/o2.ts"),
                 (RollupFixture.Billing, EdgeType.Reads, "thing:invoices", 1, "billing/b2.ts"),
                 (RollupFixture.Billing, EdgeType.Writes, "thing:invoices", 1, "billing/b1.ts"),
                 (RollupFixture.Billing, EdgeType.Writes, "thing:orders_t", 1, "billing/b3.ts"),
@@ -44,7 +44,7 @@ public sealed class FeatureRollupTests
 
         var map = FeatureRollup.Apply(input);
 
-        Assert.Empty(map.Edges.Where(e => e.From.Kind == NodeKind.Feature));
+        Assert.DoesNotContain(map.Edges, e => e.From.Kind == NodeKind.Feature);
         Assert.Contains(map.Edges, e => e is { Type: EdgeType.DependsOn, From.Kind: NodeKind.Code });
     }
 

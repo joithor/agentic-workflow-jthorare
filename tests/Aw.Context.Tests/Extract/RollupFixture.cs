@@ -56,5 +56,5 @@ internal static class RollupFixture
     internal static List<(string From, EdgeType Type, string To, int? Count, string Evidence)> Rolled(ExtractedMap map) =>
         [.. map.Edges.Where(e => e.From.Kind == NodeKind.Feature && e.Type is EdgeType.DependsOn or EdgeType.Reads or EdgeType.Writes)
             .OrderBy(e => e.From.Value, StringComparer.Ordinal).ThenBy(e => e.To.Value, StringComparer.Ordinal).ThenBy(e => e.Type)
-            .Select(e => (e.From.Value, e.Type, e.To.Value, e.Count, string.Join(" ", e.EvidenceOrEmpty.Select(r => (r.Key.Value["repo:work/".Length..]) + (r.Span is null ? string.Empty : " -> " + r.Span["repo:work/".Length..])))))];
+            .Select(e => (e.From.Value, e.Type, e.To.Value, e.Count, string.Join(' ', e.EvidenceOrEmpty.Select(r => r.Key.Value["repo:work/".Length..] + (r.Span is null ? string.Empty : " -> " + r.Span["repo:work/".Length..])))))];
 }

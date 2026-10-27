@@ -24,10 +24,10 @@ public static class FeatureRollup
         var groups = new Dictionary<(string From, string To, EdgeType Type), SortedDictionary<(string Source, string Target), (RecordKey? SourceRecord, RecordKey? TargetRecord)>>();
         foreach (var edge in map.Edges.Where(e => e.Provenance == Provenance.Deterministic && e.From.Kind == NodeKind.Code && homes.ContainsKey(e.From.Value)))
         {
-            var from = homes[edge.From.Value];
+            var (fromFeature, fromRecord) = homes[edge.From.Value];
             var (to, targetRecord) = edge switch
             {
-                { Type: EdgeType.DependsOn, To.Kind: NodeKind.Code } when homes.TryGetValue(edge.To.Value, out var other) && other.Feature != from.Feature => (other.Feature, other.Record),
+                { Type: EdgeType.DependsOn, To.Kind: NodeKind.Code } when homes.TryGetValue(edge.To.Value, out var other) && other.Feature != fromFeature => (other.Feature, other.Record),
                 { Type: EdgeType.Reads or EdgeType.Writes, To.Kind: NodeKind.Thing } => (edge.To.Value, null),
                 _ => (null, null),
             };
@@ -36,13 +36,13 @@ public static class FeatureRollup
                 continue;
             }
 
-            var key = (from.Feature, to, edge.Type);
+            var key = (fromFeature, to, edge.Type);
             if (!groups.TryGetValue(key, out var pairs))
             {
                 groups[key] = pairs = new SortedDictionary<(string, string), (RecordKey?, RecordKey?)>(PairOrder.Instance);
             }
 
-            pairs[(edge.From.Value, edge.Type == EdgeType.DependsOn ? edge.To.Value : string.Empty)] = (from.Record, targetRecord);
+            pairs[(edge.From.Value, edge.Type == EdgeType.DependsOn ? edge.To.Value : string.Empty)] = (fromRecord, targetRecord);
         }
 
         var rolled = groups.Select(g => Edge(g.Key, g.Value)).ToList();
@@ -51,8 +51,8 @@ public static class FeatureRollup
 
     private static GraphEdge Edge((string From, string To, EdgeType Type) key, SortedDictionary<(string Source, string Target), (RecordKey? SourceRecord, RecordKey? TargetRecord)> pairs)
     {
-        var evidence = pairs.Values.Take(EvidencePairs).Where(p => p.SourceRecord is not null)
-            .Select(p => new EvidenceRef(p.SourceRecord!.Value, p.TargetRecord?.Value)).ToList();
+        var evidence = pairs.Values.Take(EvidencePairs)
+            .Select(p => p.SourceRecord is { } source ? new EvidenceRef(source, p.TargetRecord?.Value) : null).OfType<EvidenceRef>().ToList();
         return new GraphEdge(NodeKey.From(key.From), NodeKey.From(key.To), key.Type, Provenance.Deterministic, 1.0, evidence, Count: pairs.Count);
     }
 

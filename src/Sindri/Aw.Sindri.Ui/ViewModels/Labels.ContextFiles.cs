@@ -39,6 +39,14 @@ internal static partial class Labels
     /// <summary>What a file with no feature says.</summary>
     internal const string ContextFilesNoFeature = "Not linked to a feature yet";
 
+    /// <summary>A file the model only tagged: it has no home feature of its own.</summary>
+    internal const string ContextFilesNoHome = "No home feature";
+
+    /// <summary>The words for a file's tags, after its home feature.</summary>
+    /// <param name="names">The tag names, comma separated.</param>
+    /// <returns>"also tagged: auth, audit".</returns>
+    internal static string ContextFilesAlsoTagged(string names) => "also tagged: " + names;
+
     /// <summary>What a file with no ticket or decision says.</summary>
     internal const string ContextFilesIntentNone = "None";
 

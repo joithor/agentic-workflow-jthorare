@@ -17,6 +17,10 @@ public sealed record MapVersion(int Number, ContextRepoName Repo, string? Commit
     /// <summary>The hash of the map rules it was built under, or null when none was recorded (a version built before issue 1041, or imported).</summary>
     public string? Ruleset { get; init; }
 
+    /// <summary>The structure reason the build kept with this version (numbers and limits only, notes joined by '; '), or null when it built clean or before this was recorded.</summary>
+    [JsonIgnore]   // why: served through the map status's Checks; the version objects in the API goldens stay as they were
+    public string? Checks { get; init; }
+
     /// <summary>The tracked files each ignored role dropped when it was built (issue 1161); null when none was recorded (a version built before, or imported), empty when no role was ignored.</summary>
     [JsonIgnore]   // why: served through the roles of map status (RoleCount.Ignored); the version objects in the API goldens stay as they were
     public IReadOnlyList<RoleDropped>? Dropped { get; init; }

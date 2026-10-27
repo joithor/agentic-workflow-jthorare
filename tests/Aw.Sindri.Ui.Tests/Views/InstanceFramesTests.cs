@@ -139,7 +139,7 @@ public sealed class InstanceFramesTests : FrameHost
 
         var served = Detail("triage-desk").Current.Status.Commands;
         Expect.Sequence(served.Select(c => c.Cli), Texts(window, "CommandCli").Select(t => t.Text));
-        Assert.Equal(served.Count(c => c.Verb != StatusVerb.Takeover), Texts(window, "CommandPending").Count);   // Take over is sent by the app: its button stands where the pending chip was
+        Assert.Equal(served.Count(c => c.Verb is not (StatusVerb.Takeover or StatusVerb.Cancel)), Texts(window, "CommandPending").Count);   // Take over and Cancel are sent by the app: their buttons stand where the pending chip was
         Assert.Equal(served.Count(c => c.Verb == StatusVerb.Takeover), Buttons(window, "CommandTakeOver").Count);
         var command = window.GetVisualDescendants().OfType<Border>().First(b => b.Name == "CommandLabelName" && b.IsEffectivelyVisible);   // the peer's name, not the view model's (a TextBlock's peer ignores one)
         var heard = Heard.Wrapper(command);

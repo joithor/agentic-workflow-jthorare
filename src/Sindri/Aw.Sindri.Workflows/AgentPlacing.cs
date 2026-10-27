@@ -38,7 +38,8 @@ internal sealed class AgentPlacing(AgentTargetResolver targets, ChallengerPick c
             return new PlacedStep(target.Value, Drafter: null);
         }
 
-        var second = await challengers.Pick(new ChallengerAsk(target.Value.Item, run.Run.Address, AgentLaunches.LaunchIdFor(run.Run), other, target.Value.Agent), cancellationToken).ConfigureAwait(false);
+        // why: the first launch of the run (escalation 0), so an escalation retry keeps the agent the first run was placed on
+        var second = await challengers.Pick(new ChallengerAsk(target.Value.Item, run.Run.Address, AgentLaunches.LaunchIdFor(run.Run.Workflow, run.Run.Run), other, target.Value.Agent), cancellationToken).ConfigureAwait(false);
         return second.IsError ? second.Error : new PlacedStep(target.Value with { Agent = second.Value.Agent }, second.Value.Drafter);
     }
 }

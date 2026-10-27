@@ -43,7 +43,7 @@ public static partial class SettingsReader
 
         if (UnknownKey(element) is { } unknown)
         {
-            return Invalid("context." + unknown, "is not a context setting this build knows (repos, docs, cascadeDepth, cascadeComponentFanOut, deadline, minHits, labeling, scrub, sessions, sources, eval, code, extract, publish, ranker, history, conceptScan)");
+            return Invalid("context." + unknown, "is not a context setting this build knows (repos, docs, cascadeDepth, cascadeComponentFanOut, deadline, minHits, labeling, scrub, sessions, sources, eval, code, extract, publish, ranker, history, conceptScan, checks)");
         }
 
         if (CodeUnknownKey(element) is { } codeKey)
@@ -93,6 +93,8 @@ public static partial class SettingsReader
                     Ranker = RankerRules.Read(section.Ranker),
                     ConceptScan = ConceptScanRules.Read(section.ConceptScan),
                     HistoryDeadline = HistoryDeadline(section.History),
+                    Checks = ChecksRules.ModeOf(section.Checks),
+                    CheckLimits = ChecksRules.Limits(section.Checks),
                 },
                 section.Code,
                 codeDeadline.Value),
@@ -176,7 +178,7 @@ public static partial class SettingsReader
     private static IReadOnlyList<ProfileRecognizer> Recognizers(ExtractSection? extract) =>
         [.. (extract?.Recognizers ?? []).OfType<RecognizerEntry>().Select(e => new ProfileRecognizer(e.Kind!, e.Glob!, e.Pattern!, e.KeyFrom!))];   // why: RecognizerRules refused a missing field
 
-    private static Error? Refused(ContextSection section, IReadOnlyList<string> globs) => Problem(section, globs) ?? RecognizerRules.Problem(section.Extract?.Recognizers) ?? GraphifyRules.Problem(section.Extract?.Graphify);
+    private static Error? Refused(ContextSection section, IReadOnlyList<string> globs) => Problem(section, globs) ?? ChecksRules.Problem(section.Checks) ?? RecognizerRules.Problem(section.Extract?.Recognizers) ?? GraphifyRules.Problem(section.Extract?.Graphify);
 
     private static PublishSettings Publish(PublishSection? section) => new() { WaitForIndexMinutes = section?.WaitForIndexMinutes ?? PublishSettings.DefaultWaitMinutes };
 
@@ -249,7 +251,7 @@ public static partial class SettingsReader
 
     private static string? UnknownKey(JsonElement element)
     {
-        string[] known = ["repos", "docs", "cascadeDepth", "cascadeComponentFanOut", "deadline", "maxBudget", "minHits", "labeling", "scrub", "sessions", "sources", "eval", "code", "extract", "publish", "ranker", "history", "conceptScan"];
+        string[] known = ["repos", "docs", "cascadeDepth", "cascadeComponentFanOut", "deadline", "maxBudget", "minHits", "labeling", "scrub", "sessions", "sources", "eval", "code", "extract", "publish", "ranker", "history", "conceptScan", "checks"];
         return element.EnumerateObject().Select(p => p.Name).FirstOrDefault(n => !known.Contains(n, StringComparer.Ordinal)) is { } name ? Printable(name) : null;
     }
 

@@ -115,28 +115,6 @@ internal sealed partial class RecipeWorkflow
     private static string? SuspendedRun(WorkflowInstance instance, OpenRun open) =>
         instance.Suspension is not null && instance.Frame.Run?.Token == open.Token ? open.Token.Value : null;
 
-    // The session ended with no report: found ended by the first poll after a suspension it was kept through, the Step runs again (sandbox spec §7); else it fails with how it ended, unless its output folder proves a result.
-    private async Task<WorkflowInstance> Ended(WorkflowInstance applied, AgentRunning running, StepUse step, AgentSessionState ended, Interpreting context)
-    {
-        var open = running.Open;
-        if (ended.FoundEnded)
-        {
-            var gone = await Close(running, measure: true).ConfigureAwait(true);   // the session is gone: this reads what it spent
-            return await Decided(applied, open, new SessionLost("service:agent:" + step.Use.Value, open.Token) { Tokens = gone.Tokens }, reportId: null, context).ConfigureAwait(true);
-        }
-
-        var recovery = await Recover(running).ConfigureAwait(true);
-        var closed = await Close(running, measure: true).ConfigureAwait(true);
-        if (recovery?.Outcome is { } outcome)
-        {
-            var recovered = new StepCompleted("agent:recovered", open.Token, OutcomeName.From(outcome), recovery.Outputs, closed.Tokens, StepRuntime.Agent, recovery.Sha!, EmptyDiff: closed.EmptyDiff);   // why: an outcome comes with its digest
-            return await Decided(applied, open, recovered, reportId: null, context).ConfigureAwait(true);
-        }
-
-        var reason = AgentEndReasons.Of(ended.EndedAs);
-        return await Decided(applied, open, AgentFailed(open, step, reason, closed.Tokens, recovery?.Reason ?? ended.Detail) with { FailureKind = AgentFailureKinds.Of(ended.Refused, checkFailed: recovery?.Reason is not null) }, reportId: null, context).ConfigureAwait(true);
-    }
-
     // The session's own report: closes the run (usage, diff signal, stop), then decides it like a desk report and answers the Update that carried it.
     private async Task<WorkflowInstance> Reported(WorkflowInstance instance, AgentRunning running, Interpreting context)
     {
@@ -151,6 +129,7 @@ internal sealed partial class RecipeWorkflow
     // Decides the trigger like RunDeskStep and RunBlockStep: mirror the change, emit its effects, and hand the result to the 'complete' Update that carried a report.
     private async Task<WorkflowInstance> Decided(WorkflowInstance instance, OpenRun open, Trigger trigger, string? reportId, Interpreting context)
     {
+        trigger = Carrying(open, trigger);
         var before = instance;
         var decision = TransitionDecision.Decide(new DecisionInput(instance, context.Recipe, trigger, GateAnswers.None, context.Decisions));
         if (decision is Rejected rejected)

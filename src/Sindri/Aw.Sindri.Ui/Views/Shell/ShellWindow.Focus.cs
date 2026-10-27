@@ -188,6 +188,20 @@ internal sealed partial class ShellWindow
         _ = target?.Focus(Method());
     }
 
+    // A closed sheet whose opener left focus on the page region itself (a jump that hid the row the sheet opened from: focus fell to the
+    // region, not into the sheet): focus returns to the opener's frame. Focus on a control of the page or in the sheet follows KeepFocus.
+    private void KeepFocusAfterClose()
+    {
+        if (_rowRequests == 0 && Shell is { IsSheetShown: false } && ReferenceEquals(FocusManager?.GetFocusedElement(), PagePanel) && SheetOpenerFrame() is { } opener)
+        {
+            _sheetOpener = null;
+            _ = opener.Focus(Method());
+            return;
+        }
+
+        KeepFocus();
+    }
+
     // The sheet's opener (the row it was opened from, by id, or the edge tab), else the row the selection moved to when the opener cleared, else the page region for the sheet; the health pill for the top bar; the page
     // region, or the sheet's heading while the sheet covers the page.
     private Control? Neighbour(Control last)

@@ -27,6 +27,9 @@ internal sealed class RunningEgress : IAsyncDisposable
     /// <summary>The socat to put in the init script.</summary>
     public string Socat { get; }
 
+    /// <summary>The launch's denial counter, flushed with the log and once more at the end; null when the launch has none.</summary>
+    public DenialCounter? Denials { get; init; }
+
     /// <summary>The egress log.</summary>
     public EgressLog Log { get; }
 
@@ -67,6 +70,14 @@ internal sealed class RunningEgress : IAsyncDisposable
             Log.Flush();
             return Task.CompletedTask;
         }, "writing egress.log").ConfigureAwait(false);
+        await Safely(async () =>
+        {
+            if (Denials is { } denials)
+            {
+                denials.Flush();
+                await denials.Publish(CancellationToken.None).ConfigureAwait(false);
+            }
+        }, "writing denials.json").ConfigureAwait(false);
         _stopFlushing.Dispose();
         await Safely(() =>
         {
@@ -114,6 +125,11 @@ internal sealed class RunningEgress : IAsyncDisposable
                 try
                 {
                     Log.Flush();
+                    if (Denials is { } denials)
+                    {
+                        denials.Flush();
+                        await denials.Publish(_stopFlushing.Token).ConfigureAwait(false);
+                    }
                 }
                 catch (Exception e) when (e is IOException or UnauthorizedAccessException)
                 {

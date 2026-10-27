@@ -42,7 +42,7 @@ public static class MapRuleset
         scope is not null && SettingsReader.Read(scope.Settings) is { IsSuccess: true } settings ? Of(ScopeRules.Mapped(settings.Value, scope.Repos)) : null;
 
     private static string Pin(ConceptPin pin) =>
-        $"{pin.Id?.Value}{Unit}{pin.Name}{Unit}{pin.Summary}{Unit}{Sorted(pin.Features)}{Unit}{Sorted(pin.Paths)}";
+        $"{pin.Id?.Value}{Unit}{pin.Name}{Unit}{pin.Summary}{Unit}{Sorted(pin.Features)}{Unit}{Sorted(pin.Paths)}{Unit}{Sorted(pin.DependsOn)}{Unit}{Sorted(pin.Owns)}";
 
     private static string Sorted(IReadOnlyList<string> values) => string.Join(',', values.Order(StringComparer.Ordinal));
 

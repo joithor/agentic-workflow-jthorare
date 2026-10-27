@@ -19188,9 +19188,13 @@ Aw.Sindri.Core.Launches.IStalledAgentRuns
 Aw.Sindri.Core.Launches.IStalledAgentRuns.Find(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Launches.StalledAgentRun!>!>
 Aw.Sindri.Core.Profile.ConceptSettings
 Aw.Sindri.Core.Profile.ConceptSettings.<Clone>$() -> Aw.Sindri.Core.Profile.ConceptSettings!
-Aw.Sindri.Core.Profile.ConceptSettings.ConceptSettings(Aw.Sindri.Core.Ids.ConceptPinId? Id = null, string? Name = null, string? Summary = null, System.Collections.Generic.IReadOnlyList<string!>? Features = null, System.Collections.Generic.IReadOnlyList<string!>? Paths = null) -> void
-Aw.Sindri.Core.Profile.ConceptSettings.Deconstruct(out Aw.Sindri.Core.Ids.ConceptPinId? Id, out string? Name, out string? Summary, out System.Collections.Generic.IReadOnlyList<string!>? Features, out System.Collections.Generic.IReadOnlyList<string!>? Paths) -> void
+Aw.Sindri.Core.Profile.ConceptSettings.ConceptSettings(Aw.Sindri.Core.Ids.ConceptPinId? Id = null, string? Name = null, string? Summary = null, System.Collections.Generic.IReadOnlyList<string!>? Features = null, System.Collections.Generic.IReadOnlyList<string!>? Paths = null, System.Collections.Generic.IReadOnlyList<string!>? DependsOn = null, System.Collections.Generic.IReadOnlyList<string!>? Owns = null) -> void
+Aw.Sindri.Core.Profile.ConceptSettings.Deconstruct(out Aw.Sindri.Core.Ids.ConceptPinId? Id, out string? Name, out string? Summary, out System.Collections.Generic.IReadOnlyList<string!>? Features, out System.Collections.Generic.IReadOnlyList<string!>? Paths, out System.Collections.Generic.IReadOnlyList<string!>? DependsOn, out System.Collections.Generic.IReadOnlyList<string!>? Owns) -> void
 Aw.Sindri.Core.Profile.ConceptSettings.Equals(Aw.Sindri.Core.Profile.ConceptSettings? other) -> bool
+Aw.Sindri.Core.Profile.ConceptSettings.DependsOn.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Aw.Sindri.Core.Profile.ConceptSettings.DependsOn.init -> void
+Aw.Sindri.Core.Profile.ConceptSettings.Owns.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Aw.Sindri.Core.Profile.ConceptSettings.Owns.init -> void
 Aw.Sindri.Core.Profile.ConceptSettings.Features.get -> System.Collections.Generic.IReadOnlyList<string!>?
 Aw.Sindri.Core.Profile.ConceptSettings.Features.init -> void
 Aw.Sindri.Core.Profile.ConceptSettings.Id.get -> Aw.Sindri.Core.Ids.ConceptPinId?
@@ -19543,7 +19547,6 @@ Aw.Sindri.Core.Sandbox.Plan.PlanMountKind.ReadWrite = 1 -> Aw.Sindri.Core.Sandbo
 Aw.Sindri.Core.Sandbox.Plan.PlanMountKind.Tmpfs = 3 -> Aw.Sindri.Core.Sandbox.Plan.PlanMountKind
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.<Clone>$() -> Aw.Sindri.Core.Sandbox.Plan.PlanNetwork!
-Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.Deconstruct(out Aw.Sindri.Core.Sandbox.NetworkMode Mode, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.PlanGroup!>! Groups, out int SindriPort, out int ProxyPort, out string! NetDir) -> void
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.Equals(Aw.Sindri.Core.Sandbox.Plan.PlanNetwork? other) -> bool
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.Groups.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.PlanGroup!>!
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.Groups.init -> void
@@ -19551,7 +19554,6 @@ Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.Mode.get -> Aw.Sindri.Core.Sandbox.Netwo
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.Mode.init -> void
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.NetDir.get -> string!
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.NetDir.init -> void
-Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.PlanNetwork(Aw.Sindri.Core.Sandbox.NetworkMode Mode, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.PlanGroup!>! Groups, int SindriPort, int ProxyPort, string! NetDir) -> void
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.ProxyPort.get -> int
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.ProxyPort.init -> void
 Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.SindriPort.get -> int
@@ -19664,7 +19666,6 @@ Aw.Sindri.Core.Sandbox.Plan.SandboxRequest
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.<Clone>$() -> Aw.Sindri.Core.Sandbox.Plan.SandboxRequest!
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Attended.get -> bool
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Attended.init -> void
-Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.LaunchId Launch, out Aw.Sindri.Core.Ids.ItemId Item, out Aw.Sindri.Core.Launch.AgentId Target, out Aw.Sindri.Core.Ids.RepoName Repo, out Aw.Sindri.Core.Workflow.Engine.InstanceAddress? Instance, out Aw.Sindri.Core.Sandbox.Plan.SandboxPaths! Paths, out string! RunNamespace, out Aw.Sindri.Core.Launch.StepPolicy? Policy, out bool Attended, out System.TimeSpan? StepTimeout, out System.TimeSpan? LongMax, out bool SlotHeld, out Aw.Sindri.Core.Sandbox.Plan.SandboxNetFacts! Net, out Aw.Sindri.Core.Sandbox.Plan.SandboxHostFacts! Host, out Aw.Sindri.Core.Profile.SandboxSettings? Settings, out Aw.Sindri.Core.Sandbox.Credentials.PreparedLogin? Login, out System.Collections.Generic.IReadOnlyList<string!>? OmitGroups, out System.Collections.Generic.IReadOnlyList<string!>? ExtraDeny) -> void
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Equals(Aw.Sindri.Core.Sandbox.Plan.SandboxRequest? other) -> bool
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.ExtraDeny.get -> System.Collections.Generic.IReadOnlyList<string!>?
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.ExtraDeny.init -> void
@@ -19692,7 +19693,6 @@ Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Repo.get -> Aw.Sindri.Core.Ids.RepoNa
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Repo.init -> void
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.RunNamespace.get -> string!
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.RunNamespace.init -> void
-Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.SandboxRequest(Aw.Sindri.Core.Workflow.Engine.LaunchId Launch, Aw.Sindri.Core.Ids.ItemId Item, Aw.Sindri.Core.Launch.AgentId Target, Aw.Sindri.Core.Ids.RepoName Repo, Aw.Sindri.Core.Workflow.Engine.InstanceAddress? Instance, Aw.Sindri.Core.Sandbox.Plan.SandboxPaths! Paths, string! RunNamespace, Aw.Sindri.Core.Launch.StepPolicy? Policy, bool Attended, System.TimeSpan? StepTimeout, System.TimeSpan? LongMax, bool SlotHeld, Aw.Sindri.Core.Sandbox.Plan.SandboxNetFacts! Net, Aw.Sindri.Core.Sandbox.Plan.SandboxHostFacts! Host, Aw.Sindri.Core.Profile.SandboxSettings? Settings, Aw.Sindri.Core.Sandbox.Credentials.PreparedLogin? Login, System.Collections.Generic.IReadOnlyList<string!>? OmitGroups = null, System.Collections.Generic.IReadOnlyList<string!>? ExtraDeny = null) -> void
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Settings.get -> Aw.Sindri.Core.Profile.SandboxSettings?
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Settings.init -> void
 Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.SlotHeld.get -> bool
@@ -20770,3 +20770,173 @@ Aw.Sindri.Core.Events.WorkflowEventPayload.Agent.get -> string?
 Aw.Sindri.Core.Events.WorkflowEventPayload.Agent.init -> void
 Aw.Sindri.Core.Events.WorkflowEventPayload.Model.get -> string?
 Aw.Sindri.Core.Events.WorkflowEventPayload.Model.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.<Clone>$() -> Aw.Sindri.Core.Sandbox.Denials.DenialEntry!
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Count.get -> int
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Count.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Deconstruct(out Aw.Sindri.Core.Events.DenialKind Kind, out string! Target, out string! Rule, out int Count, out System.DateTimeOffset First, out System.DateTimeOffset Last) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.DenialEntry(Aw.Sindri.Core.Events.DenialKind Kind, string! Target, string! Rule, int Count, System.DateTimeOffset First, System.DateTimeOffset Last) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Equals(Aw.Sindri.Core.Sandbox.Denials.DenialEntry? other) -> bool
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.First.get -> System.DateTimeOffset
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.First.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Kind.get -> Aw.Sindri.Core.Events.DenialKind
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Kind.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Last.get -> System.DateTimeOffset
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Last.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Rule.get -> string!
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Rule.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Target.get -> string!
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Target.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFile
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.<Clone>$() -> Aw.Sindri.Core.Sandbox.Denials.DenialFile!
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.LaunchId LaunchId, out System.DateTimeOffset UpdatedAt, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialEntry!>! Entries, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialOverflow!>! Overflow) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.DenialFile(Aw.Sindri.Core.Workflow.Engine.LaunchId LaunchId, System.DateTimeOffset UpdatedAt, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialEntry!>! Entries, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialOverflow!>! Overflow) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Entries.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialEntry!>!
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Entries.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Equals(Aw.Sindri.Core.Sandbox.Denials.DenialFile? other) -> bool
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.LaunchId.get -> Aw.Sindri.Core.Workflow.Engine.LaunchId
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.LaunchId.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Overflow.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialOverflow!>!
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Overflow.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.UpdatedAt.get -> System.DateTimeOffset
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.UpdatedAt.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation.<Clone>$() -> Aw.Sindri.Core.Sandbox.Denials.DenialObservation!
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation.Deconstruct(out Aw.Sindri.Core.Events.DenialKind Kind, out string! Target, out string! Rule) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation.DenialObservation(Aw.Sindri.Core.Events.DenialKind Kind, string! Target, string! Rule) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation.Equals(Aw.Sindri.Core.Sandbox.Denials.DenialObservation? other) -> bool
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation.Kind.get -> Aw.Sindri.Core.Events.DenialKind
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation.Kind.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation.Rule.get -> string!
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation.Rule.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation.Target.get -> string!
+Aw.Sindri.Core.Sandbox.Denials.DenialObservation.Target.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialOverflow
+Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.<Clone>$() -> Aw.Sindri.Core.Sandbox.Denials.DenialOverflow!
+Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.Count.get -> int
+Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.Count.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.Deconstruct(out Aw.Sindri.Core.Events.DenialKind Kind, out int Count) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.DenialOverflow(Aw.Sindri.Core.Events.DenialKind Kind, int Count) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.Equals(Aw.Sindri.Core.Sandbox.Denials.DenialOverflow? other) -> bool
+Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.Kind.get -> Aw.Sindri.Core.Events.DenialKind
+Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.Kind.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialRules
+const Aw.Sindri.Core.Sandbox.Denials.DenialRules.Cap = "cap" -> string!
+const Aw.Sindri.Core.Sandbox.Denials.DenialRules.DenyList = "deny-list" -> string!
+const Aw.Sindri.Core.Sandbox.Denials.DenialRules.HookFailOpen = "hook-fail-open" -> string!
+const Aw.Sindri.Core.Sandbox.Denials.DenialRules.InnerPolicy = "inner-policy" -> string!
+const Aw.Sindri.Core.Sandbox.Denials.DenialRules.NoGroup = "no-group" -> string!
+const Aw.Sindri.Core.Sandbox.Denials.DenialRules.NotBound = "not-bound" -> string!
+const Aw.Sindri.Core.Sandbox.Denials.DenialRules.Overflow = "overflow" -> string!
+const Aw.Sindri.Core.Sandbox.Denials.DenialRules.PrivateAddress = "private-address" -> string!
+override Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.Denials.DenialEntry.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.Denials.DenialEntry.ToString() -> string!
+override Aw.Sindri.Core.Sandbox.Denials.DenialFile.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.Denials.DenialFile.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.Denials.DenialFile.ToString() -> string!
+override Aw.Sindri.Core.Sandbox.Denials.DenialObservation.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.Denials.DenialObservation.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.Denials.DenialObservation.ToString() -> string!
+override Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.ToString() -> string!
+static Aw.Sindri.Core.Sandbox.Denials.DenialEntry.operator !=(Aw.Sindri.Core.Sandbox.Denials.DenialEntry? left, Aw.Sindri.Core.Sandbox.Denials.DenialEntry? right) -> bool
+static Aw.Sindri.Core.Sandbox.Denials.DenialEntry.operator ==(Aw.Sindri.Core.Sandbox.Denials.DenialEntry? left, Aw.Sindri.Core.Sandbox.Denials.DenialEntry? right) -> bool
+static Aw.Sindri.Core.Sandbox.Denials.DenialFile.operator !=(Aw.Sindri.Core.Sandbox.Denials.DenialFile? left, Aw.Sindri.Core.Sandbox.Denials.DenialFile? right) -> bool
+static Aw.Sindri.Core.Sandbox.Denials.DenialFile.operator ==(Aw.Sindri.Core.Sandbox.Denials.DenialFile? left, Aw.Sindri.Core.Sandbox.Denials.DenialFile? right) -> bool
+static Aw.Sindri.Core.Sandbox.Denials.DenialObservation.operator !=(Aw.Sindri.Core.Sandbox.Denials.DenialObservation? left, Aw.Sindri.Core.Sandbox.Denials.DenialObservation? right) -> bool
+static Aw.Sindri.Core.Sandbox.Denials.DenialObservation.operator ==(Aw.Sindri.Core.Sandbox.Denials.DenialObservation? left, Aw.Sindri.Core.Sandbox.Denials.DenialObservation? right) -> bool
+static Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.operator !=(Aw.Sindri.Core.Sandbox.Denials.DenialOverflow? left, Aw.Sindri.Core.Sandbox.Denials.DenialOverflow? right) -> bool
+static Aw.Sindri.Core.Sandbox.Denials.DenialOverflow.operator ==(Aw.Sindri.Core.Sandbox.Denials.DenialOverflow? left, Aw.Sindri.Core.Sandbox.Denials.DenialOverflow? right) -> bool
+Aw.Sindri.Core.Sandbox.ILearnHistory
+Aw.Sindri.Core.Sandbox.ILearnHistory.Read(string! repo, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Sindri.Core.Sandbox.LearnHistory!>
+Aw.Sindri.Core.Sandbox.LearnHistory
+Aw.Sindri.Core.Sandbox.LearnHistory.<Clone>$() -> Aw.Sindri.Core.Sandbox.LearnHistory!
+Aw.Sindri.Core.Sandbox.LearnHistory.Deconstruct(out System.DateTimeOffset? FirstLearnRun, out int LearnRuns, out System.DateTimeOffset? EndedAt) -> void
+Aw.Sindri.Core.Sandbox.LearnHistory.EndedAt.get -> System.DateTimeOffset?
+Aw.Sindri.Core.Sandbox.LearnHistory.EndedAt.init -> void
+Aw.Sindri.Core.Sandbox.LearnHistory.Equals(Aw.Sindri.Core.Sandbox.LearnHistory? other) -> bool
+Aw.Sindri.Core.Sandbox.LearnHistory.FirstLearnRun.get -> System.DateTimeOffset?
+Aw.Sindri.Core.Sandbox.LearnHistory.FirstLearnRun.init -> void
+Aw.Sindri.Core.Sandbox.LearnHistory.LearnHistory(System.DateTimeOffset? FirstLearnRun, int LearnRuns, System.DateTimeOffset? EndedAt) -> void
+Aw.Sindri.Core.Sandbox.LearnHistory.LearnRuns.get -> int
+Aw.Sindri.Core.Sandbox.LearnHistory.LearnRuns.init -> void
+override Aw.Sindri.Core.Sandbox.LearnHistory.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.LearnHistory.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.LearnHistory.ToString() -> string!
+static Aw.Sindri.Core.Sandbox.LearnHistory.operator !=(Aw.Sindri.Core.Sandbox.LearnHistory? left, Aw.Sindri.Core.Sandbox.LearnHistory? right) -> bool
+static Aw.Sindri.Core.Sandbox.LearnHistory.operator ==(Aw.Sindri.Core.Sandbox.LearnHistory? left, Aw.Sindri.Core.Sandbox.LearnHistory? right) -> bool
+Aw.Sindri.Core.Sandbox.Denials.ISandboxDenials
+Aw.Sindri.Core.Sandbox.Denials.ISandboxDenials.Append(Aw.Sindri.Core.Events.SandboxDenied! denied, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>
+Aw.Sindri.Core.Launches.LaunchSessionEvents.Append(Aw.Sindri.Core.Events.SandboxDenied! denied, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>
+Aw.Sindri.Core.Sandbox.Plan.LearnContext.<Clone>$() -> Aw.Sindri.Core.Sandbox.Plan.LearnContext!
+Aw.Sindri.Core.Sandbox.Plan.LearnContext.Deconstruct(out Aw.Sindri.Core.Sandbox.LearnHistory! History, out System.DateTimeOffset Now) -> void
+Aw.Sindri.Core.Sandbox.Plan.LearnContext.Equals(Aw.Sindri.Core.Sandbox.Plan.LearnContext? other) -> bool
+Aw.Sindri.Core.Sandbox.Plan.LearnContext
+Aw.Sindri.Core.Sandbox.Plan.LearnContext.LearnContext(Aw.Sindri.Core.Sandbox.LearnHistory! History, System.DateTimeOffset Now) -> void
+override Aw.Sindri.Core.Sandbox.Plan.LearnContext.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.Plan.LearnContext.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.Plan.LearnContext.ToString() -> string!
+static Aw.Sindri.Core.Sandbox.Plan.LearnContext.operator !=(Aw.Sindri.Core.Sandbox.Plan.LearnContext? left, Aw.Sindri.Core.Sandbox.Plan.LearnContext? right) -> bool
+static Aw.Sindri.Core.Sandbox.Plan.LearnContext.operator ==(Aw.Sindri.Core.Sandbox.Plan.LearnContext? left, Aw.Sindri.Core.Sandbox.Plan.LearnContext? right) -> bool
+Aw.Sindri.Core.Sandbox.Plan.LearnContext.History.get -> Aw.Sindri.Core.Sandbox.LearnHistory!
+Aw.Sindri.Core.Sandbox.Plan.LearnContext.History.init -> void
+Aw.Sindri.Core.Sandbox.Plan.LearnContext.Now.get -> System.DateTimeOffset
+Aw.Sindri.Core.Sandbox.Plan.LearnContext.Now.init -> void
+static readonly Aw.Sindri.Core.Sandbox.Plan.LearnWindow.Length -> System.TimeSpan
+static Aw.Sindri.Core.Sandbox.Plan.LearnWindow.Decide(Aw.Sindri.Core.Sandbox.NetworkMode? profileMode, Aw.Sindri.Core.Sandbox.LearnHistory! history, System.DateTimeOffset now) -> (Aw.Sindri.Core.Sandbox.NetworkMode Mode, System.DateTimeOffset? LearnUntil)
+Aw.Sindri.Core.Sandbox.Plan.LearnWindow
+const Aw.Sindri.Core.Sandbox.Plan.LearnWindow.MaxRuns = 10 -> int
+Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.Deconstruct(out Aw.Sindri.Core.Sandbox.NetworkMode Mode, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.PlanGroup!>! Groups, out int SindriPort, out int ProxyPort, out string! NetDir, out System.DateTimeOffset? LearnUntil) -> void
+Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.PlanNetwork(Aw.Sindri.Core.Sandbox.NetworkMode Mode, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.PlanGroup!>! Groups, int SindriPort, int ProxyPort, string! NetDir, System.DateTimeOffset? LearnUntil = null) -> void
+Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.LearnUntil.get -> System.DateTimeOffset?
+Aw.Sindri.Core.Sandbox.Plan.PlanNetwork.LearnUntil.init -> void
+Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.LaunchId Launch, out Aw.Sindri.Core.Ids.ItemId Item, out Aw.Sindri.Core.Launch.AgentId Target, out Aw.Sindri.Core.Ids.RepoName Repo, out Aw.Sindri.Core.Workflow.Engine.InstanceAddress? Instance, out Aw.Sindri.Core.Sandbox.Plan.SandboxPaths! Paths, out string! RunNamespace, out Aw.Sindri.Core.Launch.StepPolicy? Policy, out bool Attended, out System.TimeSpan? StepTimeout, out System.TimeSpan? LongMax, out bool SlotHeld, out Aw.Sindri.Core.Sandbox.Plan.SandboxNetFacts! Net, out Aw.Sindri.Core.Sandbox.Plan.SandboxHostFacts! Host, out Aw.Sindri.Core.Profile.SandboxSettings? Settings, out Aw.Sindri.Core.Sandbox.Credentials.PreparedLogin? Login, out System.Collections.Generic.IReadOnlyList<string!>? OmitGroups, out System.Collections.Generic.IReadOnlyList<string!>? ExtraDeny, out Aw.Sindri.Core.Sandbox.Plan.LearnContext? Learn) -> void
+Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.SandboxRequest(Aw.Sindri.Core.Workflow.Engine.LaunchId Launch, Aw.Sindri.Core.Ids.ItemId Item, Aw.Sindri.Core.Launch.AgentId Target, Aw.Sindri.Core.Ids.RepoName Repo, Aw.Sindri.Core.Workflow.Engine.InstanceAddress? Instance, Aw.Sindri.Core.Sandbox.Plan.SandboxPaths! Paths, string! RunNamespace, Aw.Sindri.Core.Launch.StepPolicy? Policy, bool Attended, System.TimeSpan? StepTimeout, System.TimeSpan? LongMax, bool SlotHeld, Aw.Sindri.Core.Sandbox.Plan.SandboxNetFacts! Net, Aw.Sindri.Core.Sandbox.Plan.SandboxHostFacts! Host, Aw.Sindri.Core.Profile.SandboxSettings? Settings, Aw.Sindri.Core.Sandbox.Credentials.PreparedLogin? Login, System.Collections.Generic.IReadOnlyList<string!>? OmitGroups = null, System.Collections.Generic.IReadOnlyList<string!>? ExtraDeny = null, Aw.Sindri.Core.Sandbox.Plan.LearnContext? Learn = null) -> void
+Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Learn.get -> Aw.Sindri.Core.Sandbox.Plan.LearnContext?
+Aw.Sindri.Core.Sandbox.Plan.SandboxRequest.Learn.init -> void
+Aw.Sindri.Core.Sandbox.Denials.ClaudeTranscriptDenials
+Aw.Sindri.Core.Sandbox.Denials.CodexTranscriptDenials
+Aw.Sindri.Core.Sandbox.Denials.FailOpenLog
+Aw.Sindri.Core.Sandbox.Denials.PathDenials
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.<Clone>$() -> Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials!
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialObservation!>! Observations, out System.Collections.Generic.IReadOnlyList<string!>! FailedPaths) -> void
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Equals(Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials? other) -> bool
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.FailedPaths.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.FailedPaths.init -> void
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Observations.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialObservation!>!
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Observations.init -> void
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.TranscriptDenials(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialObservation!>! Observations, System.Collections.Generic.IReadOnlyList<string!>! FailedPaths) -> void
+override Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.ToString() -> string!
+static Aw.Sindri.Core.Sandbox.Denials.ClaudeTranscriptDenials.Read(System.Collections.Generic.IEnumerable<string!>! jsonlLines) -> Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials!
+static Aw.Sindri.Core.Sandbox.Denials.CodexTranscriptDenials.Read(System.Collections.Generic.IEnumerable<string!>! jsonlLines) -> Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials!
+static Aw.Sindri.Core.Sandbox.Denials.FailOpenLog.Read(System.Collections.Generic.IEnumerable<string!>! lines) -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialObservation!>!
+static Aw.Sindri.Core.Sandbox.Denials.PathDenials.Match(Aw.Sindri.Core.Sandbox.Plan.SandboxPlan! plan, string! path, string! home) -> Aw.Sindri.Core.Sandbox.Denials.DenialObservation?
+static Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Empty.get -> Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials!
+static Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.operator !=(Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials? left, Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials? right) -> bool
+static Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.operator ==(Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials? left, Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials? right) -> bool
+Aw.Sindri.Core.Events.SandboxLearnEnded
+Aw.Sindri.Core.Events.SandboxLearnEnded.<Clone>$() -> Aw.Sindri.Core.Events.SandboxLearnEnded!
+Aw.Sindri.Core.Events.SandboxLearnEnded.At.get -> System.DateTimeOffset
+Aw.Sindri.Core.Events.SandboxLearnEnded.At.init -> void
+Aw.Sindri.Core.Events.SandboxLearnEnded.Deconstruct(out System.DateTimeOffset At, out Aw.Sindri.Core.Ids.RepoName? Repo) -> void
+Aw.Sindri.Core.Events.SandboxLearnEnded.Equals(Aw.Sindri.Core.Events.SandboxLearnEnded? other) -> bool
+Aw.Sindri.Core.Events.SandboxLearnEnded.Repo.get -> Aw.Sindri.Core.Ids.RepoName?
+Aw.Sindri.Core.Events.SandboxLearnEnded.Repo.init -> void
+Aw.Sindri.Core.Events.SandboxLearnEnded.SandboxLearnEnded(System.DateTimeOffset At, Aw.Sindri.Core.Ids.RepoName? Repo = null) -> void
+const Aw.Sindri.Core.Events.EventTypes.SandboxLearnEnded = "sandbox.learn-ended" -> string!
+override Aw.Sindri.Core.Events.SandboxLearnEnded.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Events.SandboxLearnEnded.GetHashCode() -> int
+override Aw.Sindri.Core.Events.SandboxLearnEnded.ToString() -> string!
+static Aw.Sindri.Core.Events.SandboxLearnEnded.operator !=(Aw.Sindri.Core.Events.SandboxLearnEnded? left, Aw.Sindri.Core.Events.SandboxLearnEnded? right) -> bool
+static Aw.Sindri.Core.Events.SandboxLearnEnded.operator ==(Aw.Sindri.Core.Events.SandboxLearnEnded? left, Aw.Sindri.Core.Events.SandboxLearnEnded? right) -> bool
+Aw.Sindri.Core.Sandbox.Denials.DenialsRenderer
+static Aw.Sindri.Core.Sandbox.Denials.DenialsRenderer.Render(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialFile!>! files) -> string!
+static Aw.Sindri.Core.Sandbox.Denials.DenialsRenderer.Fix(Aw.Sindri.Core.Events.DenialKind kind, string! target, string! rule) -> string!
+Aw.Sindri.Core.Sandbox.Denials.IDenialFiles
+Aw.Sindri.Core.Sandbox.Denials.IDenialFiles.List(Aw.Sindri.Core.Workflow.Engine.LaunchId? launch, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialFile!>!>
+const Aw.Sindri.Core.Sandbox.SandboxEnvironment.Plan = "AW_SANDBOX_PLAN" -> string!

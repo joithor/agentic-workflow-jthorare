@@ -1,7 +1,7 @@
 using Aw.Kernel;
+using Aw.Sindri.Core.Judge;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.LensPacks;
-using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Workflow.Blocks;
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Core.Workflow.Engine.Runtime;
@@ -13,14 +13,14 @@ namespace Aw.Sindri.Infrastructure.Workflows;
 /// What 'LaunchAgentStep' does (engine P8 D4, D8, D12): resolves the target, asks the launcher for the unattended session of <see cref="AgentLaunches.RequestFor"/>, records the outcome,
 /// and reads the worktree's HEAD as the run's start. The launcher is idempotent per launch id, so a retry or a replay starts no second session.
 /// </summary>
-/// <param name="launcher">The launcher.</param>
+/// <param name="launcher">The launcher, waiting out a full session cap (SND-LAUNCH-020).</param>
 /// <param name="targets">Where the Step runs.</param>
 /// <param name="recorder">Records 'launch.started' and 'launch.failed'.</param>
 /// <param name="diff">Reads the start commit.</param>
 /// <param name="catalog">The blocks' descriptors, for the Step's brief.</param>
 /// <param name="inputs">What a launch reads beside the target: the pack bundles, the stored facts and the Steps' instructions.</param>
-/// <param name="options">How long to wait for a free session slot.</param>
-internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver targets, AgentLaunchRecorder recorder, IRunDiff diff, BlockCatalog catalog, AgentLaunchInputs inputs, AgentRuntimeOptions options)
+/// <param name="picker">Picks the model the session runs on (model-pick spec 5).</param>
+internal sealed class AgentLaunching(AgentLaunchWaiting launcher, AgentTargetResolver targets, AgentLaunchRecorder recorder, IRunDiff diff, BlockCatalog catalog, AgentLaunchInputs inputs, ModelPicker picker)
 {
     /// <summary>Launches the run's session.</summary>
     /// <param name="run">The run.</param>
@@ -58,13 +58,19 @@ internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver tar
             return StepFailed(asked.Error);
         }
 
-        return await Start(asked.Value, cancellationToken).ConfigureAwait(false);
+        var chosen = await picker.Pick(new ModelPickWork(run, target.Value, asked.Value.Request, asked.Value.Files), cancellationToken).ConfigureAwait(false);
+        if (chosen.Refusal is { } refusal)
+        {
+            return new AgentLaunched(Worktree: null, StartHead: null, new AgentLaunchFailure(AgentLaunchFailureKind.Park, refusal.Code, refusal.Message));   // SND-MODEL-003: no model is allowed, the owner fixes the cap or floor
+        }
+
+        return await Start(string.Equals(chosen.Model, asked.Value.Request.Step?.Model, StringComparison.Ordinal) ? asked.Value.Request : asked.Value.WithModel(chosen.Model), cancellationToken).ConfigureAwait(false);
     }
 
     // Asks the launcher for the session and records the outcome; the worktree and start commit, or the failure.
     private async Task<AgentLaunched> Start(LaunchRequest request, CancellationToken cancellationToken)
     {
-        var result = await LaunchOrWait(request, cancellationToken).ConfigureAwait(false);
+        var result = await launcher.Launch(request, cancellationToken).ConfigureAwait(false);
         if (result is null)
         {
             return new AgentLaunched(Worktree: null, StartHead: null, Failure: null, Waiting: true);   // the cap is still reached: nothing is recorded, the workflow asks again
@@ -84,34 +90,27 @@ internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver tar
         }
     }
 
-    // SND-LAUNCH-020 is a queue condition (sandbox spec §6): ask again every SlotRetry until the slice ends, recording nothing; null says the slice ended with the cap still reached.
-    private async Task<LaunchResult?> LaunchOrWait(LaunchRequest request, CancellationToken cancellationToken)
-    {
-        for (var waited = TimeSpan.Zero; ; waited += options.SlotRetry)
-        {
-            var result = await launcher.Launch(request, cancellationToken).ConfigureAwait(false);
-            if (result is not FailedLaunch failed || SandboxCodes.KindOf(failed.Error.Code) != LaunchCodeKind.ResourceWait)
-            {
-                return result;
-            }
-
-            if (waited + options.SlotRetry > options.SlotSlice)
-            {
-                return null;
-            }
-
-            await Task.Delay(options.SlotRetry, cancellationToken).ConfigureAwait(false);
-        }
-    }
-
     // The launcher's request: the Step's brief and policy, its pack, and its declared read facts as files (read and scrubbed here); the failure when a fact can't be read.
-    private async ValueTask<Result<LaunchRequest>> Request(AgentLaunchRun run, AgentStepTarget target, string? workspace, PackBundle? bundle, CancellationToken cancellationToken)
+    private async ValueTask<Result<PreparedLaunch>> Request(AgentLaunchRun run, AgentStepTarget target, string? workspace, PackBundle? bundle, CancellationToken cancellationToken)
     {
         var block = BlockId.From(run.Run.Step.Block);
         var descriptor = catalog.Find(block);
         var facts = await StepFactFiles.Build(new FactFileStep(descriptor, run.Subject), run.Facts, inputs.Contents, inputs.Scrubber, cancellationToken).ConfigureAwait(false);
-        return facts.IsError ? facts.Error : AgentLaunches.RequestFor(run.Run, target, descriptor, new AgentLaunchExtras(PayloadFacts.WithShapes(Told(block), run.Payloads), workspace, bundle, facts.Value, run.Model));   // the Step's own lines, then the shape of each payload output
+        if (facts.IsError)
+        {
+            return facts.Error;
+        }
+
+        var extras = new AgentLaunchExtras(PayloadFacts.WithShapes(Told(block), run.Payloads), workspace, bundle, facts.Value, run.Model);
+        return new PreparedLaunch(AgentLaunches.RequestFor(run.Run, target, descriptor, extras), Files(bundle, facts.Value), model => AgentLaunches.RequestFor(run.Run, target, descriptor, extras with { Model = model }));
     }
+
+    // The files the model-pick question shows: the pack's files and the written facts, each as path and text.
+    private static List<PickFileText> Files(PackBundle? bundle, IReadOnlyDictionary<string, string>? facts) =>
+    [
+        .. bundle?.Files.Select(static f => new PickFileText(f.Key, f.Value)) ?? [],
+        .. facts?.Select(static f => new PickFileText(f.Key, f.Value)) ?? [],
+    ];
 
     // An unpinned or changed pack parks for the owner (SND-PACK-002); any other pack failure ends the Step.
     private static AgentLaunched BundleFailed(Error error) =>

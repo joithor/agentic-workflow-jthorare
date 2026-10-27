@@ -25,6 +25,7 @@ public static class EdgeRules
         [EdgeType.Quotes] = ("quotes", [NodeKind.Decision], [NodeKind.Record]),
         [EdgeType.BelongsTo] = ("belongs-to", _members, [NodeKind.Concept]),
         [EdgeType.Supersedes] = ("supersedes", [NodeKind.Decision], [NodeKind.Decision]),
+        [EdgeType.Tags] = ("tags", [NodeKind.Code], [NodeKind.Feature]),
     };
 
     /// <summary>Whether an edge of <paramref name="type"/> may go from a <paramref name="from"/> node to a <paramref name="to"/> node.</summary>

@@ -106,7 +106,7 @@ public sealed class GoldenHost : IAsyncDisposable
     /// <param name="resource">The resource.</param>
     public void Own(IDisposable resource) => _owned.Add(resource);
 
-    /// <summary>Hands the host a background task that calls into it and writes under the home (a views pump): it is stopped, and waited for, before the host stops.</summary>
+    /// <summary>Hands the host a background task that calls into it and writes under the home (a views pump): it is stopped after the host, and waited for before the home is deleted.</summary>
     /// <param name="resource">The resource.</param>
     public void Own(IAsyncDisposable resource) => _running.Add(resource);
 
@@ -118,12 +118,6 @@ public sealed class GoldenHost : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        // why: a background task (the views pump) calls into the app and writes under the home, so it stops, and is waited for, before either goes away
-        foreach (var running in _running)
-        {
-            await running.DisposeAsync();
-        }
-
         Http.Dispose();
         if (_app is not null)
         {
@@ -131,7 +125,13 @@ public sealed class GoldenHost : IAsyncDisposable
             await _app.DisposeAsync();
         }
 
-        // why: an owned resource may live under the home, and a recursive delete must not race it (#1414)
+        // why: a background task (the views pump) writes under the home, so it is stopped and waited for before the recursive delete, which a late file fails (#1414)
+        foreach (var running in _running)
+        {
+            await running.DisposeAsync();
+        }
+
+        _running.Clear();   // a second dispose (a test's finally) must not stop them again
         _owned.ForEach(o => o.Dispose());
         _ownHome?.Dispose();
         _elsewhere?.Dispose();

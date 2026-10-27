@@ -315,6 +315,18 @@ init waits for it, stops both forwarders and exits with the agent's status. The 
 - **Rule ids from the proxy**: `no-group` (verdict `denied`: no group lists the host, or the port is not 80 or 443), `private-address` (verdict `refused`: the host resolves to a loopback, link-local or private address), `cap` (a connection or byte cap; target `(cap)`). A learned host and a failed dial are not denials.
 - Transcript and `failopen.log` denials (`inner-policy`, `deny-list`, `not-bound`, `hook-fail-open`) use the same counter through `Record`; their readers are SB-4b's other part.
 
+## Reading denials (SB-4b)
+
+Session end looks for denials the proxy can't see (spec §3.6). The pure readers are in `Aw.Sindri.Core/Sandbox/Denials/`; `TranscriptTail` (Infrastructure) reads the last **256 KiB** of a file as lines (a missing or unreadable file gives none; the cut first line is dropped).
+
+- `ClaudeTranscriptDenials.Read(lines)`: a `user` record whose `tool_result` text starts `Permission to use <Tool> ... has been denied` (also the don't-ask-mode and "directory that is denied by your permission settings" forms) becomes `(Policy, target, inner-policy)`. The target is the tool, plus for a shell command only its first word and one subcommand word (`Bash: git push`), never the command line. Other `tool_result` text goes to path extraction.
+- `CodexTranscriptDenials.Read(lines)`: Codex has no denied record; the error text of `function_call_output`, a failed `exec_command_end` and a failed `patch_apply_end` goes to path extraction.
+- Path extraction keeps absolute paths on lines with `Read-only file system`, `No such file or directory`, `Permission denied` or `Operation not permitted` (`TranscriptDenials.FailedPaths`, at most 200).
+- `PathDenials.Match(plan, path, home)` is the likely-denial rule: the last plan mount covering the path decides. A `Deny` mount gives `(Path, path, deny-list)`; a path under `$HOME` that no mount covers (the home tmpfs itself doesn't count) gives `not-bound`; anything else, such as a missing file outside `$HOME`, is not a denial (null).
+- `FailOpenLog.Read(lines)`: each `HOOK-FAILOPEN` line of the per-launch `failopen.log` gives `(Policy, <hook>, hook-fail-open)`.
+
+Bad JSON lines are skipped, never thrown; input is bounded (1 MiB per line, 20,000 lines, 500 observations). **Not wired yet:** SB-5a calls the tail reader and these parsers at session end and feeds the observations to the denial counter.
+
 ## Phases
 
 | Phase | Builds |

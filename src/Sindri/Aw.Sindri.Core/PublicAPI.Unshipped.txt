@@ -12567,6 +12567,8 @@ Aw.Sindri.Core.Launches.LaunchEnd.Limit.get -> long?
 Aw.Sindri.Core.Launches.LaunchEnd.Limit.init -> void
 Aw.Sindri.Core.Launches.LaunchEnd.Peak.get -> long?
 Aw.Sindri.Core.Launches.LaunchEnd.Peak.init -> void
+Aw.Sindri.Core.Launches.LaunchRow.Model.get -> string?
+Aw.Sindri.Core.Launches.LaunchRow.Model.init -> void
 Aw.Sindri.Core.Launches.LaunchRow.Reason.get -> string?
 Aw.Sindri.Core.Launches.LaunchRow.Reason.init -> void
 Aw.Sindri.Core.Launches.LaunchRow.Source.get -> string?

@@ -13,9 +13,11 @@ namespace Aw.Context.Core.Engine;
 /// </summary>
 internal static partial class SourcesReader
 {
-    private static readonly string[] _sources = ["onyx", "linear"];
+    private static readonly string[] _sources = ["onyx", "linear", "github", "slack"];
     private static readonly string[] _onyx = ["url", "token", "version", "managed"];
     private static readonly string[] _linear = ["teams", "url", "token"];
+    private static readonly string[] _github = ["repos", "host", "allowPrivateHost", "token"];
+    private static readonly string[] _slack = ["channels", "retainDays", "token"];
 
     /// <summary>The first problem with the shape of <paramref name="context"/>'s 'sources' map, or null.</summary>
     /// <param name="context">The whole 'context:' section (a map).</param>
@@ -29,12 +31,12 @@ internal static partial class SourcesReader
 
         if (sources.ValueKind != JsonValueKind.Object)
         {
-            return SettingsReader.Invalid("context.sources", "must be a map of sources (onyx, linear)");
+            return SettingsReader.Invalid("context.sources", "must be a map of sources (onyx, linear, github, slack)");
         }
 
         return Unknown(sources, _sources) is { } name
-            ? SettingsReader.Invalid("context.sources." + name, "is not a source this build knows (onyx, linear)")
-            : Entry(sources, "onyx", _onyx) ?? Entry(sources, "linear", _linear);
+            ? SettingsReader.Invalid("context.sources." + name, "is not a source this build knows (onyx, linear, github, slack)")
+            : Entry(sources, "onyx", _onyx) ?? Entry(sources, "linear", _linear) ?? Entry(sources, "github", _github) ?? Entry(sources, "slack", _slack);
     }
 
     /// <summary>The checked onyx settings (or null) and Linear teams of a well-shaped 'sources' map.</summary>

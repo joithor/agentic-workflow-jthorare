@@ -80,6 +80,8 @@ internal sealed class BuildMapService(
             heads.Add(new MapHead(repo.Name, one.Value.Commit, await OnDefault(repo, one.Value.Commit, cancellationToken).ConfigureAwait(false)));
         }
 
+        // why: an import can cross repos only when its target file is in the map, so the file edges roll up on the joined map, after every repo has contributed its homes and edges
+        found = FeatureRollup.Apply(found);
         // why: mappedRepos is not empty, so the loop set the primary
         return MapHead.Check(heads) is { } invalid ? invalid : new Reading(found, degraded, primary!.Value.Name, primary.Value.Commit, heads, settings) { Dropped = dropped };
     }
@@ -266,7 +268,7 @@ internal sealed class BuildMapService(
     private static List<NodeKey> Files(ExtractedMap found, GraphNode node, List<string> repoNames) =>
         [.. (node.Key.Kind == NodeKind.Thing
             ? node.EvidenceOrEmpty.Select(e => e.Key.Value).Select(r => DeclaringFile(r, repoNames)).OfType<NodeKey>()
-            : found.Edges.Where(e => e.Type == EdgeType.Implements && e.To.Value == node.Key.Value && e.From.Kind == NodeKind.Code).Select(e => e.From))
+            : found.Edges.Where(e => e.Type is EdgeType.Implements or EdgeType.Tags && e.To.Value == node.Key.Value && e.From.Kind == NodeKind.Code).Select(e => e.From))
             .DistinctBy(k => k.Value, StringComparer.Ordinal).OrderBy(k => k.Value, StringComparer.Ordinal)];
 
     // "repo:<name>/<path>" -> code:<path>, stripping the exact prefix of a mapped repo (a name may hold '/').

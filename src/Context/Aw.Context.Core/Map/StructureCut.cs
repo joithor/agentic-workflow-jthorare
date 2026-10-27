@@ -17,9 +17,10 @@ internal static class StructureCut
         ArgumentNullException.ThrowIfNull(graph);
         ArgumentNullException.ThrowIfNull(overrides);
         ArgumentNullException.ThrowIfNull(found);
-        var purged = Purged(graph);
+        var (own, kept) = (Purged(graph), Accepted(graph, overrides));
+        var purged = own.Except(kept.Select(e => e.To.Value), StringComparer.Ordinal).ToHashSet(StringComparer.Ordinal);
         var remade = found.Nodes.Select(n => n.Key.Value).ToHashSet(StringComparer.Ordinal);
-        var dropped = graph.Edges.Where(e => IsDropped(e, purged, remade)).ToList();
+        var dropped = graph.Edges.Where(e => !kept.Contains(e) && IsDropped(e, own, remade)).ToList();
         if (purged.Count == 0 && dropped.Count == 0)
         {
             return (graph, [], StructureCounts.None);
@@ -31,6 +32,15 @@ internal static class StructureCut
         var replaced = dropped.Where(e => e is { Type: EdgeType.Implements, Provenance: Provenance.Model } && IsFileLink(e)).ToList();
         var features = replaced.Select(e => e.To.Value).Distinct(StringComparer.Ordinal).Count();
         return (cut, rows, new StructureCounts(features, replaced.Count, undone, carried));
+    }
+
+    // A 'tags' link a person or the engine accepted outlives the build that no longer proposes its cluster (owner, 2026-10-27): it stays, and so does the tag feature it points at.
+    private static HashSet<GraphEdge> Accepted(GraphSnapshot graph, IReadOnlyList<MapOverride> overrides)
+    {
+        var accepted = OverrideLog.Active(overrides).Select(o => o is { Action: OverrideAction.Accept, Link: { } link } ? link.Value : null).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        return accepted.Count == 0
+            ? []
+            : [.. graph.Edges.Where(e => e is { Type: EdgeType.Tags, Provenance: Provenance.Model } && accepted.Contains(LinkIds.For(e).Value))];
     }
 
     private static bool IsFileLink(GraphEdge e) => e is { Type: EdgeType.Implements or EdgeType.Tags, From.Kind: NodeKind.Code, To.Kind: NodeKind.Feature };
@@ -49,10 +59,11 @@ internal static class StructureCut
     private static bool Purges(GraphNode feature, List<GraphEdge> links) =>
         feature.Provenance == Provenance.Deterministic || (feature.Provenance == Provenance.Model && links.Count > 0 && links.TrueForAll(e => e.Provenance == Provenance.Model));
 
-    // The build's own file links and the edges of a feature it makes again. A person's edge to one of those features stays when the feature comes back.
+    // The edges of a feature the build makes again (a deterministic file link into a feature a person or an import wrote is theirs and stays). A person's edge to one of those features stays when the feature comes back.
     private static bool IsDropped(GraphEdge e, HashSet<string> purged, HashSet<string> remade)
     {
-        if (IsDeclared(e) || (IsFileLink(e) && e.Provenance == Provenance.Deterministic))
+        // A roll-up edge has a count, only the build writes one, and it writes every roll-up edge again; a pin's declared edge is made again from the profile.
+        if (e.Count is not null || IsDeclared(e))
         {
             return true;
         }

@@ -8,7 +8,7 @@ public static class EdgeRules
     private static readonly NodeKind[] _dependents = [NodeKind.Feature, NodeKind.Code, NodeKind.Concept];
     private static readonly NodeKind[] _members = [NodeKind.Feature, NodeKind.Record, NodeKind.Decision];
     private static readonly NodeKind[] _onSurface = [NodeKind.Surface, NodeKind.Action];
-    private static readonly NodeKind[] _usesThing = [NodeKind.Surface, NodeKind.Action, NodeKind.Code, NodeKind.Concept];
+    private static readonly NodeKind[] _usesThing = [NodeKind.Surface, NodeKind.Action, NodeKind.Code, NodeKind.Feature, NodeKind.Concept];
 
     private static readonly Dictionary<EdgeType, (string Name, NodeKind[] From, NodeKind[] To)> _table = new()
     {

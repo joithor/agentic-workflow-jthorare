@@ -29,5 +29,84 @@ public static class Chunker
     /// <summary>Windows <paramref name="text"/>.</summary>
     /// <param name="text">The clean text (cleaning is the caller's).</param>
     /// <returns>The chunks in order; none for empty or whitespace-only text.</returns>
-    public static IReadOnlyList<TextChunk> Split(string text) => throw new NotSupportedException();
+    public static IReadOnlyList<TextChunk> Split(string text)
+    {
+        var source = text.Replace("\r\n", "\n", StringComparison.Ordinal);
+        var units = Units(source);
+        var chunks = new List<TextChunk>();
+        var first = 0;
+        while (first < units.Count)
+        {
+            var last = first;
+            while (last + 1 < units.Count && Estimate(units, first, last + 1) <= WindowTokens)
+            {
+                last++;
+            }
+
+            var from = units[first];
+            var to = units[last];
+            chunks.Add(new TextChunk(chunks.Count, source[from.Start..to.End], Estimate(units, first, last), from.Line, to.EndLine));
+            if (last == units.Count - 1)
+            {
+                break;
+            }
+
+            var next = last + 1;
+            while (next - 1 > first && Estimate(units, next - 1, last) <= OverlapTokens)
+            {
+                next--;
+            }
+
+            first = next;
+        }
+
+        return chunks;
+    }
+
+    private static int Estimate(List<Unit> units, int first, int last) => Estimate(last - first + 1, units[last].End - units[first].Start);
+
+    private static List<Unit> Units(string source)
+    {
+        var units = new List<Unit>();
+        var line = 1;
+        var i = 0;
+        while (i < source.Length)
+        {
+            if (source[i] == '\n')
+            {
+                line++;
+                i++;
+            }
+            else if (char.IsWhiteSpace(source[i]))
+            {
+                i++;
+            }
+            else
+            {
+                var end = i;
+                while (end < source.Length && !char.IsWhiteSpace(source[end]))
+                {
+                    end++;
+                }
+
+                for (var start = i; start < end;)
+                {
+                    var cut = Math.Min(start + MaxUnitChars, end);
+                    if (cut < end && char.IsHighSurrogate(source[cut - 1]))
+                    {
+                        cut--;
+                    }
+
+                    units.Add(new Unit(start, cut, line, line));
+                    start = cut;
+                }
+
+                i = end;
+            }
+        }
+
+        return units;
+    }
+
+    private sealed record Unit(int Start, int End, int Line, int EndLine);
 }

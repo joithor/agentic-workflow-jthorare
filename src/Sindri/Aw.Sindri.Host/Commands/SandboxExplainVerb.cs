@@ -20,48 +20,57 @@ internal static class SandboxExplainVerb
 
     internal static async Task<int> Run(string[] args, Func<string, string?> environment, TextWriter stdout, TextWriter stderr, CancellationToken ct)
     {
-        var words = new List<string>();
-        string? plan = null;
-        var json = false;
-        for (var i = 0; i < args.Length; i++)
+        var (query, planArg, json, bad) = Parse(args);
+        if (bad is not null)
         {
-            switch (args[i])
-            {
-                case "--json":
-                    json = true;
-                    break;
-                case "--plan" when i + 1 < args.Length:
-                    plan = args[++i];
-                    break;
-                case var flag when flag.StartsWith("--", StringComparison.Ordinal):
-                    return await Fail(stderr, $"'{flag}' isn't an argument of this command, or it needs a value ({Usage})").ConfigureAwait(false);
-                default:
-                    words.Add(args[i]);
-                    break;
-            }
+            return await Fail(stderr, bad).ConfigureAwait(false);
         }
 
-        if (words.Count == 0)
-        {
-            return await Fail(stderr, $"explain needs a path, a host or a command ({Usage})").ConfigureAwait(false);
-        }
-
-        var file = plan ?? environment(SandboxEnvironment.Plan);
+        var file = planArg ?? environment(SandboxEnvironment.Plan);
         if (string.IsNullOrWhiteSpace(file))
         {
             return await Fail(stderr, $"there is no sandbox plan file to read: this is not a sandboxed session (fix: pass --plan <file>, or run it inside a Step or `sindri open` session) ({Usage})").ConfigureAwait(false);
         }
 
-        var read = await ReadPlan(file, ct).ConfigureAwait(false);
-        if (read.Plan is not { } found)
+        var (plan, problem) = await ReadPlan(file, ct).ConfigureAwait(false);
+        if (plan is null)
         {
-            return await Fail(stderr, read.Problem!).ConfigureAwait(false);
+            return await Fail(stderr, problem ?? "the sandbox plan file can't be read").ConfigureAwait(false);
         }
 
-        var query = string.Join(' ', words);
-        var answer = SandboxPlanRenderer.Explain(found, query);
+        var answer = SandboxPlanRenderer.Explain(plan, query);
         await stdout.WriteAsync(json ? AsJson(query, answer) : answer.EndsWith('\n') ? answer : answer + "\n").ConfigureAwait(false);
         return 0;
+    }
+
+    private static (string Query, string? Plan, bool Json, string? Problem) Parse(string[] args)
+    {
+        var words = new List<string>();
+        string? plan = null;
+        var json = false;
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--json")
+            {
+                json = true;
+            }
+            else if (args[i] == "--plan" && i + 1 < args.Length)
+            {
+                plan = args[++i];
+            }
+            else if (args[i].StartsWith("--", StringComparison.Ordinal))
+            {
+                return (string.Empty, null, false, $"'{args[i]}' isn't an argument of this command, or it needs a value ({Usage})");
+            }
+            else
+            {
+                words.Add(args[i]);
+            }
+        }
+
+        return words.Count == 0
+            ? (string.Empty, null, false, $"explain needs a path, a host or a command ({Usage})")
+            : (string.Join(' ', words), plan, json, null);
     }
 
     private static async Task<(SandboxPlan? Plan, string? Problem)> ReadPlan(string file, CancellationToken ct)

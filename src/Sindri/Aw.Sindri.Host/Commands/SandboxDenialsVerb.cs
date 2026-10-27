@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Sandbox.Denials;
 using Aw.Sindri.Core.Workflow.Engine;
@@ -20,54 +19,13 @@ internal sealed class SandboxDenialsVerb(ControlPlaneClient client, Output outpu
 
     internal async Task<int> Run(string[] args, CancellationToken ct)
     {
-        string? run = null, since = null;
-        var json = false;
-        for (var i = 0; i < args.Length; i++)
+        var (query, json, problem) = Parse(args);
+        if (problem is not null)
         {
-            switch (args[i])
-            {
-                case "--json":
-                    json = true;
-                    break;
-                case "--run" when i + 1 < args.Length:
-                    if (!LaunchId.TryParse(args[i + 1], provider: null, out _))
-                    {
-                        return await Invalid($"'{args[i + 1]}' isn't a launch id (LCH-…)").ConfigureAwait(false);
-                    }
-
-                    run = args[++i];
-                    break;
-                case "--since" when i + 1 < args.Length:
-                    since = args[++i];
-                    break;
-                default:
-                    return await Invalid($"'{args[i]}' isn't an argument of this command, or it needs a value").ConfigureAwait(false);
-            }
+            return await Invalid(problem).ConfigureAwait(false);
         }
 
-        string? sinceAt = null;
-        if (since is not null)
-        {
-            if (!TryTime(since, out var at))
-            {
-                return await Invalid($"--since needs a time such as 2026-10-27T09:00:00Z or an age such as 6h, not '{since}'").ConfigureAwait(false);
-            }
-
-            sinceAt = at.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
-        }
-
-        var query = new List<string>();
-        if (run is not null)
-        {
-            query.Add("launch=" + Uri.EscapeDataString(run));
-        }
-
-        if (sinceAt is not null)
-        {
-            query.Add("since=" + Uri.EscapeDataString(sinceAt));
-        }
-
-        var answer = await client.Get<ListDenialsResponse>("/sindri/sandbox/denials" + (query.Count == 0 ? string.Empty : "?" + string.Join('&', query)), ct).ConfigureAwait(false);
+        var answer = await client.Get<ListDenialsResponse>("/sindri/sandbox/denials" + query, ct).ConfigureAwait(false);
         if (answer.IsError)
         {
             return await output.Error(answer.Error).ConfigureAwait(false);
@@ -77,6 +35,41 @@ internal sealed class SandboxDenialsVerb(ControlPlaneClient client, Output outpu
             ? await output.Raw(answer.Value.Body, 0).ConfigureAwait(false)
             : await output.Text(DenialsRenderer.Render(answer.Value.Value.Launches), 0).ConfigureAwait(false);
     }
+
+    /// <summary>The query string ('' or '?launch=..&amp;since=..'), whether --json was given, and the first problem with the arguments.</summary>
+    private (string Query, bool Json, string? Problem) Parse(string[] args)
+    {
+        var query = new List<string>();
+        var json = false;
+        for (var i = 0; i < args.Length; i++)
+        {
+            var value = args.ElementAtOrDefault(i + 1) ?? string.Empty;
+            if (args[i] == "--json")
+            {
+                json = true;
+                continue;
+            }
+
+            var part = args[i] switch
+            {
+                "--run" => LaunchId.TryParse(value, provider: null, out _) ? "launch=" + Uri.EscapeDataString(value) : null,
+                "--since" => SinceQuery(value),
+                _ => null,
+            };
+            if (part is null)
+            {
+                return (string.Empty, false, $"'{args[i]}' with '{value}' isn't a launch id (LCH-…), a time such as 2026-10-27T09:00:00Z or an age such as 6h, or an argument of this command");
+            }
+
+            query.Add(part);
+            i++;
+        }
+
+        return (query.Count == 0 ? string.Empty : "?" + string.Join('&', query), json, null);
+    }
+
+    private string? SinceQuery(string text) =>
+        TryTime(text, out var at) ? "since=" + Uri.EscapeDataString(at.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)) : null;
 
     private bool TryTime(string text, out DateTimeOffset at)
     {

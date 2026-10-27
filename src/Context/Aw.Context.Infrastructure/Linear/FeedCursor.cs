@@ -12,6 +12,9 @@ namespace Aw.Context.Infrastructure.Linear;
 /// <param name="Top">The newest updatedAt seen in this run, or null.</param>
 internal sealed record FeedCursor(DateTimeOffset? Since, string? After, DateTimeOffset? Top)
 {
+    /// <summary>The start: no watermark, no page, nothing seen.</summary>
+    public static FeedCursor Empty { get; } = new(Since: null, After: null, Top: null);
+
     /// <summary>Reads a cursor; null or one this feed did not write starts over.</summary>
     /// <param name="cursor">The persisted cursor.</param>
     /// <returns>The parts.</returns>
@@ -19,7 +22,7 @@ internal sealed record FeedCursor(DateTimeOffset? Since, string? After, DateTime
     {
         if (cursor is not { } c)
         {
-            return new FeedCursor(null, null, null);
+            return Empty;
         }
 
         DateTimeOffset? since = null, top = null;
@@ -28,7 +31,7 @@ internal sealed record FeedCursor(DateTimeOffset? Since, string? After, DateTime
         {
             if (part.Length < 2 || part[1] != '=')
             {
-                return new FeedCursor(null, null, null);
+                return Empty;
             }
 
             var value = part[2..];
@@ -44,7 +47,7 @@ internal sealed record FeedCursor(DateTimeOffset? Since, string? After, DateTime
                     top = Time(value);
                     break;
                 default:
-                    return new FeedCursor(null, null, null);
+                    return Empty;
             }
         }
 
@@ -53,7 +56,7 @@ internal sealed record FeedCursor(DateTimeOffset? Since, string? After, DateTime
 
     /// <summary>The cursor as persisted.</summary>
     /// <returns>The cursor.</returns>
-    public SourceCursor ToCursor() => SourceCursor.From(string.Create(CultureInfo.InvariantCulture, $"s={Text(Since)};a={After};t={Text(Top)}"));
+    public SourceCursor ToCursor() => SourceCursor.From("s=" + Text(Since) + ";a=" + After + ";t=" + Text(Top));
 
     private static string Text(DateTimeOffset? at) => at?.UtcDateTime.ToString("O", CultureInfo.InvariantCulture) ?? string.Empty;
 

@@ -38,25 +38,17 @@ internal static class LinearIssueItem
             links.Add(Link(parent, RecordLinkKind.Parent));
         }
 
-        foreach (var relation in issue.Relations?.Nodes ?? [])
-        {
-            if (relation.RelatedIssue is { } other && RelationKind(relation.Type) is { } kind)
-            {
-                links.Add(Link(other, kind));
-            }
-        }
-
-        // why: an inverse 'blocks' or 'duplicate' says the other issue blocks or duplicates this one, which the link kinds (this record blocks the other) have no word for; only 'related' reads the same from both sides
-        foreach (var relation in issue.InverseRelations?.Nodes ?? [])
-        {
-            if (relation.Issue is { } other && string.Equals(relation.Type, "related", StringComparison.Ordinal))
-            {
-                links.Add(Link(other, RecordLinkKind.Relates));
-            }
-        }
-
+        links.AddRange(Outgoing(issue));
+        links.AddRange(Incoming(issue));
         return [.. links.DistinctBy(static l => (l.ToRef, l.Kind))];
     }
+
+    private static IEnumerable<RecordLink> Outgoing(LinearIssue issue) =>
+        (issue.Relations?.Nodes ?? []).Where(static r => r.RelatedIssue is not null && RelationKind(r.Type) is not null).Select(static r => Link(r.RelatedIssue!, RelationKind(r.Type)!.Value));
+
+    // why: an inverse 'blocks' or 'duplicate' says the other issue blocks or duplicates this one, which the link kinds (this record blocks the other) have no word for; only 'related' reads the same from both sides
+    private static IEnumerable<RecordLink> Incoming(LinearIssue issue) =>
+        (issue.InverseRelations?.Nodes ?? []).Where(static r => r.Issue is not null && string.Equals(r.Type, "related", StringComparison.Ordinal)).Select(static r => Link(r.Issue!, RecordLinkKind.Relates));
 
     private static RecordLinkKind? RelationKind(string type) => type switch
     {

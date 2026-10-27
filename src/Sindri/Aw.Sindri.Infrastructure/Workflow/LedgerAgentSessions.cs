@@ -40,12 +40,15 @@ internal sealed class LedgerAgentSessions(ILaunchViews views, ILedgerReader ledg
             SessionEndReason.Exit => new AgentSessionState(AgentSessionEnd.Exit, payload.Value.ExitCode),
             SessionEndReason.Lost => new AgentSessionState(AgentSessionEnd.Lost, payload.Value.ExitCode),
             SessionEndReason.Idle => new AgentSessionState(AgentSessionEnd.Idle, ExitCode: null, IdleDetail),
-
-            // Nothing writes a limit ending before the sandbox launches Steps; SB-5a maps it to step.failed(limit) (sandbox spec §12).
-            SessionEndReason.Limit => throw new InvalidOperationException("the ledger holds session.ended reason Limit, which this build does not map yet"),
+            SessionEndReason.Limit when payload.Value is { Kind: { } kind, Limit: { } limit, Peak: { } peak } =>
+                new AgentSessionState(AgentSessionEnd.Limit, ExitCode: null, Of(kind, limit, peak).Detail, Refused: false, Of(kind, limit, peak)),
+            SessionEndReason.Limit => throw new InvalidOperationException("the ledger holds session.ended reason Limit without its kind, limit and peak"),
             _ => throw new InvalidOperationException($"the ledger holds session.ended reason {payload.Value.Reason}, which this build does not know"),
         };
     }
+
+    private static AgentSessionLimit Of(LimitKind kind, long limit, long peak) =>
+        new(kind switch { LimitKind.Memory => AgentLimitKind.Memory, LimitKind.Wall => AgentLimitKind.Wall, _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "not a limit this build knows") }, limit, peak);
 
     public async ValueTask<Result<long>> Usage(LaunchId launch, CancellationToken cancellationToken)
     {

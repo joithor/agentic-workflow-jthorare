@@ -121,6 +121,7 @@ internal sealed class AsOfMapBuilder(IRepoReader repos, IClusterSource clusters,
 
         var extraction = MapExtractor.Extract(repo.Name, files, recognizers);
         var extracted = extraction.Map;
+        // The clusters are tags here: the as-of map's truth is what the authored map and the recognizers link, not the directory homes a build adds.
         return new MapExtraction(extracted.Plus(ClusterFeatures.Propose(repo, set, [], extracted)), extraction.TimedOut);
     }
 

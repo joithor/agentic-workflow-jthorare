@@ -95,8 +95,8 @@ internal sealed partial class NeedsYouRowViewModel : ObservableObject
     /// <summary>Where Open goes; null when the row names no item.</summary>
     public DeepLink? ItemLink => Entry.ItemId is { } item ? new DeepLink(DeepLinkKind.Item, item) : null;
 
-    /// <summary>The words under the row: what its last action said, else the served recorded-only sentence (empty when the row isn't recorded-only).</summary>
-    public string Notice => ActionNote.Length > 0 ? ActionNote : Entry.RecordedOnly ? Entry.Notice : "";
+    /// <summary>The served recorded-only sentence; empty when the row isn't recorded-only.</summary>
+    public string Notice => Entry.RecordedOnly ? Entry.Notice : ActionNote;
 
     /// <summary>True when the row shows <see cref="Notice"/>.</summary>
     public bool HasNotice => Notice.Length > 0;
@@ -184,9 +184,10 @@ internal sealed partial class NeedsYouRowViewModel : ObservableObject
     private NeedsYouActionControl[] BuildControls() =>
     [
         .. Entry.Actions
-            .Select(a => new NeedsYouActionControl(a, IsPrimary(a), a.IsReady && !_rebuilding, Tooltip(a, _rebuilding), IdShown))
+            .Select(a => new NeedsYouActionControl(a, IsPrimary(a), a.IsReady && !_rebuilding && !IsCliOnlyComplete(a), IsCliOnlyComplete(a) ? Entry.Cli : Tooltip(a, _rebuilding), IdShown))
             .OrderByDescending(c => c.IsPrimary && c.Action.OptionId.Length == 0),
     ];
+
 
     private bool IsPrimary(NeedsYouAction action) =>
         action.OptionId.Length > 0 ? action.Recommended : string.Equals(action.CatalogId, Entry.PrimaryAction, StringComparison.Ordinal);

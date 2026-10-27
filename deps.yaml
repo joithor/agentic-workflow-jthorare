@@ -653,8 +653,8 @@ edges:
   - from: Embeddings
     to: Kernel
     kind: project
-    status: planned
-    note: "Result, IService, ids"
+    status: current
+    note: "Result, IService, ids (scaffolded by hand: the scaffolder refuses tier 0)"
   - from: Connectors
     to: Kernel
     kind: project

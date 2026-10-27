@@ -58,6 +58,7 @@ internal static class Packages
         "Aw.Connectors.Core",
         "Aw.Connectors.Features",
         "Aw.Connectors.Infrastructure",
+        "Aw.Embeddings",
     ];
 
     /// <summary>

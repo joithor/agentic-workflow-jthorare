@@ -1,7 +1,6 @@
 using Aw.Sindri.Core.Launches;
 using Aw.Sindri.Core.NeedsYou;
 using Aw.Sindri.Core.Onyx;
-using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Text;
 using Aw.Sindri.Core.Views;
 
@@ -12,11 +11,9 @@ namespace Aw.Sindri.Features.GetNeedsYou;
 /// <param name="setup">The setup rows that are computed (the repo step's failure, the 'setup:mcp' need, and the approve-all plan's 'setup:recipes' and 'recipe:' rows).</param>
 /// <param name="scrubber">Scrubs the rows' text.</param>
 /// <param name="clock">Stamps the rows.</param>
-/// <param name="liveProfile">The live profile.</param>
-/// <param name="approvedProfile">The approved profile; its difference from the live one is the profile drift row.</param>
 /// <param name="stalled">The agent runs idle past their launch's idle time (issue #1000); none when this build has no launcher.</param>
 /// <param name="views">The items view, for the title of a stalled run's item.</param>
-internal sealed class NeedsYouLiveRows(IOnyxNotices onyx, SetupNotices setup, ITextScrubber scrubber, TimeProvider clock, IProfileSource liveProfile, IApprovedProfile approvedProfile, IStalledAgentRuns? stalled = null, IViewReader? views = null)
+internal sealed class NeedsYouLiveRows(IOnyxNotices onyx, SetupNotices setup, ITextScrubber scrubber, TimeProvider clock, IStalledAgentRuns? stalled = null, IViewReader? views = null)
 {
     /// <summary>The Onyx row, the profile drift row, the setup rows and the stalled agent runs, in that order.</summary>
     /// <param name="cancellationToken">Cancels the reads.</param>
@@ -24,21 +21,9 @@ internal sealed class NeedsYouLiveRows(IOnyxNotices onyx, SetupNotices setup, IT
     public async ValueTask<IReadOnlyList<NeedsYouRow>> Read(CancellationToken cancellationToken) =>
         [.. await OnyxRows(cancellationToken).ConfigureAwait(false), .. await DriftRows(cancellationToken).ConfigureAwait(false), .. await SetupRows(cancellationToken).ConfigureAwait(false), .. await StalledRows(cancellationToken).ConfigureAwait(false)];
 
-    // The profile drift row from the live profile against the approved one, as the status compares them, so it shows when the pill does and not when the next
-    // profile.checked is recorded (up to 30 s later). The stored row has the same id; the service keeps that one when both exist.
-    private async ValueTask<IReadOnlyList<NeedsYouRow>> DriftRows(CancellationToken cancellationToken)
-    {
-        var approved = await approvedProfile.Latest(cancellationToken).ConfigureAwait(false);
-        var loaded = await liveProfile.Load(cancellationToken).ConfigureAwait(false);
-        if (approved is not { IsSuccess: true, Value: { } before } || loaded.IsError || loaded.Value.Hash == before.Hash)
-        {
-            return [];
-        }
-
-        var drifted = new ProfileRow(before.Hash, ApprovedAt: null, loaded.Value.Hash, CheckedAt: null, Changed: true, ProfileDiff.Between(before.Profile, loaded.Value.Profile), ApprovedServices: [], Sequence: 0);
-        var row = NeedsYouRows.ForProfile(drifted, clock.GetUtcNow(), scrubber);
-        return row is { IsSuccess: true, Value: { } found } ? [found] : [];
-    }
+    // The profile drift row, computed from the live profile against the approved one (SetupNotices reads both).
+    private async ValueTask<IReadOnlyList<NeedsYouRow>> DriftRows(CancellationToken cancellationToken) =>
+        await setup.Drift(cancellationToken).ConfigureAwait(false) is { } row ? [row] : [];
 
     // An agent run idle past its launch's idle time that is still not ended (issue #1000): a 'park:' row the run's own park replaces. A run whose item can't be read is left out.
     private async ValueTask<IReadOnlyList<NeedsYouRow>> StalledRows(CancellationToken cancellationToken)

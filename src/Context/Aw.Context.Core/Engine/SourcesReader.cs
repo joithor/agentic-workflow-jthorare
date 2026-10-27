@@ -42,7 +42,7 @@ internal static partial class SourcesReader
     /// <summary>The checked onyx settings (or null) and Linear teams of a well-shaped 'sources' map.</summary>
     /// <param name="section">The section as read, or null.</param>
     /// <returns>The values, or SND-CONTEXT-001, 002 or 055 naming the key path.</returns>
-    internal static Result<(OnyxSettings? Onyx, LinearSettings? Linear, IReadOnlyList<string> Teams)> Check(SourcesSection? section)
+    internal static Result<(OnyxSettings? Onyx, LinearSettings? Linear, IReadOnlyList<string> Teams, GitHubSource? GitHub, SlackSource? Slack)> Check(SourcesSection? section)
     {
         var linear = section?.Linear;
         var teams = linear?.Teams ?? [];
@@ -53,11 +53,15 @@ internal static partial class SourcesReader
 
         var native = NativeLinear(linear, teams);
         var onyx = CheckedOnyx(section?.Onyx);
-        return (native, onyx) switch
+        var github = IndexRules.GitHub(section?.Github);
+        var slack = IndexRules.Slack(section?.Slack);
+        return (native, onyx, github, slack) switch
         {
-            ({ IsError: true }, _) => native.Error,
-            (_, { IsError: true }) => onyx.Error,
-            _ => (onyx.Value, native.Value, teams),
+            ({ IsError: true }, _, _, _) => native.Error,
+            (_, { IsError: true }, _, _) => onyx.Error,
+            (_, _, { IsError: true }, _) => github.Error,
+            (_, _, _, { IsError: true }) => slack.Error,
+            _ => (onyx.Value, native.Value, teams, github.Value, slack.Value),
         };
     }
 

@@ -66,7 +66,7 @@ internal sealed class EgressProxy(EgressPolicy policy, IEgressDialer dialer, Egr
         }
 
         var decision = await policy.Decide(host, port, cancellationToken).ConfigureAwait(false);
-        if (decision is not { Verdict: EgressVerdict.Allowed, Address: { } address })
+        if (decision is not { Verdict: EgressVerdict.Allowed or EgressVerdict.Learned, Address: { } address })
         {
             log.Record(host, port, decision.Verdict);
             CountDenial(host, decision.Verdict);
@@ -76,7 +76,7 @@ internal sealed class EgressProxy(EgressPolicy policy, IEgressDialer dialer, Egr
 
         var connect = string.Equals(parts[0], "CONNECT", StringComparison.OrdinalIgnoreCase);
         var upstream = await TryDial(client, address, port, cancellationToken).ConfigureAwait(false);
-        log.Record(host, port, upstream is null ? EgressVerdict.Failed : EgressVerdict.Allowed);
+        log.Record(host, port, upstream is null ? EgressVerdict.Failed : decision.Verdict);
         if (upstream is null)
         {
             return;

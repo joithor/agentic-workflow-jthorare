@@ -1,3 +1,4 @@
+using System.Net;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.VisualTree;
@@ -13,11 +14,21 @@ namespace Aw.Sindri.Ui.Tests.Views;
 [Collection(HeadlessWindows.Name)]
 public sealed class StripFocusReturnTests : FrameHost
 {
+    // The shared golden's only answerable strip row is a desk one: its protected-answer row, with a plain answer class, is the one a row sheet answers.
+    private static RouteAnswer AnswerableOffTheDesk()
+    {
+        var list = GoldenFiles.Node("workflow-instances", "root");
+        var row = list["instances"]!.AsArray().Single(r => r!["answer"]?["class"]?.GetValue<string>() == "protected")!;
+        row["answer"]!["class"] = "pause";
+        return new RouteAnswer(HttpStatusCode.OK, list.ToJsonString());
+    }
+
     [Fact]
     public Task Esc_after_Answer_returns_focus_to_the_strip_row_not_the_Needs_you_row() => OnUi(async () =>
     {
-        var (window, shell) = await Connected(s => s.Strip.Rows.Count > 0);
-        var row = shell.Strip.Rows.First(r => r.CanAnswer);
+        Server.InstancesBody = AnswerableOffTheDesk();
+        var (window, shell) = await Connected(s => s.Strip.Rows.Any(r => r.CanAnswer && !r.AtDesk));
+        var row = shell.Strip.Rows.First(r => r.CanAnswer && !r.AtDesk);   // a desk row's Answer opens the Needs-you inbox instead of a row sheet (#1057)
         var park = NeedsYouRows.Park("park:" + row.Address) with { Subject = new NeedsYouSubject("workflow", row.Address) };
         shell.ShowNeedsYou(new NeedsYouFeed([park], ""));
         Settle(window);

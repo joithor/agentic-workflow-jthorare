@@ -174,7 +174,7 @@ public sealed class ModelPickLaunchTests : IDisposable
         await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
         _ = rig.Judge.Chooses("m1");
 
-        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+        var launched = await rig.Launch(Challenge(1), floor: null, ct, agent: new StateAgent(DifferentFrom: "draft"));
 
         Expect.Equal("no failure", launched.Failure is { } failure ? failure.Code + ": " + failure.Message : "no failure");
         Expect.Equal("haiku,sonnet", string.Join(',', rig.Judge.Asks[0].Candidates.Select(c => c.Model)));
@@ -187,7 +187,7 @@ public sealed class ModelPickLaunchTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
         await using var rig = await Rig(new ModelPickSettings(PickOn: true, Models: [new ModelFacts("sonnet", "Sonnet", ModelSource.Profile, 0)]), ct, drafter: new DrafterRan("sonnet"));
 
-        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+        var launched = await rig.Launch(Challenge(1), floor: null, ct, agent: new StateAgent(DifferentFrom: "draft"));
 
         Expect.Equal("SND-MODEL-003", launched.Failure?.Code ?? "no failure");
         Expect.Equal(0, rig.Launcher.Requests.Count);
@@ -199,7 +199,7 @@ public sealed class ModelPickLaunchTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
         await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan(Model: null));
 
-        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+        var launched = await rig.Launch(Challenge(1), floor: null, ct, agent: new StateAgent(DifferentFrom: "draft"));
 
         Expect.Equal("SND-MODEL-003", launched.Failure?.Code ?? "no failure");
     }
@@ -210,7 +210,7 @@ public sealed class ModelPickLaunchTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
         await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"), agents: [AgentEntries.ClaudeCode, AgentEntries.Codex]);
 
-        var launched = await rig.Launch(Challenge(1), floor: null, ct);
+        var launched = await rig.Launch(Challenge(1), floor: null, ct, agent: new StateAgent(DifferentFrom: "draft"));
 
         Expect.Equal("no failure", launched.Failure is { } failure ? failure.Code + ": " + failure.Message : "no failure");
         Expect.Equal("codex", rig.Launcher.Requests[0].Agent.Value);

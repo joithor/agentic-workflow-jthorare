@@ -37,6 +37,7 @@ internal sealed partial class ShellViewModel
             if (string.Equals(e.PropertyName, nameof(SetupViewModel.IsHomeLineShown), StringComparison.Ordinal))
             {
                 UpdateNeedsYou();
+                Reattend();   // Home's summary counts the rows without the setup ones while the setup line stands for them
             }
         };
         Health.Catalog.PropertyChanged += (_, e) =>

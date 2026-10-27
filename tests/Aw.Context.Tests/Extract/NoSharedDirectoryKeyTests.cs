@@ -16,7 +16,7 @@ public sealed class NoSharedDirectoryKeyTests
     private static ExtractedMap Propose(IEnumerable<string[]> clusters) => ClusterFeatures.Propose(_monorepo, Set(clusters), [], ExtractedMap.Empty);
 
     private static string KeyOf(ExtractedMap map, string file) =>
-        map.Edges.Single(e => e.Type == EdgeType.Implements && e.From.Value == "code:" + file).To.Value;
+        map.Edges.Single(e => e.Type == EdgeType.Tags && e.From.Value == "code:" + file).To.Value;
 
     [Fact, Trait("Lane", "unit")]
     public void Clusters_with_no_shared_directory_build_no_root_or_bare_stem_key()
@@ -39,7 +39,7 @@ public sealed class NoSharedDirectoryKeyTests
     {
         var map = Propose([["apps/a/index.ts", "packages/b/index.ts"]]);
 
-        Assert.Equal("feature:apps.a", KeyOf(map, "apps/a/index.ts"));
+        Assert.Equal("feature:tag:monorepo:apps.a", KeyOf(map, "apps/a/index.ts"));
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -47,6 +47,6 @@ public sealed class NoSharedDirectoryKeyTests
     {
         var map = Propose([["apps/web/src/orders/place.ts", "apps/web/src/orders/cancel.ts"]]);
 
-        Assert.Equal("feature:apps.web.src.orders", KeyOf(map, "apps/web/src/orders/place.ts"));
+        Assert.Equal("feature:tag:monorepo:apps.web.src.orders", KeyOf(map, "apps/web/src/orders/place.ts"));
     }
 }

@@ -236,9 +236,18 @@ public static class ContextErrors
     /// <summary>SND-CONTEXT-200: the whole-map read was asked to open an area the map doesn't have (Part D; 201 to 209 are reserved for this stage).</summary>
     public static readonly ErrorDefinition AreaUnknown = new("SND-CONTEXT-200", ErrorKind.NotFound, "No such area in this map");
 
+    /// <summary>SND-CONTEXT-230: a record batch can't be committed (a record of another source, a blocked record with chunks, gaps in a record's chunk numbers); nothing was written.</summary>
+    public static readonly ErrorDefinition RecordBatchInvalid = new("SND-CONTEXT-230", ErrorKind.Invalid, "The record batch is invalid");
+
+    /// <summary>SND-CONTEXT-231: the query embedder could not answer (the model is down or not pulled); the dense leg drops out of the answer.</summary>
+    public static readonly ErrorDefinition EmbedderUnavailable = new("SND-CONTEXT-231", ErrorKind.Unavailable, "The embedding model is unavailable");
+
+    /// <summary>SND-CONTEXT-232: a vector scan was asked with a query or mask that doesn't fit the matrix, or a count out of range.</summary>
+    public static readonly ErrorDefinition VectorScanInvalid = new("SND-CONTEXT-232", ErrorKind.Invalid, "The vector scan request is invalid");
+
     /// <summary>Every Context error, for ErrorCatalogue.Validate.</summary>
     public static IReadOnlyList<ErrorDefinition> All { get; } =
-        [SettingsInvalid, SourceNotConfigured, UnknownAnchor, StoreUnavailable, PathInWorktree, QueryInvalid, SourceUnavailable, AllSourcesUnavailable, SessionsDisabled,
+        [SettingsInvalid, RecordBatchInvalid, EmbedderUnavailable, VectorScanInvalid, SourceNotConfigured, UnknownAnchor, StoreUnavailable, PathInWorktree, QueryInvalid, SourceUnavailable, AllSourcesUnavailable, SessionsDisabled,
          McpRepoMissing, McpArgumentsInvalid, McpToolUnknown, McpRegisterRepoUnknown, McpRegisterFailed, McpUserWide,
          NoMap, MapFileInvalid, MapNodeUndefined, ExportOutsideHome, MapFileChanged, ProbeFileInvalid, NoProbeFile, AmbiguousAnchor, ProbesRegressed,
          HeavyLockBusy, LabelingUnavailable, ReviewFileNoMatch, NoDraftMap, RepoOutsideScope, PromoteRefused, ReviewTargetStale, ExtractionUnreadable,

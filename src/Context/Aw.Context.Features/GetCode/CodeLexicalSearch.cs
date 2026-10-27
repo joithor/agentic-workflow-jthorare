@@ -88,7 +88,7 @@ internal sealed class CodeLexicalSearch(IRepoReader repos, ICodeSearch search, L
     internal static ContextRepo? RepoOf(GraphSnapshot graph, string path, IReadOnlyList<ContextRepo> allowed)
     {
         var key = "code:" + path;
-        return graph.Edges.Where(e => e.Type == EdgeType.Implements && e.From.Value == key)
+        return graph.Edges.Where(e => e.Type is EdgeType.Implements or EdgeType.Tags && e.From.Value == key)
             .SelectMany(e => e.EvidenceOrEmpty)
             .Select(r => allowed.FirstOrDefault(a => r.Key.Value.StartsWith($"repo:{a.Name.Value}/", StringComparison.Ordinal)))
             .FirstOrDefault(r => r is not null);

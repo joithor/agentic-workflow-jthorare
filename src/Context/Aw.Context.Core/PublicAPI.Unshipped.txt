@@ -8297,3 +8297,7 @@ static Aw.Context.Core.Extract.DataStorePass.Run(Aw.Context.Core.Engine.ContextR
 static Aw.Context.Core.Extract.MapExtractor.Extract(Aw.Context.Core.Engine.ContextRepoName repo, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Extract.RepoFile!>! files, Aw.Context.Core.Extract.RecognizerSet! recognizers, System.Collections.Generic.IReadOnlyList<string!>? schemaGlobs = null) -> Aw.Context.Core.Extract.MapExtraction!
 Aw.Context.Core.Extract.DataStores.DataStoreAdapters
 static Aw.Context.Core.Extract.DataStores.DataStoreAdapters.All.get -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Extract.DataStores.IDataStoreAdapter!>!
+const Aw.Context.Core.Overrides.MapOverride.StructureMarker = "service:structure-cut" -> string!
+static Aw.Context.Core.Overrides.MapOverride.UndoingStructure(Aw.Context.Core.Overrides.MapOverride! decision, System.DateTimeOffset at) -> Aw.Context.Core.Overrides.MapOverride!
+Aw.Context.Core.Map.MapBuildReport.Structure.get -> Aw.Context.Core.Map.StructureCounts!
+Aw.Context.Core.Map.MapBuildReport.Structure.init -> void

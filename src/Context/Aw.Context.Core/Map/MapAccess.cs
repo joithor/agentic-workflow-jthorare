@@ -184,7 +184,7 @@ public static class MapAccess
     /// <param name="at">When the build runs.</param>
     /// <returns>The cut graph, the rows to write with the draft (undo rows, and the carried decisions) and what was replaced.</returns>
     public static (GraphSnapshot Graph, IReadOnlyList<MapOverride> Rows, StructureCounts Counts) WithoutBuiltStructure(GraphSnapshot graph, IReadOnlyList<MapOverride> overrides, ExtractedMap found, DateTimeOffset at) =>
-        throw new NotSupportedException("red: MapAccess.WithoutBuiltStructure");
+        StructureCut.Apply(graph, overrides, found, at);
 
     /// <summary>The export document for a version's visible graph: decision nodes and 'quotes' edges are left to the decisions, which imply them.</summary>
     /// <param name="version">The version.</param>

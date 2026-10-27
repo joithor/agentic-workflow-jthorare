@@ -102,13 +102,13 @@ internal sealed class BuildMapService(
         var ruleset = MapRuleset.Of(ScopeRules.Mapped(read.Settings, profileRepos));
         var changed = current.Value is { } map && !string.Equals(map.Version.Ruleset, ruleset, StringComparison.Ordinal);
         var cuts = new BuildCuts(profileRepos, mappedRepos, read.Found, changed, at);
-        var (kept, undo) = cuts.Apply(basis, current.Value?.Overrides ?? []);
+        var (kept, undo, structure) = cuts.Apply(basis, current.Value?.Overrides ?? []);
         undo = UndoAlso(undo, open.Value, cuts);
         // The concepts ('index.concepts' pins of the mapped repos first) are derived over the whole joined graph (records and decisions included) and saved in the draft, so reads never call a model.
         // A namer or a code index that can't answer leaves the deterministic names or the plain grouping and says so as a degraded note.
         var concepts = await namers.Concepts.Run(read.Settings, Join(WithoutDerivedConcepts(kept), read.Found), [.. mappedRepos.SelectMany(r => r.Concepts)], mappedRepos, cancellationToken).ConfigureAwait(false);
         var draft = await store.SaveDraft(new MapImport(read.Name, read.Commit, concepts.Graph, undo, read.Heads) { Ruleset = ruleset, Dropped = read.Dropped }, at, cancellationToken).ConfigureAwait(false);
-        return draft.IsError ? draft.Error : new MapBuildReport(draft.Value, Proposed(kept, read.Found, mappedRepos.Select(r => r.Name.Value).ToList()), [.. read.Degraded, .. concepts.Notes], read.Heads);
+        return draft.IsError ? draft.Error : new MapBuildReport(draft.Value, Proposed(kept, read.Found, mappedRepos.Select(r => r.Name.Value).ToList()), [.. read.Degraded, .. concepts.Notes], read.Heads) { Structure = structure };
     }
 
     private sealed record Reading(ExtractedMap Found, IReadOnlyList<string> Degraded, ContextRepoName Name, string Commit, IReadOnlyList<MapHead> Heads, ContextSettings Settings)
@@ -127,7 +127,7 @@ internal sealed class BuildMapService(
     private static IReadOnlyList<MapOverride> UndoAlso(IReadOnlyList<MapOverride> undo, MapSnapshot? openDraft, BuildCuts cuts) =>
         openDraft is null
             ? undo
-            : [.. undo.Concat(cuts.Apply(openDraft.Graph, openDraft.Overrides).Undo).DistinctBy(o => o.Undoes?.Value, StringComparer.Ordinal)];
+            : [.. undo.Concat(cuts.Apply(openDraft.Graph, openDraft.Overrides).Undo).DistinctBy(o => o.Undoes?.Value ?? o.ToId().Value, StringComparer.Ordinal)];
 
     private async ValueTask<Result<RepoExtraction>> Extract(IProgress<string>? progress, ContextSettings settings, ContextRepo repo, CancellationToken cancellationToken)
     {
@@ -138,18 +138,20 @@ internal sealed class BuildMapService(
             return read.Error;
         }
 
-        var (commit, files) = read.Value;
+        var (commit, files, paths) = read.Value;
         var (extracted, timedOut) = MapExtractor.Extract(repo.Name, files, recognizers, settings.SchemaGlobs);
+        var home = HomeFeatures.Assign(repo, paths, extracted);
         var clusters = await Clusters(repo, commit, settings.Graphify, cancellationToken).ConfigureAwait(false);
-        var labels = await Labels(progress, settings, clusters, cancellationToken).ConfigureAwait(false);
+        var labels = await Labels(progress, settings, home.LabelRequests, cancellationToken).ConfigureAwait(false);
         if (labels.IsError && labels.Error.Code == ContextErrors.LabelingUnavailable.Code)
         {
             return labels.Error;
         }
 
-        // A model that couldn't answer leaves the clusters their file-derived names.
-        var features = ClusterFeatures.Propose(repo, clusters, labels.IsError ? [] : labels.Value.Labels, extracted);
-        return new RepoExtraction(extracted.Plus(features), commit, Degraded(clusters, labels, timedOut), await Dropped(repo, commit, cancellationToken).ConfigureAwait(false));
+        // The model names the home features (by path, never picking members); one that couldn't answer leaves them their path names. The clusters are tags, named from their files.
+        var named = home.WithLabels(labels.IsError ? [] : labels.Value.Labels);
+        var tags = ClusterFeatures.Propose(repo, clusters, [], extracted);
+        return new RepoExtraction(extracted.Plus(named.Map).Plus(tags), commit, Degraded(clusters, labels, timedOut), await Dropped(repo, commit, cancellationToken).ConfigureAwait(false));
     }
 
     // What the repo's ignored roles dropped from the tracked files (issue 1161); an unreadable listing counts nothing, never a failed build.
@@ -176,7 +178,7 @@ internal sealed class BuildMapService(
         !repo.Denies(path) && (Recognizers.MayRead(path) || wants.Recognizers.Wants(path) || PathDenylist.Matches(path, wants.SchemaGlobs));
 
     // HEAD's tree minus the denied paths, and the text of each file the extractor may read.
-    private async ValueTask<Result<(string Commit, List<RepoFile> Files)>> ReadFiles(IProgress<string>? progress, ContextRepo repo, (RecognizerSet Recognizers, IReadOnlyList<string> SchemaGlobs) wants, CancellationToken cancellationToken)
+    private async ValueTask<Result<(string Commit, List<RepoFile> Files, IReadOnlyList<string> Paths)>> ReadFiles(IProgress<string>? progress, ContextRepo repo, (RecognizerSet Recognizers, IReadOnlyList<string> SchemaGlobs) wants, CancellationToken cancellationToken)
     {
         var head = await repos.Head(repo, cancellationToken).ConfigureAwait(false);
         var listed = head.IsError ? head.Error : await repos.ListFiles(repo, head.Value, cancellationToken).ConfigureAwait(false);
@@ -203,7 +205,7 @@ internal sealed class BuildMapService(
         }
 
         Tell(progress, files.Count, wanted.Count);
-        return (head.Value, files);
+        return (head.Value, files, listed.Value);
     }
 
     // A cluster source that fails reads like one that is absent; a denied path never reaches the labeler or the graph.
@@ -221,15 +223,15 @@ internal sealed class BuildMapService(
             set.Value.Reason);
     }
 
-    private async ValueTask<Result<LabelPass>> Labels(IProgress<string>? progress, ContextSettings settings, ClusterSet clusters, CancellationToken cancellationToken)
+    private async ValueTask<Result<LabelPass>> Labels(IProgress<string>? progress, ContextSettings settings, IReadOnlyList<FileCluster> requests, CancellationToken cancellationToken)
     {
-        if (!settings.Labeling.Enabled || clusters.Clusters.Count == 0)
+        if (!settings.Labeling.Enabled || requests.Count == 0)
         {
             return Results.Success(new LabelPass([]));
         }
 
-        progress?.Report(string.Create(CultureInfo.InvariantCulture, $"labeling {clusters.Clusters.Count} clusters"));
-        return await namers.Labeler.Label(clusters.Clusters, settings.ExtraPatterns, settings.Labeling.MaxTokens, cancellationToken).ConfigureAwait(false);
+        progress?.Report(string.Create(CultureInfo.InvariantCulture, $"labeling {requests.Count} features"));
+        return await namers.Labeler.Label(requests, settings.ExtraPatterns, settings.Labeling.MaxTokens, cancellationToken).ConfigureAwait(false);
     }
 
     private static void Tell(IProgress<string>? progress, int done, int total) =>
@@ -254,7 +256,7 @@ internal sealed class BuildMapService(
 
     private static List<ProposedNode> Proposed(GraphSnapshot current, ExtractedMap found, List<string> repoNames) =>
     [
-        .. found.Nodes.Where(n => n.Key.Kind != NodeKind.Code && current.Resolve(n.Key) is null).OrderBy(n => n.Key.Value, StringComparer.Ordinal)
+        .. found.Nodes.Where(n => n.Key.Kind != NodeKind.Code && n is not { Provenance: Provenance.Deterministic, Key.Kind: NodeKind.Feature } && current.Resolve(n.Key) is null).OrderBy(n => n.Key.Value, StringComparer.Ordinal)
             .Select(n => new ProposedNode(n.Key, n.Provenance, n.Confidence,
                 Files(found, n, repoNames))),
     ];

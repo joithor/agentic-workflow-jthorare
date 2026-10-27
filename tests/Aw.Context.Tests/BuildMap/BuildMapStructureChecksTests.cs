@@ -55,7 +55,7 @@ public sealed class BuildMapStructureChecksTests : IDisposable
 
         Assert.Null(report.Draft.Checks);
         Assert.DoesNotContain(report.Degraded, d => d.StartsWith("structure", StringComparison.Ordinal));
-        Assert.Equal((10, 100), (report.Structure?.Isolated.Count, report.Structure?.Isolated.Total));
+        Assert.Equal((10, 100), (report.Checks?.Isolated.Count, report.Checks?.Isolated.Total));
     }
 
     [Fact, Trait("Lane", "unit")]

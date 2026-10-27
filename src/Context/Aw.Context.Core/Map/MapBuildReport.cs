@@ -9,5 +9,8 @@ namespace Aw.Context.Core.Map;
 public sealed record MapBuildReport(MapVersion Draft, IReadOnlyList<ProposedNode> Proposed, IReadOnlyList<string> Degraded, IReadOnlyList<MapHead> Heads)
 {
     /// <summary>The structure measures of this build, passing or not, or null for a report that has none.</summary>
-    public MapChecksReport? Structure { get; init; }
+    public MapChecksReport? Checks { get; init; }
+
+    /// <summary>What the build's structure cut replaced: the cluster features and links of the last build, and what became of the decisions on them (spec 2026-10-27 §5).</summary>
+    public StructureCounts Structure { get; init; } = StructureCounts.None;
 }

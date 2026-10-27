@@ -11,4 +11,7 @@ public enum AgentSessionEnd
 
     /// <summary>The agent sat idle at its prompt with no report: its turn ended and nothing happened for 120 s, or an API error stopped it and its one re-prompt got no answer.</summary>
     Idle = 3,
+
+    /// <summary>A sandbox limit killed it ('session.ended' with the reason limit): the Step fails with 'limit' and is never auto-retried.</summary>
+    Limit = 4,
 }

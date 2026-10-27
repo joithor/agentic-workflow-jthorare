@@ -73,8 +73,8 @@ internal sealed partial class BuildMapService
         var ruleset = MapRuleset.Of(ScopeRules.Mapped(read.Settings, profileRepos));
         var changed = current.Value is { } map && !string.Equals(map.Version.Ruleset, ruleset, StringComparison.Ordinal);
         var cuts = new BuildCuts(profileRepos, mappedRepos, read.Found, changed, at);
-        var (kept, undo) = cuts.Apply(basis, current.Value?.Overrides ?? []);
-        return new Cut(kept, UndoAlso(undo, open.Value, cuts), ruleset, at);
+        var (kept, undo, structure) = cuts.Apply(basis, current.Value?.Overrides ?? []);
+        return new Cut(kept, UndoAlso(undo, open.Value, cuts), ruleset, at, structure);
     }
 
     // The cluster source of a measurement: graphify is not run.
@@ -84,5 +84,5 @@ internal sealed partial class BuildMapService
             ValueTask.FromResult(Results.Success(new ClusterSet([], Available: false, Reason: "not run")));
     }
 
-    private sealed record Cut(GraphSnapshot Kept, IReadOnlyList<MapOverride> Undo, string Ruleset, DateTimeOffset At);
+    private sealed record Cut(GraphSnapshot Kept, IReadOnlyList<MapOverride> Undo, string Ruleset, DateTimeOffset At, StructureCounts Structure);
 }

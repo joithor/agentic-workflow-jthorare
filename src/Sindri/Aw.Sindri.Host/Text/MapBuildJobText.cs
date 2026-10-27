@@ -16,9 +16,9 @@ internal static class MapBuildJobText
             _ = text.Append("degraded: ").AppendLine(note);
         }
 
-        if (result.Structure is { } structure)
+        if (result.Checks is { } checks)
         {
-            _ = text.AppendLine(structure);
+            _ = text.AppendLine(checks);
         }
 
         return text.ToString();

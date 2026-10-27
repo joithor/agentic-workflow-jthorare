@@ -8,5 +8,5 @@ namespace Aw.Sindri.Features.ContextCalls;
 public sealed record BuildContextMapResult(string Repo, int Draft, int Proposed, IReadOnlyList<string> Degraded)
 {
     /// <summary>The structure measures as one line of numbers (map structure spec §4.3), on every build; null when the build did not measure.</summary>
-    public string? Structure { get; init; }
+    public string? Checks { get; init; }
 }

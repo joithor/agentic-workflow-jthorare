@@ -320,6 +320,8 @@ Pin ids on code-index rows, a `concept=` filter on `context_query`, pin `aliases
 
 ## 11. Records linked to features (#1373)
 
+**Status: pending the Sindri-owned index spec** (`2026-10-27-sindri-owned-index-design.md`, owner decision 2026-10-27: Onyx is dropped and records, chunks and vectors move into one Sindri-owned store). The rules below (record globs, directory-doc names, home-feature links, cited-path `mentions`, roll-up, tests) stand. What changes is the input: wherever this section says `IDocIndex`, `SqliteDocIndex`, `doc_chunk` or "the doc index", read "the record store" (`IRecordStore`, `source_record` kind `doc`, `chunk`); `MapDocSources(IDocIndex Docs, ...)` becomes `MapRecordSources(IRecordStore Records, ...)`; and the tracker half's inputs (state, links, attachments, times for Linear and GitHub) come from the same store. S7 starts after S3 **and** that spec's phase I1 (the `IRecordStore` port, its fake and contract tests); see its §7.2 for the full list of what changes.
+
 The ideas lane builds this. This section fixes what it depends on in steps 3 and 4 and answers where synced docs are today.
 
 ### 11.1 Where synced docs live, and whether the build sees them

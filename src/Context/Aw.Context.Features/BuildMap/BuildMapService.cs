@@ -81,7 +81,9 @@ internal sealed partial class BuildMapService(
 
     // THE SEAM for the structure steps that need every repo's files at once (map structure spec §3): S4's FeatureRollup.Apply goes here, over the merged extraction (S3's
     // HomeFeatures.Assign runs per repo inside Extract). A build and 'context map checks --build' both read through ReadRepos, so the checks measure what the build would save.
-    private static ExtractedMap WithStructure(ExtractedMap found) => found;
+    private static ExtractedMap WithStructure(ExtractedMap found) =>
+        // why: an import can cross repos only when its target file is in the map, so the file edges roll up on the joined map, after every repo has contributed its homes and edges
+        FeatureRollup.Apply(found);
 
     private async ValueTask<Result<MapBuildReport>> Save(Reading read, IReadOnlyList<ContextRepo> profileRepos, IReadOnlyList<ContextRepo> mappedRepos, CancellationToken cancellationToken)
     {
@@ -91,13 +93,13 @@ internal sealed partial class BuildMapService(
             return cut.Error;
         }
 
-        var (kept, undo, ruleset, at) = cut.Value;
+        var (kept, undo, ruleset, at, replaced) = cut.Value;
         // The concepts ('index.concepts' pins of the mapped repos first) are derived over the whole joined graph (records and decisions included) and saved in the draft, so reads never call a model.
         // A namer or a code index that can't answer leaves the deterministic names or the plain grouping and says so as a degraded note.
         // The structure checks (map structure spec §4) run on the joined graph before the concept pass and before any write: a refused build pays for neither and leaves the last draft and the current map as they were.
         var joined = Join(WithoutDerivedConcepts(kept), read.Found);
-        var structure = MapChecks.Measure(joined);
-        var checks = structure.Decide(read.Settings.Checks);
+        var measured = MapChecks.Measure(joined);
+        var checks = measured.Decide(read.Settings.Checks);
         if (checks.Refusal is { } refused)
         {
             return refused;
@@ -105,7 +107,7 @@ internal sealed partial class BuildMapService(
 
         var concepts = await namers.Concepts.Run(read.Settings, joined, [.. mappedRepos.SelectMany(r => r.Concepts)], mappedRepos, cancellationToken).ConfigureAwait(false);
         var draft = await store.SaveDraft(new MapImport(read.Name, read.Commit, concepts.Graph, undo, read.Heads) { Ruleset = ruleset, Dropped = read.Dropped, Checks = checks.Stored }, at, cancellationToken).ConfigureAwait(false);
-        return draft.IsError ? draft.Error : new MapBuildReport(draft.Value, Proposed(kept, read.Found, mappedRepos.Select(r => r.Name.Value).ToList()), [.. read.Degraded, .. checks.Notes, .. concepts.Notes], read.Heads) { Structure = structure };
+        return draft.IsError ? draft.Error : new MapBuildReport(draft.Value, Proposed(kept, read.Found, mappedRepos.Select(r => r.Name.Value).ToList()), [.. read.Degraded, .. checks.Notes, .. concepts.Notes], read.Heads) { Structure = replaced, Checks = measured };
     }
 
     private sealed record Reading(ExtractedMap Found, IReadOnlyList<string> Degraded, ContextRepoName Name, string Commit, IReadOnlyList<MapHead> Heads, ContextSettings Settings)
@@ -124,7 +126,7 @@ internal sealed partial class BuildMapService(
     private static IReadOnlyList<MapOverride> UndoAlso(IReadOnlyList<MapOverride> undo, MapSnapshot? openDraft, BuildCuts cuts) =>
         openDraft is null
             ? undo
-            : [.. undo.Concat(cuts.Apply(openDraft.Graph, openDraft.Overrides).Undo).DistinctBy(o => o.Undoes?.Value, StringComparer.Ordinal)];
+            : [.. undo.Concat(cuts.Apply(openDraft.Graph, openDraft.Overrides).Undo).DistinctBy(o => o.Undoes?.Value ?? o.ToId().Value, StringComparer.Ordinal)];
 
     private async ValueTask<Result<RepoExtraction>> Extract(IProgress<string>? progress, ContextSettings settings, ContextRepo repo, CancellationToken cancellationToken)
     {
@@ -135,18 +137,20 @@ internal sealed partial class BuildMapService(
             return read.Error;
         }
 
-        var (commit, files) = read.Value;
+        var (commit, files, paths) = read.Value;
         var (extracted, timedOut) = MapExtractor.Extract(repo.Name, files, recognizers, settings.SchemaGlobs);
+        var home = HomeFeatures.Assign(repo, paths, extracted);
         var clusters = await Clusters(repo, commit, settings.Graphify, cancellationToken).ConfigureAwait(false);
-        var labels = await Labels(progress, settings, clusters, cancellationToken).ConfigureAwait(false);
+        var labels = await Labels(progress, settings, home.LabelRequests, cancellationToken).ConfigureAwait(false);
         if (labels.IsError && labels.Error.Code == ContextErrors.LabelingUnavailable.Code)
         {
             return labels.Error;
         }
 
-        // A model that couldn't answer leaves the clusters their file-derived names.
-        var features = ClusterFeatures.Propose(repo, clusters, labels.IsError ? [] : labels.Value.Labels, extracted);
-        return new RepoExtraction(extracted.Plus(features), commit, Degraded(clusters, labels, timedOut), await Dropped(repo, commit, cancellationToken).ConfigureAwait(false));
+        // The model names the home features (by path, never picking members); one that couldn't answer leaves them their path names. The clusters are tags, named from their files.
+        var named = home.WithLabels(labels.IsError ? [] : labels.Value.Labels);
+        var tags = ClusterFeatures.Propose(repo, clusters, [], extracted);
+        return new RepoExtraction(extracted.Plus(named.Map).Plus(tags), commit, Degraded(clusters, labels, timedOut), await Dropped(repo, commit, cancellationToken).ConfigureAwait(false));
     }
 
     // What the repo's ignored roles dropped from the tracked files (issue 1161); an unreadable listing counts nothing, never a failed build.
@@ -173,7 +177,7 @@ internal sealed partial class BuildMapService(
         !repo.Denies(path) && (Recognizers.MayRead(path) || wants.Recognizers.Wants(path) || PathDenylist.Matches(path, wants.SchemaGlobs));
 
     // HEAD's tree minus the denied paths, and the text of each file the extractor may read.
-    private async ValueTask<Result<(string Commit, List<RepoFile> Files)>> ReadFiles(IProgress<string>? progress, ContextRepo repo, (RecognizerSet Recognizers, IReadOnlyList<string> SchemaGlobs) wants, CancellationToken cancellationToken)
+    private async ValueTask<Result<(string Commit, List<RepoFile> Files, IReadOnlyList<string> Paths)>> ReadFiles(IProgress<string>? progress, ContextRepo repo, (RecognizerSet Recognizers, IReadOnlyList<string> SchemaGlobs) wants, CancellationToken cancellationToken)
     {
         var head = await repos.Head(repo, cancellationToken).ConfigureAwait(false);
         var listed = head.IsError ? head.Error : await repos.ListFiles(repo, head.Value, cancellationToken).ConfigureAwait(false);
@@ -200,7 +204,7 @@ internal sealed partial class BuildMapService(
         }
 
         Tell(progress, files.Count, wanted.Count);
-        return (head.Value, files);
+        return (head.Value, files, listed.Value);
     }
 
     // A cluster source that fails reads like one that is absent; a denied path never reaches the labeler or the graph.
@@ -218,15 +222,15 @@ internal sealed partial class BuildMapService(
             set.Value.Reason);
     }
 
-    private async ValueTask<Result<LabelPass>> Labels(IProgress<string>? progress, ContextSettings settings, ClusterSet clusters, CancellationToken cancellationToken)
+    private async ValueTask<Result<LabelPass>> Labels(IProgress<string>? progress, ContextSettings settings, IReadOnlyList<FileCluster> requests, CancellationToken cancellationToken)
     {
-        if (!settings.Labeling.Enabled || clusters.Clusters.Count == 0)
+        if (!settings.Labeling.Enabled || requests.Count == 0)
         {
             return Results.Success(new LabelPass([]));
         }
 
-        progress?.Report(string.Create(CultureInfo.InvariantCulture, $"labeling {clusters.Clusters.Count} clusters"));
-        return await namers.Labeler.Label(clusters.Clusters, settings.ExtraPatterns, settings.Labeling.MaxTokens, cancellationToken).ConfigureAwait(false);
+        progress?.Report(string.Create(CultureInfo.InvariantCulture, $"labeling {requests.Count} features"));
+        return await namers.Labeler.Label(requests, settings.ExtraPatterns, settings.Labeling.MaxTokens, cancellationToken).ConfigureAwait(false);
     }
 
     private static void Tell(IProgress<string>? progress, int done, int total) =>
@@ -251,7 +255,7 @@ internal sealed partial class BuildMapService(
 
     private static List<ProposedNode> Proposed(GraphSnapshot current, ExtractedMap found, List<string> repoNames) =>
     [
-        .. found.Nodes.Where(n => n.Key.Kind != NodeKind.Code && current.Resolve(n.Key) is null).OrderBy(n => n.Key.Value, StringComparer.Ordinal)
+        .. found.Nodes.Where(n => n.Key.Kind != NodeKind.Code && n is not { Provenance: Provenance.Deterministic, Key.Kind: NodeKind.Feature } && current.Resolve(n.Key) is null).OrderBy(n => n.Key.Value, StringComparer.Ordinal)
             .Select(n => new ProposedNode(n.Key, n.Provenance, n.Confidence,
                 Files(found, n, repoNames))),
     ];
@@ -260,7 +264,7 @@ internal sealed partial class BuildMapService(
     private static List<NodeKey> Files(ExtractedMap found, GraphNode node, List<string> repoNames) =>
         [.. (node.Key.Kind == NodeKind.Thing
             ? node.EvidenceOrEmpty.Select(e => e.Key.Value).Select(r => DeclaringFile(r, repoNames)).OfType<NodeKey>()
-            : found.Edges.Where(e => e.Type == EdgeType.Implements && e.To.Value == node.Key.Value && e.From.Kind == NodeKind.Code).Select(e => e.From))
+            : found.Edges.Where(e => e.Type is EdgeType.Implements or EdgeType.Tags && e.To.Value == node.Key.Value && e.From.Kind == NodeKind.Code).Select(e => e.From))
             .DistinctBy(k => k.Value, StringComparer.Ordinal).OrderBy(k => k.Value, StringComparer.Ordinal)];
 
     // "repo:<name>/<path>" -> code:<path>, stripping the exact prefix of a mapped repo (a name may hold '/').

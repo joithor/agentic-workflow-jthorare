@@ -8,7 +8,7 @@ public static class EdgeRules
     private static readonly NodeKind[] _dependents = [NodeKind.Feature, NodeKind.Code];
     private static readonly NodeKind[] _members = [NodeKind.Feature, NodeKind.Record, NodeKind.Decision];
     private static readonly NodeKind[] _onSurface = [NodeKind.Surface, NodeKind.Action];
-    private static readonly NodeKind[] _usesThing = [NodeKind.Surface, NodeKind.Action, NodeKind.Code];
+    private static readonly NodeKind[] _usesThing = [NodeKind.Surface, NodeKind.Action, NodeKind.Code, NodeKind.Feature];
 
     private static readonly Dictionary<EdgeType, (string Name, NodeKind[] From, NodeKind[] To)> _table = new()
     {
@@ -26,6 +26,7 @@ public static class EdgeRules
         [EdgeType.Quotes] = ("quotes", [NodeKind.Decision], [NodeKind.Record]),
         [EdgeType.BelongsTo] = ("belongs-to", _members, [NodeKind.Concept]),
         [EdgeType.Supersedes] = ("supersedes", [NodeKind.Decision], [NodeKind.Decision]),
+        [EdgeType.Tags] = ("tags", [NodeKind.Code], [NodeKind.Feature]),
     };
 
     /// <summary>Whether an edge of <paramref name="type"/> may go from a <paramref name="from"/> node to a <paramref name="to"/> node.</summary>

@@ -17,7 +17,7 @@ internal static class GraphVersionReads
             return checks.Error;
         }
 
-        var select = checks.Value > 0 ? GraphSql.SelectVersions : dropped.Value > 0 ? GraphSql.SelectVersionsBefore0016 : ruleset.Value > 0 ? GraphSql.SelectVersionsBefore0013 : GraphSql.SelectVersionsBefore0012;
+        var select = checks.Value > 0 ? GraphSql.SelectVersions : dropped.Value > 0 ? GraphSql.SelectVersionsBefore0017 : ruleset.Value > 0 ? GraphSql.SelectVersionsBefore0013 : GraphSql.SelectVersionsBefore0012;
         return await SqliteQueries.List(session, new SqlStatement(select), GraphRows.Version, cancellationToken).ConfigureAwait(false);
     }
 }

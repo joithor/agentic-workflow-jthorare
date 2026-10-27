@@ -125,6 +125,7 @@ public static class EngineNotices
         ParkReason.SpecConflict => "spec-conflict",
         ParkReason.NoRuntime => "SND-WF-010",
         ParkReason.Unavailable => "unavailable",
+        ParkReason.Launch => "launch",
         _ => "parked",
     };
 }

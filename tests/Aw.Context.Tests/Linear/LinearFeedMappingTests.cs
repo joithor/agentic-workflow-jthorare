@@ -93,7 +93,7 @@ public sealed class LinearFeedMappingTests
         var first = (await feed.Pull(new RecordPull(After: null, 10, NotBefore: null), ct)).Value;
         var again = (await feed.Pull(new RecordPull(first.Next, 10, NotBefore: null), ct)).Value;
 
-        Assert.Equal(["n", "o"], first.Items.Select(i => i.Key.Value["linear:issue/".Length..]));
+        Assert.Equal(["n", "o"], first.Items.Select(i => i.Key.Value["linear:issue/".Length..]), StringComparer.Ordinal);
         Assert.Empty(again.Items);
         Assert.NotNull(fake.Variables[^1]["filter"]?["updatedAt"]?["gt"]);
     }

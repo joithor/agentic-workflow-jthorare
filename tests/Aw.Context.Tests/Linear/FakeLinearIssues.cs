@@ -38,17 +38,24 @@ internal sealed class FakeLinearIssues(IReadOnlyList<JsonObject> nodes) : HttpMe
         var body = JsonNode.Parse(await request.Content!.ReadAsStringAsync(cancellationToken).ConfigureAwait(false))!.AsObject();
         var variables = body["variables"]?.AsObject() ?? [];
         Variables.Add((JsonObject)variables.DeepClone());
-        var filter = variables["filter"]?["updatedAt"]?.AsObject();
-        var gt = Bound(filter, "gt");
-        var gte = Bound(filter, "gte");
-        var rows = nodes
-            .Where(n => Updated(n) > (gt ?? DateTimeOffset.MinValue) && Updated(n) >= (gte ?? DateTimeOffset.MinValue))
-            .OrderByDescending(Updated).ThenBy(n => n["id"]!.GetValue<string>(), StringComparer.Ordinal).ToList();
+        var rows = Matching(variables["filter"]?["updatedAt"]?.AsObject());
         var skip = variables["after"] is { } after ? int.Parse(after.GetValue<string>(), CultureInfo.InvariantCulture) : 0;
-        var first = variables["first"]?.GetValue<int>() ?? 50;
+        var reply = Reply(rows, skip, variables["first"]?.GetValue<int>() ?? 50);
+        return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(reply.ToJsonString(_json), Encoding.UTF8, "application/json") };
+    }
+
+    private List<JsonObject> Matching(JsonObject? filter)
+    {
+        var gt = Bound(filter, "gt") ?? DateTimeOffset.MinValue;
+        var gte = Bound(filter, "gte") ?? DateTimeOffset.MinValue;
+        return [.. nodes.Where(n => Updated(n) > gt && Updated(n) >= gte).OrderByDescending(Updated).ThenBy(n => n["id"]!.GetValue<string>(), StringComparer.Ordinal)];
+    }
+
+    private static JsonObject Reply(List<JsonObject> rows, int skip, int first)
+    {
         var page = rows.Skip(skip).Take(first).ToList();
         var end = skip + page.Count;
-        var reply = new JsonObject
+        return new JsonObject
         {
             ["data"] = new JsonObject
             {
@@ -59,7 +66,6 @@ internal sealed class FakeLinearIssues(IReadOnlyList<JsonObject> nodes) : HttpMe
                 },
             },
         };
-        return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(reply.ToJsonString(_json), Encoding.UTF8, "application/json") };
     }
 
     private static DateTimeOffset Updated(JsonObject node) => DateTimeOffset.Parse(node["updatedAt"]!.GetValue<string>(), CultureInfo.InvariantCulture);

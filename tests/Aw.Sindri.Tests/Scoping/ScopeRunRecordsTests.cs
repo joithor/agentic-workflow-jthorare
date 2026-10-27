@@ -39,7 +39,7 @@ public sealed class ScopeRunRecordsTests : ScopeRunRecordsContract
     protected override async ValueTask Launched(IScopeRunRecords records, ScopeLaunch launch) =>
         await Append(EventTypes.LaunchStarted,
             new LaunchStarted(launch.Launch, A.FirstItemId, LaunchMode.Open, _agent, SessionId: null, "sindri " + A.FirstItemId.Value, new LaunchViewer("none", Label: null, ViewerOutcomeKind.Unconfirmed, Code: null, Detail: null),
-                ["tmux", "attach"], CatalogSource.Builtin, "sha256:abc", launch.Run, launch.State, launch.Number),
+                ["tmux", "attach"], CatalogSource.Builtin, "sha256:abc", launch.Run, launch.State, launch.Number, Model: launch.Picked),
             $"launch.outcome:{launch.Launch.Value}");
 
     protected override async ValueTask Spent(IScopeRunRecords records, LaunchId launch, int sample, long tokens, string? model) =>
@@ -65,6 +65,47 @@ public sealed class ScopeRunRecordsTests : ScopeRunRecordsContract
         var read = await records.Of(scoping, TestContext.Current.CancellationToken);
 
         Assert.Equal("1.1", Assert.Single(read.Value, static r => r.Via == "agent").RunToken);
+    }
+
+    private static ScopeLaunch Challenge(string? picked, int number = 1) =>
+        new(InstanceAddress.From("T-1/scoping/1"), "challenge", "step.scope.challenge", Requested: null, number, LaunchId.From("LCH-000000000000000000000000000000c" + number.ToString(CultureInfo.InvariantCulture)), picked);
+
+    /// <summary>Model-pick M-7: a launch the pick gave its model, with no usage row yet, records that model as the one it ran on and asked for.</summary>
+    /// <returns>The test.</returns>
+    [Fact]
+    public async Task A_picked_launch_with_no_usage_records_the_pick_as_its_model()
+    {
+        var records = await Create();
+        await Launched(records, Challenge("haiku"));
+
+        var record = Assert.Single((await records.Of(InstanceAddress.From("T-1/scoping/1"), TestContext.Current.CancellationToken)).Value);
+
+        Assert.Equal(("haiku", "haiku"), (record.Model, record.Requested));
+    }
+
+    [Fact]
+    public async Task The_model_the_session_reports_wins_over_the_pick_and_the_pick_is_still_what_was_asked_for()
+    {
+        var records = await Create();
+        var launch = Challenge("haiku");
+        await Launched(records, launch);
+        await Spent(records, launch.Launch, 1, 100, "claude-haiku-5-5");
+
+        var record = Assert.Single((await records.Of(InstanceAddress.From("T-1/scoping/1"), TestContext.Current.CancellationToken)).Value);
+
+        Assert.Equal(("claude-haiku-5-5", "haiku"), (record.Model, record.Requested));
+    }
+
+    [Fact]
+    public async Task A_model_the_recipe_names_is_what_was_asked_for_whatever_the_pick_says()
+    {
+        var records = await Create();
+        var draft = new ScopeLaunch(InstanceAddress.From("T-1/scoping/1"), "draft", "step.scope.draft", "claude-sonnet-5-5", 1, LaunchId.From("LCH-0000000000000000000000000000000d"), Picked: "claude-sonnet-5-5");
+        await Launched(records, draft);
+
+        var record = Assert.Single((await records.Of(InstanceAddress.From("T-1/scoping/1"), TestContext.Current.CancellationToken)).Value);
+
+        Assert.Equal(("claude-sonnet-5-5", "claude-sonnet-5-5"), (record.Model, record.Requested));
     }
 
     private async ValueTask Append<T>(string type, T payload, string key)

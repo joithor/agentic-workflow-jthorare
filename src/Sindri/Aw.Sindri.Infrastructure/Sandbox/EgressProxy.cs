@@ -102,7 +102,7 @@ internal sealed class EgressProxy(EgressPolicy policy, IEgressDialer dialer, Egr
         {
             EgressVerdict.Denied => DenialRules.NoGroup,
             EgressVerdict.Refused => DenialRules.PrivateAddress,
-            EgressVerdict.Allowed or EgressVerdict.Failed => null,
+            EgressVerdict.Allowed or EgressVerdict.Learned or EgressVerdict.Failed => null,
             _ => null,
         };
         if (rule is not null)

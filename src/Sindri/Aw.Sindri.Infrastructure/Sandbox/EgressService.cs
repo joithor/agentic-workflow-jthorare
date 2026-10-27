@@ -18,8 +18,10 @@ internal sealed class EgressService(IEgressResolver resolver, IEgressDialer dial
     /// <summary>Starts the listeners.</summary>
     /// <param name="network">The plan's network (its NetDir is created when missing).</param>
     /// <param name="caps">The caps.</param>
+    /// <param name="denials">The launch's denial counter; the proxy counts into it and the flush loop writes and publishes it. Null counts nothing.</param>
+    /// <param name="time">The clock the proxy checks the learn expiry against; null is the system clock.</param>
     /// <returns>The running egress, or -014 no-forwarder, or -016 net-forward when the socket paths don't fit.</returns>
-    public Result<RunningEgress> Start(PlanNetwork network, EgressCaps caps)
+    public Result<RunningEgress> Start(PlanNetwork network, EgressCaps caps, DenialCounter? denials = null, TimeProvider? time = null)
     {
         ArgumentNullException.ThrowIfNull(network);
         ArgumentNullException.ThrowIfNull(caps);
@@ -40,14 +42,14 @@ internal sealed class EgressService(IEgressResolver resolver, IEgressDialer dial
         {
             EgressSocketDirectory.Create(network.NetDir);
             _ = Directory.CreateDirectory(runDirectory);
-            var (log, proxy) = Prepare(network, caps);
+            var (log, proxy) = Prepare(network, caps, denials, time);
             var forward = new EgressForward(network.SindriPort);
 #pragma warning disable CA2000 // ownership passes to RunningEgress, which disposes both
             proxyListener = EgressListener.Start(Path.Combine(network.NetDir, EgressSocketDirectory.ProxySocket), proxy.Handle);
             sindriListener = EgressListener.Start(Path.Combine(network.NetDir, EgressSocketDirectory.SindriSocket), forward.Handle);
 #pragma warning restore CA2000
             started = true;
-            return new RunningEgress(socat, network.NetDir, log, proxyListener, sindriListener, warn ?? WriteWarning);
+            return new RunningEgress(socat, network.NetDir, log, proxyListener, sindriListener, warn ?? WriteWarning) { Denials = denials };
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or SocketException)
         {
@@ -72,11 +74,11 @@ internal sealed class EgressService(IEgressResolver resolver, IEgressDialer dial
         RemoveDirectory(directory);
     }
 
-    private (EgressLog Log, EgressProxy Proxy) Prepare(PlanNetwork network, EgressCaps caps)
+    private (EgressLog Log, EgressProxy Proxy) Prepare(PlanNetwork network, EgressCaps caps, DenialCounter? denials, TimeProvider? time)
     {
         var log = new EgressLog(Path.Combine(runDirectory, "egress.log"));
         log.Flush();
-        return (log, new EgressProxy(new EgressPolicy(network.Groups, resolver), dialer, log, caps));
+        return (log, new EgressProxy(new EgressPolicy(network.Groups, resolver, network.Mode, network.LearnUntil, time), dialer, log, caps) { Denials = denials });
     }
 
     private static void WriteWarning(string message) =>

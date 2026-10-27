@@ -5107,6 +5107,24 @@ static Aw.Sindri.Features.GetRunSuspension.GetRunSuspensionRequest.operator !=(A
 static Aw.Sindri.Features.GetRunSuspension.GetRunSuspensionRequest.operator ==(Aw.Sindri.Features.GetRunSuspension.GetRunSuspensionRequest? left, Aw.Sindri.Features.GetRunSuspension.GetRunSuspensionRequest? right) -> bool
 static Aw.Sindri.Features.GetRunSuspension.RunSuspensionView.operator !=(Aw.Sindri.Features.GetRunSuspension.RunSuspensionView? left, Aw.Sindri.Features.GetRunSuspension.RunSuspensionView? right) -> bool
 static Aw.Sindri.Features.GetRunSuspension.RunSuspensionView.operator ==(Aw.Sindri.Features.GetRunSuspension.RunSuspensionView? left, Aw.Sindri.Features.GetRunSuspension.RunSuspensionView? right) -> bool
+Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest
+Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.CheckContextMapStructureRequest(Aw.Context.Core.Map.MapChecksSource Source = Aw.Context.Core.Map.MapChecksSource.Current) -> void
+Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.<Clone>$() -> Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest!
+Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.Deconstruct(out Aw.Context.Core.Map.MapChecksSource Source) -> void
+Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.Equals(Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest? other) -> bool
+Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.Source.get -> Aw.Context.Core.Map.MapChecksSource
+Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.Source.init -> void
+override Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.GetHashCode() -> int
+override Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.ToString() -> string!
+static Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.operator !=(Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest? left, Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest? right) -> bool
+static Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest.operator ==(Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest? left, Aw.Sindri.Features.ContextCalls.CheckContextMapStructureRequest? right) -> bool
+Aw.Sindri.Features.ContextCalls.BuildContextMapResult.Checks.get -> string?
+Aw.Sindri.Features.ContextCalls.BuildContextMapResult.Checks.init -> void
+Aw.Sindri.Features.ContextCalls.BuildContextMapResult.Notes.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Features.ContextCalls.BuildContextMapResult.Notes.init -> void
+Aw.Sindri.Features.ContextCalls.BuildContextMapResult.Replaced.get -> Aw.Context.Core.Map.StructureCounts?
+Aw.Sindri.Features.ContextCalls.BuildContextMapResult.Replaced.init -> void
 Aw.Sindri.Features.GetLaunchPicks.LaunchPicks.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.GetLaunchPicks.LaunchPickView!>! Picks, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.GetLaunchPicks.StateEscalation!>? Escalation) -> void
 Aw.Sindri.Features.GetLaunchPicks.LaunchPicks.Escalation.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.GetLaunchPicks.StateEscalation!>?
 Aw.Sindri.Features.GetLaunchPicks.LaunchPicks.Escalation.init -> void
@@ -5162,3 +5180,41 @@ static Aw.Sindri.Features.RecordLimitHit.RecordLimitHitRequest.operator !=(Aw.Si
 static Aw.Sindri.Features.RecordLimitHit.RecordLimitHitRequest.operator ==(Aw.Sindri.Features.RecordLimitHit.RecordLimitHitRequest? left, Aw.Sindri.Features.RecordLimitHit.RecordLimitHitRequest? right) -> bool
 static Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse.operator !=(Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse? left, Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse? right) -> bool
 static Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse.operator ==(Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse? left, Aw.Sindri.Features.RecordLimitHit.RecordLimitHitResponse? right) -> bool
+Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest
+Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.<Clone>$() -> Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest!
+Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.Deconstruct(out Aw.Sindri.Core.Ids.RepoName? Repo) -> void
+Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.EndLearnModeRequest(Aw.Sindri.Core.Ids.RepoName? Repo = null) -> void
+Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.Equals(Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest? other) -> bool
+Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.Repo.get -> Aw.Sindri.Core.Ids.RepoName?
+Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.Repo.init -> void
+override Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.GetHashCode() -> int
+override Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.ToString() -> string!
+static Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.operator !=(Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest? left, Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest? right) -> bool
+static Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.operator ==(Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest? left, Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest? right) -> bool
+Aw.Sindri.Features.ListDenials.ListDenialsRequest
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.<Clone>$() -> Aw.Sindri.Features.ListDenials.ListDenialsRequest!
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.LaunchId? Launch, out System.DateTimeOffset? Since) -> void
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.Equals(Aw.Sindri.Features.ListDenials.ListDenialsRequest? other) -> bool
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.Launch.get -> Aw.Sindri.Core.Workflow.Engine.LaunchId?
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.Launch.init -> void
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.ListDenialsRequest(Aw.Sindri.Core.Workflow.Engine.LaunchId? Launch = null, System.DateTimeOffset? Since = null) -> void
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.Since.get -> System.DateTimeOffset?
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.Since.init -> void
+Aw.Sindri.Features.ListDenials.ListDenialsResponse
+Aw.Sindri.Features.ListDenials.ListDenialsResponse.<Clone>$() -> Aw.Sindri.Features.ListDenials.ListDenialsResponse!
+Aw.Sindri.Features.ListDenials.ListDenialsResponse.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialFile!>! Launches) -> void
+Aw.Sindri.Features.ListDenials.ListDenialsResponse.Equals(Aw.Sindri.Features.ListDenials.ListDenialsResponse? other) -> bool
+Aw.Sindri.Features.ListDenials.ListDenialsResponse.Launches.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialFile!>!
+Aw.Sindri.Features.ListDenials.ListDenialsResponse.Launches.init -> void
+Aw.Sindri.Features.ListDenials.ListDenialsResponse.ListDenialsResponse(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialFile!>! Launches) -> void
+override Aw.Sindri.Features.ListDenials.ListDenialsRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ListDenials.ListDenialsRequest.GetHashCode() -> int
+override Aw.Sindri.Features.ListDenials.ListDenialsRequest.ToString() -> string!
+override Aw.Sindri.Features.ListDenials.ListDenialsResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ListDenials.ListDenialsResponse.GetHashCode() -> int
+override Aw.Sindri.Features.ListDenials.ListDenialsResponse.ToString() -> string!
+static Aw.Sindri.Features.ListDenials.ListDenialsRequest.operator !=(Aw.Sindri.Features.ListDenials.ListDenialsRequest? left, Aw.Sindri.Features.ListDenials.ListDenialsRequest? right) -> bool
+static Aw.Sindri.Features.ListDenials.ListDenialsRequest.operator ==(Aw.Sindri.Features.ListDenials.ListDenialsRequest? left, Aw.Sindri.Features.ListDenials.ListDenialsRequest? right) -> bool
+static Aw.Sindri.Features.ListDenials.ListDenialsResponse.operator !=(Aw.Sindri.Features.ListDenials.ListDenialsResponse? left, Aw.Sindri.Features.ListDenials.ListDenialsResponse? right) -> bool
+static Aw.Sindri.Features.ListDenials.ListDenialsResponse.operator ==(Aw.Sindri.Features.ListDenials.ListDenialsResponse? left, Aw.Sindri.Features.ListDenials.ListDenialsResponse? right) -> bool

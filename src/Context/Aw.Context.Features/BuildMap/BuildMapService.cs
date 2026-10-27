@@ -20,7 +20,7 @@ namespace Aw.Context.Features.BuildMap;
 /// touched, and every override, pending 'propose' rows included, is re-applied on read. A missing graphify is
 /// 'degraded: clusters', not an error.
 /// </summary>
-internal sealed class BuildMapService(
+internal sealed partial class BuildMapService(
     IRepoReader repos,
     IClusterSource clusterSource,
     MapNamers namers,
@@ -34,18 +34,13 @@ internal sealed class BuildMapService(
     public async ValueTask<Result<MapBuildReport>> Handle(BuildMapRequest request, CancellationToken cancellationToken)
     {
         var scope = request.Scope;
-        var mapped = SettingsReader.Read(scope.Settings).Bind(settings => ScopeRules.Resolve(settings, scope.Repos, scope.Caller).Map(r => (Settings: settings, Repos: r)));
+        var mapped = Mapped(scope);
         if (mapped.IsError)
         {
             return mapped.Error;
         }
 
         var (settings, mappedRepos) = mapped.Value;
-        if (mappedRepos.Count == 0)
-        {
-            return ContextErrors.SettingsInvalid.With("context.repos: the profile maps no repo to build from (fix: add a repo to the profile and approve it)");
-        }
-
         using var turn = await gate.Enter(cancellationToken).ConfigureAwait(false);
         return await Build(request.Progress, settings, mappedRepos, scope.Repos, cancellationToken).ConfigureAwait(false);
     }
@@ -60,13 +55,14 @@ internal sealed class BuildMapService(
     private async ValueTask<Result<Reading>> ReadRepos(IProgress<string>? progress, ContextSettings settings, IReadOnlyList<ContextRepo> mappedRepos, CancellationToken cancellationToken)
     {
         var found = ExtractedMap.Empty;
+        var pins = mappedRepos.SelectMany(r => r.Concepts).ToList();
         var degraded = new List<string>();
         (string Commit, ContextRepoName Name)? primary = null;
         var heads = new List<MapHead>(mappedRepos.Count);
         var dropped = new List<RoleDropped>();
         foreach (var repo in mappedRepos)
         {
-            var one = await Extract(progress, settings, repo, cancellationToken).ConfigureAwait(false);
+            var one = await Extract(progress, settings, repo, pins, cancellationToken).ConfigureAwait(false);
             if (one.IsError)
             {
                 return one.Error;
@@ -79,38 +75,40 @@ internal sealed class BuildMapService(
             heads.Add(new MapHead(repo.Name, one.Value.Commit, await OnDefault(repo, one.Value.Commit, cancellationToken).ConfigureAwait(false)));
         }
 
-        // why: an import can cross repos only when its target file is in the map, so the file edges roll up on the joined map, after every repo has contributed its homes and edges
-        found = FeatureRollup.Apply(found);
+        found = WithStructure(found);
         // why: mappedRepos is not empty, so the loop set the primary
         return MapHead.Check(heads) is { } invalid ? invalid : new Reading(found, degraded, primary!.Value.Name, primary.Value.Commit, heads, settings) { Dropped = dropped };
     }
 
+    // THE SEAM for the structure steps that need every repo's files at once (map structure spec §3): S4's FeatureRollup.Apply goes here, over the merged extraction (S3's
+    // HomeFeatures.Assign runs per repo inside Extract). A build and 'context map checks --build' both read through ReadRepos, so the checks measure what the build would save.
+    private static ExtractedMap WithStructure(ExtractedMap found) =>
+        // why: an import can cross repos only when its target file is in the map, so the file edges roll up on the joined map, after every repo has contributed its homes and edges
+        FeatureRollup.Apply(found);
+
     private async ValueTask<Result<MapBuildReport>> Save(Reading read, IReadOnlyList<ContextRepo> profileRepos, IReadOnlyList<ContextRepo> mappedRepos, CancellationToken cancellationToken)
     {
-        var current = await store.Snapshot(draft: false, cancellationToken).ConfigureAwait(false);
-        if (current.IsError)
+        var cut = await CutBasis(read, profileRepos, mappedRepos, cancellationToken).ConfigureAwait(false);
+        if (cut.IsError)
         {
-            return current.Error;
+            return cut.Error;
         }
 
-        var basis = current.Value?.Graph ?? GraphSnapshot.Empty;
-        var open = await store.Snapshot(draft: true, cancellationToken).ConfigureAwait(false);
-        if (open.IsError)
-        {
-            return open.Error;
-        }
-
-        var at = clock.GetUtcNow();
-        var ruleset = MapRuleset.Of(ScopeRules.Mapped(read.Settings, profileRepos));
-        var changed = current.Value is { } map && !string.Equals(map.Version.Ruleset, ruleset, StringComparison.Ordinal);
-        var cuts = new BuildCuts(profileRepos, mappedRepos, read.Found, changed, at);
-        var (kept, undo, structure) = cuts.Apply(basis, current.Value?.Overrides ?? []);
-        undo = UndoAlso(undo, open.Value, cuts);
+        var (kept, undo, ruleset, at, replaced) = cut.Value;
         // The concepts ('index.concepts' pins of the mapped repos first) are derived over the whole joined graph (records and decisions included) and saved in the draft, so reads never call a model.
         // A namer or a code index that can't answer leaves the deterministic names or the plain grouping and says so as a degraded note.
-        var concepts = await namers.Concepts.Run(read.Settings, Join(WithoutDerivedConcepts(kept), read.Found), [.. mappedRepos.SelectMany(r => r.Concepts)], mappedRepos, cancellationToken).ConfigureAwait(false);
-        var draft = await store.SaveDraft(new MapImport(read.Name, read.Commit, concepts.Graph, undo, read.Heads) { Ruleset = ruleset, Dropped = read.Dropped }, at, cancellationToken).ConfigureAwait(false);
-        return draft.IsError ? draft.Error : new MapBuildReport(draft.Value, Proposed(kept, read.Found, mappedRepos.Select(r => r.Name.Value).ToList()), [.. read.Degraded, .. concepts.Notes], read.Heads) { Structure = structure };
+        // The structure checks (map structure spec §4) run on the joined graph before the concept pass and before any write: a refused build pays for neither and leaves the last draft and the current map as they were.
+        var joined = Join(WithoutDerivedConcepts(kept), read.Found);
+        var measured = MapChecks.Measure(joined, read.Settings.CheckLimits);
+        var checks = measured.Decide(read.Settings.Checks);
+        if (checks.Refusal is { } refused)
+        {
+            return refused;
+        }
+
+        var concepts = await namers.Concepts.Run(read.Settings, joined, [.. mappedRepos.SelectMany(r => r.Concepts)], mappedRepos, cancellationToken).ConfigureAwait(false);
+        var draft = await store.SaveDraft(new MapImport(read.Name, read.Commit, concepts.Graph, undo, read.Heads) { Ruleset = ruleset, Dropped = read.Dropped, Checks = checks.Stored }, at, cancellationToken).ConfigureAwait(false);
+        return draft.IsError ? draft.Error : new MapBuildReport(draft.Value, Proposed(kept, read.Found, mappedRepos.Select(r => r.Name.Value).ToList()), [.. read.Degraded, .. checks.Notes, .. concepts.Notes], read.Heads) { Structure = replaced, Checks = measured, Notes = concepts.ReportNotes };
     }
 
     private sealed record Reading(ExtractedMap Found, IReadOnlyList<string> Degraded, ContextRepoName Name, string Commit, IReadOnlyList<MapHead> Heads, ContextSettings Settings)
@@ -131,7 +129,7 @@ internal sealed class BuildMapService(
             ? undo
             : [.. undo.Concat(cuts.Apply(openDraft.Graph, openDraft.Overrides).Undo).DistinctBy(o => o.Undoes?.Value ?? o.ToId().Value, StringComparer.Ordinal)];
 
-    private async ValueTask<Result<RepoExtraction>> Extract(IProgress<string>? progress, ContextSettings settings, ContextRepo repo, CancellationToken cancellationToken)
+    private async ValueTask<Result<RepoExtraction>> Extract(IProgress<string>? progress, ContextSettings settings, ContextRepo repo, IReadOnlyList<ConceptPin> pins, CancellationToken cancellationToken)
     {
         var recognizers = RecognizerSet.From(settings.Recognizers);
         var read = await ReadFiles(progress, repo, (recognizers, settings.SchemaGlobs), cancellationToken).ConfigureAwait(false);
@@ -142,7 +140,7 @@ internal sealed class BuildMapService(
 
         var (commit, files, paths) = read.Value;
         var (extracted, timedOut) = MapExtractor.Extract(repo.Name, files, recognizers, settings.SchemaGlobs);
-        var home = HomeFeatures.Assign(repo, paths, extracted);
+        var home = HomeFeatures.Assign(repo, paths, extracted, pins);
         var clusters = await Clusters(repo, commit, settings.Graphify, cancellationToken).ConfigureAwait(false);
         var labels = await Labels(progress, settings, home.LabelRequests, cancellationToken).ConfigureAwait(false);
         if (labels.IsError && labels.Error.Code == ContextErrors.LabelingUnavailable.Code)

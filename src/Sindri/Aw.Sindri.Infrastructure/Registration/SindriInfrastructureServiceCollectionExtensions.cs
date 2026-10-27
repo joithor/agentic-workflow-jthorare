@@ -23,6 +23,7 @@ using Aw.Sindri.Core.Packets;
 using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Prove;
 using Aw.Sindri.Core.Sandbox;
+using Aw.Sindri.Core.Sandbox.Denials;
 using Aw.Sindri.Core.Scheduling;
 using Aw.Sindri.Core.Scoping;
 using Aw.Sindri.Core.Secrets;
@@ -88,11 +89,12 @@ public static class SindriInfrastructureServiceCollectionExtensions
 
     /// <summary>SB-3a: what 'session wrap --limits' watches a session's systemd scope through (systemctl --user and the cgroup files).</summary>
     private static IServiceCollection AddScopeWatch(this IServiceCollection services) =>
-        services.AddSingleton<IScopeControl>(static _ => new SystemctlScopeControl(new SandboxProcesses())).AddSingleton<ICgroupStats, CgroupFiles>().AddSingleton<IHeavyLockSweep>(static sp => new HeavyLockSweep(sp.GetRequiredService<TimeProvider>()));
+        services.AddSingleton<IScopeControl>(static _ => new SystemctlScopeControl(new SandboxProcesses())).AddSingleton<ICgroupStats, CgroupFiles>().AddSingleton<IHeavyLockSweep>(static sp => new HeavyLockSweep(sp.GetRequiredService<TimeProvider>()))
+            .AddSingleton<IDenialFiles>(static sp => new DiskDenialFiles(sp.GetRequiredService<SindriSettings>(), sp.GetRequiredService<JsonSerializerOptions>()));   // SB-4b: the run areas' denials.json
 
     /// <summary>Engine P8: the diff signal of an agent run (git) and an agent session's end and spend (the ledger).</summary>
     private static IServiceCollection AddAgentRuntimeAdapters(this IServiceCollection services, Func<string, string?> environment) =>
-        services.AddSingleton<IRunDiff, GitRunDiff>().AddSingleton<IWorkspaceRebase, GitWorkspaceRebase>().AddSingleton<IDiffContent, GitDiffContent>().AddSingleton<IBranchChanges, GitBranchChanges>().AddSingleton<IAgentSessions, LedgerAgentSessions>().AddSingleton<IRunSuspensions, LedgerRunSuspensions>().AddSingleton<IScopeRunRecords, ScopeRunRecords>()
+        services.AddSingleton<IRunDiff, GitRunDiff>().AddSingleton<IWorkspaceRebase, GitWorkspaceRebase>().AddSingleton<IDiffContent, GitDiffContent>().AddSingleton<IBranchChanges, GitBranchChanges>().AddSingleton<IAgentSessions, LedgerAgentSessions>().AddSingleton<IRunSuspensions, LedgerRunSuspensions>().AddSingleton<ILearnHistory, LedgerLearnHistory>().AddSingleton<IScopeRunRecords, ScopeRunRecords>()
             .AddSingleton<ICheckCommands>(sp => new ToolCheckCommands(new ProcessToolRunner(), sp.GetRequiredService<ITextScrubber>(), sp.GetRequiredService<TimeProvider>()))
             .AddLensPackAdapters(environment);
 

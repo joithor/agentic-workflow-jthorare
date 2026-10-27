@@ -4,6 +4,7 @@ using Aw.Context.Core.Facade;
 using Aw.Context.Core.Map;
 using Aw.Context.Core.Proposals;
 using Aw.Context.Core.Review;
+using Aw.Context.Features.BuildMap;
 using Aw.Context.Features.CleanMap;
 using Aw.Context.Features.ScanConcepts;
 using Aw.Kernel;
@@ -12,7 +13,7 @@ using Aw.Kernel.Services;
 namespace Aw.Context.Features;
 
 /// <summary>The map part of the facade: each method goes to the group of slices that owns it (spec §4); the groups keep each class under the constructor limit.</summary>
-internal sealed class ContextMap(MapAdmin admin, MapReview review, MapProposals proposals, MapPublishing publishing, IService<CleanMapRequest, CleanupReport> clean, IService<ScanConceptsRequest, ConceptScanReport> scan) : IContextMap
+internal sealed class ContextMap(MapAdmin admin, MapReview review, MapProposals proposals, MapPublishing publishing, IService<CleanMapRequest, CleanupReport> clean, IService<ScanConceptsRequest, ConceptScanReport> scan, IService<CheckStructureRequest, MapChecksView> structure) : IContextMap
 {
     public ValueTask<Result<MapFilePreview>> PreviewMap(string path, ContextScope scope, CancellationToken cancellationToken) =>
         admin.PreviewMap(path, scope, cancellationToken);
@@ -26,6 +27,9 @@ internal sealed class ContextMap(MapAdmin admin, MapReview review, MapProposals 
     public ValueTask<Result<MapStatusView>> MapStatus(string? anchor, ContextScope scope, CancellationToken cancellationToken) => admin.MapStatus(anchor, scope, cancellationToken);
 
     public ValueTask<Result<MapHealth>> CheckMap(ContextScope? scope, CancellationToken cancellationToken) => admin.CheckMap(scope, cancellationToken);
+
+    public ValueTask<Result<MapChecksView>> MapStructure(MapChecksSource source, IProgress<string>? progress, ContextScope scope, CancellationToken cancellationToken) =>
+        structure.Handle(new CheckStructureRequest(source, progress, scope), cancellationToken);
 
     public ValueTask<Result<MapHealth>> CheckRetention(CancellationToken cancellationToken) => admin.CheckRetention(cancellationToken);
 

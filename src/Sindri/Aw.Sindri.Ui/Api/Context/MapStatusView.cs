@@ -9,6 +9,7 @@ namespace Aw.Sindri.Ui.Api.Context;
 /// <param name="Retained">Retained, as served.</param>
 /// <param name="ScopedTo">ScopedTo, as served.</param>
 /// <param name="Coverage">Coverage, as served.</param>
+/// <param name="Checks">The structure reason the build kept with this map (numbers only, e.g. "structure 41% isolated, limit 30%"); absent for a map that built clean.</param>
 /// <param name="RulesOlder">True when the live map was built under older map rules; absent (false) from an older server and for a map that recorded no ruleset.</param>
 internal sealed record MapStatusView(
     MapVersionInfo Version,
@@ -17,4 +18,5 @@ internal sealed record MapStatusView(
     int Retained,
     JsonElement? ScopedTo,
     CoverageView? Coverage = null,
-    bool RulesOlder = false);
+    bool RulesOlder = false,
+    string? Checks = null);

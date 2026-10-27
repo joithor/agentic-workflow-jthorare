@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Aw.Context.Core.Concepts;
+namespace Aw.Context.Core.Extract;
 
 /// <summary>Concept ids: lower-case ASCII words joined by '-' or '.', at most 64 characters, unique within one derivation (the shape <see cref="Engine.ConceptId"/> accepts).</summary>
 internal static class ConceptSlug

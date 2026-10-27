@@ -27,7 +27,7 @@ public static partial class SandboxPlanRenderer
             _ = text.AppendLine(CultureInfo.InvariantCulture, $"  {Label(mount.Kind),-9} {mount.Path}  ({mount.Reason})");
         }
 
-        _ = text.AppendLine().AppendLine(CultureInfo.InvariantCulture, $"Network ({SandboxWire.Name(plan.Network.Mode)}):");
+        _ = text.AppendLine().AppendLine(CultureInfo.InvariantCulture, $"Network ({SandboxWire.Name(plan.Network.Mode)}{(LearnDate(plan) is { } date ? ", learning until " + date : string.Empty)}):");
         foreach (var group in plan.Network.Groups)
         {
             _ = text.AppendLine(CultureInfo.InvariantCulture, $"  {group.Name}: {string.Join(", ", group.Hosts)}");
@@ -123,6 +123,9 @@ public static partial class SandboxPlanRenderer
         return $"{path} is blocked: {reason}.\n{fix}\n";
     }
 
+    private static string? LearnDate(SandboxPlan plan) =>
+        plan.Network is { Mode: NetworkMode.Learn, LearnUntil: { } until } ? until.UtcDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : null;
+
     private static string ExplainHost(SandboxPlan plan, string host)
     {
         if (HostGroups.Allowing(plan.Network.Groups, host) is { } group)
@@ -130,7 +133,7 @@ public static partial class SandboxPlanRenderer
             return $"{host} is allowed through the '{group.Name}' group.\n";
         }
 
-        var learn = plan.Network.Mode == NetworkMode.Learn ? "While the sandbox is learning every host is allowed and recorded.\n" : string.Empty;
+        var learn = plan.Network.Mode == NetworkMode.Learn ? $"While the sandbox is learning{(LearnDate(plan) is { } d ? " until " + d : string.Empty)}, every host on port 80 or 443 is allowed and recorded.\n" : string.Empty;
         return $"{host} is not allowed: no host group lists it.\n{learn}The owner can allow it for this repo: add it to sandbox.repos.<repo>.hosts in the profile.\n";
     }
 

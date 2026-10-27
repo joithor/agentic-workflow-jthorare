@@ -197,4 +197,17 @@ public sealed class StructurePurgeTests
         Assert.Equal(afterFirst.Edges.Select(e => (e.From.Value, e.To.Value, e.Type)).Order(), afterSecond.Edges.Select(e => (e.From.Value, e.To.Value, e.Type)).Order());
         Assert.Equal(afterFirst.Nodes.Select(n => n.Key.Value).Order(StringComparer.Ordinal), afterSecond.Nodes.Select(n => n.Key.Value).Order(StringComparer.Ordinal), StringComparer.Ordinal);
     }
+
+    [Fact, Trait("Lane", "unit")]
+    public void A_declared_pin_edge_of_the_last_build_is_dropped_so_a_removed_entry_leaves_nothing_and_a_persons_own_edge_stays()
+    {
+        var old = new GraphBuilder().Node("concept:billing").Node("concept:orders").Node("concept:notify")
+            .Edge("concept:billing", EdgeType.DependsOn, "concept:orders", evidence: "profile:index.concepts.billing.dependsOn")
+            .Edge("concept:billing", EdgeType.DependsOn, "concept:notify");
+
+        var (graph, _, _) = MapAccess.WithoutBuiltStructure(old.Build(), [], ExtractedMap.Empty, _at);
+
+        Assert.DoesNotContain(graph.Edges, e => e.To.Value == "concept:orders");
+        Assert.Contains(graph.Edges, e => e.To.Value == "concept:notify");
+    }
 }

@@ -11,4 +11,5 @@ namespace Aw.Sindri.Core.Scoping;
 /// <param name="Tokens">The tokens the run used.</param>
 /// <param name="Launch">The launch id, or null for a desk completion.</param>
 /// <param name="RunToken">The Step run's token ('{entry}.{n}') the session passes as --run, or null when it can't be told; the context call log is keyed by it.</param>
-public sealed record ScopeRunRecord(string Step, string State, int Round, string Via, string? Model, string? Requested, string? Vendor, long Tokens, string? Launch, string? RunToken = null);
+/// <param name="Target">The launcher agent the launch ran on ('claude-code', 'codex'), or null for a desk completion (#1008).</param>
+public sealed record ScopeRunRecord(string Step, string State, int Round, string Via, string? Model, string? Requested, string? Vendor, long Tokens, string? Launch, string? RunToken = null, string? Target = null);

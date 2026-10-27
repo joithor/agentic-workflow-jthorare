@@ -15,7 +15,7 @@ internal static partial class ScopePacketChecks
         ["cursor-cli"] = ["cursor"],
     };
 
-    /// <summary>SCP-CHAL-002: the challenger's model differs from the drafter's; a run at the desk is a warning (its model is self-reported), never a refusal.</summary>
+    /// <summary>SCP-CHAL-002: the challenger ran on another launcher agent than the drafter, or on a different model of the same agent; a run at the desk is a warning (its model is self-reported), never a refusal.</summary>
     private static void ChallengerDiffers(ScopeContext c, RuleSink s) =>
         Differs(c, s, "step.scope.challenge", "challenger", failOnMissingRecord: true);
 
@@ -111,6 +111,12 @@ internal static partial class ScopePacketChecks
     private static void ModelsDiffer(JsonNode drafter, JsonNode other, ModelComparison compare, ScopeContext c, RuleSink s)
     {
         var (step, role, challenger) = compare;
+        var sameAgent = SameAgent(drafter, other);
+        if (challenger && sameAgent is false)
+        {
+            return;   // why: a challenger on another launcher agent is a second opinion whatever the model strings say (#1008)
+        }
+
         var model = ScopeJson.Str(other, "model");
         var drafterModel = ScopeJson.Str(drafter, "model");
         if (IsDesk(other) || IsDesk(drafter))
@@ -124,22 +130,34 @@ internal static partial class ScopePacketChecks
         }
         else if (string.Equals(model, drafterModel, StringComparison.Ordinal))
         {
-            // why: a default install names no models, so equal models there are only a warning; a fail needs both runs to have asked for one
-            if (!string.IsNullOrEmpty(ScopeJson.Str(drafter, "requested")) && !string.IsNullOrEmpty(ScopeJson.Str(other, "requested")))
+            SameModel(drafter, other, new ModelComparison(step, role, challenger), sameAgent is true, (c, s));
+        }
+    }
+
+    // Whether both runs name the launcher agent they ran on and it is the same one; null when either did not record it.
+    private static bool? SameAgent(JsonNode drafter, JsonNode other) =>
+        ScopeJson.Str(other, "target") is { Length: > 0 } target && ScopeJson.Str(drafter, "target") is { Length: > 0 } drafterTarget ? string.Equals(target, drafterTarget, StringComparison.Ordinal) : null;
+
+    private static void SameModel(JsonNode drafter, JsonNode other, ModelComparison compare, bool sameAgent, (ScopeContext Context, RuleSink Sink) report)
+    {
+        var (step, role, challenger) = compare;
+        var (c, s) = report;
+        var model = ScopeJson.Str(other, "model");
+        // why: a default install names no models, so equal models there are only a warning; a fail needs both runs to have asked for one, or the challenger to share the drafter's agent (the model pick records what it chose)
+        if ((challenger && sameAgent) || (!string.IsNullOrEmpty(ScopeJson.Str(drafter, "requested")) && !string.IsNullOrEmpty(ScopeJson.Str(other, "requested"))))
+        {
+            if (challenger)
             {
-                if (challenger)
-                {
-                    FailUnlessSpent(c, s, step, $"the {role} ran on {model}, the drafter's model", $"Run the {role} on a different model.");
-                }
-                else
-                {
-                    s.Fail(step, $"the {role} ran on {model}, the drafter's model", $"Run the {role} on a different model.");
-                }
+                FailUnlessSpent(c, s, step, $"the {role} ran on {model}, the drafter's model", $"Run the {role} on a different model.");
             }
             else
             {
-                s.Warn(step, $"the {role} ran on {model}, the drafter's model; no model was requested for one of them (set workflow.scoping.models.*)", "Set workflow.scoping.models.* in the profile so each agent runs on its own model.");
+                s.Fail(step, $"the {role} ran on {model}, the drafter's model", $"Run the {role} on a different model.");
             }
+        }
+        else
+        {
+            s.Warn(step, $"the {role} ran on {model}, the drafter's model; no model was requested for one of them (set workflow.scoping.models.*)", "Set workflow.scoping.models.* in the profile so each agent runs on its own model.");
         }
     }
 

@@ -10,8 +10,3 @@ public interface ISandboxParks
     /// <returns>The parked instances, in any order.</returns>
     public ValueTask<IReadOnlyList<ParkedOnSandbox>> Parked(CancellationToken cancellationToken);
 }
-
-/// <summary>One instance parked on a sandbox code.</summary>
-/// <param name="Instance">The instance.</param>
-/// <param name="Since">When it parked.</param>
-public sealed record ParkedOnSandbox(WorkflowInstanceId Instance, DateTimeOffset Since);

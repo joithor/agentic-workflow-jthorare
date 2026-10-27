@@ -25,7 +25,7 @@ public sealed record SandboxBlocker(SandboxCode Code, string Reason, string? Sou
         var values = _named
             .Select(name => (name, value: refusal.Extensions?.Where(e => string.Equals(e.Key, name, StringComparison.Ordinal) && e.Value.ValueKind == System.Text.Json.JsonValueKind.String).Select(e => e.Value.GetString()).FirstOrDefault()))
             .Where(static x => x.value is not null)
-            .ToDictionary(static x => x.name, static x => x.value!, StringComparer.Ordinal);
+            .ToDictionary(static x => x.name, static x => x.value ?? string.Empty, StringComparer.Ordinal);
         return new SandboxBlocker(code, reason, SandboxRefusal.SourceTextOf(refusal), values.Count == 0 ? null : values);
     }
 }

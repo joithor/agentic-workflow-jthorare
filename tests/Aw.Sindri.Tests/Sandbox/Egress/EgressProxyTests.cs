@@ -97,8 +97,8 @@ public sealed class EgressProxyTests
     [Fact, Trait("Lane", "unit")]
     public async Task Proxy_counts_a_denied_host()
     {
-        var counter = new DenialCounter(Aw.Sindri.Core.Workflow.Engine.LaunchId.From("LCH-00000000000000000000000000000001"), "/nonexistent/denials.json",
-            Aw.Kernel.Json.AwJson.CreateOptions(Aw.Sindri.Host.SindriJsonContext.Default), new Aw.Sindri.Infrastructure.Text.RedactingScrubber(Aw.Redaction.Redactor.Default), TimeProvider.System);
+        var counter = new DenialCounter(Core.Workflow.Engine.LaunchId.From("LCH-00000000000000000000000000000001"), "/nonexistent/denials.json",
+            Kernel.Json.AwJson.CreateOptions(Host.SindriJsonContext.Default), new Infrastructure.Text.RedactingScrubber(Redaction.Redactor.Default), TimeProvider.System);
         var (proxy, _, _) = Make(denials: counter);
         foreach (var request in new[] { "CONNECT evil.example:443", "CONNECT evil.example:443", "CONNECT inside.example:443" })
         {
@@ -110,8 +110,8 @@ public sealed class EgressProxyTests
             await handled;
         }
 
-        Assert.Equal(2, counter.Count(Aw.Sindri.Core.Events.DenialKind.Network, "evil.example", Aw.Sindri.Core.Sandbox.Denials.DenialRules.NoGroup));
-        Assert.Equal(1, counter.Count(Aw.Sindri.Core.Events.DenialKind.Network, "inside.example", Aw.Sindri.Core.Sandbox.Denials.DenialRules.PrivateAddress));
+        Assert.Equal(2, counter.Count(Core.Events.DenialKind.Network, "evil.example", Core.Sandbox.Denials.DenialRules.NoGroup));
+        Assert.Equal(1, counter.Count(Core.Events.DenialKind.Network, "inside.example", Core.Sandbox.Denials.DenialRules.PrivateAddress));
     }
 
     [Fact, Trait("Lane", "unit")]

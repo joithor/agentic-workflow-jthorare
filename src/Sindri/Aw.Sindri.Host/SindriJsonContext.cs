@@ -232,7 +232,7 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(FleetChanged))]
 [JsonSerializable(typeof(ItemOpenRequested)), JsonSerializable(typeof(LaunchStarted)), JsonSerializable(typeof(LaunchStartedPublic)), JsonSerializable(typeof(LaunchFailed)), JsonSerializable(typeof(ModelPicked)), JsonSerializable(typeof(ModelPicking)), JsonSerializable(typeof(PickedFile)), JsonSerializable(typeof(OmittedFile))]   // API P10a (U0)
 [JsonSerializable(typeof(LaunchShowReport)), JsonSerializable(typeof(LaunchProbed)), JsonSerializable(typeof(SessionEnded)), JsonSerializable(typeof(SessionUsage)), JsonSerializable(typeof(LaunchSessionReported))]
-[JsonSerializable(typeof(Aw.Sindri.Core.Sandbox.Denials.DenialFile)), JsonSerializable(typeof(SandboxDenied)), JsonSerializable(typeof(SandboxLimitHit)), JsonSerializable(typeof(SandboxLearnEnded)), JsonSerializable(typeof(SandboxSummary)), JsonSerializable(typeof(StepPolicy)), JsonSerializable(typeof(ModelLoginSource)), JsonSerializable(typeof(PreparedLogin)), JsonSerializable(typeof(LoginStatus))]   // Sandbox SB-0
+[JsonSerializable(typeof(Core.Sandbox.Denials.DenialFile)), JsonSerializable(typeof(SandboxDenied)), JsonSerializable(typeof(SandboxLimitHit)), JsonSerializable(typeof(SandboxLearnEnded)), JsonSerializable(typeof(SandboxSummary)), JsonSerializable(typeof(StepPolicy)), JsonSerializable(typeof(ModelLoginSource)), JsonSerializable(typeof(PreparedLogin)), JsonSerializable(typeof(LoginStatus))]   // Sandbox SB-0
 [JsonSerializable(typeof(LaunchViewerAttached)), JsonSerializable(typeof(LaunchTakeoverOpened))]   // issue 1004
 [JsonSerializable(typeof(GetLaunchTargetsRequest)), JsonSerializable(typeof(LaunchTargets)), JsonSerializable(typeof(ProbeLaunchTargetsRequest)), JsonSerializable(typeof(ProbeLaunchTargetsResult))]   // API P10a (U11): the launch targets and their probe job
 [JsonSerializable(typeof(CodeIndexRow))]
@@ -241,7 +241,7 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(OpenItemRequest)), JsonSerializable(typeof(OpenItemBody)), JsonSerializable(typeof(LaunchRequested)), JsonSerializable(typeof(GetLaunchRequest)), JsonSerializable(typeof(LaunchView))]
 [JsonSerializable(typeof(EndLearnModeRequest)), JsonSerializable(typeof(RecordLimitHitRequest)), JsonSerializable(typeof(RecordLimitHitResponse)), JsonSerializable(typeof(LimitHitBody))]
 [JsonSerializable(typeof(GetRunSuspensionRequest)), JsonSerializable(typeof(RunSuspensionView))]
-[JsonSerializable(typeof(ListDenialsRequest)), JsonSerializable(typeof(ListDenialsResponse)), JsonSerializable(typeof(Aw.Sindri.Core.Sandbox.Denials.DenialFile)), JsonSerializable(typeof(Aw.Sindri.Core.Sandbox.Plan.SandboxPlan))]   // SB-4b: the denials read and the plan file `sandbox explain` reads
+[JsonSerializable(typeof(ListDenialsRequest)), JsonSerializable(typeof(ListDenialsResponse)), JsonSerializable(typeof(Core.Sandbox.Denials.DenialFile)), JsonSerializable(typeof(Core.Sandbox.Plan.SandboxPlan))]   // SB-4b: the denials read and the plan file `sandbox explain` reads
 [JsonSerializable(typeof(SessionHeartbeatBody)), JsonSerializable(typeof(SessionHeartbeatResponse)), JsonSerializable(typeof(SessionExitBody)), JsonSerializable(typeof(SessionExitResponse)), JsonSerializable(typeof(CaptureRule))]   // API P10a (U10)
 // Two LaunchId types meet here: the collector's looser one (Core.Launch) and the engine's 'LCH-…' one the launch events carry (SYSLIB1031).
 [JsonSerializable(typeof(Core.Workflow.Engine.LaunchId), TypeInfoPropertyName = "EngineLaunchId")]

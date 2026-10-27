@@ -1,5 +1,6 @@
 using Aw.Context.Core.ConceptScan;
 using Aw.Context.Core.Engine;
+using Aw.Context.Core.Extract;
 using Aw.Context.Core.Glossary;
 using Aw.Context.Core.Graph;
 using Aw.Context.Core.Results;

@@ -24,8 +24,6 @@ namespace Aw.Sindri.Features.ContextCalls;
 internal sealed class BuildContextMapService(ContextScopes scopes, IContextEngine engine, MapEventSource source, IIndexOutlooks outlooks, IJobContextAccessor jobs, TimeProvider clock)
     : IService<BuildContextMapRequest, BuildContextMapResult>
 {
-    private const int MaxDegraded = 20;
-
     public async ValueTask<Result<BuildContextMapResult>> Handle(BuildContextMapRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -58,7 +56,7 @@ internal sealed class BuildContextMapService(ContextScopes scopes, IContextEngin
         var held = await HoldWhenClean(recorder.Value, scope.Value, report, cancellationToken).ConfigureAwait(false);
         return held.IsError
             ? held.Error
-            : new BuildContextMapResult(recorded.Value.Repo, recorded.Value.Draft, recorded.Value.Proposed, [.. report.Degraded.Take(MaxDegraded)]) { Checks = report.Checks?.Summary };
+            : BuildContextMapResult.Of(recorded.Value.Repo, recorded.Value.Draft, recorded.Value.Proposed, report);
     }
 
     // A clean draft is held for the service's publish step; a queue that can't be read leaves the draft for a person's promote, never failing the build that already succeeded.

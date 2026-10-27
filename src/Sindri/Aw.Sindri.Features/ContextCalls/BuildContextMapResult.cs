@@ -22,5 +22,17 @@ public sealed record BuildContextMapResult(string Repo, int Draft, int Proposed,
     /// <param name="proposed">How many nodes were proposed.</param>
     /// <param name="report">The build report.</param>
     /// <returns>The small result the job keeps.</returns>
-    internal static BuildContextMapResult Of(string repo, int draft, int proposed, Aw.Context.Core.Map.MapBuildReport report) => throw new NotSupportedException();
+    internal static BuildContextMapResult Of(string repo, int draft, int proposed, Aw.Context.Core.Map.MapBuildReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        var replaced = report.Structure;
+        return new BuildContextMapResult(repo, draft, proposed, [.. report.Degraded.Take(MaxLines)])
+        {
+            Checks = report.Checks?.Summary,
+            Notes = [.. report.Notes.Take(MaxLines)],
+            Replaced = replaced is { Features: 0, Links: 0, Undone: 0, Carried: 0 } ? null : replaced,
+        };
+    }
+
+    private const int MaxLines = 20;
 }

@@ -110,6 +110,29 @@ public sealed class ModelEscalationTests : AgentRuntimeTestBase
         });
     }
 
+    /// <summary>M3 on the failure path: the state's budget is 1,000 tokens. The refused first launch spends 600 and the failed retry 600, so the 1,200 are charged and the Step's next start parks for budget (600 alone would have started it).</summary>
+    [Fact(Timeout = 120_000)]
+    public async Task A_failed_retry_charges_both_launches_and_the_next_start_parks_for_budget()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        _ = UsePick(new ModelPickSettings(PickOn: true));
+        await using var rig = await Rig(ct);
+        await rig.Run(async handle =>
+        {
+            _ = await WorkflowsHarness.Until(handle, static v => v.Run is not null && v.State == "write");
+            await Launched(ct);
+            _diff.Add(rig.Worktree + "-e1");
+            Refuse(rig, rig.Launch, tokens: 600);
+            await WaitFor(() => _launcher.Requests.Count == 2, ct);
+            Refuse(rig, rig.EscalatedLaunch, tokens: 600);
+
+            var parked = await WorkflowsHarness.Until(handle, static v => v.Question is not null);
+
+            Assert.Equal(ParkReason.Budget, parked.Question?.Reason);
+            Assert.Equal(2, _launcher.Requests.Count);   // no third launch: the engine's own retry of the Step did not start
+        });
+    }
+
     [Fact(Timeout = 120_000)]
     public async Task A_run_on_the_strongest_allowed_model_is_not_retried()
     {

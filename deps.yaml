@@ -273,6 +273,19 @@ packages:
     projectPrefix: Aw.CodeIndex
     src: src/CodeIndex
     note: "code index: symbols, callers and callees per repo, built in the background when trunk moves (code-index spec)"
+  - id: Embeddings
+    kind: package
+    tier: 0
+    sublevel: 1
+    projectPrefix: Aw.Embeddings
+    src: src/Embeddings
+    note: "the loopback Ollama embed client (digest pin, no proxy, no redirect), the float32 vector codec, L2 normalisation and the top-k scan; domain-free; BCL only (HttpClient, System.Numerics); a tier-0 library, so only project edges point at it (Sindri-owned index spec §9.2)"
+  - id: Connectors
+    kind: package
+    tier: 1
+    projectPrefix: Aw.Connectors
+    src: src/Connectors
+    note: "source readers (GitHub, Slack; later Notion, Jira): the IConnector contract, text cleaner, HTTP clients with a host allowlist; a port of ConnectAI's connector mechanics; no storage, no Context types (Sindri-owned index spec §9.2)"
 
 edges:
   # ---- current: found in the source today ----
@@ -636,6 +649,47 @@ edges:
     kind: compose
     status: current
     note: "Sindri's Host calls AddCodeIndexFeatures and AddCodeIndexInfrastructure (and nothing else from those projects) in Composition (CI-9)"
+  # ---- the Sindri-owned index (spec 2026-10-27-sindri-owned-index-design.md §9.2) ----
+  - from: Embeddings
+    to: Kernel
+    kind: project
+    status: planned
+    note: "Result, IService, ids"
+  - from: Connectors
+    to: Kernel
+    kind: project
+    status: current
+    note: "Result, ids, IService"
+  - from: Connectors
+    to: Redaction
+    kind: project
+    status: planned
+    note: "response bodies and urls go through it before any error row (§10); with Kernel, KernelTelemetry and Redaction, Connectors.Infrastructure is at the fan-out limit of 4"
+  - from: Connectors
+    to: KernelTelemetry
+    kind: project
+    status: planned
+    note: "logs and spans (codes and counts only, never record text)"
+  - from: CodeIndex
+    to: Embeddings
+    kind: project
+    status: planned
+    note: "phase I6, blocked: Aw.CodeIndex.Infrastructure already has 4 project references, so this needs a time-boxed fan-out exception or a dropped reference; until then CodeIndex keeps its own copy and the two diverge by design"
+  - from: Sindri
+    to: Embeddings
+    kind: project
+    status: planned
+    note: "Host only: binds Context's vector ports (IQueryEmbedder, IVectorScan) to Aw.Embeddings with its own registrations (a compose edge into tier 0 is illegal, DEPS-COMPOSE-001), as it binds ISymbolVectors"
+  - from: Sindri
+    to: Connectors
+    kind: project
+    status: planned
+    note: "Host only (Aw.Sindri.Features already has 4 project references, the limit): the Host adapter maps IConnector onto Context's RecordFeed"
+  - from: Sindri
+    to: Connectors
+    kind: compose
+    status: planned
+    note: "Host calls AddConnectorsFeatures and AddConnectorsInfrastructure and nothing else from them"
 
 exceptions:
   - rule: DEPS-CYCLE-001

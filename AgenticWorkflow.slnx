@@ -6,6 +6,11 @@
     <Project Path="src/Aw.Kernel.Telemetry/Aw.Kernel.Telemetry.csproj" />
     <Project Path="src/Redaction/Aw.Redaction/Aw.Redaction.csproj" />
   </Folder>
+  <Folder Name="/src/Connectors/">
+    <Project Path="src/Connectors/Aw.Connectors.Core/Aw.Connectors.Core.csproj" />
+    <Project Path="src/Connectors/Aw.Connectors.Features/Aw.Connectors.Features.csproj" />
+    <Project Path="src/Connectors/Aw.Connectors.Infrastructure/Aw.Connectors.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/CodeIndex/">
     <Project Path="src/CodeIndex/Aw.CodeIndex.Core/Aw.CodeIndex.Core.csproj" />
     <Project Path="src/CodeIndex/Aw.CodeIndex.Features/Aw.CodeIndex.Features.csproj" />
@@ -105,5 +110,7 @@
     <Project Path="tests/Aw.Forge.Testing/Aw.Forge.Testing.csproj" />
     <Project Path="tests/Aw.CodeIndex.Tests/Aw.CodeIndex.Tests.csproj" />
     <Project Path="tests/Aw.CodeIndex.Testing/Aw.CodeIndex.Testing.csproj" />
+    <Project Path="tests/Aw.Connectors.Tests/Aw.Connectors.Tests.csproj" />
+    <Project Path="tests/Aw.Connectors.Testing/Aw.Connectors.Testing.csproj" />
   </Folder>
 </Solution>

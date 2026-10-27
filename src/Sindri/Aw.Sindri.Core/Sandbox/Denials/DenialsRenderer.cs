@@ -61,9 +61,9 @@ public static class DenialsRenderer
             DenialKind.Network => $"allow {target} for this repo: add it to sandbox.repos.<repo>.hosts",
             DenialKind.Path when string.Equals(rule, DenialRules.NotBound, StringComparison.Ordinal) => $"allow {target} for this repo: sandbox.repos.<repo>.homeAllow",
             DenialKind.Path => "never allowed: the sandbox always blocks this path (Sindri's own state, the Docker socket and keys)",
-            _ when string.Equals(rule, DenialRules.HookFailOpen, StringComparison.Ordinal) => $"the hook {target} did not run; the rest of the sandbox still held",
-            _ when target.Contains("git push", StringComparison.Ordinal) => "blocked git push; push from your own terminal, or let Sindri send it",
-            _ => $"blocked {target} by the agent's own policy",
+            DenialKind.Policy when string.Equals(rule, DenialRules.HookFailOpen, StringComparison.Ordinal) => $"the hook {target} did not run; the rest of the sandbox still held",
+            DenialKind.Policy when target.Contains("git push", StringComparison.Ordinal) => "blocked git push; push from your own terminal, or let Sindri send it",
+            DenialKind.Policy or _ => $"blocked {target} by the agent's own policy",
         };
     }
 
@@ -71,6 +71,6 @@ public static class DenialsRenderer
     {
         DenialKind.Network => "network",
         DenialKind.Path => "path",
-        _ => "policy",
+        DenialKind.Policy or _ => "policy",
     };
 }

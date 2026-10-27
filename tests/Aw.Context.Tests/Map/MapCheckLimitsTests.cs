@@ -81,8 +81,6 @@ public sealed class MapCheckLimitsTests
     }
 
     [Fact, Trait("Lane", "unit")]
-    public void An_unknown_key_under_checks_is_refused()
-    {
+    public void An_unknown_key_under_checks_is_refused() =>
         Assert.True(Read("""{"checks":{"isolated":{"percent":5}}}""").IsError);
-    }
 }

@@ -37,7 +37,8 @@ public sealed class GoldenHost : IAsyncDisposable
     public const string ProfileYaml = "schemaVersion: 1\nuser: golden\nservices:\n  heartbeat: { every: 5s }\n";
 
     private readonly TempHome? _ownHome;
-    private readonly List<Func<ValueTask>> _owned = [];
+    private readonly List<IDisposable> _owned = [];
+    private readonly List<IAsyncDisposable> _running = [];
     private readonly TempHome? _elsewhere;
     private WebApplication? _app;
 
@@ -103,15 +104,11 @@ public sealed class GoldenHost : IAsyncDisposable
 
     /// <summary>Hands the host something to dispose after it stops (a fixture repo the profile maps).</summary>
     /// <param name="resource">The resource.</param>
-    public void Own(IDisposable resource) => _owned.Add(() =>
-    {
-        resource.Dispose();
-        return ValueTask.CompletedTask;
-    });
+    public void Own(IDisposable resource) => _owned.Add(resource);
 
-    /// <summary>Hands the host something to dispose asynchronously after it stops, awaited before the home is deleted (a background task that writes under the home).</summary>
+    /// <summary>Hands the host a background task that calls into it and writes under the home (a views pump): it is stopped, and waited for, before the host stops.</summary>
     /// <param name="resource">The resource.</param>
-    public void Own(IAsyncDisposable resource) => _owned.Add(resource.DisposeAsync);
+    public void Own(IAsyncDisposable resource) => _running.Add(resource);
 
     /// <summary>The live profile's hash.</summary>
     /// <param name="ct">Cancellation.</param>
@@ -121,10 +118,10 @@ public sealed class GoldenHost : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        // why: owned resources (a views pump) call into the app and write under the home, so they stop, and are waited for, before either goes away
-        foreach (var owned in _owned)
+        // why: a background task (the views pump) calls into the app and writes under the home, so it stops, and is waited for, before either goes away
+        foreach (var running in _running)
         {
-            await owned();
+            await running.DisposeAsync();
         }
 
         Http.Dispose();
@@ -134,6 +131,8 @@ public sealed class GoldenHost : IAsyncDisposable
             await _app.DisposeAsync();
         }
 
+        // why: an owned resource may live under the home, and a recursive delete must not race it (#1414)
+        _owned.ForEach(o => o.Dispose());
         _ownHome?.Dispose();
         _elsewhere?.Dispose();
     }

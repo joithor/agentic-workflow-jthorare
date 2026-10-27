@@ -20891,3 +20891,9 @@ override Aw.Sindri.Core.Events.SandboxLearnEnded.GetHashCode() -> int
 override Aw.Sindri.Core.Events.SandboxLearnEnded.ToString() -> string!
 static Aw.Sindri.Core.Events.SandboxLearnEnded.operator !=(Aw.Sindri.Core.Events.SandboxLearnEnded? left, Aw.Sindri.Core.Events.SandboxLearnEnded? right) -> bool
 static Aw.Sindri.Core.Events.SandboxLearnEnded.operator ==(Aw.Sindri.Core.Events.SandboxLearnEnded? left, Aw.Sindri.Core.Events.SandboxLearnEnded? right) -> bool
+Aw.Sindri.Core.Sandbox.Denials.DenialsRenderer
+static Aw.Sindri.Core.Sandbox.Denials.DenialsRenderer.Render(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialFile!>! files) -> string!
+static Aw.Sindri.Core.Sandbox.Denials.DenialsRenderer.Fix(Aw.Sindri.Core.Events.DenialKind kind, string! target, string! rule) -> string!
+Aw.Sindri.Core.Sandbox.Denials.IDenialFiles
+Aw.Sindri.Core.Sandbox.Denials.IDenialFiles.List(Aw.Sindri.Core.Workflow.Engine.LaunchId? launch, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialFile!>!>
+const Aw.Sindri.Core.Sandbox.SandboxEnvironment.Plan = "AW_SANDBOX_PLAN" -> string!

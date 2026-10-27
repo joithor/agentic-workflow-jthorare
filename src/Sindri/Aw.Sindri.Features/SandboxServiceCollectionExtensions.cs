@@ -2,6 +2,7 @@ using Aw.Kernel.Services;
 using Aw.Sindri.Core.Commands;
 using Aw.Sindri.Features.Commands;
 using Aw.Sindri.Features.EndLearnMode;
+using Aw.Sindri.Features.ListDenials;
 using Aw.Sindri.Features.PlanSandbox;
 using Aw.Sindri.Features.RecordLimitHit;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,5 +37,14 @@ internal static class SandboxServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         return services.AddScoped<IValidator<EndLearnModeRequest>, AcceptAllValidator<EndLearnModeRequest>>().AddCommand<EndLearnModeRequest, CommandAccepted, EndLearnModeService>();
+    }
+
+    /// <summary>Adds ListDenials, the query behind 'sindri sandbox denials'.</summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same collection.</returns>
+    internal static IServiceCollection AddListDenials(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        return services.AddScoped<IValidator<ListDenialsRequest>, AcceptAllValidator<ListDenialsRequest>>().AddQuery<ListDenialsRequest, ListDenialsResponse, ListDenialsService>();
     }
 }

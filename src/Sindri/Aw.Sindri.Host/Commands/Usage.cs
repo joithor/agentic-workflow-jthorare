@@ -18,6 +18,8 @@ internal static class Usage
         "       sindri views rebuild [--no-start]   replay the ledger into the views (the fix when they stall); starts the control plane unless --no-start",
         "       sindri queue [--json] [--no-start]   the queue's groups, one line per item; exit 1 while the views rebuild or stall; starts the control plane unless --no-start",
         "       sindri ledger [--after N] [--item X] [--type T] [--max N] [--json] [--no-start]   the audit read: one line per event (a human also sees non-public types), then 'next: N' while more remain; starts the control plane unless --no-start",
+        "       sindri sandbox explain <path|host|command> [--plan <file>] [--json]   why a path, host or command is allowed or blocked in the sandbox, and how the owner can change it; reads only the plan file (--plan or AW_SANDBOX_PLAN), no control plane",
+        "       sindri sandbox denials [--run <launchId>] [--since <time|30m|6h|2d>] [--json]   what the sandbox blocked, by target and rule, with the fix for each; asks the running control plane (exit 1 when it is down)",
         "       sindri items [--state <s>] [--repo <r>] [--json] [--no-start]   the item list, the oldest first",
         "       sindri item add <title> [--repo <r>] [--no-start]   create an item: 'ITM-… created (sequence N)'",
         "       sindri item close <item> [--cancelled] [--version <n>] [--no-start]   close an item (id or tracker key) as done, or cancelled; without --version it closes the version it reads first",

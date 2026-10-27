@@ -52,14 +52,15 @@ public sealed class ShellSetupCountTests
     }, Token);
 
     [Fact]
-    public Task When_the_first_read_leaves_a_step_open_the_setup_rows_stay_out_of_both() => UiThread.Run(async () =>
+    public Task When_the_first_read_leaves_a_step_open_only_the_row_of_the_step_the_line_names_stays_out() => UiThread.Run(async () =>
     {
         _server.NeedsYouView = ThreeAndTwoSetup();
-        _server.SetupAnswer = SetupFixture.Answer("extra-priority-mix");   // steps open: the line shows
+        _server.SetupAnswer = new RouteAnswer(System.Net.HttpStatusCode.OK, SetupFixture.With("extra-priority-mix", "profile", "done").ToJsonString());   // the first open step is recipes
         var shell = await Connected(s => s.Setup.IsHomeLineShown);
 
-        Assert.Equal((3, 3), (shell.NeedsYou.Count, shell.NeedsYou.Rows.Count));
-        Assert.StartsWith("3 need you", shell.Attention.SummaryLine, StringComparison.Ordinal);
+        Assert.Equal("recipes", shell.Setup.HomeStepId);
+        Assert.Equal((4, 4), (shell.NeedsYou.Count, shell.NeedsYou.Rows.Count));   // setup:recipes is the line's; setup:mcp stays
+        Assert.StartsWith("4 need you", shell.Attention.SummaryLine, StringComparison.Ordinal);
     }, Token);
 
     [Fact]

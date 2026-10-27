@@ -36,7 +36,7 @@ internal sealed partial class ShellViewModel
         Setup.ActionRequested += (_, e) => OpenSetupAction(e.Action);
         Setup.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is { } name && (SameName(name, nameof(SetupViewModel.IsHomeLineShown)) || SameName(name, nameof(SetupViewModel.IsFirstReadPending)) || SameName(name, nameof(SetupViewModel.IsReading))))
+            if (e.PropertyName is { } name && (SameName(name, nameof(SetupViewModel.IsHomeLineShown)) || SameName(name, nameof(SetupViewModel.HomeStepId)) || SameName(name, nameof(SetupViewModel.IsFirstReadPending)) || SameName(name, nameof(SetupViewModel.IsReading))))
             {
                 UpdateNeedsYou();
                 Reattend();   // Home's summary counts the rows without the setup ones while the setup line stands for them (or is about to: the first read is out)
@@ -70,9 +70,11 @@ internal sealed partial class ShellViewModel
         }
     }
 
-    // Home's list: the decisions filter, and no setup row while Home's line stands for them. The inbox lists every row, whatever Home's filter says and whatever the line stands for.
+    // Home's list: the decisions filter, and no setup row for the step Home's line names (setup-once spec 5.7: a row is hidden only for a step the line draws; every other setup row, like Approve all workflows, stays).
+    // The inbox lists every row, whatever Home's filter says and whatever the line names.
     private bool ShownOnHome(NeedsYouEntry row) =>
         IsNeedsYouInbox
         || ((HomeFilter != HomeFilter.Decisions || row.DecisionId is not null)
-            && !((Setup.IsHomeLineShown || Setup.IsFirstReadPending) && string.Equals(row.Kind, SetupRowKind, StringComparison.Ordinal)));
+            && !(string.Equals(row.Kind, SetupRowKind, StringComparison.Ordinal) && (Setup.IsFirstReadPending   // the step the line will name isn't known yet: hold every setup row back (A-6)
+                || (Setup.IsHomeLineShown && string.Equals(row.Id, SetupRowKind + ":" + Setup.HomeStepId, StringComparison.Ordinal)))));
 }

@@ -46,7 +46,7 @@ public sealed class ShellAttentionTests
         shell.ShowNeedsYou(Feed(NeedsYouRows.Park(), NeedsYouRows.Decision(), NeedsYouRows.Failure()));
         shell.GoTo(PageId.Home, HomeFilter.Decisions);   // Home lists the decision only
 
-        Assert.Single(shell.NeedsYou.Rows);
+        _ = Assert.Single(shell.NeedsYou.Rows);
         Assert.Equal("1 need you · 2 running · 0 with you · 1 queued", shell.Attention.SummaryLine);
         Assert.Equal(3, shell.Attention.Badge);
         Assert.Equal("(3) Needs you · Sindri", shell.WindowTitle);

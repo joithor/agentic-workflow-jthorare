@@ -1,7 +1,7 @@
 using Aw.Context.Core.Engine;
 using Aw.Context.Core.Graph;
 
-namespace Aw.Context.Core.Concepts;
+namespace Aw.Context.Core.Extract;
 
 /// <summary>The one function that makes the ids of the pins of a build (spec 2026-10-27 §10.1): the home step and the concept step both call it, so a leaf '~billing' and 'belongs-to concept:billing' agree.</summary>
 internal static class PinIds

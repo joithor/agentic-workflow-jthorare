@@ -160,7 +160,8 @@ public sealed class IndexConceptsTests : IDisposable
 
         var pin = ScopeRules.Usable(ContextScopes.Entries(profile)).Single().Concepts[0];
 
-        Assert.Equal((["orders"], ["invoices"]), (pin.DependsOn, pin.Owns));
+        Assert.Equal(["orders"], pin.DependsOn);
+        Assert.Equal(["invoices"], pin.Owns);
     }
 
     [Fact, Trait("Lane", "unit")]

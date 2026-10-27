@@ -46,7 +46,7 @@ public sealed class PinOverlapHealthTests : IDisposable
     [Fact, Trait("Lane", "unit")]
     public async Task Two_pins_whose_globs_overlap_on_no_real_file_are_no_warning()
     {
-        var (state, _, _) = await Check(Scope(Pin("a", "src/tabs/**"), Pin("b", "src/tabs/nothing-here/**")));
+        var (state, _, _) = await Check(Scope(Pin("a", "src/tabs/**"), ConceptPin.Of(ConceptId.From("b"), "b", summary: null, features: ["feature:layout.*"], paths: ["src/tabs/nothing-here/**"])));
 
         Assert.Equal(MapHealthState.Ok, state);
     }

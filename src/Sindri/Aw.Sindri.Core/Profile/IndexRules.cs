@@ -16,7 +16,7 @@ internal static class IndexRules
     private const string FeaturePrefix = "feature:";
 
     internal static Error? Check(SindriProfile profile) =>
-        Section("index", profile.Index, inherited: [])
+        Section("index", profile.Index, inherited: [.. (profile.Repos ?? []).SelectMany(r => Ids(r.Index?.Concepts))])
         ?? (profile.Repos ?? []).Select(r => Section($"repos.{r.Name}.index", r.Index, Ids(profile.Index?.Concepts)) ?? SharedIds($"repos.{r.Name}.index.concepts", profile.Index?.Concepts, r.Index?.Concepts)).FirstOrDefault(static e => e is not null);
 
     private static Error? Section(string path, IndexSettings? index, HashSet<string> inherited)

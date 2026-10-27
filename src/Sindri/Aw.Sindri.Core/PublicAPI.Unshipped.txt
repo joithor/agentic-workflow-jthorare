@@ -20580,3 +20580,26 @@ override Aw.Sindri.Core.Sandbox.LearnHistory.GetHashCode() -> int
 override Aw.Sindri.Core.Sandbox.LearnHistory.ToString() -> string!
 static Aw.Sindri.Core.Sandbox.LearnHistory.operator !=(Aw.Sindri.Core.Sandbox.LearnHistory? left, Aw.Sindri.Core.Sandbox.LearnHistory? right) -> bool
 static Aw.Sindri.Core.Sandbox.LearnHistory.operator ==(Aw.Sindri.Core.Sandbox.LearnHistory? left, Aw.Sindri.Core.Sandbox.LearnHistory? right) -> bool
+Aw.Sindri.Core.Sandbox.Denials.ClaudeTranscriptDenials
+Aw.Sindri.Core.Sandbox.Denials.CodexTranscriptDenials
+Aw.Sindri.Core.Sandbox.Denials.FailOpenLog
+Aw.Sindri.Core.Sandbox.Denials.PathDenials
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.<Clone>$() -> Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials!
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialObservation!>! Observations, out System.Collections.Generic.IReadOnlyList<string!>! FailedPaths) -> void
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Equals(Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials? other) -> bool
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.FailedPaths.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.FailedPaths.init -> void
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Observations.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialObservation!>!
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Observations.init -> void
+Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.TranscriptDenials(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialObservation!>! Observations, System.Collections.Generic.IReadOnlyList<string!>! FailedPaths) -> void
+override Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.ToString() -> string!
+static Aw.Sindri.Core.Sandbox.Denials.ClaudeTranscriptDenials.Read(System.Collections.Generic.IEnumerable<string!>! jsonlLines) -> Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials!
+static Aw.Sindri.Core.Sandbox.Denials.CodexTranscriptDenials.Read(System.Collections.Generic.IEnumerable<string!>! jsonlLines) -> Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials!
+static Aw.Sindri.Core.Sandbox.Denials.FailOpenLog.Read(System.Collections.Generic.IEnumerable<string!>! lines) -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialObservation!>!
+static Aw.Sindri.Core.Sandbox.Denials.PathDenials.Match(Aw.Sindri.Core.Sandbox.Plan.SandboxPlan! plan, string! path, string! home) -> Aw.Sindri.Core.Sandbox.Denials.DenialObservation?
+static Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.Empty.get -> Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials!
+static Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.operator !=(Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials? left, Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials? right) -> bool
+static Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials.operator ==(Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials? left, Aw.Sindri.Core.Sandbox.Denials.TranscriptDenials? right) -> bool

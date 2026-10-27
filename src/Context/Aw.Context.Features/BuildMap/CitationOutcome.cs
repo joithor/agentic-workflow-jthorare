@@ -9,9 +9,6 @@ internal enum CitationOutcome
     /// <summary>No mapped repo has it.</summary>
     Missing,
 
-    /// <summary>Reserved for the report's 'other repo' column; no path lands here now, since the one other repo that has a path resolves it.</summary>
-    OtherRepo,
-
     /// <summary>More than one repo has it and the record's own repo (when it names one) is not among them.</summary>
     Ambiguous,
 }

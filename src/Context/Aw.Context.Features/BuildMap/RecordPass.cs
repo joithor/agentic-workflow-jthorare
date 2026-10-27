@@ -270,11 +270,10 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
         AddIf(notes, _older, n => Line($"records: {n} docs older than HEAD"));
         var resolved = _cited.GetValueOrDefault(CitationOutcome.Resolved);
         var missing = _cited.GetValueOrDefault(CitationOutcome.Missing);
-        var other = _cited.GetValueOrDefault(CitationOutcome.OtherRepo);
         var ambiguous = _cited.GetValueOrDefault(CitationOutcome.Ambiguous);
-        AddIf(notes, resolved + missing + other + ambiguous, _ => Line($"citations: {resolved} resolved, {missing + other + ambiguous} unresolved ({missing} missing, {other} other repo, {ambiguous} ambiguous)"));
+        AddIf(notes, resolved + missing + ambiguous, _ => Line($"citations: {resolved} resolved, {missing + ambiguous} unresolved ({missing} missing, {ambiguous} ambiguous)"));
         AddIf(notes, _removedTouches, n => Line($"touched files since removed: {n}"));
-        AddIf(notes, _overCap, n => Line($"touches: {n} PRs over the cap ({_overCapPaths} paths)"));
+        AddIf(notes, _overCap, n => Line($"records over the file cap: {n} ({_overCapPaths} paths)"));
         return notes;
     }
 

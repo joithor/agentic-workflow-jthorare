@@ -78,7 +78,7 @@ public sealed class MapRecordSourcesTests
         Assert.Equal(["code:src/billing/Invoice.cs", "code:src/billing/Tax.cs"], Targets(reading, Doc1("docs/guide.md")), StringComparer.Ordinal);
         Assert.All(reading.Map.Edges, e => Assert.Equal((Provenance.Deterministic, 1.0), (e.Provenance, e.Confidence)));
         Assert.Equal(RepoDocs.Key(_app, "docs/guide.md"), Assert.Single(reading.Map.Edges, e => e.To.Value == "code:src/billing/Tax.cs").EvidenceOrEmpty.Single().Key);
-        AssertNote(reading, "citations: 2 resolved, 1 unresolved (1 missing, 0 other repo, 0 ambiguous)");
+        AssertNote(reading, "citations: 2 resolved, 1 unresolved (1 missing, 0 ambiguous)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -132,7 +132,7 @@ public sealed class MapRecordSourcesTests
         Assert.Equal(["code:src/shared/Util.cs"], Targets(reading, "record:github:issue/acme/app/3"), StringComparer.Ordinal);
         Assert.Equal(["code:src/common/Both.cs"], Targets(reading, "record:github:issue/acme/app/4"), StringComparer.Ordinal);
         Assert.Equal(["code:src/shared/Util.cs"], Targets(reading, Doc1("docs/guide.md")), StringComparer.Ordinal);
-        AssertNote(reading, "citations: 3 resolved, 1 unresolved (0 missing, 0 other repo, 1 ambiguous)");
+        AssertNote(reading, "citations: 3 resolved, 1 unresolved (0 missing, 1 ambiguous)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -159,7 +159,7 @@ public sealed class MapRecordSourcesTests
 
         Assert.Empty(reading.Map.Edges);
         Assert.DoesNotContain(reading.Map.Nodes, n => n.Key.Value.Contains("pr/acme/app/8", StringComparison.Ordinal));
-        AssertNote(reading, "touches: 1 PRs over the cap (60 paths)");
+        AssertNote(reading, "records over the file cap: 1 (60 paths)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -171,7 +171,7 @@ public sealed class MapRecordSourcesTests
         var reading = (await new MapRecordSources(await Store(pr), new FakeCodeSymbolSource([])).Read(input, CancellationToken.None)).Value;
 
         Assert.Equal(MapRecordSources.TouchCap, Targets(reading, "record:github:pr/acme/app/10").Count);
-        Assert.DoesNotContain(reading.Notes, n => n.StartsWith("touches:", StringComparison.Ordinal));
+        Assert.DoesNotContain(reading.Notes, n => n.StartsWith("records over the file cap:", StringComparison.Ordinal));
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -181,7 +181,7 @@ public sealed class MapRecordSourcesTests
         var reading = await Read(store, symbols: Index(Class("TaxCalculator", "src/billing/Tax.cs")));
 
         Assert.Equal(["code:src/billing/Tax.cs"], Targets(reading, Doc1("docs/guide.md")), StringComparer.Ordinal);
-        AssertNote(reading, "citations: 1 resolved, 0 unresolved (0 missing, 0 other repo, 0 ambiguous)");
+        AssertNote(reading, "citations: 1 resolved, 0 unresolved (0 missing, 0 ambiguous)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -192,9 +192,9 @@ public sealed class MapRecordSourcesTests
         var unknown = await Read(store, symbols: Index(Class("TaxCalculator", "src/billing/Tax.cs")));
 
         Assert.Empty(off.Map.Edges);
-        AssertNote(off, "citations: 0 resolved, 2 unresolved (2 missing, 0 other repo, 0 ambiguous)");
+        AssertNote(off, "citations: 0 resolved, 2 unresolved (2 missing, 0 ambiguous)");
         Assert.Equal(["code:src/billing/Tax.cs"], Targets(unknown, Doc1("docs/guide.md")), StringComparer.Ordinal);
-        AssertNote(unknown, "citations: 1 resolved, 1 unresolved (1 missing, 0 other repo, 0 ambiguous)");
+        AssertNote(unknown, "citations: 1 resolved, 1 unresolved (1 missing, 0 ambiguous)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -204,7 +204,7 @@ public sealed class MapRecordSourcesTests
         var reading = await Read(store, symbols: Index(Class("Handler", "src/billing/Tax.cs"), Class("Handler", "src/billing/Invoice.cs")));
 
         Assert.Empty(reading.Map.Edges);
-        AssertNote(reading, "citations: 0 resolved, 1 unresolved (0 missing, 0 other repo, 1 ambiguous)");
+        AssertNote(reading, "citations: 0 resolved, 1 unresolved (0 missing, 1 ambiguous)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -214,7 +214,7 @@ public sealed class MapRecordSourcesTests
         var reading = await Read(store, symbols: Index(Class("load", "src/billing/Tax.cs"), Class("render", "src/billing/Invoice.cs")));
 
         Assert.Equal(["code:src/billing/Invoice.cs", "code:src/billing/Tax.cs"], [.. reading.Map.Edges.Select(e => e.To.Value).Order(StringComparer.Ordinal)], StringComparer.Ordinal);
-        AssertNote(reading, "citations: 2 resolved, 0 unresolved (0 missing, 0 other repo, 0 ambiguous)");
+        AssertNote(reading, "citations: 2 resolved, 0 unresolved (0 missing, 0 ambiguous)");
     }
 
     private static string Gen(int i) => string.Create(CultureInfo.InvariantCulture, $"src/gen/F{i:D2}.cs");
@@ -229,8 +229,8 @@ public sealed class MapRecordSourcesTests
         var reading = (await new MapRecordSources(await Store(pr), new FakeCodeSymbolSource([])).Read(Many(all), CancellationToken.None)).Value;
 
         Assert.Empty(reading.Map.Edges);
-        AssertNote(reading, "touches: 1 PRs over the cap (70 paths)");
-        AssertNote(reading, "citations: 30 resolved, 0 unresolved (0 missing, 0 other repo, 0 ambiguous)");
+        AssertNote(reading, "records over the file cap: 1 (70 paths)");
+        AssertNote(reading, "citations: 30 resolved, 0 unresolved (0 missing, 0 ambiguous)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -244,7 +244,7 @@ public sealed class MapRecordSourcesTests
         var reading = (await new MapRecordSources(await Store(pr), new FakeCodeSymbolSource([])).Read(input, CancellationToken.None)).Value;
 
         Assert.Empty(reading.Map.Edges);
-        AssertNote(reading, "touches: 1 PRs over the cap (52 paths)");
+        AssertNote(reading, "records over the file cap: 1 (52 paths)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -259,7 +259,7 @@ public sealed class MapRecordSourcesTests
         var reading = await Read(store, lib: true, symbols: symbols);
 
         Assert.Empty(reading.Map.Edges);
-        AssertNote(reading, "citations: 0 resolved, 1 unresolved (0 missing, 0 other repo, 1 ambiguous)");
+        AssertNote(reading, "citations: 0 resolved, 1 unresolved (0 missing, 1 ambiguous)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -270,7 +270,7 @@ public sealed class MapRecordSourcesTests
         var reading = await Read(store, symbols: Index([.. unmapped, Class("Handler", "src/billing/Tax.cs")]));
 
         Assert.Equal(["code:src/billing/Tax.cs"], Targets(reading, Doc1("docs/guide.md")), StringComparer.Ordinal);
-        AssertNote(reading, "citations: 1 resolved, 0 unresolved (0 missing, 0 other repo, 0 ambiguous)");
+        AssertNote(reading, "citations: 1 resolved, 0 unresolved (0 missing, 0 ambiguous)");
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -281,7 +281,7 @@ public sealed class MapRecordSourcesTests
         var reading = await Read(await Store(issue, pr));
 
         var edge = Assert.Single(reading.Map.Edges, e => e.To.Value == "record:linear:issue/abc");
-        Assert.Equal(["parent", "relates"], edge.EvidenceOrEmpty.Select(e => e.Span!), StringComparer.Ordinal);
+        Assert.Equal(["parent", "relates"], edge.EvidenceOrEmpty.Select(e => e.Span), StringComparer.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]

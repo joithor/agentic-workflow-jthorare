@@ -15,7 +15,7 @@ internal static class GraphSql
     public const string InsertAlias = "INSERT INTO node_alias (map_version, alias, target) VALUES ($v, $alias, $target)";
 
     public const string InsertEdge =
-        "INSERT INTO edge (map_version, from_key, to_key, type, provenance, confidence, trust, step_order, written_at) VALUES ($v, $from, $to, $type, $provenance, $confidence, $trust, $order, $at)";
+        "INSERT INTO edge (map_version, from_key, to_key, type, provenance, confidence, trust, step_order, written_at, rollup_count) VALUES ($v, $from, $to, $type, $provenance, $confidence, $trust, $order, $at, $count)";
 
     public const string InsertEdgeEvidence =
         "INSERT INTO edge_evidence (edge_id, position, record, span) SELECT id, $position, $record, $span FROM edge WHERE map_version = $v AND from_key = $from AND to_key = $to AND type = $type";
@@ -62,7 +62,7 @@ internal static class GraphSql
         "SELECT node_key, record, span FROM node_evidence WHERE map_version = $v ORDER BY node_key, position";
 
     public const string SelectEdges =
-        "SELECT id, from_key, to_key, type, provenance, confidence, step_order, written_at FROM edge WHERE map_version = $v ORDER BY id";
+        "SELECT id, from_key, to_key, type, provenance, confidence, step_order, written_at, rollup_count FROM edge WHERE map_version = $v ORDER BY id";
 
     public const string SelectEdgeEvidence =
         "SELECT ee.edge_id, ee.record, ee.span FROM edge_evidence ee JOIN edge e ON e.id = ee.edge_id WHERE e.map_version = $v ORDER BY ee.edge_id, ee.position";
@@ -139,7 +139,7 @@ internal static class GraphSql
         "INSERT INTO node (map_version, key, label, attributes, provenance, confidence, trust, written_at) SELECT $to, key, label, attributes, provenance, confidence, trust, written_at FROM node WHERE map_version = $from",
         "INSERT INTO node_evidence (map_version, node_key, position, record, span) SELECT $to, node_key, position, record, span FROM node_evidence WHERE map_version = $from",
         "INSERT INTO node_alias (map_version, alias, target) SELECT $to, alias, target FROM node_alias WHERE map_version = $from",
-        "INSERT INTO edge (map_version, from_key, to_key, type, provenance, confidence, trust, step_order, written_at) SELECT $to, from_key, to_key, type, provenance, confidence, trust, step_order, written_at FROM edge WHERE map_version = $from ORDER BY id",
+        "INSERT INTO edge (map_version, from_key, to_key, type, provenance, confidence, trust, step_order, written_at, rollup_count) SELECT $to, from_key, to_key, type, provenance, confidence, trust, step_order, written_at, rollup_count FROM edge WHERE map_version = $from ORDER BY id",
         "INSERT INTO edge_evidence (edge_id, position, record, span) SELECT n.id, ee.position, ee.record, ee.span FROM edge_evidence ee JOIN edge o ON o.id = ee.edge_id " +
         "JOIN edge n ON n.map_version = $to AND n.from_key = o.from_key AND n.to_key = o.to_key AND n.type = o.type WHERE o.map_version = $from",
         "INSERT INTO decision (map_version, key, quote, wording, provenance, trust, written_at) SELECT $to, key, quote, wording, provenance, trust, written_at FROM decision WHERE map_version = $from",

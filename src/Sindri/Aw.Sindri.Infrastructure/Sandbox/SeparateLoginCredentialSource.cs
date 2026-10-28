@@ -41,11 +41,11 @@ internal sealed class SeparateLoginCredentialSource : IModelCredentialSource
     {
         if (IsClaude(target))
         {
-            return ProbeFile(AgentHomes.For(_sindriHome, target) + "/.credentials.json", "Claude Code", LoginFiles.ClaudeExpiry, "open 'sindri sandbox login claude-code' to sign in again");
+            return ProbeFile(AgentHomes.For(_sindriHome, target) + "/.credentials.json", "Claude Code", LoginFiles.ClaudeExpiry, ClaudeRefreshToken, "open 'sindri sandbox login claude-code' to sign in again");
         }
 
         return IsCodex(target)
-            ? ProbeFile(AgentHomes.For(_sindriHome, target) + "/auth.json", "Codex", LoginFiles.CodexExpiry, "open 'sindri sandbox login codex' to sign in again")
+            ? ProbeFile(AgentHomes.For(_sindriHome, target) + "/auth.json", "Codex", LoginFiles.CodexExpiry, CodexRefreshToken, "open 'sindri sandbox login codex' to sign in again")
             : Status(LoginState.Missing);
     }
 
@@ -82,13 +82,22 @@ internal sealed class SeparateLoginCredentialSource : IModelCredentialSource
 
     private static bool IsCodex(AgentId target) => string.Equals(target.Value, CodexTarget, StringComparison.Ordinal);
 
+    private static bool ClaudeRefreshToken(JsonElement root) =>
+        root.TryGetProperty("claudeAiOauth", out var oauth) && HasString(oauth, "refreshToken");
+
+    private static bool CodexRefreshToken(JsonElement root) =>
+        root.TryGetProperty("tokens", out var tokens) && HasString(tokens, "refresh_token");
+
+    private static bool HasString(JsonElement parent, string name) =>
+        parent.ValueKind == JsonValueKind.Object && parent.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String && value.GetString() is { Length: > 0 };
+
     private static LoginStatus Status(LoginState state, string? detail = null) => new(state, ModelLoginSource.SeparateLogin, detail);
 
     private static Result<PreparedLogin> Unavailable(string reason, string? detail) =>
         SandboxRefusal.For(SindriErrors.LaunchLoginUnavailable, reason, detail, ModelLoginSource.SeparateLogin);
 
     // Ready with its expiry when it is still valid, Expired when it has run out; a missing or unreadable file is no login.
-    private LoginStatus ProbeFile(string file, string what, Func<JsonElement, DateTimeOffset?> expiry, string expired)
+    private LoginStatus ProbeFile(string file, string what, Func<JsonElement, DateTimeOffset?> expiry, Func<JsonElement, bool> hasRefreshToken, string expired)
     {
         if (!File.Exists(file))
         {
@@ -99,7 +108,11 @@ internal sealed class SeparateLoginCredentialSource : IModelCredentialSource
         {
             using var document = JsonDocument.Parse(File.ReadAllBytes(file));
             var at = expiry(document.RootElement);
-            return at is { } when && when <= _clock.GetUtcNow() ? Status(LoginState.Expired, $"the {what} login has expired; {expired}") : new LoginStatus(LoginState.Ready, ModelLoginSource.SeparateLogin, ExpiresAt: at);
+
+            // why: a Step uses this login in place and may refresh it, so only a login with no refresh token left has really run out (spec §3.4, §15)
+            return at is { } when && when <= _clock.GetUtcNow() && !hasRefreshToken(document.RootElement)
+                ? Status(LoginState.Expired, $"the {what} login has expired; {expired}")
+                : new LoginStatus(LoginState.Ready, ModelLoginSource.SeparateLogin, ExpiresAt: at);
         }
         catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException)
         {

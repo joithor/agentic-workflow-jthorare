@@ -253,7 +253,7 @@ SB-5a's rendered settings put it into effect.
   `SweepStale` is the crash sweep; `Release` removes a copy.
 - **Separate-login (SB-8).** `SeparateLoginCredentialSource` (`Infrastructure/Sandbox/`, registered beside owner-copy) supports `claude-code` and `codex`. Its login is the target's own agent home,
   `AgentHomes.For(sindriHome, target)` = `$AW_SINDRI_HOME/agent-homes/<target>`. `Probe` reads `.credentials.json` (Claude Code) or `auth.json` (Codex) in it: no home or no file is `no-login`; an unreadable file is `no-login`;
-  the expiry rules are owner-copy's, so an expired one is `expired`. `Prepare` returns one read-write `LoginMount` that binds the home at its own path (host path = sandbox path) and `CLAUDE_CONFIG_DIR=<home>` or `CODEX_HOME=<home>`;
+  an access token past its expiry is still ready when the file holds a refresh token (a Step uses the home in place and may refresh it, spec §3.4, §15), and `expired` only when it has none. `Prepare` returns one read-write `LoginMount` that binds the home at its own path (host path = sandbox path) and `CLAUDE_CONFIG_DIR=<home>` or `CODEX_HOME=<home>`;
   nothing is copied and `Release` does nothing. The owner's `~/.claude` and `~/.codex` are not bound, so the plan binds no `projects/<key>` from them (the transcripts are in the agent home) and masks nothing. The home sits inside
   Sindri's home, which the plan empties with a tmpfs, so its bind is placed after that mask (`PlanMounts.AddLogin`, `inSindriHome`).
 - **Self-check.** `fs-deny`, `fs-write`, `git-ref` (the sandbox's git settings win; two ref updates in the run's directory work; another ref does not; the `selfcheck` ref is removed from outside afterwards),

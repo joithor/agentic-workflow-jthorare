@@ -1,7 +1,6 @@
 using Aw.Sindri.Core.Profile;
-using Aw.Sindri.Core.Sandbox;
 
-namespace Aw.Sindri.Tests.Sandbox;
+namespace Aw.Sindri.Tests.Profile;
 
 /// <summary>The toolchain detector (sandbox spec §3.7, SB-11): a file listing in, the 'sandbox.repos.&lt;repo&gt;' entries to offer out. Pure, so these tests give paths and read no disk.</summary>
 public sealed class SandboxToolchainDetectorTests

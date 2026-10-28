@@ -1,6 +1,5 @@
-using Aw.Sindri.Core.Profile;
 
-namespace Aw.Sindri.Core.Sandbox;
+namespace Aw.Sindri.Core.Profile;
 
 /// <summary>What the detector found in a repo.</summary>
 /// <param name="Toolchains">Each toolchain found, in a fixed order (Node, Python, Go, dotnet).</param>

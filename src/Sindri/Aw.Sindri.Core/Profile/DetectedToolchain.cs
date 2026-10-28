@@ -1,6 +1,5 @@
-using Aw.Sindri.Core.Profile;
 
-namespace Aw.Sindri.Core.Sandbox;
+namespace Aw.Sindri.Core.Profile;
 
 /// <summary>One toolchain the detector found, and the entries it suggests for it.</summary>
 /// <param name="Name">The toolchain's name for the owner: Node, Python, Go or dotnet.</param>

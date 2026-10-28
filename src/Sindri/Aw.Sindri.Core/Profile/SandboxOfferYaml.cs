@@ -1,8 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
-using Aw.Sindri.Core.Profile;
 
-namespace Aw.Sindri.Core.Sandbox;
+namespace Aw.Sindri.Core.Profile;
 
 /// <summary>Writes an offered 'sandbox.repos.&lt;repo&gt;' entry as the YAML to paste into the profile.</summary>
 public static partial class SandboxOfferYaml

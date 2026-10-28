@@ -1,6 +1,5 @@
-using Aw.Sindri.Core.Profile;
 
-namespace Aw.Sindri.Core.Sandbox;
+namespace Aw.Sindri.Core.Profile;
 
 /// <summary>
 /// Looks at the paths a repo tracks and suggests its 'sandbox.repos.&lt;repo&gt;' entries (sandbox spec §3.7): the host group or hosts, the cache paths and, for npm lock files, the prepare dirs of each toolchain it finds.

@@ -17,7 +17,7 @@ public sealed class AgentRecoveringTests
 
     public AgentRecoveringTests()
     {
-        _recovering = new AgentRecovering(new BlockCatalog([TestBlocks.Step("step.produce")], []), _outputs, _facts);
+        _recovering = new AgentRecovering(new BlockCatalog([TestBlocks.Step("step.produce")], []), _outputs, _facts, Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.Instance);
     }
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
@@ -59,6 +59,35 @@ public sealed class AgentRecoveringTests
         var recovered = await _recovering.Recover(Run() with { Payloads = [FactKey.From("fact:output")] }, Token);
 
         Assert.Equal("done", recovered.Outcome);
+    }
+
+    /// <summary>Issue 1468: recovery asks the same checks 'complete' asks (a schema included), through the one shared validator; any refusal means nothing is recovered.</summary>
+    [Fact]
+    public async Task An_output_the_shared_checks_refuse_is_not_recovered_and_the_refusal_is_the_reason()
+    {
+        _outputs.Add(Dir, "output", """{"found":true}""");
+        var recovering = new AgentRecovering(new BlockCatalog([TestBlocks.Step("step.produce")], []), _outputs, _facts, new RefusingChecks());
+
+        var recovered = await recovering.Recover(Run(), Token);
+
+        Assert.Null(recovered.Outcome);
+        Assert.Contains("fact:output breaks its schema", recovered.Reason, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_shared_checker_applies_a_facts_schema_as_well_as_the_payload_type()
+    {
+        var outputs = new Dictionary<FactKey, ReadOnlyMemory<byte>> { [FactKey.From("fact:scopeMap")] = System.Text.Encoding.UTF8.GetBytes("""{"bogus":true}""") };
+
+        var wrong = new Aw.Sindri.Features.CompleteStep.ReportOutputChecker().Violations(outputs, new HashSet<FactKey> { FactKey.From("fact:scopeMap") }, scopingQuestions: false);
+
+        Assert.NotEmpty(wrong);
+        Assert.Contains("fact:scopeMap", wrong[0], StringComparison.Ordinal);
+    }
+
+    private sealed class RefusingChecks : Aw.Sindri.Core.Workflow.Engine.Runtime.IReportOutputChecks
+    {
+        public IReadOnlyList<string> Violations(IReadOnlyDictionary<FactKey, ReadOnlyMemory<byte>> outputs, IReadOnlySet<FactKey> payloads, bool scopingQuestions) => ["fact:output breaks its schema"];
     }
 
     [Fact]

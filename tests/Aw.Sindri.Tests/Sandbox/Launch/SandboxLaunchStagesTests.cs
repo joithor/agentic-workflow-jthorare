@@ -153,7 +153,7 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     }
 
     [Fact]
-    public void A_renewal_write_into_a_removed_session_home_makes_no_folder()
+    public void A_renewal_write_finds_the_token_folder_gone_and_makes_none()
     {
         var gone = Path.Combine(_temp.Path, "removed-session-home");
 

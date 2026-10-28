@@ -186,6 +186,12 @@
           "YamlDotNet": "[18.1.0, 18.1.0]"
         }
       },
+      "aw.embeddings": {
+        "type": "Project",
+        "dependencies": {
+          "Aw.Kernel": "[1.0.0, )"
+        }
+      },
       "aw.forge.core": {
         "type": "Project",
         "dependencies": {

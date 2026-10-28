@@ -144,15 +144,10 @@ public sealed class SandboxShimsTests : IDisposable
         }
     }
 
-    private void Script(string name, string body) => File.WriteAllText(Path.Combine(_dir, name), "#!/bin/sh\n" + body + "\n");
+    private void Script(string name, string body) => ExecutableScript.Write(Path.Combine(_dir, name), body + "\n");
 
     private (string Output, int Code) Run(string tool, string args, bool slotHeld)
     {
-        foreach (var name in SandboxShims.Tools.Select(t => "real-" + t).Append("heavy"))
-        {
-            File.SetUnixFileMode(Path.Combine(_dir, name), UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-        }
-
         var start = new ProcessStartInfo("/bin/sh") { RedirectStandardOutput = true, UseShellExecute = false };
         start.ArgumentList.Add("-c");
         start.ArgumentList.Add($"exec '{Path.Combine(_dir, "shims", tool)}' {args}");

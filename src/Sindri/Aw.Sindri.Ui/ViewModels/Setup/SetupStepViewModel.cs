@@ -36,8 +36,8 @@ internal sealed partial class SetupStepViewModel : ObservableObject
     /// <summary>The step's place in the checklist, from 1.</summary>
     public int Number { get; }
 
-    /// <summary>What the number circle shows: the number, or a tick once the step is done or skipped.</summary>
-    public string NumberText => IsFinished ? "✓" : Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    /// <summary>What the number circle shows: the number, a tick once the step is done, or a dash once it is skipped.</summary>
+    public string NumberText => IsDone ? "✓" : IsFinished ? "–" : Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>What the step is, in a few words (the app's own title).</summary>
     public string Title { get; private set; } = string.Empty;

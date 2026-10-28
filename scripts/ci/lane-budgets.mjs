@@ -30,16 +30,20 @@ const BUDGETS = { unit: 10, integration: 60 };
 // Per-package exceptions to the lane budget, each an owner decision: SindriUi's headless Avalonia tests (real fonts, rendering)
 // cannot run in 60 s on CI (owner, 2026-10-16). Sindri's integration lane is wait-bound on real Temporal servers: 120 s
 // (owner, 2026-10-16: 63.7 s in CI after fail-fast + 8 threads). An explicit --budget for a lane overrides this table too.
-// Raised by the owner on 2026-10-28 (q147) to the time measured in main CI run 40734081015 plus about 25%, the first run that
-// reached this check (SindriUi integration 224.7 s, unit 10.2 s; Sindri unit 27.3 s, integration 122.2 s); issue #1546 brings
-// them back down.
-const PACKAGE_BUDGETS = { SindriUi: { unit: 13, integration: 280 }, Sindri: { unit: 35, integration: 155 } };
+// Raised by the owner on 2026-10-28 (q148, superseding q147's measured + 25%) to about twice the slowest main CI run seen, since
+// the same lanes swing 35-80% between runs on GitHub's shared runners (run 40734081015 then 40747387454: Sindri unit 27.3 s then
+// 48.4 s, SindriUi integration 224.7 s then 303.3 s, Context unit 9.66 s then 14.9 s). Still blocking; #1546 brings them back down.
+const PACKAGE_BUDGETS = {
+  SindriUi: { unit: 28, integration: 600 },
+  Sindri: { unit: 100, integration: 340 },
+  Context: { unit: 30 },
+};
 // Per-test-project rows: a test project named here is measured as a row of its own (the row is the project's name) and kept out
 // of its package's sum, with its own limits. For a package whose slow suites cannot fit one project's budget: Aw.Sindri.Engine.Tests
 // holds the Temporal-bound suites split out of Aw.Sindri.Tests so that package's integration lane fits 120 s (owner, 2026-10-18).
-// An explicit --budget for a lane overrides this table too. Raised by the owner on 2026-10-28 (q147): 125.3 s measured in run
-// 40734081015, plus about 25%; #1546 brings it back down.
-const PROJECT_BUDGETS = { "Aw.Sindri.Engine.Tests": { integration: 160 } };
+// An explicit --budget for a lane overrides this table too. Raised by the owner on 2026-10-28 (q148, superseding q147) to about
+// twice the slowest run seen (125.3 s in run 40734081015); #1546 brings it back down.
+const PROJECT_BUDGETS = { "Aw.Sindri.Engine.Tests": { integration: 250 } };
 const SOLUTION = "AgenticWorkflow.slnx";
 
 class ToolError extends Error {}

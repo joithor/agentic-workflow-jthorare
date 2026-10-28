@@ -1,8 +1,8 @@
 using System.Globalization;
 using Aw.Context.Core;
 using Aw.Context.Core.Records;
-using Aw.Kernel;
 using Aw.Context.Infrastructure.Store;
+using Aw.Kernel;
 using Aw.Kernel.Data;
 using Microsoft.Data.Sqlite;
 

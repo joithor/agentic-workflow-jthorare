@@ -46,7 +46,7 @@ public sealed class FakeRecordStore : IRecordStore
     {
         lock (_gate)
         {
-            return Ok<StoredRecord?>(_records.TryGetValue(key, out var row) ? Resolve(row) : null);
+            return Ok(_records.TryGetValue(key, out var row) ? Resolve(row) : null);
         }
     }
 

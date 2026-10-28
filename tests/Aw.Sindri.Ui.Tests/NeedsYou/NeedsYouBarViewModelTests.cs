@@ -17,6 +17,18 @@ public sealed class NeedsYouBarViewModelTests
     private readonly List<NeedsYouDecisionEventArgs> _decisions = [];
     private Func<NeedsYouDecisionEventArgs, Task<string>> _decisionAnswer = _ => Task.FromResult("");
 
+    // The desk instance's golden asks for a file (fact:output); the bar can't give one (#1170, NeedsYouBarRequiredOutputTests), so these tests serve it with the output optional.
+    public NeedsYouBarViewModelTests()
+    {
+        var instance = JsonNode.Parse(GoldenFiles.Api("workflow-instance", "dev-desk-round-trip"))!;
+        foreach (var output in instance["current"]!["desk"]!["outputs"]!.AsArray())
+        {
+            output!["required"] = false;
+        }
+
+        _server.InstanceBody = _ => new RouteAnswer(System.Net.HttpStatusCode.OK, instance.ToJsonString());
+    }
+
     private async Task<NeedsYouBarViewModel> Bar(NeedsYouEntry entry, bool read = false)
     {
         var bar = new NeedsYouBarViewModel(new DeskReporter(_server, () => _api), _clock);

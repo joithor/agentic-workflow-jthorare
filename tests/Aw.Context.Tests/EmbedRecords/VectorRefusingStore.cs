@@ -28,4 +28,6 @@ internal sealed class VectorRefusingStore(IRecordStore inner) : IRecordStore
     public ValueTask<Result<StoreStamps>> Stamps(CancellationToken cancellationToken) => inner.Stamps(cancellationToken);
 
     public ValueTask<Result<int>> Purge(SourceId source, CancellationToken cancellationToken) => inner.Purge(source, cancellationToken);
+
+    public ValueTask<Result<SourceCounts>> Count(SourceId source, CancellationToken cancellationToken) => inner.Count(source, cancellationToken);
 }

@@ -9195,3 +9195,22 @@ static Aw.Context.Core.Sync.SourceProgress.operator ==(Aw.Context.Core.Sync.Sour
 Aw.Context.Core.Sync.IIndexSync.Progress(Aw.Context.Core.Engine.ContextScope! scope, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Sync.SourceProgress!>!>!>
 Aw.Context.Core.Sync.IExternalRecordFeeds
 Aw.Context.Core.Sync.IExternalRecordFeeds.For(Aw.Context.Core.Engine.ContextSettings! settings, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Engine.ContextRepo!>! repos, Aw.Context.Core.Trust.Scrubbers! scrubbers) -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Sync.RecordFeed!>!
+Aw.Context.Core.Records.IRecordStore.Count(Aw.Context.Core.Sources.SourceId source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Records.SourceCounts!>!>
+Aw.Context.Core.Records.SourceCounts
+Aw.Context.Core.Records.SourceCounts.<Clone>$() -> Aw.Context.Core.Records.SourceCounts!
+Aw.Context.Core.Records.SourceCounts.Chunks.get -> int
+Aw.Context.Core.Records.SourceCounts.Chunks.init -> void
+Aw.Context.Core.Records.SourceCounts.Deconstruct(out int Records, out int Chunks, out int Vectors) -> void
+Aw.Context.Core.Records.SourceCounts.Equals(Aw.Context.Core.Records.SourceCounts? other) -> bool
+Aw.Context.Core.Records.SourceCounts.Records.get -> int
+Aw.Context.Core.Records.SourceCounts.Records.init -> void
+Aw.Context.Core.Records.SourceCounts.SourceCounts(int Records, int Chunks, int Vectors) -> void
+Aw.Context.Core.Records.SourceCounts.Vectors.get -> int
+Aw.Context.Core.Records.SourceCounts.Vectors.init -> void
+Aw.Context.Core.Sync.IIndexSync.Counts(Aw.Context.Core.Sources.SourceId source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Records.SourceCounts!>!>
+Aw.Context.Core.Sync.IIndexSync.Purge(Aw.Context.Core.Sources.SourceId source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<int>!>
+override Aw.Context.Core.Records.SourceCounts.Equals(object? obj) -> bool
+override Aw.Context.Core.Records.SourceCounts.GetHashCode() -> int
+override Aw.Context.Core.Records.SourceCounts.ToString() -> string!
+static Aw.Context.Core.Records.SourceCounts.operator !=(Aw.Context.Core.Records.SourceCounts? left, Aw.Context.Core.Records.SourceCounts? right) -> bool
+static Aw.Context.Core.Records.SourceCounts.operator ==(Aw.Context.Core.Records.SourceCounts? left, Aw.Context.Core.Records.SourceCounts? right) -> bool

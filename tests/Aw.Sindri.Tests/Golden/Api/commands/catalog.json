@@ -845,6 +845,22 @@
       "confirm": null
     },
     {
+      "action": "PurgeIndexSource",
+      "class": "desk",
+      "allowedCallers": [
+        "human+terminal"
+      ],
+      "terminal": true,
+      "method": "POST",
+      "route": "/sindri/index/purge",
+      "cli": "sindri index purge <source>",
+      "ui": "cli-only:typed-yes",
+      "destructive": false,
+      "readsViews": false,
+      "shortcut": null,
+      "confirm": null
+    },
+    {
       "action": "RebuildViews",
       "class": "desk",
       "allowedCallers": [

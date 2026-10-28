@@ -43,6 +43,8 @@ internal static class RecordMappers
     internal static IRowMapper<SyncPosition> Position { get; } = new Mapper<SyncPosition>(r =>
         new SyncPosition(Text(r, 0) is { } cursor ? SourceCursor.From(cursor) : null, Text(r, 1) is { } phase ? RecordWire.Phase(phase) : null, Text(r, 2) is { } backfill ? SourceCursor.From(backfill) : null));
 
+    internal static IRowMapper<SourceCounts> Counts { get; } = new Mapper<SourceCounts>(r => new SourceCounts(r.GetInt32(0), r.GetInt32(1), r.GetInt32(2)));
+
     internal static IRowMapper<StoreStamps> Stamps { get; } = new Mapper<StoreStamps>(r => new StoreStamps(r.GetInt64(0), r.GetInt64(1)));
 
     internal static IRowMapper<ExistingRecord> Existing { get; } = new Mapper<ExistingRecord>(r =>

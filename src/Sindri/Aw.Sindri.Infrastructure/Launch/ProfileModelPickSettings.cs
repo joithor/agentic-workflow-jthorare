@@ -33,7 +33,7 @@ internal sealed class ProfileModelPickSettings(IApprovedProfile approved) : IMod
             DenyPaths: found.DenyPaths);
     }
 
-    private static bool IsOn(WorkflowAgentSettings settings) => string.Equals(settings.Pick, WorkflowAgentSettings.On, StringComparison.Ordinal);
+    private static bool IsOn(WorkflowAgentSettings settings) => settings.PickIsOn;
 
     private async ValueTask<(WorkflowAgentSettings Settings, IReadOnlyList<string>? DenyPaths)?> Agent(CancellationToken cancellationToken)
     {

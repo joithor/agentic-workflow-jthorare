@@ -1,7 +1,6 @@
 using Aw.Kernel;
-using Aw.Sindri.Core.Secrets;
 
-namespace Aw.Sindri.Core.Onyx;
+namespace Aw.Sindri.Core.Secrets;
 
 /// <summary>Stores the one secret Sindri writes (Onyx's personal access token) where `SecretPointer` can read it back. The secret never appears in an argument list, a log or an error.</summary>
 public interface ISecretWriter

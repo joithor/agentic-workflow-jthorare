@@ -36,7 +36,7 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
     public string RunAreaFor(LaunchId launch) => Path.Combine(Launcher.LaunchDirectory, "areas", launch.Value);
 
     /// <inheritdoc/>
-    public string? RunDirectoryFor(LaunchRequest request) => StepEnvironment.RunDirectoryOf(request, Launcher.SindriHome);
+    public string? RunDirectoryFor(LaunchRequest request) => request.Attended ? AttendedOpen.RunDirectory(Launcher.SindriHome, request.Launch) : StepEnvironment.RunDirectoryOf(request, Launcher.SindriHome);
 
     /// <inheritdoc/>
     public string NetDirFor(LaunchId launch)

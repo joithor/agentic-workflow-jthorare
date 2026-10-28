@@ -22,8 +22,8 @@ public sealed class SandboxChecksTests
     private static SandboxBlocker Blocker(ErrorDefinition error, string reason, ModelLoginSource? source = null) =>
         SandboxBlocker.Of(SandboxRefusal.For(error, reason, source: source));
 
-    private static SandboxChecks Checks(ISandbox sandbox, SandboxBlocker[]? forms = null, SandboxBlocker[]? logins = null, SandboxRequest? fixture = null, ParkedOnSandbox[]? parked = null, int free = 3) =>
-        new(sandbox, new Blockers(forms ?? []), new Blockers(logins ?? []), new Fixture(fixture), new SandboxResumeList(new Parks(parked ?? []), new Slots(free)));
+    private static SandboxChecks Checks(ISandbox sandbox, SandboxBlocker[]? forms = null, SandboxBlocker[]? logins = null, SandboxRequest? fixture = null, ParkedOnSandbox[]? parked = null, int free = 3, SandboxRequest? writeScope = null) =>
+        new(sandbox, new Blockers(forms ?? []), new Blockers(logins ?? []), new Fixture(fixture, writeScope), new SandboxResumeList(new Parks(parked ?? []), new Slots(free)));
 
     [Fact]
     public async Task A_box_with_no_mechanism_and_a_bad_form_and_a_missing_login_reports_all_three_at_once()
@@ -49,6 +49,16 @@ public sealed class SandboxChecksTests
 
         Assert.Equal(["SND-LAUNCH-017", "SND-LAUNCH-016"], [.. report.Blockers.Select(b => b.Code.Error.Code)]);
         Assert.Equal(SandboxReasons.FsDeny, report.Blockers[1].Reason);
+    }
+
+    [Fact]
+    public async Task A_write_scope_fixture_that_fails_its_self_check_is_a_016_blocker()
+    {
+        var sandbox = new FailingSelfCheck(SandboxRefusal.For(SindriErrors.LaunchSelfCheckFailed, SandboxReasons.GitRef));
+
+        var report = await Checks(sandbox, writeScope: SandboxRequests.WriteScope).Run(Token);
+
+        Assert.Equal(SandboxReasons.GitRef, Assert.Single(report.Blockers).Reason);
     }
 
     [Fact]
@@ -107,9 +117,11 @@ public sealed class SandboxChecksTests
         public ValueTask<IReadOnlyList<SandboxBlocker>> Check(CancellationToken cancellationToken) => ValueTask.FromResult<IReadOnlyList<SandboxBlocker>>(found);
     }
 
-    private sealed class Fixture(SandboxRequest? request) : ISandboxFixture
+    private sealed class Fixture(SandboxRequest? request, SandboxRequest? writeScope = null) : ISandboxFixture
     {
         public SandboxRequest? Request() => request;
+
+        public SandboxRequest? WriteScopeRequest() => writeScope;
     }
 
     private sealed class Parks(ParkedOnSandbox[] parked) : ISandboxParks

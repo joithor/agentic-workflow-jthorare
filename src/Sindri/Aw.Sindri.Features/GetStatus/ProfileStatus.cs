@@ -13,4 +13,5 @@ namespace Aw.Sindri.Features.GetStatus;
 /// live file changed since the saved approval, or the saved approval isn't the latest recorded 'profile.approved' event
 /// (missing from the ledger, or followed by a later one). A live file that doesn't load is judged by the saved approval.
 /// </param>
-public sealed record ProfileStatus(ProfileHash? Approved, ProfileHash? Live, bool ChangedSinceApproval, string? Problem, string? Source, bool NeedsApproval);
+/// <param name="ModelPick">'on' when the approved profile has model choice on (workflow.agent.pick), else 'off': computed here so the app never derives it (model-pick spec 8).</param>
+public sealed record ProfileStatus(ProfileHash? Approved, ProfileHash? Live, bool ChangedSinceApproval, string? Problem, string? Source, bool NeedsApproval, string ModelPick = "off");

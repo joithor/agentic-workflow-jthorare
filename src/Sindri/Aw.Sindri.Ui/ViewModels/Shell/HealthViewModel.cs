@@ -2,6 +2,7 @@ using Aw.Kernel;
 using Aw.Sindri.Ui.Api;
 using Aw.Sindri.Ui.Platform;
 using Aw.Sindri.Ui.ViewModels.Controls;
+using Aw.Sindri.Ui.ViewModels.Settings;
 
 namespace Aw.Sindri.Ui.ViewModels.Shell;
 
@@ -63,6 +64,9 @@ internal sealed partial class HealthViewModel(IEndpointRecordSource records, ISi
 
     /// <summary>The command catalog as controls (read on connect and after a reconnect).</summary>
     public CatalogViewModel Catalog { get; } = new(clipboard, clock);
+
+    /// <summary>Settings' model-choice line, kept up to date by each status.</summary>
+    public ModelChoiceViewModel ModelChoice { get; } = new(clipboard, clock);
 
     /// <summary>The Code index card (code-index spec §7.3, CI-10b); the shell has it followed with the other views.</summary>
     public CodeIndexCardViewModel CodeIndex => field ??= WatchCodeIndex(new CodeIndexCardViewModel(api, clock));
@@ -164,6 +168,7 @@ internal sealed partial class HealthViewModel(IEndpointRecordSource records, ISi
         ProfileDetail = StatusText.ProfileDetail(status.Profile);
         ProfileFix = StatusText.ProfileFix(status.Profile);
         LiveProfile = status.Profile.Live;
+        ModelChoice.Show(status.Profile);
         Services = [.. status.Services.Select(StatusText.Service)];
         if (status.Running)
         {

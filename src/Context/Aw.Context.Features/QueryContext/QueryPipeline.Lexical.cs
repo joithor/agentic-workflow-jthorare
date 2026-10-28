@@ -11,13 +11,13 @@ namespace Aw.Context.Features.QueryContext;
 internal sealed partial class QueryPipeline
 {
     // The record store answering with no hit is not an answer of the catalog's sources: every one of them missing is still SND-CONTEXT-011.
-    private static bool NothingAnswered(Searched searched) => searched.Answers.All(a => a.Source == RecordStoreSource.Id && a.Hits.Count == 0);
+    private static bool NothingAnswered(Searched searched) => searched.Answers.All(a => (a.Source == RecordStoreSource.Id || a.Source == DenseRecordSource.Id) && a.Hits.Count == 0);
 
     private static Error NoSourceAnswered(IEnumerable<DegradedSource> degraded) =>
         ContextErrors.AllSourcesUnavailable.With($"no source answered ({string.Join(", ", degraded.Select(d => d.Source.Value))}); fix: sindri context sources status");
 
     /// <summary>
-    /// The catalog's sources and, for a live query with terms, the record store's lexical leg as one more source (spec §6.1), under the audiences the approved
+    /// The catalog's sources and, for a live query with terms, the record store's lexical and dense legs as two more sources (spec §6.1), under the audiences the approved
     /// profile gives the repos in scope. A policy that can't answer drops the leg and says so, as a degraded source.
     /// </summary>
     private async Task<(List<IContextSource> Sources, List<DegradedSource> Degraded)> WithRecordStore(List<IContextSource> catalogSources, (ContextSettings Settings, IReadOnlyList<ContextRepo> Repos) profile,
@@ -43,6 +43,7 @@ internal sealed partial class QueryPipeline
             allowed.UnionWith(scope.Value.Allowed);
         }
 
-        return ([.. catalogSources, new RecordStoreSource(lexical.Leg, lexical.Store, new AudienceScope(allowed), clock)], degraded);
+        var audience = new AudienceScope(allowed);
+        return ([.. catalogSources, new RecordStoreSource(lexical.Leg, lexical.Store, audience, clock), new DenseRecordSource(lexical, audience, clock)], degraded);
     }
 }

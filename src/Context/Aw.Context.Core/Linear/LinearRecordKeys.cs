@@ -30,6 +30,13 @@ public static class LinearRecordKeys
     /// <returns>'linear:update/&lt;uuid&gt;', or null when the id isn't a UUID.</returns>
     public static RecordKey? Update(ExternalId id) => Keyed(UpdatePrefix, id);
 
+    /// <summary>Whether a canonical key names a record of the native Linear adapter's kinds.</summary>
+    /// <param name="canonical">The key.</param>
+    /// <returns>True for an issue, document, project or project-update key.</returns>
+    public static bool IsLinear(RecordKey canonical) =>
+        canonical.Value.StartsWith(IssuePrefix, StringComparison.Ordinal) || canonical.Value.StartsWith(DocPrefix, StringComparison.Ordinal)
+        || canonical.Value.StartsWith(ProjectPrefix, StringComparison.Ordinal) || canonical.Value.StartsWith(UpdatePrefix, StringComparison.Ordinal);
+
     /// <summary>The kind of the record a key from this class names.</summary>
     /// <param name="canonical">The key.</param>
     /// <returns>Issue, Doc, or Project (a project and its updates).</returns>

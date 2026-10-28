@@ -9,10 +9,10 @@ namespace Aw.Sindri.Infrastructure.Sandbox;
 /// <summary>
 /// The running egress of every launch in flight (sandbox spec §3.2, SB-5a): the launcher starts it before the self-check, the session's end disposes it
 /// (which flushes <c lang="text">egress.log</c> and the denial counter, then removes the socket directory). Safe to call from any thread; disposing the
-/// registry releases every launch still in it.
+/// registry releases every launch still in it, from <see cref="DisposeAsync"/> or from a container disposed synchronously.
 /// </summary>
 /// <param name="service">Starts one launch's listeners.</param>
-internal sealed class LaunchSandboxRegistry(EgressService service) : IAsyncDisposable
+internal sealed class LaunchSandboxRegistry(EgressService service) : IAsyncDisposable, IDisposable
 {
     private readonly Lock _lock = new();
     private readonly Dictionary<LaunchId, RunningEgress> _running = [];
@@ -105,4 +105,8 @@ internal sealed class LaunchSandboxRegistry(EgressService service) : IAsyncDispo
             await egress.DisposeAsync().ConfigureAwait(false);
         }
     }
+
+    /// <inheritdoc />
+    /// <remarks>A container disposed synchronously can't wait for the egress cleanup: it is started and left to finish (it never throws).</remarks>
+    public void Dispose() => _ = DisposeAsync().AsTask();
 }

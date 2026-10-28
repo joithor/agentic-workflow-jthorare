@@ -9,5 +9,5 @@ public static class LineContexts
     /// <param name="phase">The phase name.</param>
     /// <returns>The JSON text.</returns>
     public static string Of(string baseSha, string line = "L-1", string phase = "p2") =>
-        $$"""{"line":"{{line}}","phase":"{{phase}}","attempt":1,"base":"{{baseSha}}","runArea":{}}""";
+        $$$"""{"line":"{{{line}}}","phase":"{{{phase}}}","attempt":1,"base":"{{{baseSha}}}","runArea":{}}""";
 }

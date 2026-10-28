@@ -21,9 +21,9 @@ internal sealed class FakeSeparateHome : IDisposable
         }
 
         var expires = Now + (state == LoginState.Expired ? TimeSpan.FromMinutes(-1) : TimeSpan.FromHours(8));
-        File.WriteAllText(ClaudeHome + "/.credentials.json", JsonSerializer.Serialize(new { claudeAiOauth = new { accessToken = "a", refreshToken = "r", expiresAt = expires.ToUnixTimeMilliseconds() } }));
+        File.WriteAllText(ClaudeHome + "/.credentials.json", JsonSerializer.Serialize(new { claudeAiOauth = new { accessToken = "a", refreshToken = state == LoginState.Expired ? null : "r", expiresAt = expires.ToUnixTimeMilliseconds() } }));
         File.WriteAllText(ClaudeHome + "/.claude.json", "{\"onboarded\":true}");
-        File.WriteAllText(CodexHome + "/auth.json", $"{{\"tokens\":{{\"refresh_token\":\"r\"}},\"last_refresh\":\"{Now - TimeSpan.FromDays(state == LoginState.Expired ? 30 : 1):O}\"}}");
+        File.WriteAllText(CodexHome + "/auth.json", $"{{\"tokens\":{{{(state == LoginState.Expired ? string.Empty : "\"refresh_token\":\"r\"")}}},\"last_refresh\":\"{Now - TimeSpan.FromDays(state == LoginState.Expired ? 30 : 1):O}\"}}");
     }
 
     internal static DateTimeOffset Now { get; } = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);

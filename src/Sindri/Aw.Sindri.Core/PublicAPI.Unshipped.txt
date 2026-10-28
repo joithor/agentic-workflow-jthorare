@@ -21107,3 +21107,13 @@ Aw.Sindri.Core.Sandbox.Credentials.AgentHomes
 static Aw.Sindri.Core.Sandbox.Credentials.AgentHomes.For(string! sindriHome, Aw.Sindri.Core.Launch.AgentId target) -> string!
 Aw.Sindri.Core.Sandbox.Credentials.ISandboxLogin
 Aw.Sindri.Core.Sandbox.Credentials.ISandboxLogin.Run(Aw.Sindri.Core.Launch.AgentId target, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Aw.Kernel.Result<int>!>!
+Aw.Sindri.Core.Launch.HostSession.StatusRight.get -> string?
+Aw.Sindri.Core.Launch.HostSession.StatusRight.init -> void
+Aw.Sindri.Core.Sandbox.SandboxStatusLine
+const Aw.Sindri.Core.Sandbox.SandboxStatusLine.MaxLength = 79 -> int
+const Aw.Sindri.Core.Sandbox.SandboxStatusLine.PrefixToken = "<prefix>" -> string!
+static Aw.Sindri.Core.Sandbox.SandboxStatusLine.Refusal.get -> string!
+static Aw.Sindri.Core.Sandbox.SandboxStatusLine.TakeoverBanner.get -> string!
+static Aw.Sindri.Core.Sandbox.SandboxStatusLine.PrefixLabel(string! tmuxPrefix) -> string!
+static Aw.Sindri.Core.Sandbox.SandboxStatusLine.Render(bool attended, string! tmuxPrefix) -> string!
+static Aw.Sindri.Core.Sandbox.SandboxStatusLine.Template(bool attended) -> string!

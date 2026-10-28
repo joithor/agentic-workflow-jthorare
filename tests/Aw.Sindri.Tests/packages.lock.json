@@ -604,6 +604,14 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.12, 10.0.12]"
         }
       },
+      "aw.connectors.testing": {
+        "type": "Project",
+        "dependencies": {
+          "Aw.Connectors.Core": "[1.0.0, )",
+          "Aw.Connectors.Features": "[1.0.0, )",
+          "Aw.Kernel.Testing": "[1.0.0, )"
+        }
+      },
       "aw.context.core": {
         "type": "Project",
         "dependencies": {

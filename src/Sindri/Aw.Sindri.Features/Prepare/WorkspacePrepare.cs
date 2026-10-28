@@ -72,7 +72,7 @@ internal sealed class WorkspacePrepare(IApprovedProfile profile, IPrepareSource 
     private async ValueTask<Result<Unit>> One(Run run, PrepareDir dir, CancellationToken cancellationToken)
     {
         var relative = (dir.Dir ?? ".").Trim('/');
-        var lockPath = relative is "." or "" ? Lockfile : relative + "/" + Lockfile;
+        var lockPath = relative.Length == 0 || string.Equals(relative, ".", StringComparison.Ordinal) ? Lockfile : relative + "/" + Lockfile;
         var read = await source.FileAtCommit(run.Repo, run.Base, lockPath, cancellationToken).ConfigureAwait(false);
         if (read.IsError)
         {
@@ -87,12 +87,18 @@ internal sealed class WorkspacePrepare(IApprovedProfile profile, IPrepareSource 
         var allow = dir.AllowScripts ?? [];
         var key = PrepareKey.Of(lockfile, allow);
         var target = Path.Combine(run.WorkDirectory, relative);
-        if (cache.Has(key))
+        if (!cache.Has(key))
         {
-            var restored = await cache.Restore(key, target, cancellationToken).ConfigureAwait(false);
-            return restored.IsError ? Fail(SandboxReasons.InstallFailed, $"can't copy the cached packages into {target}: {restored.Error.Message}") : Unit.Value;
+            return await Miss(run, (key, target), allow, cancellationToken).ConfigureAwait(false);
         }
 
+        var restored = await cache.Restore(key, target, cancellationToken).ConfigureAwait(false);
+        return restored.IsError ? Fail(SandboxReasons.InstallFailed, $"can't copy the cached packages into {target}: {restored.Error.Message}") : Unit.Value;
+    }
+
+    // A miss installs under one heavy slot and fills the cache.
+    private async ValueTask<Result<Unit>> Miss(Run run, (string Key, string Target) at, IReadOnlyList<string> allow, CancellationToken cancellationToken)
+    {
         run.Progress?.Report("Preparing the workspace");
         // Deviation from spec 3.8 (lead's decision, 2026-10-28): the spec says `heavy --expensive npm ci`; Sindri already holds the box-wide slot itself through IHeavySlots and runs the tool with
         // AW_HEAVY_LOCK_HELD=1 (ToolCheckCommands), as RepoCommandRunner does, so there is no dependency on an external wrapper and the install still queues like any expensive job.
@@ -110,22 +116,21 @@ internal sealed class WorkspacePrepare(IApprovedProfile profile, IPrepareSource 
 
         await using (lease.ConfigureAwait(false))
         {
-            var installed = await Install(run, target, allow, cancellationToken).ConfigureAwait(false);
+            var installed = await Install(run, at.Target, allow, cancellationToken).ConfigureAwait(false);
             if (installed.IsError)
             {
                 return installed;
             }
 
-            var stored = await cache.Store(key, target, cancellationToken).ConfigureAwait(false);
-            return stored.IsError ? Fail(SandboxReasons.InstallFailed, $"can't fill the cache from {target}: {stored.Error.Message}") : Unit.Value;
+            var stored = await cache.Store(at.Key, at.Target, cancellationToken).ConfigureAwait(false);
+            return stored.IsError ? Fail(SandboxReasons.InstallFailed, $"can't fill the cache from {at.Target}: {stored.Error.Message}") : Unit.Value;
         }
     }
 
     // `npm ci --ignore-scripts`, then `npm rebuild <allowed>`: npm has no per-package allow list, so scripts are off for the install and only the named packages' scripts run afterwards.
     private async ValueTask<Result<Unit>> Install(Run run, string target, IReadOnlyList<string> allow, CancellationToken cancellationToken)
     {
-        var steps = new List<CheckInvocation>();
-        steps.Add(new CheckInvocation(InstallName, ["npm", "ci", "--ignore-scripts"], Remaining(run)));
+        List<CheckInvocation> steps = [new CheckInvocation(InstallName, ["npm", "ci", "--ignore-scripts"], Remaining(run))];
         if (allow.Count > 0)
         {
             steps.Add(new CheckInvocation(RebuildName, ["npm", "rebuild", .. allow], Remaining(run)));

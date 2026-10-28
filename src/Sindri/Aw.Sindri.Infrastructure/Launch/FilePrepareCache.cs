@@ -88,7 +88,7 @@ internal sealed class FilePrepareCache(string root, IToolRunner runner) : IPrepa
                 return Unit.Value;
             }
 
-            last = run.Outcome == ToolOutcome.Exited ? $"cp exited {run.ExitCode}: {run.Error}" : $"cp {run.Outcome}";
+            last = run.Outcome == ToolOutcome.Exited ? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"cp exited {run.ExitCode}: {run.Error}") : $"cp {run.Outcome}";
         }
 
         return KernelErrors.Unavailable.With($"the copy from {from} to {to} failed: {last}");

@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using Aw.Kernel;
 using Aw.Sindri.Core.Launch;
 
 namespace Aw.Sindri.Infrastructure.Launch;

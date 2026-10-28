@@ -11,13 +11,12 @@ namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 /// <summary>The box facts of a Linux launch's sandbox step: paths from the launcher's own options, memory and cores from the machine port, the control plane's port, the catalog's policy form.</summary>
 /// <param name="Launcher">The launcher's files.</param>
 /// <param name="Catalog">The agent catalog.</param>
-/// <param name="Machine">The box's memory and cores (the same numbers the doctor shows).</param>
 /// <param name="Processes">Runs git.</param>
-/// <param name="Environment">The process environment (HOME, AW_STATE_DIR, PATH ...), read at each launch.</param>
+/// <param name="HostFacts">Reads the host facts at each launch (the switch step's BoxHostFacts.Read).</param>
 /// <param name="Control">The running control plane's endpoint record, or null when unknown.</param>
 /// <param name="Counters">What a launch's denial counter is made from, or null to count no denials.</param>
 #pragma warning disable MA0182 // registered by the product Host in SB-5a's switch step
-internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentCatalog Catalog, ISandboxMachine Machine, ISandboxProcesses Processes, Func<IReadOnlyDictionary<string, string>> Environment, Func<ControlEndpoint?> Control, DenialCounterParts? Counters = null) : ISandboxLaunchInputs
+internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentCatalog Catalog, ISandboxProcesses Processes, Func<SandboxHostFacts> HostFacts, Func<ControlEndpoint?> Control, DenialCounterParts? Counters = null) : ISandboxLaunchInputs
 {
     /// <summary>The proxy port inside every sandbox (its network namespace is private, so one fixed port can't clash).</summary>
     internal const int FixedProxyPort = 3128;
@@ -25,13 +24,7 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
     private static readonly TimeSpan _gitTimeout = TimeSpan.FromSeconds(10);
 
     /// <inheritdoc/>
-    public SandboxHostFacts Host()
-    {
-        var env = Environment();
-        var home = env.GetValueOrDefault("HOME") ?? System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
-        var state = env.GetValueOrDefault("AW_STATE_DIR") is { Length: > 0 } set ? set : Path.Combine(home, ".agentic-workflow");
-        return new SandboxHostFacts(home, state, Launcher.SindriHome ?? Launcher.Home, CsBinDir(state), Uid(), Machine.RamBytes, Machine.Cores, IsMacOs: false, env, OtherHomes("/home", home));
-    }
+    public SandboxHostFacts Host() => HostFacts();
 
     /// <inheritdoc/>
     public ValueTask<string> GitCommonDir(string repoPath, CancellationToken cancellationToken)
@@ -47,7 +40,7 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
     /// <inheritdoc/>
     public string NetDirFor(LaunchId launch)
     {
-        var runtime = string.Create(CultureInfo.InvariantCulture, $"/run/user/{Uid()}");
+        var runtime = string.Create(CultureInfo.InvariantCulture, $"/run/user/{HostFacts().Uid}");
         return NetDir(Directory.Exists(runtime) ? runtime : "/tmp", launch);
     }
 
@@ -75,50 +68,5 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
     /// <returns>The path.</returns>
     internal static string NetDir(string baseDirectory, LaunchId launch) =>
         Path.Combine(baseDirectory, "aw-net", launch.Value.Replace("LCH-", string.Empty, StringComparison.Ordinal)[..12]);
-
-    /// <summary>The other users' home directories under <paramref name="root"/>, which the plan denies.</summary>
-    /// <param name="root">The parent of the homes (/home).</param>
-    /// <param name="ownHome">The owner's home.</param>
-    /// <returns>The paths, sorted.</returns>
-    internal static IReadOnlyList<string> OtherHomes(string root, string ownHome)
-    {
-        try
-        {
-            return Directory.Exists(root)
-                ? [.. System.IO.Directory.EnumerateDirectories(root).Where(d => !string.Equals(d, ownHome.TrimEnd('/'), StringComparison.Ordinal)).Order(StringComparer.Ordinal)]
-                : [];
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            return [];
-        }
-    }
-
-    private static string CsBinDir(string state)
-    {
-        var current = Path.Combine(state, "bin", "cs", "current");
-        try
-        {
-            return Directory.ResolveLinkTarget(current, returnFinalTarget: true)?.FullName ?? string.Empty;
-        }
-        catch (IOException)
-        {
-            return string.Empty;   // none installed
-        }
-    }
-
-    private static int Uid()
-    {
-        try
-        {
-            var line = File.ReadLines("/proc/self/status").FirstOrDefault(l => l.StartsWith("Uid:", StringComparison.Ordinal));
-            var fields = line?.Split('\t', StringSplitOptions.RemoveEmptyEntries);
-            return fields is { Length: > 1 } && int.TryParse(fields[1], NumberStyles.None, CultureInfo.InvariantCulture, out var uid) ? uid : 0;
-        }
-        catch (IOException)
-        {
-            return 0;
-        }
-    }
 }
 #pragma warning restore MA0182

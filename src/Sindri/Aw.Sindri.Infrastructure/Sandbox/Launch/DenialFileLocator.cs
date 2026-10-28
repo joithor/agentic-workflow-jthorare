@@ -1,4 +1,5 @@
 using Aw.Sindri.Core.Sandbox.Plan;
+using Aw.Sindri.Infrastructure.Launch.Usage;
 
 namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 
@@ -28,17 +29,6 @@ internal static class DenialFileLocator
         return logs is null ? null : Path.Combine(logs, FailOpenName);
     }
 
-    private static string? Newest(string root)
-    {
-        try
-        {
-            return Directory.Exists(root)
-                ? Directory.EnumerateFiles(root, "*.jsonl", SearchOption.AllDirectories).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault()
-                : null;
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            return null;   // nothing readable to count from
-        }
-    }
+    private static string? Newest(string root) =>
+        TranscriptFiles.Jsonl(root, since: null).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
 }

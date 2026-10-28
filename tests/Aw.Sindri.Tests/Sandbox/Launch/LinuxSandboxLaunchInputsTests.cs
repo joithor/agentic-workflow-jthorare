@@ -1,7 +1,6 @@
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Control;
 using Aw.Sindri.Core.Launch;
-using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Infrastructure.Launch;
 using Aw.Sindri.Infrastructure.Sandbox.Launch;
@@ -9,6 +8,7 @@ using Aw.Sindri.Tests.Sandbox.Bubblewrap;
 using Aw.Sindri.Testing;
 using Aw.Sindri.Tests.Sandbox.Egress;
 using Aw.Sindri.Testing.Launch;
+using Aw.Sindri.Testing.Sandbox;
 
 namespace Aw.Sindri.Tests.Sandbox.Launch;
 
@@ -24,20 +24,12 @@ public sealed class LinuxSandboxLaunchInputsTests : IDisposable
     public void Dispose() => _temp.Dispose();
 
     private LinuxSandboxLaunchInputs Make(ControlEndpoint? control = null) =>
-        new(new LauncherOptions(_temp.Path) { SindriHome = "/real/home" }, new AgentCatalog([AgentEntries.ClaudeCode]), new Machine(), _processes,
-            () => new Dictionary<string, string>(StringComparer.Ordinal) { ["HOME"] = "/home/owner", ["AW_STATE_DIR"] = "/state" }, () => control);
+        new(new LauncherOptions(_temp.Path) { SindriHome = "/real/home" }, new AgentCatalog([AgentEntries.ClaudeCode]), _processes, () => SandboxRequests.Host, () => control);
 
     [Fact]
-    public void Host_takes_memory_and_cores_from_the_machine_and_the_homes_from_the_environment()
+    public void Host_is_what_the_constructor_s_reader_returns()
     {
-        var host = Make().Host();
-
-        Expect.Equal(8L * 1024 * 1024 * 1024, host.TotalMemoryBytes);
-        Expect.Equal(6, host.CpuCores);
-        Expect.Equal("/home/owner", host.Home);
-        Expect.Equal("/state", host.StateDir);
-        Expect.Equal("/real/home", host.SindriHome);
-        Expect.Equal(string.Empty, host.CsBinDir);   // no bin/cs/current under /state
+        Expect.True(ReferenceEquals(SandboxRequests.Host, Make().Host()));
     }
 
     [Fact]
@@ -65,7 +57,7 @@ public sealed class LinuxSandboxLaunchInputsTests : IDisposable
         _ = _processes.When((_, a) => a.Contains("--git-common-dir", StringComparer.Ordinal), FakeProcesses.Ok("../.git\n"));
 
         Expect.Equal("/work/.git", await Make().GitCommonDir("/work/web", CancellationToken.None));
-        Expect.Equal("/other/.git", await new LinuxSandboxLaunchInputs(new LauncherOptions(_temp.Path), new AgentCatalog([]), new Machine(), new FakeProcesses(), () => new Dictionary<string, string>(StringComparer.Ordinal), () => null).GitCommonDir("/other", CancellationToken.None));
+        Expect.Equal("/other/.git", await new LinuxSandboxLaunchInputs(new LauncherOptions(_temp.Path), new AgentCatalog([]), new FakeProcesses(), () => SandboxRequests.Host, () => null).GitCommonDir("/other", CancellationToken.None));
     }
 
     [Fact]
@@ -78,26 +70,6 @@ public sealed class LinuxSandboxLaunchInputsTests : IDisposable
     }
 
     [Fact]
-    public void Other_homes_are_the_other_directories_under_the_root_sorted()
-    {
-        foreach (var name in new[] { "zed", "owner", "amy" })
-        {
-            _ = Directory.CreateDirectory(Path.Combine(_temp.Path, name));
-        }
-
-        var others = LinuxSandboxLaunchInputs.OtherHomes(_temp.Path, Path.Combine(_temp.Path, "owner"));
-
-        Expect.True(others.SequenceEqual([Path.Combine(_temp.Path, "amy"), Path.Combine(_temp.Path, "zed")], StringComparer.Ordinal));
-    }
-
-    [Fact]
     public void The_run_area_is_per_launch_under_the_launcher_directory() =>
         Expect.Equal(Path.Combine(_temp.Path, "launch", "areas", _launch.Value), Make().RunAreaFor(_launch));
-
-    private sealed class Machine : ISandboxMachine
-    {
-        public long RamBytes => 8L * 1024 * 1024 * 1024;
-
-        public int Cores => 6;
-    }
 }

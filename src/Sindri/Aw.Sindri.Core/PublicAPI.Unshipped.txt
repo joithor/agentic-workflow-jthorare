@@ -18582,7 +18582,7 @@ static Aw.Sindri.Core.Workflow.Engine.Runtime.Reruns.Action.get -> Aw.Sindri.Cor
 static Aw.Sindri.Core.Workflow.Engine.Runtime.Reruns.Of(Aw.Sindri.Core.Workflow.Engine.Runtime.InstanceView! view) -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Ids.ActionId>!
 static Aw.Sindri.Core.Workflow.Views.DeskRecommendation.operator !=(Aw.Sindri.Core.Workflow.Views.DeskRecommendation? left, Aw.Sindri.Core.Workflow.Views.DeskRecommendation? right) -> bool
 static Aw.Sindri.Core.Workflow.Views.DeskRecommendation.operator ==(Aw.Sindri.Core.Workflow.Views.DeskRecommendation? left, Aw.Sindri.Core.Workflow.Views.DeskRecommendation? right) -> bool
-static Aw.Sindri.Core.Health.HealthSummary.For(bool running, Aw.Sindri.Core.Views.ViewsStatus! views, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Views.ServiceRow!>? services, Aw.Sindri.Core.Health.ProfileApproval profile, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Health.HealthProblem!>? codeIndex = null) -> Aw.Sindri.Core.Health.HealthReport!
+static Aw.Sindri.Core.Health.HealthSummary.For(bool running, Aw.Sindri.Core.Views.ViewsStatus! views, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Views.ServiceRow!>? services, Aw.Sindri.Core.Health.ProfileApproval profile, Aw.Sindri.Core.Health.HealthContext? context = null) -> Aw.Sindri.Core.Health.HealthReport!
 Aw.Sindri.Core.Health.ProfileApproval
 Aw.Sindri.Core.Health.ProfileApproval.Approved = 0 -> Aw.Sindri.Core.Health.ProfileApproval
 Aw.Sindri.Core.Health.ProfileApproval.Changed = 1 -> Aw.Sindri.Core.Health.ProfileApproval
@@ -21142,3 +21142,17 @@ static Aw.Sindri.Core.Profile.SandboxOfferYaml.Render(string! repo, Aw.Sindri.Co
 static Aw.Sindri.Core.Profile.SandboxToolchainDetector.Detect(System.Collections.Generic.IReadOnlyList<string!>! paths) -> Aw.Sindri.Core.Profile.ToolchainOffer!
 static Aw.Sindri.Core.Profile.ToolchainOffer.operator !=(Aw.Sindri.Core.Profile.ToolchainOffer? left, Aw.Sindri.Core.Profile.ToolchainOffer? right) -> bool
 static Aw.Sindri.Core.Profile.ToolchainOffer.operator ==(Aw.Sindri.Core.Profile.ToolchainOffer? left, Aw.Sindri.Core.Profile.ToolchainOffer? right) -> bool
+Aw.Sindri.Core.Health.HealthContext
+Aw.Sindri.Core.Health.HealthContext.<Clone>$() -> Aw.Sindri.Core.Health.HealthContext!
+Aw.Sindri.Core.Health.HealthContext.CodeIndex.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Health.HealthProblem!>?
+Aw.Sindri.Core.Health.HealthContext.CodeIndex.init -> void
+Aw.Sindri.Core.Health.HealthContext.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Health.HealthProblem!>? CodeIndex, out System.DateTimeOffset? Now) -> void
+Aw.Sindri.Core.Health.HealthContext.Equals(Aw.Sindri.Core.Health.HealthContext? other) -> bool
+Aw.Sindri.Core.Health.HealthContext.HealthContext(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Health.HealthProblem!>? CodeIndex, System.DateTimeOffset? Now = null) -> void
+Aw.Sindri.Core.Health.HealthContext.Now.get -> System.DateTimeOffset?
+Aw.Sindri.Core.Health.HealthContext.Now.init -> void
+override Aw.Sindri.Core.Health.HealthContext.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Health.HealthContext.GetHashCode() -> int
+override Aw.Sindri.Core.Health.HealthContext.ToString() -> string!
+static Aw.Sindri.Core.Health.HealthContext.operator !=(Aw.Sindri.Core.Health.HealthContext? left, Aw.Sindri.Core.Health.HealthContext? right) -> bool
+static Aw.Sindri.Core.Health.HealthContext.operator ==(Aw.Sindri.Core.Health.HealthContext? left, Aw.Sindri.Core.Health.HealthContext? right) -> bool

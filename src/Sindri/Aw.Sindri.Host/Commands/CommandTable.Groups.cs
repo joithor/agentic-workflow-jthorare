@@ -14,14 +14,21 @@ internal static partial class CommandTable
         _ => await UnknownVerb(args, output).ConfigureAwait(false),
     };
 
-    /// <summary>'sindri agents|setup|code-index …': the read-only verbs that only call the control plane.</summary>
-    private static async Task<int> ReadVerbs(string[] args, ControlPlaneClient client, Output output, CancellationToken ct) => args switch
+    /// <summary>'sindri agents|setup|code-index|index …': the verbs that only call the control plane (the reads never start it; 'index sync' may).</summary>
+    private static async Task<int> ReadVerbs(string[] args, (ControlPlaneClient Client, Output Output) api, (IServiceProvider Services, StartCommand Start) host, (CancellationToken Interrupt, CancellationToken Again) signals)
     {
-        ["agents", .. var rest] => await new AgentsVerbs(client, output).Run(rest, ct).ConfigureAwait(false),
-        ["setup", .. var rest] => await new SetupVerbs(client, output).Run(rest, ct).ConfigureAwait(false),
-        ["code-index", .. var rest] => await new CodeIndexVerbs(client, output).Run(rest, ct).ConfigureAwait(false),
-        _ => await UnknownVerb(args, output).ConfigureAwait(false),
-    };
+        var (client, output) = api;
+        var ct = signals.Interrupt;
+        return args switch
+        {
+            ["agents", .. var rest] => await new AgentsVerbs(client, output).Run(rest, ct).ConfigureAwait(false),
+            ["setup", .. var rest] => await new SetupVerbs(client, output).Run(rest, ct).ConfigureAwait(false),
+            ["code-index", .. var rest] => await new CodeIndexVerbs(client, output).Run(rest, ct).ConfigureAwait(false),
+            ["index", .. var rest] => await new IndexVerbs(client, output, new JobFollower(client, output, host.Services.GetRequiredService<TimeProvider>()), Interactive(), Console.In, host.Start.EnsureRunning)
+                .Run(rest, ct, signals.Again).ConfigureAwait(false),
+            _ => await UnknownVerb(args, output).ConfigureAwait(false),
+        };
+    }
 
     /// <summary>'sindri pr babysit &lt;url&gt; …': the hand start of the PR babysitter (API16).</summary>
     private static async Task<int> Pr(string[] args, IServiceProvider services, Output output, RecipeDesk desk, CancellationToken ct) => args switch

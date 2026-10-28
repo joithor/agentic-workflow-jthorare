@@ -162,5 +162,7 @@ public sealed class VectorMatrixCacheTests : IDisposable
         public ValueTask<Kernel.Result<StoreStamps>> Stamps(CancellationToken cancellationToken) => _inner.Stamps(cancellationToken);
 
         public ValueTask<Kernel.Result<int>> Purge(SourceId source, CancellationToken cancellationToken) => _inner.Purge(source, cancellationToken);
+
+        public ValueTask<Kernel.Result<SourceCounts>> Count(SourceId source, CancellationToken cancellationToken) => _inner.Count(source, cancellationToken);
     }
 }

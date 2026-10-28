@@ -49,7 +49,7 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     {
         var request = Step();
 
-        var built = await Make().Request(request, CancellationToken.None);
+        var built = await Make().Request(request, chosenSession: null, CancellationToken.None);
 
         Expect.True(built.IsSuccess);
         var r = built.Value;
@@ -65,7 +65,7 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     [Fact]
     public async Task Request_refuses_with_the_login_code_when_no_source_supports_the_agent()
     {
-        var built = await Make(new FakeModelCredentialSource(ModelLoginSource.OwnerCopy)).Request(Step(), CancellationToken.None);
+        var built = await Make(new FakeModelCredentialSource(ModelLoginSource.OwnerCopy)).Request(Step(), chosenSession: null, CancellationToken.None);
 
         Expect.True(built.IsError && string.Equals(built.Error.Code, SindriErrors.LaunchLoginUnavailable.Code, StringComparison.Ordinal));
     }
@@ -125,7 +125,7 @@ public sealed class SandboxLaunchStagesTests : IDisposable
 
     private async Task<(SandboxRequest Request, SandboxPlan Plan)> PlanFor(StepPolicy policy)
     {
-        var asked = (await Make().Request(Asked(policy), CancellationToken.None)).Value;
+        var asked = (await Make().Request(Asked(policy), chosenSession: null, CancellationToken.None)).Value;
         return (asked, SandboxPlanner.Build(SandboxMechanism.Bubblewrap, asked).Value);
     }
 

@@ -1,4 +1,5 @@
 using Aw.Kernel;
+using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
@@ -13,9 +14,10 @@ internal interface ISandboxLaunchStages
 {
     /// <summary>Builds the request from the launch: the repo's profile settings, host paths, net facts, learn history, and the prepared login (credentials).</summary>
     /// <param name="request">The launch.</param>
+    /// <param name="chosenSession">The session id the launcher chose for the agent, or null; kept for the denial collector.</param>
     /// <param name="cancellationToken">Cancels the work.</param>
     /// <returns>The request, or the SND-LAUNCH-015/017 refusal.</returns>
-    public ValueTask<Result<SandboxRequest>> Request(LaunchRequest request, CancellationToken cancellationToken);
+    public ValueTask<Result<SandboxRequest>> Request(LaunchRequest request, SessionId? chosenSession, CancellationToken cancellationToken);
 
     /// <summary>Writes the Step's policy file into the session home with the plan's rules merged in (a claude-settings-file Step; the sandbox can't see the launcher's own directory), and gives the extra arguments the Step's form takes under a sandbox (a Codex Step's '-c' overrides).</summary>
     /// <param name="request">The request the plan was built from.</param>

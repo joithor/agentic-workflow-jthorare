@@ -1,8 +1,11 @@
+using System.Security.Cryptography;
+using System.Text;
 using Aw.Kernel;
 using Aw.Sindri.Core.Events;
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Lease;
 using Aw.Sindri.Core.Ledger;
+using Aw.Sindri.Core.Sandbox.Denials;
 using Aw.Sindri.Core.Workflow.Engine;
 
 namespace Aw.Sindri.Core.Launches;
@@ -19,7 +22,7 @@ namespace Aw.Sindri.Core.Launches;
 /// <param name="events">Builds the entries.</param>
 /// <param name="clock">The time.</param>
 public sealed class LaunchSessionEvents(ILaunchFiles files, LaunchLiveness liveness, ReportedIdAdmission admission, HeldLease held,
-    ILedgerStore ledger, EventFactory events, TimeProvider clock)
+    ILedgerStore ledger, EventFactory events, TimeProvider clock) : ISandboxDenials
 {
     /// <summary>How long the end of a session waits for the token totals before it ends without them.</summary>
     public static TimeSpan FinalTokensBudget { get; } = TimeSpan.FromSeconds(5);
@@ -110,6 +113,44 @@ public sealed class LaunchSessionEvents(ILaunchFiles files, LaunchLiveness liven
     /// <returns>Success, or why the ledger refused (the files stay).</returns>
     public ValueTask<Result<Unit>> EndByLimit(LaunchId launch, LimitEnd limit, CancellationToken cancellationToken) =>
         Append(SessionEnded.Limited(launch, limit), cancellationToken);
+
+    /// <summary>Appends 'sandbox.limit-hit' for a limit reached without ending the session, once per launch and kind (the key carries n=1, so a repeat is recorded already and succeeds).</summary>
+    /// <param name="launch">The launch.</param>
+    /// <param name="kind">Which limit.</param>
+    /// <param name="peak">The peak: a count for pids, bytes for memory and disk.</param>
+    /// <param name="cancellationToken">Cancels the append.</param>
+    /// <returns>Success (also for a repeat), or why the ledger refused.</returns>
+    public async ValueTask<Result<Unit>> LimitHit(LaunchId launch, LimitHitKind kind, long peak, CancellationToken cancellationToken)
+    {
+        if (held.Current is not { } grant)
+        {
+            return SindriErrors.NotRunning.With("the control plane doesn't hold the lease (fix: sindri)");
+        }
+
+        var admitted = await admission.Admit(launch, id: null, cancellationToken).ConfigureAwait(false);
+        var key = $"{EventTypes.SandboxLimitHit}:{launch.Value}:{kind.ToString().ToLowerInvariant()}:1";
+        var appended = await ledger.Append(events.Entry(EventTypes.SandboxLimitHit, new SandboxLimitHit(launch, kind, peak), key, admitted.Item), grant, cancellationToken).ConfigureAwait(false);
+        return appended.IsError ? appended.Error : Unit.Value;
+    }
+
+    /// <summary>Appends 'sandbox.denied' (the 1st, 10th or 100th denial of a target, or the first overflow of a kind), once per key; a repeat is recorded already and succeeds.</summary>
+    /// <param name="denied">The event; its target is already scrubbed and cut by the run's counter.</param>
+    /// <param name="cancellationToken">Cancels the append.</param>
+    /// <returns>Success (also for a repeat), or why the ledger refused.</returns>
+    public async ValueTask<Result<Unit>> Append(SandboxDenied denied, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(denied);
+        if (held.Current is not { } grant)
+        {
+            return SindriErrors.NotRunning.With("the control plane doesn't hold the lease (fix: sindri)");
+        }
+
+        var admitted = await admission.Admit(denied.Launch, id: null, cancellationToken).ConfigureAwait(false);
+        var hash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(denied.Target)))[..12];
+        var key = $"{EventTypes.SandboxDenied}:{denied.Launch.Value}:{denied.Kind.ToString().ToLowerInvariant()}:{hash}:{denied.Count}";
+        var appended = await ledger.Append(events.Entry(EventTypes.SandboxDenied, denied, key, admitted.Item), grant, cancellationToken).ConfigureAwait(false);
+        return appended.IsError ? appended.Error : Unit.Value;
+    }
 
     private async ValueTask<Result<Unit>> Append(SessionEnded ended, CancellationToken cancellationToken)
     {

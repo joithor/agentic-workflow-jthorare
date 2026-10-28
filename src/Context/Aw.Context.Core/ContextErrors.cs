@@ -147,6 +147,12 @@ public static class ContextErrors
     /// <summary>SND-CONTEXT-059: a sync stopped at its time cap: the run is partial and resumes from its cursor next time (degraded, exit 0).</summary>
     public static readonly ErrorDefinition SyncCapped = new("SND-CONTEXT-059", ErrorKind.Unavailable, "A sync stopped at its time cap");
 
+    /// <summary>SND-CONTEXT-060: a map build whose features are mostly unconnected (more than the refuse limit have no link to another feature or a table) is refused before any write; the last draft and the current map stay (map structure spec §4.3). 'context.checks.mode: warn' turns it into a degraded note.</summary>
+    public static readonly ErrorDefinition MapUnconnected = new("SND-CONTEXT-060", ErrorKind.Invalid, "Map structure is mostly unconnected");
+
+    /// <summary>SND-CONTEXT-061: a map build with too many features over the size cap is refused before any write (map structure spec §4.3). 'context.checks.mode: warn' turns it into a degraded note.</summary>
+    public static readonly ErrorDefinition MapOversized = new("SND-CONTEXT-061", ErrorKind.Invalid, "Features are over the size cap");
+
     /// <summary>SND-CONTEXT-080: no eligible backtest sample (no merge carries an issue key of a profile team in the window, or every candidate was left out; the message gives the counts).</summary>
     public static readonly ErrorDefinition NoEligibleSample = new("SND-CONTEXT-080", ErrorKind.NotFound, "No eligible backtest sample");
 
@@ -230,13 +236,22 @@ public static class ContextErrors
     /// <summary>SND-CONTEXT-200: the whole-map read was asked to open an area the map doesn't have (Part D; 201 to 209 are reserved for this stage).</summary>
     public static readonly ErrorDefinition AreaUnknown = new("SND-CONTEXT-200", ErrorKind.NotFound, "No such area in this map");
 
+    /// <summary>SND-CONTEXT-230: a record batch can't be committed (a record of another source, a blocked record with chunks, gaps in a record's chunk numbers); nothing was written.</summary>
+    public static readonly ErrorDefinition RecordBatchInvalid = new("SND-CONTEXT-230", ErrorKind.Invalid, "The record batch is invalid");
+
+    /// <summary>SND-CONTEXT-231: the query embedder could not answer (the model is down or not pulled); the dense leg drops out of the answer.</summary>
+    public static readonly ErrorDefinition EmbedderUnavailable = new("SND-CONTEXT-231", ErrorKind.Unavailable, "The embedding model is unavailable");
+
+    /// <summary>SND-CONTEXT-232: a vector scan was asked with a query or mask that doesn't fit the matrix, or a count out of range.</summary>
+    public static readonly ErrorDefinition VectorScanInvalid = new("SND-CONTEXT-232", ErrorKind.Invalid, "The vector scan request is invalid");
+
     /// <summary>Every Context error, for ErrorCatalogue.Validate.</summary>
     public static IReadOnlyList<ErrorDefinition> All { get; } =
-        [SettingsInvalid, SourceNotConfigured, UnknownAnchor, StoreUnavailable, PathInWorktree, QueryInvalid, SourceUnavailable, AllSourcesUnavailable, SessionsDisabled,
+        [SettingsInvalid, RecordBatchInvalid, EmbedderUnavailable, VectorScanInvalid, SourceNotConfigured, UnknownAnchor, StoreUnavailable, PathInWorktree, QueryInvalid, SourceUnavailable, AllSourcesUnavailable, SessionsDisabled,
          McpRepoMissing, McpArgumentsInvalid, McpToolUnknown, McpRegisterRepoUnknown, McpRegisterFailed, McpUserWide,
          NoMap, MapFileInvalid, MapNodeUndefined, ExportOutsideHome, MapFileChanged, ProbeFileInvalid, NoProbeFile, AmbiguousAnchor, ProbesRegressed,
          HeavyLockBusy, LabelingUnavailable, ReviewFileNoMatch, NoDraftMap, RepoOutsideScope, PromoteRefused, ReviewTargetStale, ExtractionUnreadable,
-         OnyxKeyRefused, OnyxUnexpectedReply, OnyxDocumentNotFound, OnyxKeyNotServiceAccount, OnyxNotPinnedOrLoopback, LinearUrlRefused, LinearKeyRefused, LinearUnexpectedReply, LinearRecordNotFound, SyncRunning, ModelAnswerRefused, SyncSourceUnknown, SyncCapped,
+         OnyxKeyRefused, OnyxUnexpectedReply, OnyxDocumentNotFound, OnyxKeyNotServiceAccount, OnyxNotPinnedOrLoopback, LinearUrlRefused, LinearKeyRefused, LinearUnexpectedReply, LinearRecordNotFound, SyncRunning, ModelAnswerRefused, SyncSourceUnknown, MapUnconnected, MapOversized, SyncCapped,
          NoEligibleSample, NoBriefSource, UnknownArm, AdjudicationCapped, CommitUnknown, NoMergeBase, MapVersionNotRetained, HistoryDeadline, IntentNotSynced, CodeGlobInvalid, CodeGlobsTooMany, CodeSearchTimedOut, RecognizerInvalid, RecognizerOverCap, PatternTimedOut, DraftChanged, MapHeadInvalid, GraphifyLimitInvalid, RerankUnavailable, AreaUnknown, NodeNotInScopeGraph];
 
     /// <summary>

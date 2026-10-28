@@ -83,7 +83,7 @@ public static partial class NeedsYouRows
     /// <param name="scrubber">Scrubs the text the row stores.</param>
     /// <returns>The row.</returns>
     public static NeedsYouRow ForDeskTask(ItemRow item, InstanceAddress address, DateTimeOffset since, ITextScrubber scrubber) =>
-        Row(item, address, new EngineRow(NeedsYouRowIds.Desk(address), "desk task", $"a desk task is open ({address.Value})", Urgency.Colour, AnswerKind: null, _completeStep, [_completeStep], Status(address),
+        Row(item, address, new EngineRow(NeedsYouRowIds.Desk(address), "desk task", $"a desk task is open ({address.Value})", Urgency.Colour, AnswerKind: null, _completeStep, [_completeStep], Complete(address),
             new NeedsYouOpen(WorkflowRoute(address), "Answer the question")), since, scrubber);
 
     /// <summary>The 'park' row of a takeover that went idle.</summary>
@@ -107,6 +107,9 @@ public static partial class NeedsYouRows
             new NeedsYouOpen(WorkflowRoute(address), "Open the workflow")), since, scrubber);
 
     private static string WorkflowRoute(InstanceAddress address) => "workflow/" + address.Value;
+
+    // The complete command, with the run and the outcome left for the person (the row does not carry the open run's token; 'workflow status' prints the filled line).
+    private static string Complete(InstanceAddress address) => $"sindri workflow complete {address.Value} --run <run> --outcome <outcome>";
 
     private static string Status(InstanceAddress address) => $"sindri workflow status {address.Value}";
 
@@ -154,6 +157,7 @@ public static partial class NeedsYouRows
         { Reason: ParkReason.SpecConflict, ParkKind: ParkKind.Dispatch } => ("park · dispatch refused", refusal ?? "an effect was refused"),
         { Reason: ParkReason.SpecConflict } => ("park · spec conflict", "its recipe drifted since approval"),
         { Reason: ParkReason.NoRuntime } => ("park · no runtime", "no runtime runs its step"),
+        { Reason: ParkReason.Launch } => ("park · launch", "its step can't start in the sandbox"),
         { Reason: ParkReason.Unavailable } => ("park · unavailable", "a dependency of its step is down"),   // no row is made for it; this keeps a mirrored child's park honest if one is asked for
         _ => ("park", "it is parked"),
     };

@@ -237,15 +237,15 @@ public sealed class NeedsYouHomeTests : IDisposable
         Assert.Equal("Decided: Decline", Named<TextBlock>(window, "DecisionOutcome").Text);
     });
 
-    // §11.2 as U2's F2, for a Needs-you row: with its sheet beside the page, Enter again moves into the sheet's first action.
+    // §11.2 as U2's F2, for a Needs-you row: with its sheet beside the page, Enter again moves into the sheet's first action (its note, which sits above the options).
     [Fact]
-    public Task Enter_again_on_a_decision_row_with_its_sheet_open_focuses_the_first_option() => OnUi(async () =>
+    public Task Enter_again_on_a_decision_row_with_its_sheet_open_focuses_the_note() => OnUi(async () =>
     {
         var (window, shell) = await Connected(width: 1400);
         shell.ShowNeedsYou(new ViewModels.NeedsYou.NeedsYouFeed([NeedsYouRows.Decision()], ""));
         shell.Navigate(new DeepLink(DeepLinkKind.Decision, "DEC-1"));
         Settle(window);
-        var first = Named<Control>(window, "DecisionSheet").GetVisualDescendants().OfType<Button>().First(b => b.Classes.Contains("decision-option"));
+        var first = Named<TextBox>(window, "DecisionNote");
         Assert.False(ReferenceEquals(window.FocusManager?.GetFocusedElement(), first));
 
         window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);

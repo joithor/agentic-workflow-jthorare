@@ -21,6 +21,27 @@ internal sealed partial class InstanceFrameView : UserControl
     public InstanceFrameView()
     {
         InitializeComponent();
+        AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
+    }
+
+    // Esc with a Why flyout open closes the flyout only and puts focus back on the sentence that opened it; the sheet stays, and the next Esc closes it
+    // (model-pick spec section 6.1, Layering). The window's own Esc is spent on the sheet, so this runs first, on the way down.
+    private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || e.KeyModifiers != KeyModifiers.None)
+        {
+            return;
+        }
+
+        var open = this.GetVisualDescendants().OfType<Button>().FirstOrDefault(b => b.Flyout?.IsOpen == true);
+        if (open?.Flyout is not { } flyout)
+        {
+            return;
+        }
+
+        flyout.Hide();
+        _ = open.Focus(NavigationMethod.Tab);
+        e.Handled = true;
     }
 
     /// <inheritdoc />

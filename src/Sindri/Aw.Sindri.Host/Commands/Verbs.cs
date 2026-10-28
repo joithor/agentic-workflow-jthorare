@@ -83,7 +83,7 @@ internal sealed class Verbs(ControlPlaneClient client, Core.Control.IControlPlan
         var state = valid.Value.Approved ? "approved" : "not approved (fix: sindri profile approve)";
         return json
             ? await output.Json(valid.Value, valid.Value.Approved ? 0 : 1).ConfigureAwait(false)
-            : await output.Text($"Profile valid: {valid.Value.Source}\nhash {valid.Value.Hash.Value}, {state}\n{string.Concat((valid.Value.Matches ?? []).Select(static l => l + "\n"))}", valid.Value.Approved ? 0 : 1).ConfigureAwait(false);
+            : await output.Text($"Profile valid: {valid.Value.Source}\nhash {valid.Value.Hash.Value}, {state}\n{string.Concat((valid.Value.Matches ?? []).Select(static l => l + "\n"))}{string.Concat((valid.Value.Warnings ?? []).Select(static l => "warning: " + l + "\n"))}", valid.Value.Approved ? 0 : 1).ConfigureAwait(false);
     }
 
     /// <summary>'profile init [--json]': writes the default profile when none exists and says what comes next; local, like validate. It never approves and never replaces a file.</summary>
@@ -184,7 +184,7 @@ internal sealed class Verbs(ControlPlaneClient client, Core.Control.IControlPlan
     private static string ApprovalText(ApproveProfileResponse a, bool preview) => (preview, a.Approved) switch
     {
         (_, true) when preview => $"Approved already: {a.Hash.Value}\n",
-        (true, _) => $"hash {a.Hash.Value}\n{(a.Unreadable is null ? string.Empty : $"the stored approval can't be read by this build ({a.Unreadable}); approving the hash below replaces it\n")}changed since the last approval: {(a.Changes.Count == 0 ? (a.UnlistedChange ? "no listed key, yet the hash differs (this build may write the profile differently from the one that approved it; if not, a key is missing from this list: report it)" : "nothing") : string.Join(", ", a.Changes))}\n{RoleCountsText(a)}{StepArgvText(a)}to approve: sindri profile approve {a.Hash.Value}\n",
+        (true, _) => $"hash {a.Hash.Value}\n{(a.Unreadable is null ? string.Empty : $"the stored approval can't be read by this build ({a.Unreadable}); approving the hash below replaces it\n")}changed since the last approval: {(a.Changes.Count == 0 ? (a.UnlistedChange ? "no listed key, yet the hash differs (this build may write the profile differently from the one that approved it; if not, a key is missing from this list: report it)" : "nothing") : string.Join(", ", a.Changes))}\n{RoleCountsText(a)}{StepArgvText(a)}{(a.Notice is null ? string.Empty : a.Notice + "\n")}to approve: sindri profile approve {a.Hash.Value}\n",
         _ => $"Approved {a.Hash.Value}\n",
     };
 

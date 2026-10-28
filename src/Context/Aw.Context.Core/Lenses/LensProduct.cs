@@ -5,7 +5,7 @@ namespace Aw.Context.Core.Lenses;
 /// <summary>The product band (spec §8.9): the own scope, the neighbors at the depth and the nodes the cascade reaches, each node in the first list that holds it. Neighbors are reached over structure edges only (part-of, on, reads, writes, step-of, depends-on, moves-to), so features that only share a concept, a record or a code unit with the anchor are not neighbors.</summary>
 internal static class LensProduct
 {
-    private static readonly NodeKind[] _kinds = [NodeKind.Feature, NodeKind.Surface, NodeKind.Action, NodeKind.Thing, NodeKind.Flow];
+    private static readonly NodeKind[] _kinds = [NodeKind.Feature, NodeKind.Surface, NodeKind.Action, NodeKind.Thing, NodeKind.Flow, NodeKind.Concept];
     private static readonly EdgeType[] _structure = [EdgeType.PartOf, EdgeType.On, EdgeType.Reads, EdgeType.Writes, EdgeType.StepOf, EdgeType.DependsOn, EdgeType.MovesTo];
 
     /// <summary>The band and the keys of every item it lists (the other bands' edges are drawn among them).</summary>

@@ -13,6 +13,9 @@ public sealed record ContextSettings
     /// <summary>The default doc globs.</summary>
     public static IReadOnlyList<string> DefaultDocGlobs { get; } = ["docs/**/*.md", "**/PRD*.md", "**/TDD*.md"];
 
+    /// <summary>The default 'context.docs.directoryNames': file names that count as docs in any directory.</summary>
+    public static IReadOnlyList<string> DefaultDocDirectoryNames { get; } = ["AGENTS.md", "README.md", "CONTEXT.md"];
+
     /// <summary>The default 'context.code.schemaGlobs': the migration and schema files the code lens's data files may name.</summary>
     public static IReadOnlyList<string> DefaultSchemaGlobs { get; } =
         ["**/migrations/**", "**/migrate/**", "**/schema/**", "**/schemas/**", "**/*.sql", "**/*.prisma", "**/*.graphql", "**/*.gql", "**/*.proto", "**/*.avsc", "**/*.xsd", "**/*.schema.json"];
@@ -22,6 +25,12 @@ public sealed record ContextSettings
 
     /// <summary>The repo-relative globs whose files the repo-docs source indexes.</summary>
     public IReadOnlyList<string> DocGlobs { get; init; } = DefaultDocGlobs;
+
+    /// <summary>'context.docs.directoryNames': file names that count as docs in any directory, on top of <see cref="DocGlobs"/>.</summary>
+    public IReadOnlyList<string> DocDirectoryNames { get; init; } = DefaultDocDirectoryNames;
+
+    /// <summary>What the doc index and the repo-docs feed index: <see cref="DocGlobs"/> plus a '**/name' glob for each of <see cref="DocDirectoryNames"/>.</summary>
+    public IReadOnlyList<string> IndexedDocGlobs => [.. DocGlobs, .. DocDirectoryNames.Select(static n => "**/" + n)];
 
     /// <summary>The per-query deadline.</summary>
     public TimeSpan Deadline { get; init; } = TimeSpan.FromSeconds(10);
@@ -49,6 +58,15 @@ public sealed record ContextSettings
 
     /// <summary>The checked 'context.sources.linear' entry for the native Linear adapter (S-6), or null when the profile names no Linear token.</summary>
     public LinearSettings? Linear { get; init; }
+
+    /// <summary>'context.index' (owned index spec §5.5, §5.6, §6, §8): the window, the chunk ceiling, retention, the dense floors and the Onyx leftover acknowledgement.</summary>
+    public ContextIndexSettings Index { get; init; } = new();
+
+    /// <summary>The checked 'context.sources.github' entry, or null when the profile names none.</summary>
+    public GitHubSource? GitHub { get; init; }
+
+    /// <summary>The checked 'context.sources.slack' entry, or null when the profile names none.</summary>
+    public SlackSource? Slack { get; init; }
 
     /// <summary>The Linear team keys ('context.sources.linear.teams') an Onyx identifier alias may name; empty for none.</summary>
     public IReadOnlyList<string> LinearTeams { get; init; } = [];
@@ -85,4 +103,10 @@ public sealed record ContextSettings
 
     /// <summary>'context.ranker': the feature stage and the rerank arm of the query (Phase 8). Both off by default.</summary>
     public RankerSettings Ranker { get; init; } = new();
+
+    /// <summary>Whether a build whose structure checks would refuse the map stops ('refuse', the default) or saves a degraded note ('warn'); 'context.checks'.</summary>
+    public ChecksMode Checks { get; init; } = ChecksMode.Refuse;
+
+    /// <summary>The limits of the structure checks ('context.checks.isolated' and '.overCap'): the shares that make a map degraded or refused.</summary>
+    public MapCheckLimits CheckLimits { get; init; } = new();
 }

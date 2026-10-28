@@ -55,7 +55,7 @@ session can't start it (`SND-AUTH-002`).
 The repo docs refresh through the service above, and the intent sources (Onyx records linked to the map, decisions
 extracted from them) sync through the `context-sync` service (`services: { context-sync: { every: 15m } }`; it runs only
 when named). `context sources status` shows each intent source's last sync, links, decisions and queued records, and
-`sindri doctor` warns (`context:sync`) when one never synced or its last run failed.
+`sindri doctor` warns (`context:sync`, detail `live search: <source> …`) when one never synced or its last run failed. The record index has its own `context:index-*` rows (its sync row reads `record index: …`).
 
 ### Asking
 

@@ -16,11 +16,11 @@ public sealed class EgressProxyTests
         ["inside.example"] = [IPAddress.Parse("10.0.0.7")],
     };
 
-    private static (EgressProxy Proxy, FakeEgressDialer Dialer, EgressLog Log) Make(EgressCaps? caps = null)
+    private static (EgressProxy Proxy, FakeEgressDialer Dialer, EgressLog Log) Make(EgressCaps? caps = null, DenialCounter? denials = null)
     {
         var dialer = new FakeEgressDialer();
         var log = new EgressLog(Path.Combine("/nonexistent-egress-dir", "egress.log"));
-        return (new EgressProxy(new EgressPolicy(_groups, new FakeEgressResolver(_dns)), dialer, log, caps ?? EgressCaps.Default), dialer, log);
+        return (new EgressProxy(new EgressPolicy(_groups, new FakeEgressResolver(_dns)), dialer, log, caps ?? EgressCaps.Default) { Denials = denials }, dialer, log);
     }
 
     private static async Task<string> ReadHead(Stream stream)
@@ -51,6 +51,8 @@ public sealed class EgressProxyTests
         await upstream.WriteAsync("pong"u8.ToArray(), TestContext.Current.CancellationToken);
         await client.ReadExactlyAsync(got, TestContext.Current.CancellationToken);
         await client.DisposeAsync();
+        // the upstream plays the server: it closes once the proxy has half-closed it, else the relay waits out EgressCaps.HalfCloseGrace (30 s)
+        await upstream.DisposeAsync();
         await handled;
 
         Assert.Equal("pong", Encoding.ASCII.GetString(got));
@@ -69,6 +71,8 @@ public sealed class EgressProxyTests
         var upstream = await dialer.Upstream.Task;
         var head = await ReadHead(upstream);
         await client.DisposeAsync();
+        // the upstream plays the server: it closes once the proxy has half-closed it, else the relay waits out EgressCaps.HalfCloseGrace (30 s)
+        await upstream.DisposeAsync();
         await handled;
 
         Assert.StartsWith("GET /ocsp?x=1 HTTP/1.1\r\n", head, StringComparison.Ordinal);
@@ -92,6 +96,26 @@ public sealed class EgressProxyTests
         Assert.StartsWith("HTTP/1.1 403", head, StringComparison.Ordinal);
         Assert.Empty(dialer.Dialed);
         Assert.Equal(1, log.Count("evil.example", 443, EgressVerdict.Denied));
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Proxy_counts_a_denied_host()
+    {
+        var counter = new DenialCounter(Core.Workflow.Engine.LaunchId.From("LCH-00000000000000000000000000000001"), "/nonexistent/denials.json",
+            Kernel.Json.AwJson.CreateOptions(Host.SindriJsonContext.Default), new Infrastructure.Text.RedactingScrubber(Redaction.Redactor.Default), TimeProvider.System);
+        var (proxy, _, _) = Make(denials: counter);
+        foreach (var request in new[] { "CONNECT evil.example:443", "CONNECT evil.example:443", "CONNECT inside.example:443" })
+        {
+            var (client, server) = JoinedStream.Pair();
+            var handled = proxy.Handle(server, TestContext.Current.CancellationToken);
+            await client.WriteAsync(Encoding.ASCII.GetBytes(request + " HTTP/1.1\r\n\r\n"), TestContext.Current.CancellationToken);
+            _ = await ReadHead(client);
+            await client.DisposeAsync();
+            await handled;
+        }
+
+        Assert.Equal(2, counter.Count(Core.Events.DenialKind.Network, "evil.example", Core.Sandbox.Denials.DenialRules.NoGroup));
+        Assert.Equal(1, counter.Count(Core.Events.DenialKind.Network, "inside.example", Core.Sandbox.Denials.DenialRules.PrivateAddress));
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -124,6 +148,8 @@ public sealed class EgressProxyTests
         await proxy.Handle(secondServer, TestContext.Current.CancellationToken);
         var head = await ReadHead(second);
         await first.DisposeAsync();
+        // the upstream plays the server: it closes once the proxy has half-closed it, else the relay waits out EgressCaps.HalfCloseGrace (30 s)
+        await (await dialer.Upstream.Task).DisposeAsync();
         await firstHandled;
 
         Assert.StartsWith("HTTP/1.1 503", head, StringComparison.Ordinal);

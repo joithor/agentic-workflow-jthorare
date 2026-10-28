@@ -16,10 +16,17 @@ ok    code-index        not configured: no approved profile
 warn  context:sources   SND-PROFILE-005 no profile is approved, so no repo is mapped (fix: sindri profile approve)
 ok    context:sync      no context sources, so nothing syncs
 ok    context:mcp-scope no user-wide 'sindri' MCP entry for Claude Code, Codex or Cursor
+ok    context:index-store not configured (no profile is approved)
+ok    context:index-github not configured (no profile is approved)
+ok    context:index-linear not configured (no profile is approved)
+ok    context:index-slack not configured (no profile is approved)
+ok    context:index-ollama not configured (no profile is approved)
+ok    context:index-sync not configured (no profile is approved)
 ok    launcher:adoption no opens in the last 30 days
 ok    pr-watch          the watcher has not run yet
-warn  setup             not finished: profile (needs-you), recipes (todo), mcp (todo), map (todo) (fix: sindri profile approve <hash>)
+warn  setup             not finished: profile (needs-you), recipes (todo), mcp (todo), map (todo), onyx (todo) (fix: sindri profile approve <hash>)
 warn  setup:ui-evidence ui-evidence not found (ROOT/artifacts/aot-sindri-smoke/bin/ui-evidence) (fix: run ./setup.sh from the agentic-workflow checkout (the evidence tool ships with Sindri))
+ok    model:pick        model choice is off
 ok    forge:credential  no forge configured
 warn  codex:read-only   pending: owner probe (fix: in that harness, sindri doctor --probe --harness codex:read-only > tests/Aw.Sindri.Tests/Golden/Probe/codex-read-only.json; docs/csharp/sindri.md, 'The harness probe')
 warn  codex:workspace-write pending: owner probe (fix: in that harness, sindri doctor --probe --harness codex:workspace-write > tests/Aw.Sindri.Tests/Golden/Probe/codex-workspace-write.json; docs/csharp/sindri.md, 'The harness probe')
@@ -154,7 +161,7 @@ true
 "http=404"
 post http=405
 ## sindri services --json | jq (name, every, paused, job)
-[{"name":"code-index-embed","every":"1m","paused":false,"job":null},{"name":"code-index-main-move","every":"1m","paused":false,"job":null},{"name":"context-concept-scan","every":"1m","paused":false,"job":null},{"name":"context-map-refresh","every":"1m","paused":false,"job":null},{"name":"context-sync-gaps","every":"1m","paused":false,"job":null},{"name":"heartbeat","every":"5s","paused":false,"job":null},{"name":"pr-watch","every":"5s","paused":false,"job":null},{"name":"router-stub","every":"5s","paused":false,"job":null},{"name":"setup","every":"1m","paused":false,"job":null},{"name":"workflow-events","every":"5s","paused":false,"job":null}]
+[{"name":"code-index-embed","every":"1m","paused":false,"job":null},{"name":"code-index-main-move","every":"1m","paused":false,"job":null},{"name":"context-concept-scan","every":"1m","paused":false,"job":null},{"name":"context-map-refresh","every":"1m","paused":false,"job":null},{"name":"context-sync-gaps","every":"1m","paused":false,"job":null},{"name":"heartbeat","every":"5s","paused":false,"job":null},{"name":"index-embed","every":"1m","paused":false,"job":null},{"name":"index-sync","every":"5m","paused":false,"job":null},{"name":"pr-watch","every":"5s","paused":false,"job":null},{"name":"router-stub","every":"5s","paused":false,"job":null},{"name":"setup","every":"1m","paused":false,"job":null},{"name":"workflow-events","every":"5s","paused":false,"job":null}]
 ## sindri services run heartbeat (human, terminal)
 job JOB-ID started
 run heartbeat (manual)
@@ -183,6 +190,8 @@ context-concept-scan  every 1m  last: ok  next: TIME
 context-map-refresh  every 1m  last: ok  next: TIME
 context-sync-gaps  every 1m  last: ok  next: TIME
 heartbeat  every 5s  paused  last: ok  next: paused
+index-embed  every 1m  last: ok  next: TIME
+index-sync  every 5m  last: ok  next: TIME
 pr-watch  every 5s  last: ok  next: TIME
 router-stub  every 5s  last: ok  next: TIME
 setup  every 1m  last: ok  next: TIME
@@ -196,6 +205,8 @@ context-concept-scan  every 1m  last: ok  next: TIME
 context-map-refresh  every 1m  last: ok  next: TIME
 context-sync-gaps  every 1m  last: ok  next: TIME
 heartbeat  every 5s  last: ok  next: TIME
+index-embed  every 1m  last: ok  next: TIME
+index-sync  every 5m  last: ok  next: TIME
 pr-watch  every 5s  last: ok  next: TIME
 router-stub  every 5s  last: ok  next: TIME
 setup  every 1m  last: ok  next: TIME
@@ -225,12 +236,19 @@ ok    code-index:lock   context/code-index.lock parses and matches the pins this
 ok    context:sources   no context: section in the profile, so no context sources
 ok    context:sync      no context sources, so nothing syncs
 ok    context:mcp-scope no user-wide 'sindri' MCP entry for Claude Code, Codex or Cursor
+ok    context:index-store not configured (the approved profile names no github, linear or slack source)
+ok    context:index-github not configured (the approved profile names no context.sources.github)
+ok    context:index-linear not configured (the approved profile names no context.sources.linear)
+ok    context:index-slack not configured (the approved profile names no context.sources.slack)
+ok    context:index-ollama not configured (no record source, so nothing to embed)
+ok    context:index-sync not configured (no record source, so nothing syncs)
 ok    launcher:adoption no opens in the last 30 days
 ok    pr-watch          the watcher's last run was ok
-warn  setup             not finished: recipes (needs-you), mcp (todo), map (todo) (fix: sindri recipe approve-all)
+warn  setup             not finished: recipes (needs-you), mcp (todo), map (todo), onyx (todo) (fix: sindri recipe approve-all)
 warn  pre-commit:smoke  no pre-commit hook, so staged secrets are not scanned (fix: sindri scrub --install-pre-commit --repo WORK/repo)
 ok    setup:token       WORK/home/auth/human.token can be read by you alone
 warn  setup:ui-evidence ui-evidence not found (ROOT/artifacts/aot-sindri-smoke/bin/ui-evidence) (fix: run ./setup.sh from the agentic-workflow checkout (the evidence tool ships with Sindri))
+ok    model:pick        model choice is off
 ok    forge:credential  no forge configured
 warn  codex:read-only   pending: owner probe (fix: in that harness, sindri doctor --probe --harness codex:read-only > tests/Aw.Sindri.Tests/Golden/Probe/codex-read-only.json; docs/csharp/sindri.md, 'The harness probe')
 warn  codex:workspace-write pending: owner probe (fix: in that harness, sindri doctor --probe --harness codex:workspace-write > tests/Aw.Sindri.Tests/Golden/Probe/codex-workspace-write.json; docs/csharp/sindri.md, 'The harness probe')

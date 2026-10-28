@@ -454,6 +454,24 @@
       "confirm": null
     },
     {
+      "action": "EndLearnMode",
+      "class": "desk",
+      "allowedCallers": [
+        "human+terminal",
+        "human",
+        "session"
+      ],
+      "terminal": false,
+      "method": "POST",
+      "route": "/sindri/sandbox/learn-off",
+      "cli": "sindri sandbox learn off [--repo <repo>] [--json]",
+      "ui": "ready",
+      "destructive": false,
+      "readsViews": false,
+      "shortcut": null,
+      "confirm": null
+    },
+    {
       "action": "FileRequest",
       "class": "request",
       "allowedCallers": [
@@ -730,6 +748,24 @@
       "method": "POST",
       "route": "/sindri/views/rebuild",
       "cli": "sindri views rebuild",
+      "ui": "ready",
+      "destructive": false,
+      "readsViews": false,
+      "shortcut": null,
+      "confirm": null
+    },
+    {
+      "action": "RecordLimitHit",
+      "class": "issue",
+      "allowedCallers": [
+        "human+terminal",
+        "human",
+        "session"
+      ],
+      "terminal": false,
+      "method": "POST",
+      "route": "/sindri/launches/{launchId}/limit-hit",
+      "cli": "sindri session wrap --launch <launchId>",
       "ui": "ready",
       "destructive": false,
       "readsViews": false,

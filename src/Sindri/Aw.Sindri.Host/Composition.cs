@@ -1,11 +1,15 @@
 using Aw.CodeIndex.Features;
 using Aw.CodeIndex.Infrastructure;
+using Aw.Connectors.Features;
+using Aw.Connectors.Infrastructure;
 using Aw.Context.Core;
 using Aw.Context.Core.Models;
 using Aw.Context.Features;
 using Aw.Context.Infrastructure;
 using Aw.Kernel.Json;
 using Aw.Kernel.Telemetry;
+using Aw.Sindri.Core.Doctor;
+using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Registration;
 using Aw.Sindri.Features;
 using Aw.Sindri.Host.Forge;
@@ -13,6 +17,7 @@ using Aw.Sindri.Host.Models;
 using Aw.Sindri.Host.Registration;
 using Aw.Sindri.Infrastructure.Processes;
 using Aw.Sindri.Infrastructure.Registration;
+using Aw.Sindri.Infrastructure.Sandbox.Launch;
 using Aw.Sindri.Infrastructure.Workflows;
 
 namespace Aw.Sindri.Host;
@@ -35,14 +40,19 @@ internal static class Composition
             .AddSindriCore()
             .AddSindriFeatures()
             .AddSindriInfrastructure(environment)
+            .AddSindriPlatformSandbox(environment)   // SB-5a: the one switch (bubblewrap + session cap on Linux, UnavailableSandbox elsewhere)
             .AddSindriWorkflows(environment, ChildEnvironment.Start)   // the Temporal dev server serve keeps beside itself (engine spec rev 8 §0), the worker and 'workflow complete'
             .AddContextCore()
             .AddContextFeatures()
             .AddContextInfrastructure(ContextEnvironment(environment))   // context engine: $AW_SINDRI_HOME/context (compose edge); pointers resolve here
             .AddCodeIndexFeatures()
             .AddCodeIndexInfrastructure(environment)   // the code index: $AW_SINDRI_HOME/code-index (compose edge)
+            .AddSlackConnectorFactory()
+            .AddGitHubConnectorFactory()   // the source readers are built per token (owned-index spec §9.2), so only the factory; the Host adapter over IConnector is IndexSources/ConnectorFeed
+            .AddConnectorsInfrastructure(environment)
             .AddContextLabeling()   // the labeling pass over IModelPort; a build asks it only when the approved profile turns 'context.labeling' on
             .AddSingleton<IModelPort>(sp => new JudgeModelPort(new JudgeCatalog(environment, sp.GetRequiredService<TimeProvider>(), sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>()).Get))
+            .AddScoped<IDoctorChecks>(sp => new ModelPickDoctorChecks(sp.GetRequiredService<IModelPickSettings>(), environment))   // the 'model:pick' row (model-pick spec 8)
             .AddPullRequests(environment)   // IPullRequests over the forge the approved profile names (workflow.forge; compose edge to Aw.Forge.Infrastructure in Forge/ForgeAdapters)
             .AddProveBlocks(environment)   // input.prove.echo, only under AW_SINDRI_PROVE_BLOCKS=1 in a prover home
             .AddSindriHost();

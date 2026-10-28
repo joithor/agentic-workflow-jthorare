@@ -5,6 +5,12 @@
     ],
     "threshold": 0.6
   },
+  "timings": {
+    "firstCallMs": 1800,
+    "totalMs": 42500,
+    "calls": 2,
+    "slowestCallMs": 2100
+  },
   "rulings": [
     {
       "id": "L-code-3",

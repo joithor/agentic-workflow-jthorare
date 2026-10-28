@@ -5,17 +5,18 @@ public static class EdgeRules
 {
     private static readonly NodeKind[] _any = Enum.GetValues<NodeKind>();
     private static readonly NodeKind[] _implemented = [NodeKind.Feature, NodeKind.Surface, NodeKind.Action];
-    private static readonly NodeKind[] _dependents = [NodeKind.Feature, NodeKind.Code];
+    private static readonly NodeKind[] _dependents = [NodeKind.Feature, NodeKind.Code, NodeKind.Concept];
     private static readonly NodeKind[] _members = [NodeKind.Feature, NodeKind.Record, NodeKind.Decision];
     private static readonly NodeKind[] _onSurface = [NodeKind.Surface, NodeKind.Action];
+    private static readonly NodeKind[] _usesThing = [NodeKind.Surface, NodeKind.Action, NodeKind.Code, NodeKind.Feature, NodeKind.Concept];
 
     private static readonly Dictionary<EdgeType, (string Name, NodeKind[] From, NodeKind[] To)> _table = new()
     {
         [EdgeType.PartOf] = ("part-of", [NodeKind.Feature, NodeKind.Surface], [NodeKind.Feature]),
         [EdgeType.On] = ("on", [NodeKind.Action], [NodeKind.Surface]),
         [EdgeType.MovesTo] = ("moves-to", [NodeKind.Surface], [NodeKind.Surface]),
-        [EdgeType.Reads] = ("reads", _onSurface, [NodeKind.Thing]),
-        [EdgeType.Writes] = ("writes", _onSurface, [NodeKind.Thing]),
+        [EdgeType.Reads] = ("reads", _usesThing, [NodeKind.Thing]),
+        [EdgeType.Writes] = ("writes", _usesThing, [NodeKind.Thing]),
         [EdgeType.DependsOn] = ("depends-on", _dependents, _dependents),
         [EdgeType.StepOf] = ("step-of", _onSurface, [NodeKind.Flow]),
         [EdgeType.Implements] = ("implements", [NodeKind.Code], _implemented),
@@ -25,6 +26,7 @@ public static class EdgeRules
         [EdgeType.Quotes] = ("quotes", [NodeKind.Decision], [NodeKind.Record]),
         [EdgeType.BelongsTo] = ("belongs-to", _members, [NodeKind.Concept]),
         [EdgeType.Supersedes] = ("supersedes", [NodeKind.Decision], [NodeKind.Decision]),
+        [EdgeType.Tags] = ("tags", [NodeKind.Code], [NodeKind.Feature]),
     };
 
     /// <summary>Whether an edge of <paramref name="type"/> may go from a <paramref name="from"/> node to a <paramref name="to"/> node.</summary>

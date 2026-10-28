@@ -53,6 +53,7 @@ using Aw.Sindri.Features.ApproveProfile;
 using Aw.Sindri.Features.ApproveRecipe;
 using Aw.Sindri.Features.CancelJob;
 using Aw.Sindri.Features.CheckPack;
+using Aw.Sindri.Features.CheckSandbox;
 using Aw.Sindri.Features.CloseItem;
 using Aw.Sindri.Features.CodeIndexJobs;
 using Aw.Sindri.Features.CompleteStep;
@@ -62,6 +63,7 @@ using Aw.Sindri.Features.CreateItem;
 using Aw.Sindri.Features.Decide;
 using Aw.Sindri.Features.DeferOnyx;
 using Aw.Sindri.Features.Docs;
+using Aw.Sindri.Features.EndLearnMode;
 using Aw.Sindri.Features.EvalRecipe;
 using Aw.Sindri.Features.FileRequest;
 using Aw.Sindri.Features.GetEventCatalog;
@@ -72,6 +74,7 @@ using Aw.Sindri.Features.GetItemScope;
 using Aw.Sindri.Features.GetItemTimeline;
 using Aw.Sindri.Features.GetJob;
 using Aw.Sindri.Features.GetLaunch;
+using Aw.Sindri.Features.GetLaunchPicks;
 using Aw.Sindri.Features.GetLaunchTargets;
 using Aw.Sindri.Features.GetNeedsYou;
 using Aw.Sindri.Features.GetProfile;
@@ -88,6 +91,7 @@ using Aw.Sindri.Features.LineDoctor;
 using Aw.Sindri.Features.LineHoldout;
 using Aw.Sindri.Features.ListCommands;
 using Aw.Sindri.Features.ListDecisions;
+using Aw.Sindri.Features.ListDenials;
 using Aw.Sindri.Features.ListItems;
 using Aw.Sindri.Features.ListJobs;
 using Aw.Sindri.Features.ListOutbox;
@@ -105,6 +109,7 @@ using Aw.Sindri.Features.PauseService;
 using Aw.Sindri.Features.ProbeLaunchTargets;
 using Aw.Sindri.Features.ReadLedger;
 using Aw.Sindri.Features.RebuildViews;
+using Aw.Sindri.Features.RecordLimitHit;
 using Aw.Sindri.Features.RegisterMcp;
 using Aw.Sindri.Features.RegisterRecipe;
 using Aw.Sindri.Features.ResumeService;
@@ -164,6 +169,7 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(OptionView)), JsonSerializable(typeof(GetNeedsYouRequest)), JsonSerializable(typeof(GetNeedsYouResponse)), JsonSerializable(typeof(GetItemTimelineRequest)), JsonSerializable(typeof(GetItemScopeRequest)), JsonSerializable(typeof(ItemScopeResponse))]
 [JsonSerializable(typeof(TimelineResponse)), JsonSerializable(typeof(Recipe)), JsonSerializable(typeof(BlockDescriptor)), JsonSerializable(typeof(ValidateRecipeResponse))]
 [JsonSerializable(typeof(CheckPackResponse)), JsonSerializable(typeof(PackFinding))]
+[JsonSerializable(typeof(WrapLimits))]   // SB-3a: the wrap limits file
 [JsonSerializable(typeof(EvalRecipeResponse)), JsonSerializable(typeof(WorkflowEvent)), JsonSerializable(typeof(EvalStartLine)), JsonSerializable(typeof(EvalStepLine))]
 [JsonSerializable(typeof(RecipeValidationView)), JsonSerializable(typeof(CompleteStepResponse)), JsonSerializable(typeof(InstanceView)), JsonSerializable(typeof(ListOutboxResponse))]
 [JsonSerializable(typeof(ScopingApproved)), JsonSerializable(typeof(ScopingEscape)), JsonSerializable(typeof(ScopingView)), JsonSerializable(typeof(ScopingCheckResponse)), JsonSerializable(typeof(ScopingDeskReport))]   // SC-K: the scoping verbs
@@ -181,6 +187,7 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(FleetChanged))]
 [JsonSerializable(typeof(Features.CodeIndexReads.CodeIndexStatusView)), JsonSerializable(typeof(Features.CodeIndexReads.RepoHealth)), JsonSerializable(typeof(CodeIndex.Core.Facade.FindSymbolsAnswer)), JsonSerializable(typeof(CodeIndex.Core.Values.RepoName), TypeInfoPropertyName = "CodeIndexRepoName"), JsonSerializable(typeof(Features.CodeIndexReads.CodeCallsView)), JsonSerializable(typeof(CodeIndex.Core.Facade.RepoStatus), TypeInfoPropertyName = "CodeIndexRepoStatus")]   // code-index reads (CI-10a)
 [JsonSerializable(typeof(SessionList)), JsonSerializable(typeof(SessionView)), JsonSerializable(typeof(SessionRow)), JsonSerializable(typeof(EndedSessionRow)), JsonSerializable(typeof(SessionStatus))]   // collector spec CA-1, CA-2, CA-8
+[JsonSerializable(typeof(LaunchPicks)), JsonSerializable(typeof(LaunchPickView)), JsonSerializable(typeof(StateEscalation)), JsonSerializable(typeof(PickRunRow)), JsonSerializable(typeof(PickRunDetail)), JsonSerializable(typeof(PickRunDelta)), JsonSerializable(typeof(PickRunFrame))]   // model-pick spec §6.1: GET /sindri/launch/picks
 [JsonSerializable(typeof(DeskNotice))]   // engine P6 unit (c): a line of notifications.jsonl
 [JsonSerializable(typeof(EffectRow))]            // engine P6: an effect's ledger row (§5.7)
 [JsonSerializable(typeof(RoutedItem))]           // engine P7 plan D8: the router stub's item.routed event
@@ -201,6 +208,8 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(ContextLinksSynced)), JsonSerializable(typeof(ContextMapImported)), JsonSerializable(typeof(MapDocument)), JsonSerializable(typeof(ReviewFile))]
 [JsonSerializable(typeof(MapStatusView)), JsonSerializable(typeof(MapPublishStatusView)), JsonSerializable(typeof(StaleRepo)), JsonSerializable(typeof(MapExported)), JsonSerializable(typeof(MapHealth)), JsonSerializable(typeof(PurgeReport))]
 [JsonSerializable(typeof(ImportContextMapRequest)), JsonSerializable(typeof(ImportContextMapResponse))]
+[JsonSerializable(typeof(GetIndexStatusRequest)), JsonSerializable(typeof(IndexStatusView)), JsonSerializable(typeof(IndexSourceRow)), JsonSerializable(typeof(PurgeIndexSourceRequest)), JsonSerializable(typeof(IndexPurgeView))]   // the index verbs (owned-index spec §5.8)
+[JsonSerializable(typeof(CheckContextMapStructureRequest)), JsonSerializable(typeof(MapChecksView))]   // map structure spec §4.3
 // Two RecordKey types meet here: Sindri's item link key and the context lane's source key; name Sindri's apart (SYSLIB1031).
 [JsonSerializable(typeof(Core.Ids.RecordKey), TypeInfoPropertyName = "ItemRecordKey")]
 [JsonSerializable(typeof(BudgetFigures)), JsonSerializable(typeof(ChildGroup)), JsonSerializable(typeof(ChildRow)), JsonSerializable(typeof(CurrentState))]
@@ -226,14 +235,17 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(FleetChanged))]
 [JsonSerializable(typeof(ItemOpenRequested)), JsonSerializable(typeof(LaunchStarted)), JsonSerializable(typeof(LaunchStartedPublic)), JsonSerializable(typeof(LaunchFailed)), JsonSerializable(typeof(ModelPicked)), JsonSerializable(typeof(ModelPicking)), JsonSerializable(typeof(PickedFile)), JsonSerializable(typeof(OmittedFile))]   // API P10a (U0)
 [JsonSerializable(typeof(LaunchShowReport)), JsonSerializable(typeof(LaunchProbed)), JsonSerializable(typeof(SessionEnded)), JsonSerializable(typeof(SessionUsage)), JsonSerializable(typeof(LaunchSessionReported))]
-[JsonSerializable(typeof(SandboxDenied)), JsonSerializable(typeof(SandboxLimitHit)), JsonSerializable(typeof(SandboxSummary)), JsonSerializable(typeof(StepPolicy)), JsonSerializable(typeof(ModelLoginSource)), JsonSerializable(typeof(PreparedLogin)), JsonSerializable(typeof(LoginStatus))]   // Sandbox SB-0
+[JsonSerializable(typeof(Core.Sandbox.Denials.DenialFile)), JsonSerializable(typeof(SandboxDenied)), JsonSerializable(typeof(SandboxLimitHit)), JsonSerializable(typeof(SandboxLearnEnded)), JsonSerializable(typeof(SandboxSummary)), JsonSerializable(typeof(StepPolicy)), JsonSerializable(typeof(ModelLoginSource)), JsonSerializable(typeof(PreparedLogin)), JsonSerializable(typeof(LoginStatus))]   // Sandbox SB-0
 [JsonSerializable(typeof(LaunchViewerAttached)), JsonSerializable(typeof(LaunchTakeoverOpened))]   // issue 1004
 [JsonSerializable(typeof(GetLaunchTargetsRequest)), JsonSerializable(typeof(LaunchTargets)), JsonSerializable(typeof(ProbeLaunchTargetsRequest)), JsonSerializable(typeof(ProbeLaunchTargetsResult))]   // API P10a (U11): the launch targets and their probe job
 [JsonSerializable(typeof(CodeIndexRow))]
 [JsonSerializable(typeof(ModelHistoryRow)), JsonSerializable(typeof(RunScope)), JsonSerializable(typeof(RunModel)), JsonSerializable(typeof(StateOrder))]   // model-pick M-4: the model-history and model-runs views
 [JsonSerializable(typeof(LaunchRow)), JsonSerializable(typeof(LaunchEnd)), JsonSerializable(typeof(LaunchViewer)), JsonSerializable(typeof(LaunchViewerPublic))]   // API P10a (U8): the launches view
 [JsonSerializable(typeof(OpenItemRequest)), JsonSerializable(typeof(OpenItemBody)), JsonSerializable(typeof(LaunchRequested)), JsonSerializable(typeof(GetLaunchRequest)), JsonSerializable(typeof(LaunchView))]
+[JsonSerializable(typeof(EndLearnModeRequest)), JsonSerializable(typeof(RecordLimitHitRequest)), JsonSerializable(typeof(RecordLimitHitResponse)), JsonSerializable(typeof(LimitHitBody))]
 [JsonSerializable(typeof(GetRunSuspensionRequest)), JsonSerializable(typeof(RunSuspensionView))]
+[JsonSerializable(typeof(ListDenialsRequest)), JsonSerializable(typeof(ListDenialsResponse)), JsonSerializable(typeof(Core.Sandbox.Denials.DenialFile)), JsonSerializable(typeof(Core.Sandbox.Plan.SandboxPlan))]   // SB-4b: the denials read and the plan file `sandbox explain` reads
+[JsonSerializable(typeof(CheckSandboxRequest)), JsonSerializable(typeof(CheckSandboxResponse)), JsonSerializable(typeof(SandboxBlockerLine))]   // SB-5a: Check again
 [JsonSerializable(typeof(SessionHeartbeatBody)), JsonSerializable(typeof(SessionHeartbeatResponse)), JsonSerializable(typeof(SessionExitBody)), JsonSerializable(typeof(SessionExitResponse)), JsonSerializable(typeof(CaptureRule))]   // API P10a (U10)
 // Two LaunchId types meet here: the collector's looser one (Core.Launch) and the engine's 'LCH-…' one the launch events carry (SYSLIB1031).
 [JsonSerializable(typeof(Core.Workflow.Engine.LaunchId), TypeInfoPropertyName = "EngineLaunchId")]

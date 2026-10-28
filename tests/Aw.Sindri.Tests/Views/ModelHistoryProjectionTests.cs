@@ -76,10 +76,24 @@ public sealed class ModelHistoryProjectionTests
     public async Task A_launch_with_no_instance_makes_no_row()
     {
         await _v.Begin();
-        await _v.Fold(Aw.Sindri.Core.Events.EventTypes.LaunchStarted, ModelHistoryFolds.LaunchPayload(ModelHistoryFolds.Run(1), "draft", Sonnet) with { Instance = null }, Aw.Sindri.Testing.A.FirstItemId);
+        await _v.Fold(Core.Events.EventTypes.LaunchStarted, ModelHistoryFolds.LaunchPayload(ModelHistoryFolds.Run(1), "draft", Sonnet) with { Instance = null }, A.FirstItemId);
         await _v.Completed("draft", "check", ModelHistoryFolds.Run(1));
 
         Assert.Null(await _v.Row("draft", Sonnet));
+    }
+
+    /// <summary>#1481: a real mirrored row names the instance by its address; the fold looked the instance up by the workflow id in some places and the address in others, so a real escalated run wrote no row.</summary>
+    [Fact]
+    public async Task A_real_escalated_run_counts_the_refused_first_model_and_the_sonnet_ok_run()
+    {
+        await _v.Begin("write");
+        await _v.Launched(ModelHistoryFolds.Run(1), Sonnet, "write");
+        await _v.Picked("write", from: Sonnet, "refused");
+        await _v.Launched(ModelHistoryFolds.Run(1), Opus, "write");
+        await _v.Completed("write", "done", ModelHistoryFolds.Run(1));
+
+        Expect.Sequence([ModelOutcome.Refused], (await _v.Row("write", Sonnet))!.Recent);
+        Expect.Sequence([ModelOutcome.Ok], (await _v.Row("write", Opus))!.Recent);
     }
 
     [Theory]
@@ -104,7 +118,7 @@ public sealed class ModelHistoryProjectionTests
         await _v.Picked("draft", from: Sonnet, kind: null);
         await _v.Picked("draft", from: Sonnet, kind: "crashed");
 
-        Assert.Empty((await _v.Views.List<ModelHistoryRow>(Aw.Sindri.Core.Views.ViewNames.ModelHistory, TestContext.Current.CancellationToken)).Value);
+        Assert.Empty((await _v.Views.List<ModelHistoryRow>(Core.Views.ViewNames.ModelHistory, TestContext.Current.CancellationToken)).Value);
     }
 
     [Fact]
@@ -129,7 +143,7 @@ public sealed class ModelHistoryProjectionTests
         await _v.Launched(ModelHistoryFolds.Run(2), model: null, "check");
         await _v.Completed("check", "apply", ModelHistoryFolds.Run(2));
 
-        Assert.Empty((await _v.Views.List<ModelHistoryRow>(Aw.Sindri.Core.Views.ViewNames.ModelHistory, TestContext.Current.CancellationToken)).Value);
+        Assert.Empty((await _v.Views.List<ModelHistoryRow>(Core.Views.ViewNames.ModelHistory, TestContext.Current.CancellationToken)).Value);
     }
 
     [Fact]
@@ -139,7 +153,7 @@ public sealed class ModelHistoryProjectionTests
         await _v.Launched(ModelHistoryFolds.Run(1), Sonnet);
         await _v.Completed("draft", "check", ModelHistoryFolds.Run(1));
 
-        Assert.Empty((await _v.Views.List<ModelHistoryRow>(Aw.Sindri.Core.Views.ViewNames.ModelHistory, TestContext.Current.CancellationToken)).Value);
+        Assert.Empty((await _v.Views.List<ModelHistoryRow>(Core.Views.ViewNames.ModelHistory, TestContext.Current.CancellationToken)).Value);
     }
 
     [Fact]

@@ -9,10 +9,13 @@ using Aw.Context.Core.History;
 using Aw.Context.Core.Linking;
 using Aw.Context.Core.Map;
 using Aw.Context.Core.Proposals;
+using Aw.Context.Core.Records;
 using Aw.Context.Core.Review;
 using Aw.Context.Core.ScopeGraph;
 using Aw.Context.Core.Search;
+using Aw.Context.Core.Sync;
 using Aw.Context.Core.Trust;
+using Aw.Context.Core.Vectors;
 using Aw.Context.Infrastructure.ConceptScan;
 using Aw.Context.Infrastructure.Docs;
 using Aw.Context.Infrastructure.Eval;
@@ -24,12 +27,14 @@ using Aw.Context.Infrastructure.Labeling;
 using Aw.Context.Infrastructure.Linear;
 using Aw.Context.Infrastructure.Map;
 using Aw.Context.Infrastructure.Onyx;
+using Aw.Context.Infrastructure.Records;
 using Aw.Context.Infrastructure.Review;
 using Aw.Context.Infrastructure.ScopeRuns;
 using Aw.Context.Infrastructure.Scrubbing;
 using Aw.Context.Infrastructure.Search;
 using Aw.Context.Infrastructure.Sources;
 using Aw.Context.Infrastructure.Store;
+using Aw.Context.Infrastructure.Vectors;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -63,6 +68,10 @@ public static class ContextInfrastructureServiceCollectionExtensions
             .AddSingleton<IProposalRuns>(sp => sp.GetRequiredService<SqliteGraphStore>())
             .AddSingleton<IConceptHintStore, SqliteConceptHintStore>()
             .AddSingleton<IIntentStore, SqliteIntentStore>()
+            .AddSingleton<IRecordStore, SqliteRecordStore>()
+            .AddSingleton<ILexicalLeg, SqliteLexicalLeg>()
+            .AddSingleton<IRecordFeedCatalog, ContextRecordFeedCatalog>()
+            .AddSingleton<IVectorMatrixCache, VectorMatrixCache>()
             .AddSingleton<IScopeRunStore, SqliteScopeRunStore>()
             .AddSingleton<IMapFileReader, MapFileReader>()
             .AddSingleton<IMapSearchIndexFactory, SqliteMapSearchIndexFactory>()

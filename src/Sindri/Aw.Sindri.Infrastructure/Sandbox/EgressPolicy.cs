@@ -1,4 +1,5 @@
 using System.Net;
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 
 namespace Aw.Sindri.Infrastructure.Sandbox;
@@ -6,7 +7,10 @@ namespace Aw.Sindri.Infrastructure.Sandbox;
 /// <summary>Decides whether a host and port may be reached, from the plan's static host groups.</summary>
 /// <param name="groups">The plan's groups.</param>
 /// <param name="resolver">Resolves names.</param>
-internal sealed class EgressPolicy(IReadOnlyList<PlanGroup> groups, IEgressResolver resolver)
+/// <param name="mode">The plan's network mode.</param>
+/// <param name="learnUntil">When learn mode stops; checked on every request.</param>
+/// <param name="time">The clock.</param>
+internal sealed class EgressPolicy(IReadOnlyList<PlanGroup> groups, IEgressResolver resolver, NetworkMode mode = NetworkMode.Enforce, DateTimeOffset? learnUntil = null, TimeProvider? time = null)
 {
     private static readonly int[] _ports = [80, 443];
 
@@ -26,7 +30,13 @@ internal sealed class EgressPolicy(IReadOnlyList<PlanGroup> groups, IEgressResol
     {
         ArgumentNullException.ThrowIfNull(host);
         var name = host.Trim().TrimEnd('.').Trim('[', ']');
-        if (!_ports.Contains(port) || HostGroups.Allowing(groups, name) is null)
+        if (!_ports.Contains(port))
+        {
+            return new EgressDecision(EgressVerdict.Denied, Address: null);
+        }
+
+        var listed = HostGroups.Allowing(groups, name) is not null;
+        if (!listed && !Learning())
         {
             return new EgressDecision(EgressVerdict.Denied, Address: null);
         }
@@ -38,12 +48,14 @@ internal sealed class EgressPolicy(IReadOnlyList<PlanGroup> groups, IEgressResol
         {
             if (Reachable(address))
             {
-                return new EgressDecision(EgressVerdict.Allowed, address);
+                return new EgressDecision(listed ? EgressVerdict.Allowed : EgressVerdict.Learned, address);
             }
         }
 
         return new EgressDecision(EgressVerdict.Refused, Address: null);
     }
+
+    private bool Learning() => mode == NetworkMode.Learn && learnUntil is { } until && (time ?? TimeProvider.System).GetUtcNow() < until;
 
     private bool Reachable(IPAddress address) => IsPublic(address) || HostGroups.Allowing(groups, address.ToString()) is not null;
 

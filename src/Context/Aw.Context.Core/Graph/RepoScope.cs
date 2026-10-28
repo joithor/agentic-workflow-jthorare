@@ -1,7 +1,7 @@
 namespace Aw.Context.Core.Graph;
 
 /// <summary>
-/// The nodes a repo implements (spec §3): the targets of 'implements' edges with file evidence in that repo
+/// The nodes a repo implements (spec §3): the targets of 'implements' edges (and 'tags' edges, so a tag feature has its repo) with file evidence in that repo
 /// ('repo:&lt;repo&gt;/&lt;path&gt;'), and the code files those edges start from ("that repo's files and code"). S-3b adds their cascade.
 /// Since owner decision 2026-10-15 (B) a session also sees the intent linked to those nodes (<see cref="WithLinkedIntent"/>).
 /// </summary>
@@ -16,7 +16,7 @@ public static class RepoScope
         ArgumentNullException.ThrowIfNull(graph);
         var prefix = $"repo:{repo.Value}/";
         return graph.Edges
-            .Where(e => e.Type == EdgeType.Implements && e.EvidenceOrEmpty.Any(r => r.Key.Value.StartsWith(prefix, StringComparison.Ordinal)))
+            .Where(e => e.Type is EdgeType.Implements or EdgeType.Tags && e.EvidenceOrEmpty.Any(r => r.Key.Value.StartsWith(prefix, StringComparison.Ordinal)))
             .SelectMany(e => new[] { e.To.Value, e.From.Value })
             .ToHashSet(StringComparer.Ordinal);
     }

@@ -5,6 +5,7 @@ using Aw.Sindri.Core.Onyx;
 using Aw.Sindri.Core.Setup;
 using Aw.Sindri.Core.Workflow.Shipped;
 using Aw.Sindri.Host.Catalog;
+using Aw.Sindri.Host.ContextVectors;
 using Aw.Sindri.Host.Onyx;
 using Aw.Sindri.Host.Server;
 using Aw.Sindri.Host.Shipped;
@@ -26,6 +27,9 @@ internal static class SindriHostServiceCollectionExtensions
         .AddSingleton<IEmbeddedRecipes>(static _ => new ManifestEmbeddedRecipes(typeof(ManifestEmbeddedRecipes).Assembly))   // the recipes this build ships; nothing at run time reads recipes/sindri from disk
         .AddSingleton<Projector>()
         .AddSingleton<ScheduleInputs>()
+        .AddSingleton<Context.Core.Sync.IExternalRecordFeeds>(static sp => new IndexSources.GitHubRecordFeeds(sp.GetRequiredService<Core.Secrets.ISecretPointers>(), sp.GetRequiredService<Connectors.Core.GitHub.IGitHubConnectorFactory>(), IndexSources.GitHubReaders.Create))   // the GitHub feed `index sync` picks up through the record-feed catalog
+        .AddSingleton<Context.Core.Sync.IExternalRecordFeeds>(static sp => new IndexSources.SlackRecordFeeds(sp.GetRequiredService<Core.Secrets.ISecretPointers>(), sp.GetRequiredService<Connectors.Core.Slack.ISlackConnectorFactory>(), IndexSources.SlackReaders.Create))   // the Slack feed, present only when the profile lists channels, a workspace and a token that resolves
+        .AddContextVectors()   // Context's query embedder and vector scan over Aw.Embeddings (owned-index spec §9.2)
         .AddScoped<CodeIndexHost.ICodeIndexScopeSource, CodeIndexHost.ProfileCodeIndexScopeSource>()
         .AddScoped<Context.Core.Symbols.ICodeSymbolSource, CodeIndexHost.CodeIndexSymbolSource>()   // Context reads the index through the CodeIndex facade (S-9); replaces the no-index default (TryAdd in AddContextFeatures)
         .AddScoped<Context.Core.Glossary.ISymbolVectors, CodeIndexHost.CodeIndexSymbolVectors>()   // Context reads the stored symbol embeddings through the CodeIndex facade (the concept glossary); replaces the no-vectors default (TryAdd in AddContextFeatures)

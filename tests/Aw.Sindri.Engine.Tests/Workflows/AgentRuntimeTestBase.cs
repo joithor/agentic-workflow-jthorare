@@ -17,6 +17,7 @@ using Aw.Sindri.Testing.Workflow;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Temporalio.Client;
+using Temporalio.Common;
 using Temporalio.Testing;
 using Temporalio.Worker;
 
@@ -40,6 +41,7 @@ public abstract class AgentRuntimeTestBase : IDisposable
     internal string? _factRepo;   // the repo key fact:item names, when a test wants one the profile doesn't list
     internal ILauncher? _launcherSeen;   // what the host sees as the launcher when a test wraps the fake
     internal IRunDiff? _diffSeen;
+    internal Action<IServiceCollection>? _extra;   // more registrations a test wants over the fakes (the model pick's settings, judge and catalog)
 
     public void Dispose()
     {
@@ -203,6 +205,9 @@ public abstract class AgentRuntimeTestBase : IDisposable
 
         public LaunchId Launch => AgentLaunches.LaunchIdFor(Run());
 
+        /// <summary>The launch id of the run's one retry on a stronger model (model-pick spec 5).</summary>
+        public LaunchId EscalatedLaunch => AgentLaunches.LaunchIdFor(Run() with { Escalation = 1 });
+
         public string Worktree => AgentLaunches.WorktreeFor(Run(), new AgentStepTarget(ItemId.From(_item.Id), AgentId.From("claude-code"), Repo));
 
         public static async Task<AgentRig> Start(AgentRuntimeTestBase test, WorkflowEnvironment? given, CancellationToken ct)
@@ -253,8 +258,25 @@ public abstract class AgentRuntimeTestBase : IDisposable
 
         public static async Task Replayed(WorkflowHandle<RecipeWorkflow, RecipeResult> handle)
         {
-            var replayed = await new WorkflowReplayer(new WorkflowReplayerOptions().AddWorkflow<RecipeWorkflow>()).ReplayWorkflowAsync(await handle.FetchHistoryAsync(), throwOnReplayFailure: false, TestContext.Current.CancellationToken);
-            Assert.Null(replayed.ReplayFailure);
+            var history = await handle.FetchHistoryAsync();
+            var replayed = await new WorkflowReplayer(new WorkflowReplayerOptions().AddWorkflow<RecipeWorkflow>()).ReplayWorkflowAsync(history, throwOnReplayFailure: false, TestContext.Current.CancellationToken);
+            Assert.True(replayed.ReplayFailure is null, ReplayReport(replayed.ReplayFailure, history));   // a replay failure names the history it failed on, so a once-in-fifty flake leaves its evidence (#1464)
+        }
+
+        /// <summary>The replay failure, the event it names if it does, and the last 40 events of the history: id, type, and for a marker its name and change id, for an activity its type and id.</summary>
+        private static string ReplayReport(Exception? failure, WorkflowHistory history)
+        {
+            var events = history.Events.ToList();
+            var lines = new List<string> { "replay failed: " + failure, string.Create(System.Globalization.CultureInfo.InvariantCulture, $"history has {events.Count} events; the last {Math.Min(40, events.Count)}:") };
+            foreach (var e in events.Skip(Math.Max(0, events.Count - 40)))
+            {
+                var extra = e.MarkerRecordedEventAttributes is { } marker
+                    ? $" marker={marker.MarkerName} {string.Join(' ', marker.Details.Select(static d => d.Key + "=" + string.Join(',', d.Value.Payloads_.Select(static p => p.Data.ToStringUtf8()))))}"
+                    : e.ActivityTaskScheduledEventAttributes is { } scheduled ? $" activity={scheduled.ActivityType.Name} id={scheduled.ActivityId}" : string.Empty;
+                lines.Add(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"  #{e.EventId} {e.EventType}{extra}"));
+            }
+
+            return string.Join('\n', lines);
         }
 
         /// <summary>The session id of each 'launch.started' row, in order (null when the row has none).</summary>
@@ -269,6 +291,27 @@ public abstract class AgentRuntimeTestBase : IDisposable
             }
 
             return sessions;
+        }
+
+        /// <summary>The payload text of every ledger row of <paramref name="type"/>.</summary>
+        public async Task<IReadOnlyList<string>> Payloads(string type, CancellationToken ct)
+        {
+            var rows = (await Sindri.GetRequiredService<ILedgerStore>().ReadAfter(0, 500, ct)).Value;
+            return [.. rows.Where(e => e.Envelope.Type == type).Select(static e => e.Envelope.Payload)];
+        }
+
+        /// <summary>The payloads of <paramref name="type"/> once at least one is recorded (the outcome follows the launch by a moment).</summary>
+        public async Task<IReadOnlyList<string>> PayloadsUntil(string type, CancellationToken ct)
+        {
+            var deadline = RealTime.NowDateTime.AddSeconds(30);
+            var rows = await Payloads(type, ct);
+            while (rows.Count == 0 && RealTime.NowDateTime < deadline)
+            {
+                await Task.Delay(50, ct);
+                rows = await Payloads(type, ct);
+            }
+
+            return rows;
         }
 
         /// <summary>The reason of the instance's one 'step.failed' row.</summary>
@@ -357,7 +400,8 @@ public abstract class AgentRuntimeTestBase : IDisposable
             _ = services.Replace(ServiceDescriptor.Singleton<IAgentSessions>(test._sessions));
             _ = services.Replace(ServiceDescriptor.Singleton(test._diffSeen ?? test._diff));
             _ = services.Replace(ServiceDescriptor.Singleton<IStepOutputs>(test._outputs));
-            _ = services.Replace(ServiceDescriptor.Singleton(new AgentRuntimeOptions(PollInterval: TimeSpan.FromMilliseconds(100))));
+            _ = services.Replace(ServiceDescriptor.Singleton(new AgentRuntimeOptions(PollInterval: TimeSpan.FromMilliseconds(100)) { SlotRetry = TimeSpan.FromMilliseconds(50), SlotSlice = TimeSpan.FromMilliseconds(400) }));
+            test._extra?.Invoke(services);
         }
     }
 

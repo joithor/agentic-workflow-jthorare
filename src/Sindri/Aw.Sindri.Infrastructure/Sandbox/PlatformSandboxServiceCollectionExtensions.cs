@@ -1,5 +1,9 @@
+using Aw.Sindri.Core.Control;
+using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
+using Aw.Sindri.Infrastructure.Launch;
+using Aw.Sindri.Infrastructure.Sandbox.Launch;
 using Aw.Sindri.Infrastructure.Sessions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -35,7 +39,41 @@ public static class PlatformSandboxServiceCollectionExtensions
         return services
             .AddSindriBubblewrapSandbox(environment)
             .AddSingleton<ISliceScopes>(new CgroupSliceScopes(SliceDirectory(uid)))
-            .AddSingleton<ISessionCap>(sp => new FileSessionCap(LockFile(sp.GetRequiredService<SindriSettings>().Home), sp.GetRequiredService<ISliceScopes>()));
+            .AddSingleton<ISessionCap>(sp => new FileSessionCap(LockFile(sp.GetRequiredService<SindriSettings>().Home), sp.GetRequiredService<ISliceScopes>()))
+            .AddSingleton<ISandboxLaunchStages, PendingSandboxLaunchStages>()   // TODO(flow): replace with the flow builder's ISandboxLaunchStages implementation (the one line that remains)
+            .AddSingleton<ISandboxLaunch>(sp => new SandboxLaunch(
+                sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<ISandboxLaunchStages>(), LaunchOptions(sp, environment)));
+    }
+
+    private static SandboxLaunchOptions LaunchOptions(IServiceProvider sp, Func<string, string?> environment)
+    {
+        var endpoints = sp.GetRequiredService<IEndpointFile>();
+        return new SandboxLaunchOptions(
+            environment("AW_SANDBOX_SYSTEMD_RUN") is { Length: > 0 } run ? run : "systemd-run",
+            ReadBox(),
+            TimeSpan.FromHours(2),   // workflow.steps.longMax's default; the launch reads no profile here yet
+            sp.GetRequiredService<SindriSettings>().Home,
+            sp.GetRequiredService<LauncherOptions>().SecretsDirectory,
+            () => endpoints.Read(CancellationToken.None).AsTask().GetAwaiter().GetResult() is { IsSuccess: true } read ? read.Value : null);   // control.json is a tiny local file
+    }
+
+    /// <summary>Reads the box's RAM (MemTotal in /proc/meminfo, in kB) and logical cores.</summary>
+    /// <returns>The facts; 0 bytes of RAM when /proc/meminfo can't be read.</returns>
+    internal static BoxFacts ReadBox()
+    {
+        long ram = 0;
+        try
+        {
+            var line = File.ReadLines("/proc/meminfo").FirstOrDefault(l => l.StartsWith("MemTotal:", StringComparison.Ordinal));
+            var kb = line?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1).FirstOrDefault();
+            ram = long.TryParse(kb, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var parsed) ? parsed * 1024 : 0;
+        }
+        catch (IOException)
+        {
+            // No /proc: the planner treats 0 bytes as unknown.
+        }
+
+        return new BoxFacts(ram, Environment.ProcessorCount);
     }
 
     /// <summary>Gets the cgroup directory whose '*.scope' children are the live Step sessions.</summary>

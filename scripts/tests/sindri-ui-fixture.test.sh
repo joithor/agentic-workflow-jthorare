@@ -652,6 +652,7 @@ AW_SINDRI_HOME="$P" SINDRI="$STUB" FIXTURE_AGENT_WAIT=2 bash "$FIXTURE" model-pi
 check "the next state lets the judge stub answer again" "$(echo '{}' | timeout 1 "$PD/stub-judge/judge" model-pick >/dev/null 2>&1; echo $?)" "0"
 
 # The launcher stub: what it writes and what it reports, run by hand with the environment a launch gives it. Each run has its own folders.
+AW_SINDRI_HOME="$P" SINDRI="$STUB" FIXTURE_AGENT_WAIT=2 bash "$FIXTURE" model-picks-run escalated >/dev/null 2>&1   # the stub refuses Haiku in this state only
 R="$TMPDIR/picksstub"
 mkdir -p "$R/home/launches" "$R/run1" "$R/claude1" "$R/run2" "$R/claude2"
 seed='Sindri Step brief. Report with: sindri workflow complete ITM-0f/wf/1 --run RUN-abc --outcome done --output fact:resolution=$AW_SINDRI_RUN_DIR/.sindri-out/resolution'
@@ -659,7 +660,7 @@ seed='Sindri Step brief. Report with: sindri workflow complete ITM-0f/wf/1 --run
 env AW_SINDRI_HOME="$R/home" AW_SINDRI_LAUNCH=LCH-1 AW_SINDRI_INSTANCE=ITM-0f/wf/1 AW_SINDRI_RUN_DIR="$R/run1" CLAUDE_CONFIG_DIR="$R/claude1" \
   timeout 5 "$PD/stub-bin-pick/claude" --model claude-haiku-4-5 --session-id 11111111-2222-4333-8444-555555555555 "$seed" >/dev/null 2>&1
 check "the stub on the model it refuses reports twice (the second bad report ends its session)" "$(grep -c '^workflow complete ITM-0f/wf/1 --run RUN-abc --outcome done --output fact:resolution=' "$STUB_LOG")" "2"
-check "the stub's refused report is not JSON" "$(jq -e . "$R/run1/.sindri-out/resolution" >/dev/null 2>&1; echo $?)" "4"
+check "the stub's refused report is not JSON" "$(jq -e . "$R/run1/.sindri-out/resolution" >/dev/null 2>&1 && echo json || echo not-json)" "not-json"
 check "the stub writes the session's transcript under the session id, naming the model it ran on" "$(jq -r '[.type, .message.model] | join(",")' "$R/claude1/projects/fixture/11111111-2222-4333-8444-555555555555.jsonl")" "assistant,claude-haiku-4-5"
 : > "$STUB_LOG"
 env AW_SINDRI_HOME="$R/home" AW_SINDRI_LAUNCH=LCH-2 AW_SINDRI_INSTANCE=ITM-0f/wf/1 AW_SINDRI_RUN_DIR="$R/run2" CLAUDE_CONFIG_DIR="$R/claude2" \

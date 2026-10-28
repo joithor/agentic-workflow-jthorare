@@ -103,9 +103,13 @@ internal sealed class ApproveProfileService(IProfileSource live, IApprovals appr
             StepArgv = checks.StepArgv(loaded.Profile, changes),
             Unreadable = latest.IsError ? latest.Error.Message : null,
             UnlistedChange = IsUnlistedChange(previous, changes, loaded),
+            Notice = NoticeOf(loaded),
             RoleCounts = await RoleCounts(previous, loaded, changes, cancellationToken).ConfigureAwait(false),
         };
     }
+
+    // The line the owner approves along with a profile that turns model choice on (model-pick spec 8); none otherwise.
+    private static string? NoticeOf(LoadedProfile loaded) => loaded.Profile.Workflow?.Agent is { PickIsOn: true } ? WorkflowAgentSettings.Notice : null;
 
     /// <summary>The file counts of the changed role keys (#1148); null, and left out of the JSON, when no role key changed.</summary>
     private async ValueTask<IReadOnlyList<string>?> RoleCounts(LoadedProfile? previous, LoadedProfile loaded, IReadOnlyList<string> changes, CancellationToken cancellationToken)
@@ -135,6 +139,11 @@ internal sealed class ApproveProfileService(IProfileSource live, IApprovals appr
             return loaded;
         }
 
-        return checks.Context(loaded.Value.Profile) is { } invalid ? invalid : loaded;
+        if (checks.Context(loaded.Value.Profile) is { } invalid)
+        {
+            return invalid;
+        }
+
+        return await checks.Models(loaded.Value.Profile, cancellationToken).ConfigureAwait(false) is { } badModel ? badModel : loaded;   // SND-MODEL-001
     }
 }

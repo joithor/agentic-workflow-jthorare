@@ -176,6 +176,9 @@ public static class EventTypes
     /// <summary>A sandbox limit was reached without ending the session: pids, memory high or disk growth (sandbox spec §8).</summary>
     public const string SandboxLimitHit = "sandbox.limit-hit";
 
+    /// <summary>The owner ended network learn mode early, for one repo or every repo (sandbox spec §3.6).</summary>
+    public const string SandboxLearnEnded = "sandbox.learn-ended";
+
     /// <summary>A takeover tried to open the taken-over Step's live session in a viewer (issue 1004).</summary>
     public const string LaunchTakeoverOpened = "launch.takeover-opened";
 

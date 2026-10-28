@@ -43,6 +43,9 @@ internal sealed record LauncherParts(IAgentCatalog Catalog, Func<bool, ISessionH
     /// <summary>The models an agent offers (the probe's read, model-pick spec §3), or null when no model list is probed: targets then carry none and say nothing about it.</summary>
     public IModelCatalog? Models { get; init; }
 
+    /// <summary>The sandbox step for an unattended launch (sandbox spec §12 SB-5a), or null when there is none: the agent then runs its argv unconfined, as before SB-5a.</summary>
+    public ISandboxLaunch? Sandbox { get; init; }
+
     /// <summary>Finds an agent CLI the way the login shell does; null when it doesn't resolve.</summary>
     public Func<string, CancellationToken, ValueTask<string?>> ResolveBin { get; init; } = BinResolver.Resolve;
 }

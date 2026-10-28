@@ -218,6 +218,7 @@ public sealed class SandboxCanariesTests
         var argv = Sandbox(new FakeProcesses()).Wrap(area.Plan, ["claude", "--x"]).Value;
 
         Assert.Equal("bwrap", argv[0]);
-        Assert.Equal(["--", "claude", "--x"], argv.TakeLast(3), StringComparer.Ordinal);
+        Assert.Equal(["--", "/bin/sh", "-c"], argv.SkipWhile(a => a != "--").Take(3), StringComparer.Ordinal);   // the inside init, then the agent
+        Assert.Equal([EgressInit.Name, "claude", "--x"], argv.TakeLast(3), StringComparer.Ordinal);
     }
 }

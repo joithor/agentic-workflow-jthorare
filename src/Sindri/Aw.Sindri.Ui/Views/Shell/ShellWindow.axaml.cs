@@ -133,7 +133,7 @@ internal sealed partial class ShellWindow : Window
     private void Cover(double width)
     {
         var below = this.TryFindResource("Size.SheetCoversBelow", out var value) && value is double limit ? limit : 1100;
-        var covers = width > 0 && width < below;
+        var covers = (width > 0 && width < below) || Shell is { SheetCoversPage: true };
         var changed = covers != SheetPanel.Classes.Contains("covers");
         SheetPanel.Classes.Set("covers", covers);
         SheetPanel.Width = covers ? double.NaN : Shell?.ShownSheetWidth ?? double.NaN;
@@ -169,7 +169,7 @@ internal sealed partial class ShellWindow : Window
     {
         switch (e.PropertyName)
         {
-            case nameof(ShellViewModel.SheetWidth) or nameof(ShellViewModel.ShownSheetWidth):
+            case nameof(ShellViewModel.SheetWidth) or nameof(ShellViewModel.ShownSheetWidth) or nameof(ShellViewModel.SheetCoversPage):
                 Cover(Bounds.Width);
                 break;
             case nameof(ShellViewModel.State):
@@ -182,13 +182,26 @@ internal sealed partial class ShellWindow : Window
             case nameof(ShellViewModel.IsNeedsYouInbox):
                 FollowInbox();
                 break;
+            case nameof(ShellViewModel.SheetSubject) when Shell is { SheetChangeIsStacked: false }:
+                ResetSheetScroll();   // another row opened on the open sheet; a pushed child and Back keep their scroll
+                break;
             case nameof(ShellViewModel.IsSheetShown):
-                CoverPage();
-                Dispatcher.UIThread.Post(Shell is { IsSheetShown: true } ? FocusOpenedSheet : KeepFocus, DispatcherPriority.Loaded);
+                OnSheetShownChanged();
                 break;
             default:
                 break;
         }
+    }
+
+    private void OnSheetShownChanged()
+    {
+        CoverPage();
+        if (Shell is { IsSheetShown: true, SheetChangeIsStacked: false })
+        {
+            ResetSheetScroll();   // a sheet that opens starts at its top; a pushed child and Back keep their scroll
+        }
+
+        Dispatcher.UIThread.Post(Shell is { IsSheetShown: true } ? FocusOpenedSheet : KeepFocusAfterClose, DispatcherPriority.Loaded);
     }
 
     // A page switch (a G-chord) hides the page the focused control was on: focus goes to the page region, which is named, so the new page is spoken.

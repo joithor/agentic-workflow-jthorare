@@ -58,6 +58,7 @@ internal sealed partial class ShellViewModel
         };
         NeedsYou.ActionRequested += (_, e) => Decide(e);
         Decision.Refused += (_, _) => Navigate(new DeepLink(DeepLinkKind.Decision, Decision.DecisionId));
+        Decision.PropertyChanged += OnDecisionChanged;
         NeedsYou.CopyRequested += (_, e) => _ = clipboard.SetText(e.Text, CancellationToken.None);
     }
 

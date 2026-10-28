@@ -94,6 +94,9 @@ internal sealed partial class InstanceFrameViewModel(ISindriApi api, IClipboard 
     /// <summary>The Step runs; null before a read.</summary>
     public StepRunsViewModel? StepRuns { get; private set => Set(ref field, value); }
 
+    /// <summary>The Model picks table (model-pick spec §6.1); null until the picks are read or when there are none.</summary>
+    public ModelPicksViewModel? ModelPicks { get; private set => Set(ref field, value); }
+
     /// <summary>The sentence a refusal or an unreadable answer shows.</summary>
     public string ProblemText { get; private set => Set(ref field, value); } = string.Empty;
 
@@ -187,6 +190,7 @@ internal sealed partial class InstanceFrameViewModel(ISindriApi api, IClipboard 
             Show(answer.Value);
             await ReadRun(answer.Value, generation, cancellationToken).ConfigureAwait(true);
             await ReadNames(url, answer.Value, generation, cancellationToken).ConfigureAwait(true);
+            await ReadPicks(url, answer.Value.Address, generation, cancellationToken).ConfigureAwait(true);
         }
         else
         {
@@ -284,7 +288,7 @@ internal sealed partial class InstanceFrameViewModel(ISindriApi api, IClipboard 
         _shown = null;
         (Title, Recipe, Hash12, Version, StateText, Detail, SinceText, Identity, ProblemText, Note) = (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
         (WorkflowName, DetailsText, AddressCopy) = (string.Empty, string.Empty, null);
-        (Subject, Band, Expanded, StepRuns) = (null, null, null, null);
+        (Subject, Band, Expanded, StepRuns, ModelPicks) = (null, null, null, null, null);
         (Grant, _grantSignature) = (null, string.Empty);
         ClearPanels();
         (_eventsFor, _eventRows) = (null, []);

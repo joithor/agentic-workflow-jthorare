@@ -14,6 +14,7 @@ public sealed class FakeLauncher : ILauncher
     private readonly List<LaunchRequest> _requests = [];
     private readonly List<LaunchId> _stops = [];
     private (Error Error, LaunchStage Stage)? _nextFailure;
+    private int _failuresLeft;
 
     /// <summary>What <see cref="Probe"/> returns.</summary>
     public LaunchProbed Probed { get; set; } = new(
@@ -32,10 +33,18 @@ public sealed class FakeLauncher : ILauncher
     /// <summary>Makes the next new launch fail; a repeat of a live launch still returns its Started.</summary>
     /// <param name="error">The catalogue error.</param>
     /// <param name="stage">Where it stopped.</param>
-    public void FailNextWith(Error error, LaunchStage stage = LaunchStage.Host) => _nextFailure = (error, stage);
+    /// <param name="times">How many new launches fail before one starts.</param>
+    public void FailNextWith(Error error, LaunchStage stage = LaunchStage.Host, int times = 1)
+    {
+        _nextFailure = (error, stage);
+        _failuresLeft = times;
+    }
 
     /// <summary>The session id every new launch reports as chosen before it started, or null (an agent whose id is reported later).</summary>
     public Core.Ids.SessionId? PreChosenSession { get; set; }
+
+    /// <summary>The run directory every new launch reports on its Started, or null (a human open).</summary>
+    public string? RunDirectory { get; set; }
 
     /// <summary>When set, 'Launch' waits for it (and its caller's cancellation) before answering: a launch that is still running.</summary>
     public Task? Hold { get; set; }
@@ -65,7 +74,11 @@ public sealed class FakeLauncher : ILauncher
 
         if (_nextFailure is { } failure)
         {
-            _nextFailure = null;
+            if (--_failuresLeft <= 0)
+            {
+                _nextFailure = null;
+            }
+
             return new FailedLaunch(failure.Error, failure.Stage);
         }
 
@@ -75,6 +88,7 @@ public sealed class FakeLauncher : ILauncher
             ["tmux", "-L", "sindri-launch", "attach", "-t", "=" + host.Name], CatalogSource.Builtin, "fake-argv-hash")
         {
             ChosenSession = PreChosenSession?.Value,
+            RunDirectory = RunDirectory,
         };
         _live[request.Launch] = started;
         return started;

@@ -9,4 +9,5 @@ namespace Aw.Sindri.Testing.Scoping;
 /// <param name="Requested">The model the state's 'with.model' asks for; null when it asks for none.</param>
 /// <param name="Number">The run's number.</param>
 /// <param name="Launch">The launch.</param>
-public sealed record ScopeLaunch(InstanceAddress Run, string State, string Step, string? Requested, int Number, LaunchId Launch);
+/// <param name="Picked">The model the pick chose, as 'launch.started' records it; null when the launch records none.</param>
+public sealed record ScopeLaunch(InstanceAddress Run, string State, string Step, string? Requested, int Number, LaunchId Launch, string? Picked = null);

@@ -1,0 +1,46 @@
+using Aw.Connectors.Core;
+using Aw.Connectors.Core.Slack;
+using Aw.Connectors.Features.PullGitHub;
+using Aw.Connectors.Features.PullSlack;
+using Aw.Kernel.Services;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Aw.Connectors.Features;
+
+/// <summary>Registers Aw.Connectors.Features's slices: each service, its validator and its decorators (outermost first).</summary>
+public static class ConnectorsFeaturesServiceCollectionExtensions
+{
+    /// <summary>Adds every Connectors use case as an IService.</summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same collection.</returns>
+    public static IServiceCollection AddConnectorsFeatures(this IServiceCollection services)
+    {
+        _ = services
+            .AddScoped<PullGitHubService>()
+            .AddScoped<IValidator<PullGitHubRequest>, PullGitHubValidator>()
+            .AddScoped<IService<PullGitHubRequest, PullGitHubResponse>>(static sp =>
+                new ValidatingService<PullGitHubRequest, PullGitHubResponse>(
+                    sp.GetRequiredService<PullGitHubService>(),
+                    sp.GetRequiredService<IValidator<PullGitHubRequest>>()))
+            .AddScoped<PullSlackService>()
+            .AddScoped<IValidator<PullSlackRequest>, PullSlackValidator>()
+            .AddScoped<IService<PullSlackRequest, PullSlackResponse>>(static sp =>
+                new ValidatingService<PullSlackRequest, PullSlackResponse>(
+                    sp.GetRequiredService<PullSlackService>(),
+                    sp.GetRequiredService<IValidator<PullSlackRequest>>()));
+        return services;
+    }
+
+    /// <summary>Adds the Slack connector as an <see cref="IConnector"/> over the registered <see cref="ISlackReader"/> (add the reader with AddSlackReader) and the PullSlack slice.</summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="settings">The checked 'context.sources.slack' entry.</param>
+    /// <returns>The same collection.</returns>
+    public static IServiceCollection AddSlackConnector(this IServiceCollection services, SlackSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return services.AddScoped<IConnector>(sp => new SlackConnector(
+            settings,
+            sp.GetRequiredService<ISlackReader>(),
+            sp.GetRequiredService<IService<PullSlackRequest, PullSlackResponse>>()));
+    }
+}

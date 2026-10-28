@@ -34,7 +34,7 @@ public static class AgentLaunches
         return LaunchId.From("LCH-" + Convert.ToHexStringLower(digest)[..32]);
     }
 
-    /// <summary>The worktree the run works in: the workspace the Step reads when it names one ('fact:workspace', an existing worktree the launcher then uses as it is), else the one the launcher creates, '&lt;repo&gt;/.claude/worktrees/sindri-&lt;instance&gt;-&lt;run&gt;'.</summary>
+    /// <summary>The worktree the run works in: the workspace the Step reads when it names one ('fact:workspace', an existing worktree the launcher then uses as it is), else the one the launcher creates, '&lt;repo&gt;/.claude/worktrees/sindri-&lt;instance&gt;-&lt;run&gt;' ('-e1' after it for the retry on a stronger model).</summary>
     /// <param name="run">The run.</param>
     /// <param name="target">Where it runs.</param>
     /// <param name="workspace">The workspace the Step reads; null when it reads none.</param>
@@ -43,7 +43,7 @@ public static class AgentLaunches
     {
         ArgumentNullException.ThrowIfNull(run);
         ArgumentNullException.ThrowIfNull(target);
-        return !string.IsNullOrWhiteSpace(workspace) ? workspace : target.RepoPath.TrimEnd('/') + "/.claude/worktrees/sindri-" + run.Workflow.Value + "-" + run.Run.Value;
+        return !string.IsNullOrWhiteSpace(workspace) ? workspace : target.RepoPath.TrimEnd('/') + "/.claude/worktrees/sindri-" + run.Workflow.Value + "-" + run.Run.Value + (run.Escalation > 0 ? string.Create(CultureInfo.InvariantCulture, $"-e{run.Escalation}") : string.Empty);   // why: the retry works in a fresh worktree, not the failed run's
     }
 
     /// <summary>The launcher's request: unattended, Open, the worktree, the Step's reference and the policy its capability gives.</summary>
@@ -73,15 +73,15 @@ public static class AgentLaunches
     /// <param name="target">Where it runs.</param>
     /// <param name="evaluator">The head sha, the holdout set and the phase worktree to keep out of reach.</param>
     /// <param name="descriptor">The Step's descriptor, for the brief; null when the catalog doesn't know it.</param>
-    /// <param name="instructions">What the Step is told to do, for the brief; none when it has none.</param>
+    /// <param name="extras">What the Step is told to do (its instructions, for the brief) and the model it runs on (the pick); null for none and the agent's default.</param>
     /// <returns>The request.</returns>
-    public static LaunchRequest EvaluatorRequestFor(AgentStepRun run, AgentStepTarget target, EvaluatorLaunch evaluator, BlockDescriptor? descriptor = null, IReadOnlyList<string>? instructions = null)
+    public static LaunchRequest EvaluatorRequestFor(AgentStepRun run, AgentStepTarget target, EvaluatorLaunch evaluator, BlockDescriptor? descriptor = null, AgentLaunchExtras? extras = null)
     {
         ArgumentNullException.ThrowIfNull(evaluator);
         // The launcher fills in the writable path: the scratch checkout it makes. No commit rights: the evaluator reports, it doesn't change the repo.
         var policy = new StepPolicy([.. _report, .. _evidence], StepPermissionMode.Default, WritablePath: null, ReadOnlyPaths: [evaluator.HoldoutPath], DeniedPaths: [evaluator.PhaseWorktree]);
         return new LaunchRequest(
             LaunchIdFor(run), target.Item, target.Agent, LaunchMode.Open, Attended: false, target.RepoPath, run.Address, Worktree: null,
-            new StepArgs(Model: null, policy, run.Step, AgentStepBrief.Render(run, descriptor, instructions)), run.Run, Evaluator: evaluator);
+            new StepArgs(Model: extras?.Model, policy, run.Step, AgentStepBrief.Render(run, descriptor, extras?.Instructions)), run.Run, Evaluator: evaluator);
     }
 }

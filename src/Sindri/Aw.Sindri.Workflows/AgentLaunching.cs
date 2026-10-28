@@ -1,4 +1,6 @@
 using Aw.Kernel;
+using Aw.Sindri.Core;
+using Aw.Sindri.Core.Judge;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.LensPacks;
 using Aw.Sindri.Core.Workflow.Blocks;
@@ -12,13 +14,14 @@ namespace Aw.Sindri.Infrastructure.Workflows;
 /// What 'LaunchAgentStep' does (engine P8 D4, D8, D12): resolves the target, asks the launcher for the unattended session of <see cref="AgentLaunches.RequestFor"/>, records the outcome,
 /// and reads the worktree's HEAD as the run's start. The launcher is idempotent per launch id, so a retry or a replay starts no second session.
 /// </summary>
-/// <param name="launcher">The launcher.</param>
-/// <param name="targets">Where the Step runs.</param>
+/// <param name="launcher">The launcher, waiting out a full session cap (SND-LAUNCH-020).</param>
+/// <param name="placing">Where the Step runs, and for a challenger the drafter it differs from (#1008).</param>
 /// <param name="recorder">Records 'launch.started' and 'launch.failed'.</param>
 /// <param name="diff">Reads the start commit.</param>
 /// <param name="catalog">The blocks' descriptors, for the Step's brief.</param>
 /// <param name="inputs">What a launch reads beside the target: the pack bundles, the stored facts and the Steps' instructions.</param>
-internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver targets, AgentLaunchRecorder recorder, IRunDiff diff, BlockCatalog catalog, AgentLaunchInputs inputs)
+/// <param name="picker">Picks the model the session runs on (model-pick spec 5).</param>
+internal sealed class AgentLaunching(AgentLaunchWaiting launcher, AgentPlacing placing, AgentLaunchRecorder recorder, IRunDiff diff, BlockCatalog catalog, AgentLaunchInputs inputs, ModelPicker picker)
 {
     /// <summary>Launches the run's session.</summary>
     /// <param name="run">The run.</param>
@@ -27,19 +30,20 @@ internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver tar
     public async Task<AgentLaunched> Launch(AgentLaunchRun run, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(run);
-        var target = await targets.Resolve(run.Item, run.Run.Address, cancellationToken).ConfigureAwait(false);
+        var target = await placing.Place(run, cancellationToken).ConfigureAwait(false);
         if (target.IsError)
         {
-            return StepFailed(target.Error);   // nothing was asked of the launcher, so there is no outcome to record
+            return Unplaced(target.Error);
         }
 
+        var (where, drafter) = target.Value;
         var workspace = await WorkspaceOf(run, cancellationToken).ConfigureAwait(false);
         if (workspace.IsError)
         {
             return StepFailed(workspace.Error);
         }
 
-        var bundle = await Bundle(run, target.Value, cancellationToken).ConfigureAwait(false);
+        var bundle = await Bundle(run, where, cancellationToken).ConfigureAwait(false);
         if (bundle.IsError)
         {
             return BundleFailed(bundle.Error);
@@ -50,25 +54,42 @@ internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver tar
             return StepFailed("SND-LAUNCH-013", AgentModels.Refusal(profile));   // the launcher's own refusal of a model it can't express
         }
 
-        var asked = await Request(run, target.Value, workspace.Value, bundle.Value, cancellationToken).ConfigureAwait(false);
+        var asked = await Request(run, where, workspace.Value, bundle.Value, cancellationToken).ConfigureAwait(false);
         if (asked.IsError)
         {
             return StepFailed(asked.Error);
         }
 
-        return await Start(asked.Value, cancellationToken).ConfigureAwait(false);
+        var chosen = await picker.Pick(new ModelPickWork(run, where, asked.Value.Request, asked.Value.Files, drafter), cancellationToken).ConfigureAwait(false);
+        if (chosen.Refusal is { } refusal)
+        {
+            return new AgentLaunched(Worktree: null, StartHead: null, new AgentLaunchFailure(AgentLaunchFailureKind.Park, refusal.Code, refusal.Message));   // SND-MODEL-003: no model is allowed, the owner fixes the cap or floor
+        }
+
+        return await Start(string.Equals(chosen.Model, asked.Value.Request.Step?.Model, StringComparison.Ordinal) ? asked.Value.Request : asked.Value.WithModel(chosen.Model), chosen.CanEscalate, cancellationToken).ConfigureAwait(false);
     }
 
+    // Nothing was asked of the launcher, so there is no outcome to record; no agent may run a challenger (SND-LAUNCH-028) parks until the owner approves one.
+    private static AgentLaunched Unplaced(Error error) =>
+        string.Equals(error.Code, SindriErrors.LaunchNoUsableAgent.Code, StringComparison.Ordinal)
+            ? new AgentLaunched(Worktree: null, StartHead: null, new AgentLaunchFailure(AgentLaunchFailureKind.Park, error.Code, error.Message))
+            : StepFailed(error);
+
     // Asks the launcher for the session and records the outcome; the worktree and start commit, or the failure.
-    private async Task<AgentLaunched> Start(LaunchRequest request, CancellationToken cancellationToken)
+    private async Task<AgentLaunched> Start(LaunchRequest request, bool canEscalate, CancellationToken cancellationToken)
     {
         var result = await launcher.Launch(request, cancellationToken).ConfigureAwait(false);
+        if (result is null)
+        {
+            return new AgentLaunched(Worktree: null, StartHead: null, Failure: null, Waiting: true);   // the cap is still reached: nothing is recorded, the workflow asks again
+        }
+
         switch (result)
         {
             case StartedLaunch started:
                 await recorder.Started(request, started, cancellationToken).ConfigureAwait(false);
                 var head = await diff.Head(request.Worktree!, cancellationToken).ConfigureAwait(false);   // why: RequestFor always names the worktree
-                return new AgentLaunched(request.Worktree, head.IsError ? null : head.Value, Failure: null);   // a worktree with no HEAD leaves the diff signal unmeasured
+                return new AgentLaunched(request.Worktree, head.IsError ? null : head.Value, Failure: null, request.Step?.Model, canEscalate, Agent: request.Agent.Value, RunDirectory: started.RunDirectory);   // a worktree with no HEAD leaves the diff signal unmeasured
             case FailedLaunch failed:
                 await recorder.Failed(request, failed, cancellationToken).ConfigureAwait(false);
                 return new AgentLaunched(Worktree: null, StartHead: null, AgentLaunchFailures.Of(failed));
@@ -78,13 +99,26 @@ internal sealed class AgentLaunching(ILauncher launcher, AgentTargetResolver tar
     }
 
     // The launcher's request: the Step's brief and policy, its pack, and its declared read facts as files (read and scrubbed here); the failure when a fact can't be read.
-    private async ValueTask<Result<LaunchRequest>> Request(AgentLaunchRun run, AgentStepTarget target, string? workspace, PackBundle? bundle, CancellationToken cancellationToken)
+    private async ValueTask<Result<PreparedLaunch>> Request(AgentLaunchRun run, AgentStepTarget target, string? workspace, PackBundle? bundle, CancellationToken cancellationToken)
     {
         var block = BlockId.From(run.Run.Step.Block);
         var descriptor = catalog.Find(block);
         var facts = await StepFactFiles.Build(new FactFileStep(descriptor, run.Subject), run.Facts, inputs.Contents, inputs.Scrubber, cancellationToken).ConfigureAwait(false);
-        return facts.IsError ? facts.Error : AgentLaunches.RequestFor(run.Run, target, descriptor, new AgentLaunchExtras(PayloadFacts.WithShapes(Told(block), run.Payloads), workspace, bundle, facts.Value, run.Model));   // the Step's own lines, then the shape of each payload output
+        if (facts.IsError)
+        {
+            return facts.Error;
+        }
+
+        var extras = new AgentLaunchExtras(PayloadFacts.WithShapes(Told(block), run.Payloads), workspace, bundle, facts.Value, run.Model);
+        return new PreparedLaunch(AgentLaunches.RequestFor(run.Run, target, descriptor, extras), Files(bundle, facts.Value), model => AgentLaunches.RequestFor(run.Run, target, descriptor, extras with { Model = model }));
     }
+
+    // The files the model-pick question shows: the pack's files and the written facts, each as path and text.
+    private static List<PickFileText> Files(PackBundle? bundle, IReadOnlyDictionary<string, string>? facts) =>
+    [
+        .. bundle?.Files.Select(static f => new PickFileText(f.Key, f.Value)) ?? [],
+        .. facts?.Select(static f => new PickFileText(f.Key, f.Value)) ?? [],
+    ];
 
     // An unpinned or changed pack parks for the owner (SND-PACK-002); any other pack failure ends the Step.
     private static AgentLaunched BundleFailed(Error error) =>

@@ -45,11 +45,16 @@ internal sealed class CheckMapService(IGraphStore store) : IService<CheckMapRequ
         var (shown, layer) = seen is { } ok ? (ok.Value.Graph, ok.Value.Overrides) : (graph.Value, overrides.Value);
         var detail = string.Create(CultureInfo.InvariantCulture,
             $"map v{version.Number} current ({version.Repo}, whole map: {shown.Nodes.Count} nodes, {shown.Edges.Count} edges); commits behind HEAD: unknown until a build records its commit");
-        return Verdict(version, detail, OverrideApplier.Apply(shown, layer).Orphaned.Count, request.Scope);
+        return Verdict(version, detail, OverrideApplier.Apply(shown, layer).Orphaned.Count, request.Scope, PinHealth.Of(shown, request.Scope));
     }
 
-    private static MapHealth Verdict(MapVersion version, string detail, int orphaned, ContextScope? scope)
+    private static MapHealth Verdict(MapVersion version, string detail, int orphaned, ContextScope? scope, PinHealth pins)
     {
+        if (pins.Notes.Count > 0 && orphaned == 0)
+        {
+            return new MapHealth(Name, MapHealthState.Warn, $"{detail}; {string.Join("; ", pins.Notes)}", string.Join("; ", pins.Fixes));
+        }
+
         if (orphaned > 0)
         {
             return new MapHealth(Name, MapHealthState.Warn, string.Create(CultureInfo.InvariantCulture, $"{detail}; {orphaned} orphaned override(s)"),

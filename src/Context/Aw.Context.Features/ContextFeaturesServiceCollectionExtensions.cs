@@ -20,6 +20,7 @@ using Aw.Context.Core.ScopeGraph;
 using Aw.Context.Core.Search;
 using Aw.Context.Core.Subgraph;
 using Aw.Context.Core.Symbols;
+using Aw.Context.Core.Sync;
 using Aw.Context.Core.Walks;
 using Aw.Context.Core.WholeMap;
 using Aw.Context.Features.Adjudicate;
@@ -28,6 +29,7 @@ using Aw.Context.Features.BuildMap;
 using Aw.Context.Features.CheckMap;
 using Aw.Context.Features.CheckRetention;
 using Aw.Context.Features.CleanMap;
+using Aw.Context.Features.EmbedRecords;
 using Aw.Context.Features.EvalMap;
 using Aw.Context.Features.EvalProbes;
 using Aw.Context.Features.EvalPurge;
@@ -94,6 +96,8 @@ public static class ContextFeaturesServiceCollectionExtensions
         services.TryAddSingleton<IConceptNamer, DisabledConceptNamer>();   // a host that sets up labeling (AddContextLabeling) replaces it
         services.TryAddSingleton<ISymbolVectors, DisabledSymbolVectors>();   // the host that wires the code index (Sindri's Host adapter) replaces it
         services.TryAddScoped<ConceptPass>();
+        services.TryAddScoped<MapRecordSources>();   // scoped: it reads the code index, which is read in the call's scope
+        services.TryAddScoped<MapInputs>();
         services.TryAddScoped<MapNamers>();   // scoped: the concept step reads the code index, which is read in the call's scope
         services.TryAddSingleton<IHeavyJobLock, UnconfiguredHeavyJobLock>();   // a host that wires the box-wide lock replaces it
         services.TryAddSingleton<UnconfiguredBacktest>();   // hosts that wire the backtest ports (Infrastructure) replace these
@@ -101,8 +105,12 @@ public static class ContextFeaturesServiceCollectionExtensions
         services.TryAddSingleton<IMergeHistory>(sp => sp.GetRequiredService<UnconfiguredBacktest>());
         services.TryAddSingleton<IAsOfDocs>(sp => sp.GetRequiredService<UnconfiguredBacktest>());
         services.TryAddSingleton<IEvalStore>(sp => sp.GetRequiredService<UnconfiguredBacktest>());
-        return services.AddMapHeads().AddContextSlices();
+        return services.AddMapHeads().AddIndexSync().AddRecordSearch().AddEmbedRecords().AddContextSlices();
     }
+
+    private static IServiceCollection AddRecordSearch(this IServiceCollection services) => services.AddScoped<RecordSearch>();
+
+    private static IServiceCollection AddIndexSync(this IServiceCollection services) => services.AddScoped<IIndexSync, IndexSync>();
 
     private static IServiceCollection AddContextSlices(this IServiceCollection services) => services
         .AddBacktest()
@@ -113,7 +121,7 @@ public static class ContextFeaturesServiceCollectionExtensions
         .AddScoped<IService<RefreshDocsRequest, RefreshReport>, RefreshDocsService>()
         .AddScoped<IService<SyncSourcesRequest, SyncReport>, SyncSourcesService>()
         .AddScoped<ContextSources>()
-        .AddSingleton<SyncLocks>()
+        .AddSingleton<RecordFeedSync>()
         .AddSingleton<RepoTreeCache>()
         .AddScoped<IService<PreviewMapRequest, MapFilePreview>, PreviewMapService>()
         .AddScoped<IService<ImportMapRequest, MapImported>, ImportMapService>()
@@ -126,7 +134,7 @@ public static class ContextFeaturesServiceCollectionExtensions
         .AddScoped<IService<ListNeighborsRequest, NeighborsView>, ListNeighborsService>()
         .AddScoped<IService<FindPathRequest, PathView>, FindPathService>()
         .AddSingleton<MapBuildGate>()
-        .AddScoped<IService<BuildMapRequest, MapBuildReport>, BuildMapService>()
+        .AddBuildSlices()
         .AddReviewSlices()
         .AddPromoteSlices()
         .AddScoped<IService<ProposeFromScopeRequest, ProposeResult>, ProposeFromScopeService>()
@@ -145,6 +153,12 @@ public static class ContextFeaturesServiceCollectionExtensions
         .AddScoped<IContextLenses>(static sp => sp.GetRequiredService<ContextGraph>())
         .AddScoped<IContextEngine, ContextEngine>()
         .AddLensSlices();
+
+    // The build, and the structure checks that share its reading.
+    private static IServiceCollection AddBuildSlices(this IServiceCollection services) => services
+        .AddScoped<BuildMapService>()
+        .AddScoped<IService<BuildMapRequest, MapBuildReport>>(static sp => sp.GetRequiredService<BuildMapService>())
+        .AddScoped<IService<CheckStructureRequest, MapChecksView>, CheckStructureService>();
 
     private static IServiceCollection AddReviewSlices(this IServiceCollection services) => services
         .AddScoped<IService<ReviewQueueRequest, ReviewQueueView>, ReviewQueueService>()

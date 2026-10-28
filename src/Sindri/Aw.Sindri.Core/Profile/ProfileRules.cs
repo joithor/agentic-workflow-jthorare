@@ -202,7 +202,9 @@ public static class ProfileRules
             : null;
     }
 
-    private static Error? Workflow(SindriProfile profile) => Durations(profile.Workflow) ?? Effects(profile.Workflow) ?? Judges(profile) ?? ForgeRules.Check(profile.Workflow?.Forge) ?? PrRules.Check(profile.Workflow?.Pr, profile.Workflow?.Docs) ?? Route(profile.Workflow?.Route);
+    private static Error? Workflow(SindriProfile profile) => DurationsAndAgent(profile.Workflow) ?? Effects(profile.Workflow) ?? Judges(profile) ?? ForgeRules.Check(profile.Workflow?.Forge) ?? PrRules.Check(profile.Workflow?.Pr, profile.Workflow?.Docs) ?? Route(profile.Workflow?.Route);
+
+    private static Error? DurationsAndAgent(WorkflowSettings? workflow) => Durations(workflow) ?? ModelKeyRules.Shape(workflow?.Agent);
 
     /// <summary>The router stub's key (engine P7 plan D8): 'workflow.route.startable' is all or none.</summary>
     private static Error? Route(RouteSettings? route) =>
@@ -222,7 +224,30 @@ public static class ProfileRules
             }
         }
 
-        return null;
+        return JudgeWidths(profile);
+    }
+
+    /// <summary>The judge call width (issue 1440): the box's and each repo's 'parallel' is 1 to 16.</summary>
+    private static Error? JudgeWidths(SindriProfile profile)
+    {
+        var (path, width) = JudgeWidthKeys(profile).FirstOrDefault(static w => w.Width is < JudgeParallel.Min or > JudgeParallel.Max);
+        return path is null ? null : Invalid(path, string.Create(CultureInfo.InvariantCulture, $"{width} is not between {JudgeParallel.Min} and {JudgeParallel.Max}"));
+    }
+
+    private static IEnumerable<(string Path, int Width)> JudgeWidthKeys(SindriProfile profile)
+    {
+        if (profile.Workflow?.Judge?.Parallel is { } box)
+        {
+            yield return ("workflow.judge.parallel", box);
+        }
+
+        foreach (var repo in profile.Repos ?? [])
+        {
+            if (repo.Workflow?.Judge?.Parallel is { } own)
+            {
+                yield return ($"repos.{repo.Name}.workflow.judge.parallel", own);
+            }
+        }
     }
 
     private static IEnumerable<(string Path, IReadOnlyList<string> Names)> JudgeLists(SindriProfile profile)

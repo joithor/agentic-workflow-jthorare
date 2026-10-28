@@ -31,6 +31,18 @@ internal static partial class CommandTable
             return await Serve(environment, clock).ConfigureAwait(false);
         }
 
+        if (args is ["sandbox", "explain", .. var explain])
+        {
+            // before Compose: explain reads only the plan file, never the state directory, the ledger or telemetry (sandbox spec 3.6)
+            return await SandboxExplainVerb.Run(explain, environment, Console.Out, Console.Error, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        if (args is ["sandbox", "show", .. var show])
+        {
+            // before Compose, like explain: show reads only the plan file
+            return await SandboxShowVerb.Run(show, environment, Console.Out, Console.Error, CancellationToken.None).ConfigureAwait(false);
+        }
+
         var services = Composition.Compose(new ServiceCollection(), environment, clock);
         configure?.Invoke(services);   // tests only: a test replaces a port with its fake; Program passes nothing
         var provider = services.BuildServiceProvider();
@@ -95,13 +107,14 @@ internal static partial class CommandTable
             ["open", .. var rest] => await new OpenCommand(client, output, start.EnsureRunning, services.GetRequiredService<TimeProvider>()).Run(rest, ct).ConfigureAwait(false),
             ["queue" or "items" or "item", ..] => await new ItemVerbs(client, output, (launch, c) => start.EnsureRunning(launch, c)).Run(args, ct).ConfigureAwait(false),
             ["request" or "requests" or "decisions" or "decide" or "needs-you", ..] => await new RequestVerbs(client, output, (launch, c) => start.EnsureRunning(launch, c)).Run(args, ct).ConfigureAwait(false),
-            ["agents" or "setup" or "code-index", ..] => await ReadVerbs(args, client, output, ct).ConfigureAwait(false),
+            ["agents" or "setup" or "code-index" or "index", ..] => await ReadVerbs(args, (client, output), (services, start), (ct, interrupt.Again)).ConfigureAwait(false),
             ["repo", ..] => await Repo(args, client, output, services, (ct, interrupt.Again)).ConfigureAwait(false),
             ["ledger", .. var rest] => await new LedgerVerbs(client, output, (launch, c) => start.EnsureRunning(launch, c)).Run(rest, ct).ConfigureAwait(false),
-            ["services" or "jobs", ..] => await JobCommands.Run(args, (client, output), start.EnsureRunning, services.GetRequiredService<TimeProvider>(), (ct, interrupt.Again)).ConfigureAwait(false),
+            ["services" or "jobs", ..] or ["index", "embed", ..] => await JobCommands.Run(args, (client, output), start.EnsureRunning, services.GetRequiredService<TimeProvider>(), (ct, interrupt.Again)).ConfigureAwait(false),
             ["launch" or "session", ..] => await LaunchOrSession(args, client, (output, environment), services, (ct, interrupt.Again)).ConfigureAwait(false),
             ["doctor", ..] => await Doctor(args, verbs, harnesses, output, ct).ConfigureAwait(false),
             ["onyx", .. var rest] => await Onyx(rest, verbs, new OnyxVerbs(services, output, (hash, to, c) => new Verbs(client, probe, to, services, e => start.EnsureRunning(launch: true, e)).Approve(hash, c)), output, ct).ConfigureAwait(false),
+            ["sandbox", ..] => await Sandbox(args, client, output, services, (ct, Headers(session, services))).ConfigureAwait(false),
             ["mcp", .. var rest] => await new McpVerbs(services, output).Run(rest, ct).ConfigureAwait(false),
             ["context", ..] => await Context(args, client, output, services, (ct, interrupt.Again)).ConfigureAwait(false),
             ["line", "holdout", .. var rest] => await new LineHoldoutVerbs(client, output, Interactive(), Console.In).Run(rest, ct).ConfigureAwait(false),
@@ -171,8 +184,9 @@ internal static partial class CommandTable
     private static async Task<int> LaunchOrSession(string[] args, ControlPlaneClient client, (Output Output, Func<string, string?> Environment) io, IServiceProvider services, (CancellationToken Interrupt, CancellationToken Again) signals) =>
         args switch
         {
-            ["session", "wrap", .. var rest] => await SessionWrapVerb.Run(rest, client, services.GetRequiredService<ISindriHome>(), io.Environment, signals.Interrupt).ConfigureAwait(false),
+            ["session", "wrap", .. var rest] => await SessionWrapVerb.Run(rest, client, services, io.Environment, signals.Interrupt).ConfigureAwait(false),
             ["launch", "probe", .. var probe] => await new LaunchProbeVerb(client, io.Output, new JobFollower(client, io.Output, services.GetRequiredService<TimeProvider>())).Run(probe, signals.Interrupt, signals.Again).ConfigureAwait(false),
+            ["launch", "picks", .. var picks] => await new LaunchPicksVerb(client, io.Output).Run(picks, signals.Interrupt).ConfigureAwait(false),
             ["launch", .. var rest] => await new LaunchVerbs(services.GetRequiredService<ILaunchSetup>(), io.Output).Run(rest, signals.Interrupt).ConfigureAwait(false),
             _ => await UnknownVerb(args, io.Output).ConfigureAwait(false),
         };

@@ -23,6 +23,7 @@
     <!-- Forge/: ForgePullRequests over the forge package's file-backed adapter -->
     <ProjectReference Include="../../src/Forge/Aw.Forge.Core/Aw.Forge.Core.csproj" />
     <ProjectReference Include="../Aw.Sindri.Testing/Aw.Sindri.Testing.csproj" />
+    <ProjectReference Include="../Aw.Embeddings.Testing/Aw.Embeddings.Testing.csproj" />
     <ProjectReference Include="../Aw.Context.Testing/Aw.Context.Testing.csproj" />
     <ProjectReference Include="../Aw.CodeIndex.Testing/Aw.CodeIndex.Testing.csproj" />
     <ProjectReference Include="../Aw.Kernel.Telemetry.Testing/Aw.Kernel.Telemetry.Testing.csproj" />
@@ -94,6 +95,7 @@
   <ItemGroup>
     <!-- The v4.9.0 deployment files, small text fixtures fetched from raw.githubusercontent.com at the pinned commit (checked against context/onyx.lock by OnyxFixturesTests). -->
     <None Include="Fixtures/**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Sandbox/Denials/Fixtures/**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -14,4 +14,7 @@ public static class SandboxEnvironment
 
     /// <summary>The socat binary.</summary>
     public const string Socat = "AW_SANDBOX_SOCAT";
+
+    /// <summary>The value-free plan file inside a sandboxed session: the launcher sets it, and 'sindri sandbox explain' reads that one file and nothing else (sandbox spec §3.6).</summary>
+    public const string Plan = "AW_SANDBOX_PLAN";
 }

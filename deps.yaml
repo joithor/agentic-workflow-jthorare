@@ -244,7 +244,7 @@ packages:
     tier: 1
     projectPrefix: Aw.SandboxTools
     src: null
-    note: "the host binaries the Sindri sandbox runs around a Step's agent session (sandbox spec 2026-10-18-sindri-sandbox-design.md, §4, §9): bubblewrap (bwrap), systemd-run for the cgroup scope and socat for the unix-socket forwarders. Not repo code: the node exists so the Sindri -> SandboxTools cli edge is declared. The adapters that start them are SB-2, SB-3a and SB-4a; a test redirects each with AW_SANDBOX_BWRAP, AW_SANDBOX_SYSTEMD_RUN and AW_SANDBOX_SOCAT"
+    note: "the host binaries the Sindri sandbox runs around a Step's agent session (sandbox spec 2026-10-18-sindri-sandbox-design.md, §4, §9): bubblewrap (bwrap), systemd-run for the cgroup scope (and systemctl --user to read, signal and move the ceiling of that scope, SB-3a) and socat for the unix-socket forwarders. Not repo code: the node exists so the Sindri -> SandboxTools cli edge is declared. The adapters that start them are SB-2, SB-3a and SB-4a; a test redirects each with AW_SANDBOX_BWRAP, AW_SANDBOX_SYSTEMD_RUN and AW_SANDBOX_SOCAT"
   - id: Meta
     kind: package
     tier: 2
@@ -273,6 +273,19 @@ packages:
     projectPrefix: Aw.CodeIndex
     src: src/CodeIndex
     note: "code index: symbols, callers and callees per repo, built in the background when trunk moves (code-index spec)"
+  - id: Embeddings
+    kind: package
+    tier: 0
+    sublevel: 1
+    projectPrefix: Aw.Embeddings
+    src: src/Embeddings
+    note: "the loopback Ollama embed client (digest pin, no proxy, no redirect), the float32 vector codec, L2 normalisation and the top-k scan; domain-free; BCL only (HttpClient, System.Numerics); a tier-0 library, so only project edges point at it (Sindri-owned index spec §9.2)"
+  - id: Connectors
+    kind: package
+    tier: 1
+    projectPrefix: Aw.Connectors
+    src: src/Connectors
+    note: "source readers (GitHub, Slack; later Notion, Jira): the IConnector contract, text cleaner, HTTP clients with a host allowlist; a port of ConnectAI's connector mechanics; no storage, no Context types (Sindri-owned index spec §9.2)"
 
 edges:
   # ---- current: found in the source today ----
@@ -300,7 +313,7 @@ edges:
     to: SandboxTools
     kind: cli
     status: planned
-    note: "the sandbox runs bwrap, systemd-run and socat around a Step's agent session (SB-2, SB-3a, SB-4a); check-deps does not scan C# for cli edges"
+    note: "the sandbox runs bwrap, systemd-run, systemctl and socat around a Step's agent session (SB-2, SB-3a, SB-4a); check-deps does not scan C# for cli edges"
   - from: Sindri
     to: Judge
     kind: file
@@ -636,6 +649,47 @@ edges:
     kind: compose
     status: current
     note: "Sindri's Host calls AddCodeIndexFeatures and AddCodeIndexInfrastructure (and nothing else from those projects) in Composition (CI-9)"
+  # ---- the Sindri-owned index (spec 2026-10-27-sindri-owned-index-design.md §9.2) ----
+  - from: Embeddings
+    to: Kernel
+    kind: project
+    status: current
+    note: "Result, IService, ids (scaffolded by hand: the scaffolder refuses tier 0)"
+  - from: Connectors
+    to: Kernel
+    kind: project
+    status: current
+    note: "Result, ids, IService"
+  - from: Connectors
+    to: Redaction
+    kind: project
+    status: planned
+    note: "response bodies and urls go through it before any error row (§10); with Kernel, KernelTelemetry and Redaction, Connectors.Infrastructure is at the fan-out limit of 4"
+  - from: Connectors
+    to: KernelTelemetry
+    kind: project
+    status: planned
+    note: "logs and spans (codes and counts only, never record text)"
+  - from: CodeIndex
+    to: Embeddings
+    kind: project
+    status: planned
+    note: "phase I6, blocked: Aw.CodeIndex.Infrastructure already has 4 project references, so this needs a time-boxed fan-out exception or a dropped reference; until then CodeIndex keeps its own copy and the two diverge by design"
+  - from: Sindri
+    to: Embeddings
+    kind: project
+    status: current
+    note: "Host only: binds Context's vector ports (IQueryEmbedder, IVectorScan) to Aw.Embeddings with its own registrations (a compose edge into tier 0 is illegal, DEPS-COMPOSE-001), as it binds ISymbolVectors"
+  - from: Sindri
+    to: Connectors
+    kind: project
+    status: planned
+    note: "Host only (Aw.Sindri.Features already has 4 project references, the limit): the Host adapter maps IConnector onto Context's RecordFeed"
+  - from: Sindri
+    to: Connectors
+    kind: compose
+    status: planned
+    note: "Host calls AddConnectorsFeatures and AddConnectorsInfrastructure and nothing else from them"
 
 exceptions:
   - rule: DEPS-CYCLE-001

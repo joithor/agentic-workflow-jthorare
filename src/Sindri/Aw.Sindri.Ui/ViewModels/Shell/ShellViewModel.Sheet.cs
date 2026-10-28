@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using Aw.Sindri.Ui.Navigation;
+using Aw.Sindri.Ui.ViewModels.NeedsYou;
 
 namespace Aw.Sindri.Ui.ViewModels.Shell;
 
@@ -14,8 +16,19 @@ internal sealed partial class ShellViewModel
     /// <summary>The sheet's visible title: the subject's name once drawn (an agent's heading), else the subject itself; the ref stays in the tooltip.</summary>
     public string SheetTitle => NamedSubject;
 
+    private void OnDecisionChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (string.Equals(e.PropertyName, nameof(DecisionSheetViewModel.Heading), StringComparison.Ordinal))
+        {
+            Changed(nameof(SheetTitle), nameof(SheetName), nameof(EdgeTabName));
+        }
+    }
+
     /// <summary>The link the sheet was opened by (its kind and subject); null before the first.</summary>
     public DeepLink? SheetLink { get; private set; }
+
+    /// <summary>True when the sheet's last subject was a child pushed on a frame, or Back to the frame it came from: such a change keeps the sheet's scroll.</summary>
+    public bool SheetChangeIsStacked { get; private set; }
 
     /// <summary>True when the closed sheet shows its edge tab (a subject was opened before).</summary>
     public bool HasEdgeTab => SheetSubject.Length > 0;
@@ -41,12 +54,13 @@ internal sealed partial class ShellViewModel
 
     private static string Joined(string noun, string title) => title.Length > 0 ? noun + " " + title : noun;
 
-    /// <summary>The edge tab's text: the item's or workflow's readable title once read, else the sheet kind's plain word; never a raw address.</summary>
+    /// <summary>The edge tab's text: the item's, workflow run's or workflow type's readable title once read, else the sheet kind's plain word; never a raw address.</summary>
 #pragma warning disable IDE0072 // the kinds whose subject is already a readable name keep it
     public string EdgeTabText => SheetLink?.Kind switch
     {
         DeepLinkKind.Item => Item.Title.Length > 0 ? Item.Title : Labels.EdgeTabItem,
         DeepLinkKind.Workflow => Instance.Title.Length > 0 ? Instance.Title : Labels.EdgeTabWorkflowRun,
+        DeepLinkKind.Recipe => Recipe.Title.Length > 0 ? Recipe.Title : SheetSubject,
         DeepLinkKind.NeedsYou => Labels.EdgeTabNeedsYou,
         DeepLinkKind.Decision => Labels.EdgeTabDecision,
         DeepLinkKind.Job => Labels.EdgeTabJob,
@@ -85,6 +99,7 @@ internal sealed partial class ShellViewModel
     internal void OpenSheet(DeepLink link)
     {
         SheetLink = link;
+        SheetChangeIsStacked = _stacking;
         IsSheetOpen = true;
         ForgetRowSheetUnless(link);
         OnSheetOpened(link);
@@ -108,6 +123,7 @@ internal sealed partial class ShellViewModel
             return;
         }
 
+        SheetChangeIsStacked = false;
         (IsSheetOpen, OpenerRow, OpenerStrip, OpenerRecipeGroup, OpenerSession) = (true, null, null, null, null);
         OnJobSheetReopened();
         Changed(nameof(IsSheetOpen), nameof(IsSheetShown), nameof(IsEdgeTabShown));

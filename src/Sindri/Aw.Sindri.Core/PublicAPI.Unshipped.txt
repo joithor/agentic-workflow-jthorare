@@ -21081,3 +21081,9 @@ Aw.Sindri.Core.Sandbox.ISandboxMachine.Cores.get -> int
 Aw.Sindri.Core.Sandbox.ISandboxMachine.RamBytes.get -> long
 const Aw.Sindri.Core.Profile.WorkflowAgentSettings.Notice = "Model choice is on: each agent step's brief and input files (up to 100,000 characters, secrets and denied paths removed), and for the concept scan its map summary, are sent to Jev to pick a model." -> string!
 Aw.Sindri.Core.Profile.WorkflowAgentSettings.PickIsOn.get -> bool
+Aw.Sindri.Core.Workflow.Engine.Runtime.IReportOutputChecks
+Aw.Sindri.Core.Workflow.Engine.Runtime.IReportOutputChecks.Violations(System.Collections.Generic.IReadOnlyDictionary<Aw.Sindri.Core.Workflow.Ids.FactKey, System.ReadOnlyMemory<byte>>! outputs, System.Collections.Generic.IReadOnlySet<Aw.Sindri.Core.Workflow.Ids.FactKey>! payloads, bool scopingQuestions) -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks
+Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.Violations(System.Collections.Generic.IReadOnlyDictionary<Aw.Sindri.Core.Workflow.Ids.FactKey, System.ReadOnlyMemory<byte>>! outputs, System.Collections.Generic.IReadOnlySet<Aw.Sindri.Core.Workflow.Ids.FactKey>! payloads, bool scopingQuestions) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.Instance.get -> Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks!
+Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.PayloadReportChecks() -> void

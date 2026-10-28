@@ -68,8 +68,16 @@ public static class PlatformSandboxServiceCollectionExtensions
                         }
                     }),
                     sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>(), sp.GetRequiredService<ITextScrubber>(), sp.GetRequiredService<TimeProvider>())))
-            .AddSingleton<ISandboxLaunch>(sp => new SandboxLaunch(
-                sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<ISandboxLaunchStages>(), LaunchOptions(sp, environment)));
+            .AddSingleton<ISandboxExec>(sp => ExecFor(sp, environment))
+            .AddSingleton<ISandboxLaunch>(sp => new SandboxLaunch(sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<ISandboxLaunchStages>(), LaunchOptions(sp, environment)));
+    }
+
+    private static SandboxExec ExecFor(IServiceProvider sp, Func<string, string?> environment)
+    {
+        var machine = sp.GetRequiredService<ISandboxMachine>();
+        return new SandboxExec(
+            sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<EgressService>(), sp.GetRequiredService<IApprovedProfile>(),
+            new BoxFacts(machine.RamBytes, machine.Cores), environment("AW_SANDBOX_SYSTEMD_RUN") is { Length: > 0 } run ? run : "systemd-run");
     }
 
     private static SandboxLaunchOptions LaunchOptions(IServiceProvider sp, Func<string, string?> environment)

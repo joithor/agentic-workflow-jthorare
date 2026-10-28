@@ -3,12 +3,13 @@ using Aw.Context.Core.Facade;
 using Aw.Kernel;
 using Aw.Kernel.Services;
 using Aw.Sindri.Core.Events;
+using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Ledger;
 using Aw.Sindri.Core.Profile;
 
 namespace Aw.Sindri.Features.ValidateProfile;
 
-internal sealed class ValidateProfileService(IProfileSource live, IApprovals approvals, ILedgerStore ledger, EventFactory events, IContextEngine context, ModelKeyChecks? models = null)
+internal sealed class ValidateProfileService(IProfileSource live, IApprovals approvals, ILedgerStore ledger, EventFactory events, IContextEngine context, ModelKeyChecks? models = null, IAgentCatalog? agents = null)
     : IService<ValidateProfileRequest, ValidateProfileResponse>
 {
     public async ValueTask<Result<ValidateProfileResponse>> Handle(ValidateProfileRequest request, CancellationToken cancellationToken)
@@ -43,8 +44,11 @@ internal sealed class ValidateProfileService(IProfileSource live, IApprovals app
 
         var approved = ProfileRules.IsApproved(saved.Value?.Hash, recorded.Value?.Hash, loaded.Value.Hash);
         var matches = models is null ? [] : await models.PinMatches(loaded.Value.Profile, cancellationToken).ConfigureAwait(false);
-        return new ValidateProfileResponse(loaded.Value.Hash, loaded.Value.Source, approved) { Matches = matches.Count == 0 ? null : matches };
+        return new ValidateProfileResponse(loaded.Value.Hash, loaded.Value.Source, approved) { Matches = matches.Count == 0 ? null : matches, Warnings = Warnings(loaded.Value.Profile) };
     }
+
+    private IReadOnlyList<string>? Warnings(SindriProfile profile) =>
+        agents is not null && AgentTargetWarning.For(profile.Workflow?.Agent?.Target, agents) is { } line ? [line] : null;
 
     private async ValueTask<Error?> ModelProblem(SindriProfile profile, CancellationToken cancellationToken) =>
         models is null ? null : await models.Models(profile, cancellationToken).ConfigureAwait(false);

@@ -13,5 +13,10 @@ public static class JudgeParallel
     /// <param name="profile">The profile.</param>
     /// <param name="repo">The item's repo name, or null.</param>
     /// <returns>The repo's value, else the box's, else null.</returns>
-    public static int? Effective(SindriProfile profile, string? repo) => throw new NotSupportedException();
+    public static int? Effective(SindriProfile profile, string? repo)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        return profile.Repos?.FirstOrDefault(r => string.Equals(r.Name, repo, StringComparison.Ordinal))?.Workflow?.Judge?.Parallel
+            ?? profile.Workflow?.Judge?.Parallel;
+    }
 }

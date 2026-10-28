@@ -1444,7 +1444,9 @@ sends it on to the desk twin. A Step with no registered runtime keeps opening a 
   events` prints `via block · decision <id>` (a `sindri workflow why` verb that explains the decision comes with DT-J3); the API's event detail has `via` and
   `decision`, left out when null. Desk reports carry neither.
 - **Profile:** `workflow.judge.providers` (and `repos[].workflow.judge.providers`) narrows which providers a Judge
-  Step may ask; see `sindri-profile.md`.
+  Step may ask; see `sindri-profile.md`. `workflow.judge.parallel` (1 to 16) sets how many calls the scoping judge Steps run at once: a Step's `parallel: { profile: workflow.judge.parallel }`
+  resolves from the approved profile (the repo's value, else the box's) and is left out when neither sets it, so the Step's default of 8 applies; recipe validation accepts that profile key for
+  `parallel` and no other (`RCP-BLOCK-003`).
 
 ## Agent runtime (P8)
 

@@ -20,7 +20,7 @@ internal sealed class RelevanceJudgeStep(IJudgeChoice judge, ITextScrubber scrub
 {
     internal const double DefaultThreshold = 0.6;
 
-    internal const int DefaultParallel = 4;
+    internal const int DefaultParallel = 8;
 
     internal const int MaxParallel = 16;
 

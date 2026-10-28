@@ -9060,3 +9060,4 @@ override Aw.Context.Core.Sync.SourceProgress.ToString() -> string!
 static Aw.Context.Core.Sync.SourceProgress.From(Aw.Context.Core.Sources.SourceId source, Aw.Context.Core.Records.SyncPhase? phase, System.DateTimeOffset? lastSync, string? lastCode) -> Aw.Context.Core.Sync.SourceProgress!
 static Aw.Context.Core.Sync.SourceProgress.operator !=(Aw.Context.Core.Sync.SourceProgress? left, Aw.Context.Core.Sync.SourceProgress? right) -> bool
 static Aw.Context.Core.Sync.SourceProgress.operator ==(Aw.Context.Core.Sync.SourceProgress? left, Aw.Context.Core.Sync.SourceProgress? right) -> bool
+Aw.Context.Core.Sync.IIndexSync.Progress(Aw.Context.Core.Engine.ContextScope! scope, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Sync.SourceProgress!>!>!>

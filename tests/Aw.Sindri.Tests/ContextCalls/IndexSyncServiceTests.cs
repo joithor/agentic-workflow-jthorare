@@ -8,7 +8,6 @@ using Aw.Context.Core.Sync;
 using Aw.Kernel;
 using Aw.Sindri.Core.Scheduling;
 using Aw.Sindri.Features.ContextCalls;
-using Aw.Sindri.Testing;
 
 namespace Aw.Sindri.Tests.ContextCalls;
 

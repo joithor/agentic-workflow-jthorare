@@ -34,6 +34,8 @@ public sealed class SandboxLaunchStagesTests : IDisposable
         _inputs = new StubInputs(_temp.Path);
     }
 
+    private string Home => Path.Combine(_temp.Path, "home");
+
     public void Dispose() => _temp.Dispose();
 
     private LaunchSandboxRegistry Registry() =>
@@ -87,10 +89,12 @@ public sealed class SandboxLaunchStagesTests : IDisposable
         var (asked, plan) = await PlanFor(policy);
         _inputs.Form = PolicyForm.ClaudeSettingsFile;
 
-        var args = await Make().WritePolicy(asked, plan, CancellationToken.None);
+        var args = await Make().WritePolicy(asked, plan, Home, CancellationToken.None);
 
-        Expect.True(args.IsSuccess && args.Value.Count == 0);
-        Expect.True(File.Exists(StepPolicyFile.PathFor(_inputs.PolicyDirectory(), plan.Launch)));
+        Expect.True(args.IsSuccess && args.Value.Args.Count == 0);
+        Expect.True(File.Exists(StepPolicyFile.PathFor(Home, plan.Launch)) && args.Value.To == StepPolicyFile.PathFor(Home, plan.Launch));
+        Expect.True(!File.Exists(StepPolicyFile.PathFor(_inputs.PolicyDirectory(), plan.Launch)));
+        Expect.True(args.Value.Apply(["claude", "--settings", args.Value.From!])[2] == args.Value.To);   // the argv points at the file in the session home
     }
 
     [Fact]
@@ -100,10 +104,20 @@ public sealed class SandboxLaunchStagesTests : IDisposable
         var (asked, plan) = await PlanFor(policy);
         _inputs.Form = PolicyForm.CodexOverrides;
 
-        var args = await Make().WritePolicy(asked, plan, CancellationToken.None);
+        var args = await Make().WritePolicy(asked, plan, Home, CancellationToken.None);
 
-        Expect.True(args.IsSuccess && args.Value.Count > 0);
-        Expect.True(!File.Exists(StepPolicyFile.PathFor(_inputs.PolicyDirectory(), plan.Launch)));
+        Expect.True(args.IsSuccess && args.Value.Args.Count > 0);
+        Expect.True(!File.Exists(StepPolicyFile.PathFor(Home, plan.Launch)));
+    }
+
+    [Fact]
+    public void Extra_arguments_go_right_after_the_program_and_before_the_prompt()
+    {
+        var files = new PolicyFiles(["-c", "approval_policy=\"never\""]);
+
+        var argv = files.Apply(["codex", "exec", "--", "do the thing"]);
+
+        Expect.True(argv.SequenceEqual(["codex", "-c", "approval_policy=\"never\"", "exec", "--", "do the thing"], StringComparer.Ordinal));
     }
 
     private static LaunchRequest Asked(StepPolicy policy) =>
@@ -134,8 +148,6 @@ public sealed class SandboxLaunchStagesTests : IDisposable
         public PolicyForm PolicyFormOf(AgentId agent) => Form;
 
         public DenialCounter? DenialCounterFor(LaunchId launch) => null;
-
-        public (string? Transcript, TranscriptKind Kind, string? FailOpenLog) DenialFiles(LaunchId launch) => (null, TranscriptKind.Claude, null);
 
         public SandboxHostFacts Host() => SandboxRequests.Host;
 

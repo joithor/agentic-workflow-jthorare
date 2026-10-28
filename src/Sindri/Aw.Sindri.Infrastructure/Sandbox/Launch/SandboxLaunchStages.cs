@@ -57,23 +57,26 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
     }
 
     /// <inheritdoc/>
-    public ValueTask<Result<IReadOnlyList<string>>> WritePolicy(SandboxRequest request, SandboxPlan plan, CancellationToken cancellationToken)
+    public ValueTask<Result<PolicyFiles>> WritePolicy(SandboxRequest request, SandboxPlan plan, string sessionHome, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(plan);
         _plans[plan.Launch] = plan;
         if (request.Policy is not { } policy)
         {
-            return Done([]);
+            return Done(PolicyFiles.None);
         }
 
         var form = inputs.PolicyFormOf(request.Target);
         if (form == PolicyForm.ClaudeSettingsFile)
         {
-            _ = StepPolicyFile.Write(inputs.PolicyDirectory(), plan.Launch, policy, SandboxPolicyOverlay.From(plan));   // the launcher wrote it without the plan: the same path, now with the plan's rules
+            var from = StepPolicyFile.PathFor(inputs.PolicyDirectory(), plan.Launch);
+            var to = StepPolicyFile.Write(sessionHome, plan.Launch, policy, SandboxPolicyOverlay.From(plan));
+            StepPolicyFile.Delete(inputs.PolicyDirectory(), plan.Launch);   // the launcher's copy has no plan in it and the sandbox can't read it
+            return Done(new PolicyFiles([], from, to));
         }
 
-        return Done(form == PolicyForm.CodexOverrides ? SandboxPolicyFiles.CodexOverrides(policy) : []);
+        return Done(form == PolicyForm.CodexOverrides ? new PolicyFiles(SandboxPolicyFiles.CodexOverrides(policy)) : PolicyFiles.None);
     }
 
     /// <inheritdoc/>
@@ -89,14 +92,14 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
     {
         if (_plans.TryRemove(launch, out var plan) && egress.Get(launch)?.Denials is { } counter)
         {
-            var (transcript, kind, failOpen) = inputs.DenialFiles(launch);
+            var (transcript, kind, failOpen) = DenialFileLocator.For(plan);
             await DenialCollector.Collect(new DenialSources(plan, SessionHomePaths.For(inputs.Host().SindriHome, launch), transcript, kind, failOpen), counter, cancellationToken).ConfigureAwait(false);   // before the egress stops and before session.ended
         }
 
         _ = await egress.Release(launch).ConfigureAwait(false);
     }
 
-    private static ValueTask<Result<IReadOnlyList<string>>> Done(IReadOnlyList<string> arguments) => ValueTask.FromResult(Results.Success(arguments));
+    private static ValueTask<Result<PolicyFiles>> Done(PolicyFiles files) => ValueTask.FromResult(Results.Success(files));
 
     private static TimeSpan? LongMax(SindriProfile? loaded) =>
         loaded is not null && RecipeDuration.TryFrom(LineProfile.LongMax(loaded), out var duration) ? duration.Span : null;

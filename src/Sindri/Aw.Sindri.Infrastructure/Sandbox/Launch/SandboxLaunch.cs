@@ -2,11 +2,11 @@ using System.Collections.Concurrent;
 using Aw.Kernel;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Launch;
-using Aw.Sindri.Infrastructure.Launch;
 using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
+using Aw.Sindri.Infrastructure.Launch;
 
 namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 
@@ -71,7 +71,7 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
             return checkedPlan.Error;
         }
 
-        var wrapped = sandbox.Wrap(plan, [.. argv, .. staged.Value.Args]);   // the Step form's extra arguments (a sandboxed Codex Step's -c overrides) go after the launcher's own
+        var wrapped = sandbox.Wrap(plan, staged.Value.Policy.Apply(argv));   // the policy file now sits in the session home; a Codex Step's -c overrides go after the launcher's own
         if (wrapped.IsError)
         {
             return wrapped.Error;
@@ -91,7 +91,7 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
             return home.Error;
         }
 
-        var policy = await stages.WritePolicy(request, plan, cancellationToken).ConfigureAwait(false);
+        var policy = await stages.WritePolicy(request, plan, home.Value, cancellationToken).ConfigureAwait(false);
         if (policy.IsError)
         {
             return policy.Error;
@@ -101,7 +101,7 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
         return egress.IsError ? egress.Error : new Staged(home.Value, policy.Value);
     }
 
-    private sealed record Staged(string Home, IReadOnlyList<string> Args);
+    private sealed record Staged(string Home, PolicyFiles Policy);
 
     /// <summary>Makes the session home with the launch's one-read secret moved in (the launcher's own file is deleted: the wrap reads the home's) and control.json as a file, which a sandbox needs.</summary>
     private Result<string> MakeHome(SandboxPlan plan)

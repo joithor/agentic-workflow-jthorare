@@ -261,7 +261,7 @@ public sealed class PullSlackTests
 
         var result = await Service(reader).Handle(Request(after: null, 100, General, Ops), Ct);
 
-        Assert.Equal("SND-INDEX-006", result.Error.Code);
+        Assert.Equal("SND-INDEX-013", result.Error.Code);
     }
 
     [Fact, Trait("Lane", "unit")]

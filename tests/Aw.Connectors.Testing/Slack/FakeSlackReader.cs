@@ -6,7 +6,7 @@ namespace Aw.Connectors.Testing.Slack;
 
 /// <summary>
 /// An in-memory <see cref="ISlackReader"/>: serves what was added per channel the way Slack does (history newest first from an inclusive oldest, a thread root first) and, like the real
-/// client, refuses a channel that is not allowed before it reads anything (SND-INDEX-006). Contract-tested against the real client.
+/// client, refuses a channel that is not allowed before it reads anything (SND-INDEX-013). Contract-tested against the real client.
 /// </summary>
 public sealed class FakeSlackReader(params string[] allowedChannels) : ISlackReader
 {

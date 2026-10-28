@@ -7,7 +7,7 @@ namespace Aw.Connectors.Infrastructure.Slack;
 
 /// <summary>
 /// Reads the listed channels from the Slack Web API (owned index spec §5.3, §10): GET conversations.history and conversations.replies with the bot token as a bearer, a page at a time by
-/// response_metadata.next_cursor. A channel that is not in the allowlist (or is a direct message) is refused before any request (SND-INDEX-006). Slack's HTTP 200 with ok:false becomes a typed
+/// response_metadata.next_cursor. A channel that is not in the allowlist (or is a direct message) is refused before any request (SND-INDEX-013). Slack's HTTP 200 with ok:false becomes a typed
 /// error; a 429 stops the read and comes back as a value with the reset time (never a sleep). Only https on slack.com is spoken, a redirect is refused and the token goes only in the
 /// Authorization header and in no error.
 /// </summary>

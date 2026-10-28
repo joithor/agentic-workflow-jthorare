@@ -189,10 +189,10 @@ public sealed class SlackClientTests : IDisposable
 
         var error = (await client.History(Other, oldest: null, Ct)).Error;
 
-        Assert.Equal("SND-INDEX-006", error.Code);
+        Assert.Equal("SND-INDEX-013", error.Code);
         Assert.Empty(_server.Requests);
-        Assert.Equal("SND-INDEX-006", (await client.Replies(Other, At(1), Ct)).Error.Code);
-        Assert.Equal("SND-INDEX-006", (await client.Probe(Other, Ct)).Error.Code);
+        Assert.Equal("SND-INDEX-013", (await client.Replies(Other, At(1), Ct)).Error.Code);
+        Assert.Equal("SND-INDEX-013", (await client.Probe(Other, Ct)).Error.Code);
         Assert.Empty(_server.Requests);
     }
 
@@ -205,7 +205,7 @@ public sealed class SlackClientTests : IDisposable
     {
         var client = Client(Token, General, id);
 
-        Assert.Equal("SND-INDEX-006", (await client.History(id, oldest: null, Ct)).Error.Code);
+        Assert.Equal("SND-INDEX-013", (await client.History(id, oldest: null, Ct)).Error.Code);
         Assert.Empty(_server.Requests);
     }
 

@@ -90,7 +90,7 @@ internal sealed partial class SlackConnector(SlackSettings settings, ISlackReade
 
         return thread.Value.RateLimitedUntil is { } until
             ? Limited(until)
-            : Results.Success<string?>(thread.Value.Items.Count == 0 ? null : SlackRecords.VersionOf(SlackRecords.Newest(thread.Value.Items, DateTimeOffset.MinValue)));
+            : Results.Success(thread.Value.Items.Count == 0 ? null : SlackRecords.VersionOf(SlackRecords.Newest(thread.Value.Items, DateTimeOffset.MinValue)));
     }
 
     private async ValueTask<Result<string?>> DayVersion(SlackChannelRef channel, string day, CancellationToken cancellationToken)
@@ -116,7 +116,7 @@ internal sealed partial class SlackConnector(SlackSettings settings, ISlackReade
             settings.Workspace,
             day,
             [.. history.Value.Items.Where(m => !SlackRecords.IsNoise(m) && SlackRecords.IsUnthreaded(m) && string.Equals(SlackRecords.DayOf(m), day, StringComparison.Ordinal)).OrderBy(static m => m.Ts, StringComparer.Ordinal)]);
-        return Results.Success<string?>(item?.Version);
+        return Results.Success(item?.Version);
     }
 
     [GeneratedRegex(@"^slack:(?<channel>[CG][A-Z0-9]{2,20})/(?:day/(?<day>\d{4}-\d{2}-\d{2})|(?<ts>\d{1,12}\.\d{6}))\z", RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 100)]

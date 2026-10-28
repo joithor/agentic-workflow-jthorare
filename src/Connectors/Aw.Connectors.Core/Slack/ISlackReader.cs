@@ -2,7 +2,7 @@ using Aw.Kernel;
 
 namespace Aw.Connectors.Core.Slack;
 
-/// <summary>Reads the messages of the channels the profile lists. Every call refuses a channel that is not in the allowlist, before any request (SND-INDEX-006).</summary>
+/// <summary>Reads the messages of the channels the profile lists. Every call refuses a channel that is not in the allowlist, before any request (SND-INDEX-013).</summary>
 public interface ISlackReader
 {
     /// <summary>Reads a channel's top-level messages (conversations.history), newest first, every page from <paramref name="oldest"/> (inclusive) to now.</summary>

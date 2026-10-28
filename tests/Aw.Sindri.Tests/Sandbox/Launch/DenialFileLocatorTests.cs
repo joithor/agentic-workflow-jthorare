@@ -19,7 +19,7 @@ public sealed class DenialFileLocatorTests : IDisposable
     private static SandboxPlan PlanWith(params PlanEnvVar[] extra)
     {
         var plan = SandboxPlanner.Build(Aw.Sindri.Core.Sandbox.SandboxMechanism.Bubblewrap, SandboxRequests.WriteScope).Value;
-        return plan with { Environment = [.. plan.Environment, .. extra] };
+        return plan with { Environment = [.. plan.Environment.Where(e => !extra.Any(x => string.Equals(x.Name, e.Name, StringComparison.Ordinal))), .. extra] };   // the plan's own login dir would win otherwise
     }
 
     private const string Glob = "~/.claude/projects/*/{sessionId}.jsonl";

@@ -7649,7 +7649,7 @@ static Aw.Sindri.Core.Secrets.SecretPointer.IsPointer(string! name) -> bool
 static Aw.Sindri.Core.Secrets.SecretPointer.Parse(string! text) -> Aw.Kernel.Result<Aw.Sindri.Core.Secrets.SecretPointer!>!
 static Aw.Sindri.Core.Secrets.SecretPointer.operator !=(Aw.Sindri.Core.Secrets.SecretPointer? left, Aw.Sindri.Core.Secrets.SecretPointer? right) -> bool
 static Aw.Sindri.Core.Secrets.SecretPointer.operator ==(Aw.Sindri.Core.Secrets.SecretPointer? left, Aw.Sindri.Core.Secrets.SecretPointer? right) -> bool
-static Aw.Sindri.Core.Sessions.SessionRows.Of(Aw.Sindri.Core.Sessions.ObservedSession! session, Aw.Sindri.Core.Launch.AgentEntry? entry, string? repoPath, Aw.Sindri.Core.Launch.LaunchStep? launch = null) -> Aw.Sindri.Core.Sessions.SessionRow!
+static Aw.Sindri.Core.Sessions.SessionRows.Of(Aw.Sindri.Core.Sessions.ObservedSession! session, Aw.Sindri.Core.Launch.AgentEntry? entry, string? repoPath, Aw.Sindri.Core.Launch.LaunchStep? launch = null, Aw.Sindri.Core.Sandbox.SessionSandbox? sandbox = null) -> Aw.Sindri.Core.Sessions.SessionRow!
 static Aw.Sindri.Core.SindriErrors.All.get -> System.Collections.Generic.IReadOnlyList<Aw.Kernel.ErrorDefinition!>!
 static Aw.Sindri.Core.Text.SafeText.Clean(Aw.Sindri.Core.Text.ITextScrubber! scrubber, string! text, int max) -> string!
 static Aw.Sindri.Core.Text.SafeText.CleanBlock(Aw.Sindri.Core.Text.ITextScrubber! scrubber, string! text, int max) -> string!
@@ -21107,3 +21107,46 @@ Aw.Sindri.Core.Sandbox.Credentials.AgentHomes
 static Aw.Sindri.Core.Sandbox.Credentials.AgentHomes.For(string! sindriHome, Aw.Sindri.Core.Launch.AgentId target) -> string!
 Aw.Sindri.Core.Sandbox.Credentials.ISandboxLogin
 Aw.Sindri.Core.Sandbox.Credentials.ISandboxLogin.Run(Aw.Sindri.Core.Launch.AgentId target, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Aw.Kernel.Result<int>!>!
+Aw.Sindri.Core.Launches.LaunchRow.Sandbox.get -> Aw.Sindri.Core.Sandbox.SandboxSummary?
+Aw.Sindri.Core.Launches.LaunchRow.Sandbox.init -> void
+Aw.Sindri.Core.Launches.LaunchSandboxes
+Aw.Sindri.Core.Sandbox.ISessionSandboxes
+Aw.Sindri.Core.Sandbox.ISessionSandboxes.Read(Aw.Sindri.Core.Workflow.Engine.LaunchId launch, Aw.Sindri.Core.Sandbox.SandboxSummary! summary, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Sindri.Core.Sandbox.SessionSandbox!>
+Aw.Sindri.Core.Sandbox.SessionMemory
+Aw.Sindri.Core.Sandbox.SessionMemory.<Clone>$() -> Aw.Sindri.Core.Sandbox.SessionMemory!
+Aw.Sindri.Core.Sandbox.SessionMemory.Deconstruct(out long? UsedBytes, out long? MaxBytes) -> void
+Aw.Sindri.Core.Sandbox.SessionMemory.Equals(Aw.Sindri.Core.Sandbox.SessionMemory? other) -> bool
+Aw.Sindri.Core.Sandbox.SessionMemory.MaxBytes.get -> long?
+Aw.Sindri.Core.Sandbox.SessionMemory.MaxBytes.init -> void
+Aw.Sindri.Core.Sandbox.SessionMemory.SessionMemory(long? UsedBytes, long? MaxBytes) -> void
+Aw.Sindri.Core.Sandbox.SessionMemory.UsedBytes.get -> long?
+Aw.Sindri.Core.Sandbox.SessionMemory.UsedBytes.init -> void
+Aw.Sindri.Core.Sandbox.SessionSandbox
+Aw.Sindri.Core.Sandbox.SessionSandbox.<Clone>$() -> Aw.Sindri.Core.Sandbox.SessionSandbox!
+Aw.Sindri.Core.Sandbox.SessionSandbox.Attended.get -> bool
+Aw.Sindri.Core.Sandbox.SessionSandbox.Attended.init -> void
+Aw.Sindri.Core.Sandbox.SessionSandbox.Deconstruct(out Aw.Sindri.Core.Sandbox.SessionSandboxState State, out bool Attended, out string? Folder, out Aw.Sindri.Core.Sandbox.SessionMemory? Memory) -> void
+Aw.Sindri.Core.Sandbox.SessionSandbox.Equals(Aw.Sindri.Core.Sandbox.SessionSandbox? other) -> bool
+Aw.Sindri.Core.Sandbox.SessionSandbox.Folder.get -> string?
+Aw.Sindri.Core.Sandbox.SessionSandbox.Folder.init -> void
+Aw.Sindri.Core.Sandbox.SessionSandbox.Memory.get -> Aw.Sindri.Core.Sandbox.SessionMemory?
+Aw.Sindri.Core.Sandbox.SessionSandbox.Memory.init -> void
+Aw.Sindri.Core.Sandbox.SessionSandbox.SessionSandbox(Aw.Sindri.Core.Sandbox.SessionSandboxState State, bool Attended, string? Folder, Aw.Sindri.Core.Sandbox.SessionMemory? Memory) -> void
+Aw.Sindri.Core.Sandbox.SessionSandbox.State.get -> Aw.Sindri.Core.Sandbox.SessionSandboxState
+Aw.Sindri.Core.Sandbox.SessionSandbox.State.init -> void
+Aw.Sindri.Core.Sandbox.SessionSandboxState
+Aw.Sindri.Core.Sandbox.SessionSandboxState.On = 0 -> Aw.Sindri.Core.Sandbox.SessionSandboxState
+Aw.Sindri.Core.Sandbox.SessionSandboxState.Unavailable = 1 -> Aw.Sindri.Core.Sandbox.SessionSandboxState
+Aw.Sindri.Core.Sessions.SessionRow.Sandbox.get -> Aw.Sindri.Core.Sandbox.SessionSandbox?
+Aw.Sindri.Core.Sessions.SessionRow.Sandbox.init -> void
+override Aw.Sindri.Core.Sandbox.SessionMemory.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.SessionMemory.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.SessionMemory.ToString() -> string!
+override Aw.Sindri.Core.Sandbox.SessionSandbox.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.SessionSandbox.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.SessionSandbox.ToString() -> string!
+static Aw.Sindri.Core.Launches.LaunchSandboxes.Of(Aw.Sindri.Core.Launches.ILaunchViews! launches, Aw.Sindri.Core.Sandbox.ISessionSandboxes! reader, System.Collections.Generic.IEnumerable<Aw.Sindri.Core.Workflow.Engine.LaunchId>! ids, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyDictionary<Aw.Sindri.Core.Workflow.Engine.LaunchId, Aw.Sindri.Core.Sandbox.SessionSandbox!>!>
+static Aw.Sindri.Core.Sandbox.SessionMemory.operator !=(Aw.Sindri.Core.Sandbox.SessionMemory? left, Aw.Sindri.Core.Sandbox.SessionMemory? right) -> bool
+static Aw.Sindri.Core.Sandbox.SessionMemory.operator ==(Aw.Sindri.Core.Sandbox.SessionMemory? left, Aw.Sindri.Core.Sandbox.SessionMemory? right) -> bool
+static Aw.Sindri.Core.Sandbox.SessionSandbox.operator !=(Aw.Sindri.Core.Sandbox.SessionSandbox? left, Aw.Sindri.Core.Sandbox.SessionSandbox? right) -> bool
+static Aw.Sindri.Core.Sandbox.SessionSandbox.operator ==(Aw.Sindri.Core.Sandbox.SessionSandbox? left, Aw.Sindri.Core.Sandbox.SessionSandbox? right) -> bool

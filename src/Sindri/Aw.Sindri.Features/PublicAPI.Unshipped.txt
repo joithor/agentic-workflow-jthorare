@@ -5330,3 +5330,5 @@ static Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.operator !=(Aw.Sindr
 static Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.operator ==(Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse? left, Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse? right) -> bool
 Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Blockers.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlockerLine!>!
 Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Blockers.init -> void
+Aw.Sindri.Features.GetLaunch.LaunchView.Sandbox.get -> Aw.Sindri.Core.Sandbox.SandboxSummary?
+Aw.Sindri.Features.GetLaunch.LaunchView.Sandbox.init -> void

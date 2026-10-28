@@ -5,6 +5,7 @@ using Aw.Sindri.Core.Commands;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Launches;
 using Aw.Sindri.Core.Profile;
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sessions;
 
 namespace Aw.Sindri.Features.GetSession;
@@ -12,12 +13,13 @@ namespace Aw.Sindri.Features.GetSession;
 /// <summary>
 /// One live session (collector spec CA-2). A ref that is unknown or ended answers SND-SESSION-404. Every caller gets the directory, the socket and the state history.
 /// </summary>
-internal sealed class GetSessionService(ISessionSnapshot snapshot, IAgentCatalog catalog, IApprovedProfile approvals, ICallerContextAccessor callers, ILaunchViews launches)
+internal sealed class GetSessionService(ISessionSnapshot snapshot, IAgentCatalog catalog, IApprovedProfile approvals, ICallerContextAccessor callers, ILaunchViews launches, ISessionSandboxes sandboxes)
     : IService<GetSessionRequest, SessionView>
 {
     public async ValueTask<Result<SessionView>> Handle(GetSessionRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        _ = sandboxes;   // red: the row carries its sandbox with the next commit
         if (callers.Current is null)
         {
             return SindriErrors.AuthRefused.With("a session needs a caller");

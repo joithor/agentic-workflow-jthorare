@@ -5,6 +5,7 @@ using Aw.Sindri.Core.Commands;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Launches;
 using Aw.Sindri.Core.Profile;
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sessions;
 using Aw.Sindri.Core.Workflow.Engine;
 
@@ -14,7 +15,7 @@ namespace Aw.Sindri.Features.ListSessions;
 /// The live sessions (collector spec CA-1): the collector's snapshot, trimmed to the caller. A session caller sees only its repo's rows and none of the human-only fields;
 /// the head counts cover what the caller may see, before the request's filters. SND-SESSION-002 replaces the list.
 /// </summary>
-internal sealed class ListSessionsService(ISessionSnapshot snapshot, IAgentCatalog catalog, IApprovedProfile approvals, ICallerContextAccessor callers, TimeProvider clock, ILaunchViews launches)
+internal sealed class ListSessionsService(ISessionSnapshot snapshot, IAgentCatalog catalog, IApprovedProfile approvals, ICallerContextAccessor callers, TimeProvider clock, ILaunchViews launches, ISessionSandboxes sandboxes)
     : IService<ListSessionsRequest, SessionList>
 {
     internal const string EmptyText = "No agent sessions are running.";
@@ -22,6 +23,7 @@ internal sealed class ListSessionsService(ISessionSnapshot snapshot, IAgentCatal
     public async ValueTask<Result<SessionList>> Handle(ListSessionsRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        _ = sandboxes;   // red: the rows carry their sandbox with the next commit
         if (callers.Current is null)
         {
             return SindriErrors.AuthRefused.With("the session list needs a caller");

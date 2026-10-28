@@ -145,7 +145,7 @@ Approving appends the `profile.approved` event first and saves the snapshot seco
 a retry after a failed save finds the latest recorded approval already naming that hash, appends nothing and only saves. "Approved" means saved
 and named by the latest recorded `profile.approved` event, so a saved approval whose event is missing (or was followed by a later one)
 is not approved, and approving again records it. Every surface judges by this one rule (`ProfileRules.IsApproved`): `profile
-validate`, the `profile approve` preview, `status` (`profile.needsApproval`) and the startup summary ("approval not recorded in
+validate`, the `profile approve` preview, `status` (`profile.needsApproval`; `profile.modelPick`, `on` or `off`, from the approved profile's `workflow.agent.pick`) and the startup summary ("approval not recorded in
 the ledger as the latest one"), and `doctor`'s profile check (a `warn` with the fix `sindri profile approve`). A ledger or a
 saved approval that can't be read is an error on each of them, never "not approved": `profile validate`, `status` and bare
 `sindri` exit 2 with `SND-LEDGER-002` or `SND-PROFILE-006`, and `doctor` fails its profile check. An approval stays readable across

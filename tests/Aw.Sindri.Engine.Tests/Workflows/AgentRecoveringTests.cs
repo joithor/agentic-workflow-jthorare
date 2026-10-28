@@ -93,6 +93,37 @@ public sealed class AgentRecoveringTests
     }
 
     [Fact]
+    public async Task A_run_directory_is_where_the_outputs_are_read_from()
+    {
+        _outputs.Add("/home/runs/WFI-1/draft/LCH-1", "output", """{"found":true}""");
+
+        var recovered = await _recovering.Recover(Run() with { RunDirectory = "/home/runs/WFI-1/draft/LCH-1" }, Token);
+
+        Assert.Equal("done", recovered.Outcome);
+        Assert.Equal(FactKey.From("fact:output"), Assert.Single(recovered.Outputs).Key);
+    }
+
+    [Fact]
+    public async Task A_run_directory_that_is_set_is_the_only_place_read_so_a_worktree_file_is_not_used()
+    {
+        _outputs.Add(Dir, "output", "in the worktree");
+
+        var recovered = await _recovering.Recover(Run() with { RunDirectory = "/home/runs/WFI-1/draft/LCH-1" }, Token);
+
+        Assert.Null(recovered.Outcome);
+    }
+
+    [Fact]
+    public async Task A_parked_report_names_the_run_directorys_output_folder()
+    {
+        _outputs.Add("/home/runs/WFI-1/draft/LCH-1", "scratch.txt", "x");
+
+        var recovered = await _recovering.Recover(Run() with { RunDirectory = "/home/runs/WFI-1/draft/LCH-1" }, Token);
+
+        Assert.StartsWith("the agent finished but its result was not recorded: " + Path.Combine("/home/runs/WFI-1/draft/LCH-1", ".sindri-out"), recovered.Reason, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task An_empty_or_absent_folder_recovers_nothing_so_the_Step_fails_with_the_session_s_own_end()
     {
         var recovered = await _recovering.Recover(Run(), Token);

@@ -104,16 +104,6 @@
 #                                  id on stdout (progress goes to stderr). The Step takes a slot of the box's heavy lock first, so a
 #                                  busy lock delays the launch. Exit 1 when no launch started in time; needs jq and git.
 #
-#   sindri-ui-fixture.sh model-picks picked|escalated|unpriced|picking <ITM-id> <instance-address>
-#                                  the model pick rows of one run (model-pick spec section 6.1) for the instance frame's Model picks
-#                                  table, written as ledger rows the picks route reads (model.picking, model.picked, session.usage and,
-#                                  for a retry, launch.failed): picked is one run on Haiku chosen by Jev with tokens and a price;
-#                                  unpriced is one run on a model the price table lacks ("cost unknown"); picking is a model.picking
-#                                  with no model.picked ("choosing model..."); escalated is a Haiku run that failed to start and a Sonnet
-#                                  retry on the same state and attempt, chosen by rules. The ids are fixed per state, so a rerun
-#                                  writes the same rows (INSERT OR IGNORE). The item and the instance must exist (see 'workflows'): the
-#                                  frame opens the instance and reads its picks by address. Needs jq and sqlite3 or python3.
-#
 # FIXTURE_REPO names the items' repo (default: none, so the API's default applies).
 # FIXTURE_DESK_TIMEOUT (up only): writes workflow.deskTimeout into the fixture profile, the floor of every desk Step timeout (park-timeout).
 # FIXTURE_AGENT_WAIT is how many seconds agent-run waits for launch.started (default 120; a saturated box needs more).
@@ -896,61 +886,6 @@ agent_run() {
   return 1
 }
 
-# --- model-picks: the Model picks table's states (model-pick spec 6.1, issue #1206 M-8) ---
-
-# $1 key, $2 type, $3 payload JSON. A fixed id and idempotency key, so a rerun adds nothing (see publish_event).
-pick_event() {
-  local key="sindri-ui-fixture:model-picks:$1" id corr
-  id="$(printf '%s' "$key" | cksum | awk '{printf "5c0f1e01-%04x-4d1e-9a55-3c2f6d8e1b05", $1 % 65536}')"
-  corr="${id%?}6"
-  ledger "INSERT OR IGNORE INTO events (id, type, schema_version, occurred_at, actor, tenant, ring, correlation_id, epoch, idempotency_key, payload_json)
-          VALUES ('$id', '$2', 1, strftime('%Y-%m-%dT%H:%M:%S', 'now') || '.0000000Z', 'sindri-ui-fixture', 'local', 0, '$corr',
-                  COALESCE((SELECT MAX(epoch) FROM events), 0), '$key', '$3');" >/dev/null
-}
-
-# $1 launch number (1 or 2), $2 item, $3 instance; prints the launch id (LCH- and 32 hex digits).
-pick_launch() { printf 'LCH-%032x\n' "$((0x5c0f1e00 + $1))"; }
-
-# $1 launch, $2 item, $3 instance, $4 model (or null), $5 by, $6 reason (or null), $7 escalatedFrom (or null), $8 escalatedFromKind (or null)
-pick_payload() {
-  jq -cn --arg l "$1" --arg i "$2" --arg a "$3" --arg m "$4" --arg by "$5" --arg r "$6" --arg f "$7" --arg k "$8" '
-    def nul: if . == "null" then null else . end;
-    {launchId: $l, item: $i, instance: $a, state: "questions", attempt: 1, target: "claude-code", model: ($m | nul), by: $by, reason: ($r | nul),
-     decision: (if $by == "jev" then "JD-fixture" else null end), candidates: ["haiku", "sonnet"], briefHash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-     files: [{path: "src/App.cs", chars: 1200}], omitted: [{path: "big.log", chars: 500000, why: "cap"}], jevMs: 2100,
-     jevCalls: (if $by == "jev" then 1 else 0 end), contentSent: ($by == "jev"), unusual: false, escalatedFrom: ($f | nul), escalatedFromKind: ($k | nul)}'
-}
-
-# $1 launch, $2 model, $3 input tokens, $4 output tokens
-pick_usage() {
-  jq -cn --arg l "$1" --arg m "$2" --argjson i "$3" --argjson o "$4" '{launchId: $l, sample: 1, inputTokens: $i, outputTokens: $o, target: "claude-code", model: $m}'
-}
-
-model_picks() { # $1 state, $2 item, $3 instance
-  need jq
-  need_sql
-  local state="$1" item="$2" instance="$3" l1 l2
-  l1="$(pick_launch 1)"
-  l2="$(pick_launch 2)"
-  case "$state" in
-    picking)
-      pick_event "picking:$l1" model.picking "$(jq -cn --arg l "$l1" --arg i "$item" --arg a "$instance" '{launchId: $l, item: $i, instance: $a, state: "questions", attempt: 1, startedAt: "2026-01-01T00:00:00.0000000Z"}')" ;;
-    picked)
-      pick_event "picked:$l1" model.picked "$(pick_payload "$l1" "$item" "$instance" claude-haiku-4-5 jev null null null)"
-      pick_event "usage:$l1" session.usage "$(pick_usage "$l1" claude-haiku-4-5 30000 11000)" ;;
-    unpriced)
-      pick_event "unpriced:$l1" model.picked "$(pick_payload "$l1" "$item" "$instance" some-new-model rules timeout null null)"
-      pick_event "unpriced-usage:$l1" session.usage "$(pick_usage "$l1" some-new-model 12000 3000)" ;;
-    escalated)
-      pick_event "escalated:$l1" model.picked "$(pick_payload "$l1" "$item" "$instance" claude-haiku-4-5 jev null null null)"
-      pick_event "escalated-usage:$l1" session.usage "$(pick_usage "$l1" claude-haiku-4-5 6000 2000)"
-      pick_event "escalated-failed:$l1" launch.failed "$(jq -cn --arg l "$l1" --arg i "$item" --arg a "$instance" '{launchId: $l, item: $i, code: "SND-LAUNCH-001", message: "the model refused", instance: $a, state: "questions", attempt: 1}')"
-      pick_event "escalated:$l2" model.picked "$(pick_payload "$l2" "$item" "$instance" claude-sonnet-4-5 rules timeout claude-haiku-4-5 refused)"
-      pick_event "escalated-usage:$l2" session.usage "$(pick_usage "$l2" claude-sonnet-4-5 24000 7000)" ;;
-  esac
-  printf '%s\n' "$instance"
-}
-
 verb="${1:-}"
 case "$verb" in
   -h | --help) usage; exit 0 ;;
@@ -981,11 +916,6 @@ case "$verb" in
     esac ;;
   hide-item) { [ "$#" -eq 2 ] && case "$2" in ITM-*[!0-9a-f]* | ITM-) false ;; ITM-*) true ;; *) false ;; esac; } || die "usage: hide-item <ITM-id>" ;;
   agent-run) [ "$#" -eq 1 ] || die "'agent-run' takes no arguments" ;;
-  model-picks)
-    [ "$#" -eq 4 ] || die "usage: model-picks picked|escalated|unpriced|picking <ITM-id> <instance-address>"
-    case "$2" in picked | escalated | unpriced | picking) ;; *) die "model-picks: '$2' is not a state (picked, escalated, unpriced, picking)" ;; esac
-    case "$3" in ITM-*[!0-9a-f]* | ITM-) die "model-picks: '$3' is not an item id" ;; ITM-*) ;; *) die "model-picks: '$3' is not an item id" ;; esac
-    [ -n "$4" ] || die "model-picks: the instance address is empty" ;;
   decide) [ "$#" -eq 3 ] || die "usage: decide <DEC-id> <choice>" ;;
   *) usage >&2; die "unknown verb: $verb" ;;
 esac

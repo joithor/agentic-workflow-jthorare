@@ -11,12 +11,12 @@ namespace Aw.Sindri.Tests.IndexSources;
 
 public sealed class ConnectorFeedTests
 {
-    private static readonly DateTimeOffset T = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset _t = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     private static ConnectorItem Item(string repo, string key = "github:pr/acme/widgets/12", string kind = "pr", string state = "merged", DateTimeOffset? updated = null, params ConnectorLink[] links) =>
-        new(key, kind, "Fix save", "Fix save\n\nbody", "octocat", "https://github.com/acme/widgets/pull/12", state, state, T, updated ?? T.AddHours(1), null, "v1", links, repo);
+        new(key, kind, "Fix save", "Fix save\n\nbody", "octocat", "https://github.com/acme/widgets/pull/12", state, state, _t, updated ?? _t.AddHours(1), ClosedAt: null, "v1", links, repo);
 
     private static ConnectorFeed Feed(StubConnector connector, string[]? listed = null, string[]? profile = null, Scrubbers? scrubbers = null) =>
         new(SourceId.From("github"), connector, new ProfileRepoMap(listed ?? ["acme/widgets"], (profile ?? ["widgets"]).Select(ContextRepoName.From)).Place, scrubbers);
@@ -48,7 +48,7 @@ public sealed class ConnectorFeedTests
 
         var page = (await feed.Pull(Pull(), Ct)).Value;
 
-        Assert.Equal(["github:pr/acme/widgets/12"], page.Items.Select(static i => i.Key.Value));
+        Assert.True(page.Items.Select(static i => i.Key.Value).SequenceEqual(["github:pr/acme/widgets/12"], StringComparer.Ordinal));
         Assert.Equal(1, feed.SkippedNotInProfile);
     }
 
@@ -66,9 +66,9 @@ public sealed class ConnectorFeedTests
     [Fact, Trait("Lane", "unit")]
     public async Task A_record_older_than_the_window_is_not_returned()
     {
-        var connector = new StubConnector(Item("acme/widgets", updated: T.AddDays(-400)));
+        var connector = new StubConnector(Item("acme/widgets", updated: _t.AddDays(-400)));
 
-        var page = (await Feed(connector).Pull(Pull(notBefore: T.AddDays(-180)), Ct)).Value;
+        var page = (await Feed(connector).Pull(Pull(notBefore: _t.AddDays(-180)), Ct)).Value;
 
         Assert.Empty(page.Items);
     }
@@ -99,7 +99,7 @@ public sealed class ConnectorFeedTests
     public async Task A_secret_in_a_title_or_text_is_cleaned_before_the_record_leaves_the_feed()
     {
         var dirty = Item("acme/widgets") with { Title = "Rotate SECRETVALUE now", Text = "key is SECRETVALUE here" };
-        var scrubbers = new Scrubbers(new MaskingFilter(), new MaskingFilter(), default);
+        var scrubbers = new Scrubbers(new MaskingFilter(), new MaskingFilter(), ScrubRuleset.From("0123456789abcdef"));
 
         var page = (await Feed(new StubConnector(dirty), scrubbers: scrubbers).Pull(Pull(), Ct)).Value;
 

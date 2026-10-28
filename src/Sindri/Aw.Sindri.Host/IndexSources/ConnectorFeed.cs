@@ -36,7 +36,7 @@ internal sealed class ConnectorFeed(SourceId source, IConnector connector, Func<
         }
 
         var page = read.Value;
-        var items = Items(page, pull.NotBefore);
+        var items = Items(page, pull.NotBefore, pull.Before);
         var removed = page.Removed.Select(static key => RecordKey.TryFrom(key, out var k) ? (RecordKey?)k : null).OfType<RecordKey>().ToList();
         return ContextCursor.TryFrom(page.Next.Value, out var next)
             ? new RecordPage(items, removed, next, page.CursorReset)
@@ -44,10 +44,10 @@ internal sealed class ConnectorFeed(SourceId source, IConnector connector, Func<
     }
 
     // The page's records inside the window and the profile, mapped; the rest are counted or dropped.
-    private List<RecordItem> Items(ConnectorPage page, DateTimeOffset? notBefore)
+    private List<RecordItem> Items(ConnectorPage page, DateTimeOffset? notBefore, DateTimeOffset? before)
     {
         var items = new List<RecordItem>(page.Items.Count);
-        foreach (var item in page.Items.Where(i => notBefore is not { } start || i.UpdatedAt >= start))
+        foreach (var item in page.Items.Where(i => (notBefore is not { } start || i.UpdatedAt >= start) && (before is not { } end || i.UpdatedAt < end)))
         {
             if (place(item) is not { } placement)
             {

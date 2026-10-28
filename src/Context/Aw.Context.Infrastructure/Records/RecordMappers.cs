@@ -41,7 +41,7 @@ internal static class RecordMappers
         new RecordChunk(r.GetInt32(0), r.GetString(1), r.GetInt32(2), r.GetString(3), r.IsDBNull(4) ? null : r.GetInt32(4), r.IsDBNull(5) ? null : r.GetInt32(5)));
 
     internal static IRowMapper<SyncPosition> Position { get; } = new Mapper<SyncPosition>(r =>
-        new SyncPosition(Text(r, 0) is { } cursor ? SourceCursor.From(cursor) : null, Text(r, 1) is { } phase ? RecordWire.Phase(phase) : null, Text(r, 2) is { } backfill ? SourceCursor.From(backfill) : null));
+        new SyncPosition(Text(r, 0) is { } cursor ? SourceCursor.From(cursor) : null, Text(r, 1) is { } phase ? RecordWire.Phase(phase) : null, Text(r, 2) is { } backfill ? SourceCursor.From(backfill) : null, At(r, 3)));
 
     internal static IRowMapper<SourceCounts> Counts { get; } = new Mapper<SourceCounts>(r => new SourceCounts(r.GetInt32(0), r.GetInt32(1), r.GetInt32(2)));
 

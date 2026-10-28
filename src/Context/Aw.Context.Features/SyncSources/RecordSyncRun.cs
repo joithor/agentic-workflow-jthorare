@@ -70,6 +70,11 @@ internal sealed class RecordSyncRun(RecordFeed feed, IRecordStore store, (Scrubb
     private async ValueTask<Result<SyncPosition?>> Step(SyncPosition position, CancellationToken cancellationToken)
     {
         var phase = PhaseOf(position);
+        if (phase == SyncPhase.Backfill && position.BackfillBefore is null)
+        {
+            position = position with { BackfillBefore = RecentStart() };   // a row stored before the bound existed: Recent's start now, kept from here on
+        }
+
         var pulled = await feed.Pull(PullFor(phase, position), cancellationToken).ConfigureAwait(false);
         if (pulled.IsError)
         {
@@ -83,7 +88,7 @@ internal sealed class RecordSyncRun(RecordFeed feed, IRecordStore store, (Scrubb
             return Results.Success<SyncPosition?>(value: null);
         }
 
-        var after = ended ? Following(phase, position) : Advance(phase, position, page);
+        var after = ended ? Following(phase, position, RecentStart()) : Advance(phase, position, page);
         var batch = RecordBatches.From(feed.Source, page, phase, context.Scrubbers, clock.GetUtcNow()) with { Position = after };
         var committed = await store.Commit(batch, cancellationToken).ConfigureAwait(false);
         if (committed.IsError)
@@ -103,23 +108,26 @@ internal sealed class RecordSyncRun(RecordFeed feed, IRecordStore store, (Scrubb
 
     private RecordPull PullFor(SyncPhase phase, SyncPosition position)
     {
-        var now = clock.GetUtcNow();
-        var windowStart = now - TimeSpan.FromDays(context.Index.WindowDays);
+        var windowStart = clock.GetUtcNow() - TimeSpan.FromDays(context.Index.WindowDays);
         if (phase == SyncPhase.Recent)
         {
-            return new RecordPull(position.Cursor, pageSize, Max(now - RecentWindow, windowStart));
+            return new RecordPull(position.Cursor, pageSize, RecentStart());
         }
 
-        return new RecordPull(phase == SyncPhase.Backfill ? position.BackfillCursor : position.Cursor, pageSize, windowStart);
+        // Backfill stops where Recent started
+        return phase == SyncPhase.Backfill ? new RecordPull(position.BackfillCursor, pageSize, windowStart, position.BackfillBefore) : new RecordPull(position.Cursor, pageSize, windowStart);
     }
+
+    /// <summary>Where Recent starts now: 30 days back, but never before the window's start.</summary>
+    private DateTimeOffset RecentStart() => Max(clock.GetUtcNow() - RecentWindow, clock.GetUtcNow() - TimeSpan.FromDays(context.Index.WindowDays));
 
     /// <summary>The position after a page with records: the cursor of the phase moves, the others stay.</summary>
     private static SyncPosition Advance(SyncPhase phase, SyncPosition position, RecordPage page) =>
         phase == SyncPhase.Backfill ? position with { Phase = phase, BackfillCursor = page.Next } : position with { Phase = phase, Cursor = page.Next };
 
     /// <summary>The position after an empty page: the phase is through, so the next pull belongs to the following one (the cursors stay).</summary>
-    private static SyncPosition Following(SyncPhase phase, SyncPosition position) =>
-        position with { Phase = phase == SyncPhase.Recent ? SyncPhase.Backfill : SyncPhase.Incremental };
+    private static SyncPosition Following(SyncPhase phase, SyncPosition position, DateTimeOffset recentStart) =>
+        phase == SyncPhase.Recent ? position with { Phase = SyncPhase.Backfill, BackfillBefore = recentStart } : position with { Phase = SyncPhase.Incremental };
 
     private static DateTimeOffset Max(DateTimeOffset a, DateTimeOffset b) => a > b ? a : b;
 

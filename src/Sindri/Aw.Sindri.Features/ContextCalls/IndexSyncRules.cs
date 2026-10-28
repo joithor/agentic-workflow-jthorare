@@ -20,10 +20,10 @@ internal static class IndexSyncRules
             return new DoctorCheck(IndexDoctorChecks.SyncName, CheckState.Ok, "no record source feeds a repo yet", Fix: null);
         }
 
-        var lines = rows.Select(Line).ToList();
+        var lines = "record index: " + string.Join("; ", rows.Select(Line));
         return rows.Any(IsProblem)
-            ? new DoctorCheck(IndexDoctorChecks.SyncName, CheckState.Warn, string.Join("; ", lines), Fix)
-            : new DoctorCheck(IndexDoctorChecks.SyncName, CheckState.Ok, string.Join("; ", lines), Fix: null);
+            ? new DoctorCheck(IndexDoctorChecks.SyncName, CheckState.Warn, lines, Fix)
+            : new DoctorCheck(IndexDoctorChecks.SyncName, CheckState.Ok, lines, Fix: null);
     }
 
     private static bool IsProblem(SourceProgress p) => p.LastSync is null || Failure(p) is not null;

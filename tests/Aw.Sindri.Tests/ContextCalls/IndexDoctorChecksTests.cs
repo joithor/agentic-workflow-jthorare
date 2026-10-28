@@ -142,7 +142,7 @@ public sealed class IndexDoctorChecksTests
 
         var row = IndexSyncRules.Judge([SourceProgress.From(SourceId.From("github"), SyncPhase.Incremental, at, lastCode: null)]);
 
-        Assert.Equal(new DoctorCheck("context:index-sync", CheckState.Ok, "github synced 2026-10-28 09:05Z", Fix: null), row);
+        Assert.Equal(new DoctorCheck("context:index-sync", CheckState.Ok, "record index: github synced 2026-10-28 09:05Z", Fix: null), row);
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -152,7 +152,7 @@ public sealed class IndexDoctorChecksTests
 
         var row = IndexSyncRules.Judge([SourceProgress.From(SourceId.From("github"), SyncPhase.Incremental, at, "SND-CONTEXT-010"), SourceProgress.From(SourceId.From("slack"), phase: null, lastSync: null, lastCode: null)]);
 
-        Assert.Equal((CheckState.Warn, "github last sync failed: SND-CONTEXT-010; slack not synced yet"), (row.State, row.Detail));
+        Assert.Equal((CheckState.Warn, "record index: github last sync failed: SND-CONTEXT-010; slack not synced yet"), (row.State, row.Detail));
         Assert.Equal("sindri index sync, then sindri index status", row.Fix);
     }
 
@@ -163,7 +163,7 @@ public sealed class IndexDoctorChecksTests
 
         var row = IndexSyncRules.Judge([SourceProgress.From(SourceId.From("github"), SyncPhase.Incremental, at, "SND-CONTEXT-059")]);
 
-        Assert.Equal((CheckState.Ok, "github synced 2026-10-28 09:05Z"), (row.State, row.Detail));
+        Assert.Equal((CheckState.Ok, "record index: github synced 2026-10-28 09:05Z"), (row.State, row.Detail));
     }
 
     private IndexDoctorChecks Checks(PointerSecrets secrets, FakeProbe probe, TimeSpan? limit = null) =>

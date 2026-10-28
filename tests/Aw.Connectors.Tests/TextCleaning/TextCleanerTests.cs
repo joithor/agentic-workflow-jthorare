@@ -60,7 +60,7 @@ public sealed class TextCleanerTests
     }
 
     [Fact, Trait("Lane", "unit")]
-    public void Entities_are_decoded_after_tags_are_stripped() => Assert.Equal("a < b && c > d \"q\" 'r' x y A", TextCleaner.Clean("a &lt; b &amp;&amp; c &gt; d &quot;q&quot; &#39;r&#39; x&nbsp;y &#65;"));
+    public void Entities_are_decoded_after_tags_are_stripped() => Assert.Equal("a < b && c > d \"q\" 'r' x y A", TextCleaner.Clean("a &lt; b &amp;&amp; c &gt; d &quot;q&quot; &#39;r&#39; x&nbsp;y &#65;"));
 
     [Fact, Trait("Lane", "unit")]
     public void Escaped_tag_text_stays_text() => Assert.Equal("use <script> sparingly", TextCleaner.Clean("use &lt;script&gt; sparingly"));

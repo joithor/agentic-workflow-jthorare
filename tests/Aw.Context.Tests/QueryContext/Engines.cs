@@ -55,9 +55,9 @@ using Aw.Context.Testing.History;
 using Aw.Context.Testing.Linking;
 using Aw.Context.Testing.Map;
 using Aw.Context.Testing.Records;
-using Aw.Context.Testing.Vectors;
 using Aw.Context.Testing.Review;
 using Aw.Context.Testing.ScopeGraph;
+using Aw.Context.Testing.Vectors;
 using Aw.Context.Tests.EvalProbes;
 using Aw.Kernel.Testing;
 using Microsoft.Extensions.Time.Testing;
@@ -69,7 +69,7 @@ internal static class Engines
 {
     internal static readonly ContextRepo[] Repos = [new(ContextRepoName.From("split-panes"), "/repos/split-panes"), new(ContextRepoName.From("other"), "/repos/other")];
 
-    internal static IContextEngine Over(FixedSourceCatalog catalog, FakeDocIndex? index = null, FakeTimeProvider? time = null, FakeIntentStore? intentStore = null)
+    internal static IContextEngine Over(FixedSourceCatalog catalog, FakeDocIndex? index = null, FakeTimeProvider? time = null, FakeIntentStore? intentStore = null, FakeLexicalLeg? lexical = null, FakeRecordStore? records = null)
     {
         var clock = time ?? new FakeTimeProvider(new DateTimeOffset(2026, 10, 12, 9, 0, 0, TimeSpan.Zero));
         var scrubbers = new FakeScrubberFactory();
@@ -78,7 +78,8 @@ internal static class Engines
         var intents = intentStore ?? new FakeIntentStore();
         var graphs = new MapReader(store, intents);
         var repos = new FakeRepoReader(Repos[0], "0a1b2c3d4e5f60718293a4b5c6d7e8f901234567", new Dictionary<string, string>(StringComparer.Ordinal));
-        return new ContextEngine(new QueryContextService(scrubbers, new SequentialIdGenerator(), clock, new LiveInputs(graphs, catalog, repos), intents, new FakeModelPort()),
+        return new ContextEngine(new QueryContextService(scrubbers, new SequentialIdGenerator(), clock, new LiveInputs(graphs, catalog, repos), intents, new FakeModelPort(),
+                new RecordSearch(lexical ?? new FakeLexicalLeg(), records ?? new FakeRecordStore())),
             new ContextSources(new SourcesStatusService(docs, catalog, scrubbers, intents, clock), new RefreshDocsService(docs, scrubbers), new SyncSourcesService(catalog, new RecordFeedSync(new FakeRecordFeedCatalog(), new FakeRecordStore(), clock), scrubbers, graphs, intents, new FakeModelPort(), clock), new EmbedRecordsService(new FakeRecordStore(), new FakeChunkEmbedder()), intents,
                 new IndexSync(new RecordFeedSync(new FakeRecordFeedCatalog(), new FakeRecordStore(), clock), new FakeRecordStore(), scrubbers)), scrubbers, Map(clock, store, scrubbers),
             new ContextGraph(new ShowNodeService(graphs, scrubbers), new ListNeighborsService(graphs, scrubbers), new FindPathService(graphs, scrubbers),
@@ -135,6 +136,8 @@ internal static class Engines
         new(new MapInputs(new FakeRepoReader(Repos[0], "0a1b2c3d4e5f60718293a4b5c6d7e8f901234567", new Dictionary<string, string>(StringComparer.Ordinal)), new MapRecordSources(new FakeRecordStore(), new NoCodeSymbolSource())), new FakeClusterSource(), new MapNamers(new FakeLabeler(), new ConceptPass(new DisabledConceptNamer(), new DisabledSymbolVectors(), new FakeConceptHintStore(), store)), new MapBuildGate(), new FakeDefaultBranch(), store, clock);
 
     internal static IContextEngine Over(params IContextSource[] sources) => Over(new FixedSourceCatalog(sources));
+
+    internal static IContextEngine Over(IContextSource source, FakeLexicalLeg? lexical, FakeRecordStore? records = null) => Over(new FixedSourceCatalog(source), lexical: lexical, records: records);
 
     /// <summary>
     /// Runs <paramref name="query"/> while advancing <paramref name="clock"/> a second at a time, so a deadline on the

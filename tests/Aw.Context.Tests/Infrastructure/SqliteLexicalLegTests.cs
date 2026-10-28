@@ -34,15 +34,16 @@ public sealed class SqliteLexicalLegTests : IDisposable
     private async Task<LexicalAnswer> Search(AudienceScope scope, params string[] terms) => (await _leg.Search(terms, scope, ILexicalLeg.DefaultLimit, Ct)).Value;
 
     [Fact]
-    public async Task An_empty_or_missing_store_answers_degraded_not_an_error()
+    public async Task An_empty_or_missing_store_answers_no_hits_and_no_degraded_line_not_an_error()
     {
         var missing = await Search(Scope(_team), "orientation");
-        Assert.NotNull(missing.Degraded);
-        Assert.Contains("sindri index sync", missing.Degraded.Message, StringComparison.Ordinal);
+        Assert.Null(missing.Degraded);
         Assert.Empty(missing.Hits);
 
         _ = await _home.Database.Writable(Ct);
-        Assert.NotNull((await Search(Scope(_team), "orientation")).Degraded);
+        var empty = await Search(Scope(_team), "orientation");
+        Assert.Null(empty.Degraded);
+        Assert.Empty(empty.Hits);
     }
 
     [Fact]

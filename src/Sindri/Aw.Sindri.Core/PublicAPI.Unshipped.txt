@@ -21021,7 +21021,7 @@ Aw.Sindri.Core.Sandbox.ParkedOnSandbox
 Aw.Sindri.Core.Sandbox.ISandboxSlots
 Aw.Sindri.Core.Sandbox.ISandboxSlots.Free(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<int>
 Aw.Sindri.Core.Sandbox.SandboxCopy
-static Aw.Sindri.Core.Sandbox.SandboxCopy.For(string! code, string! reason, string? source = null, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? values = null) -> Aw.Sindri.Core.Sandbox.OwnerCopy?
+static Aw.Sindri.Core.Sandbox.SandboxCopy.For(string! code, string! reason, string? source = null, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? values = null, bool attended = false) -> Aw.Sindri.Core.Sandbox.OwnerCopy?
 Aw.Sindri.Core.Sandbox.OwnerCopy
 Aw.Sindri.Core.Sandbox.SandboxBlockerLine
 static Aw.Sindri.Core.Sandbox.SandboxBlockerLine.From(Aw.Sindri.Core.Sandbox.SandboxBlocker! blocker) -> Aw.Sindri.Core.Sandbox.SandboxBlockerLine!

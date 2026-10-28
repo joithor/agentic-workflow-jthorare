@@ -50,11 +50,13 @@ public static class SandboxCopy
     /// <param name="reason">The reason.</param>
     /// <param name="source">The credential source ('owner-copy' or 'separate-login') for -017, or null.</param>
     /// <param name="values">Named values by name without the angle brackets, or null.</param>
+    /// <param name="attended">True for the wording of a session the owner opens (sandbox spec §3.9, §8).</param>
     /// <returns>The sentence, its copyable command (or null) and its state ('gray', 'wait' or null); null when the pair has no sentence.</returns>
-    public static OwnerCopy? For(string code, string reason, string? source = null, IReadOnlyDictionary<string, string>? values = null)
+    public static OwnerCopy? For(string code, string reason, string? source = null, IReadOnlyDictionary<string, string>? values = null, bool attended = false)
     {
         ArgumentNullException.ThrowIfNull(code);
         ArgumentNullException.ThrowIfNull(reason);
+        _ = attended;   // red: the attended wording is not read yet
         var key = reason.StartsWith("http-", StringComparison.Ordinal) ? "http-<status>" : reason;
         var row = _rows.FirstOrDefault(r => string.Equals(r.Code, code, StringComparison.Ordinal) && string.Equals(r.Reason, key, StringComparison.Ordinal) && (r.Source is null || string.Equals(r.Source, source, StringComparison.Ordinal)));
         if (row is null)

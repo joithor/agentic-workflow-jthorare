@@ -26,6 +26,31 @@ public sealed class SandboxBlockerLineTests
     }
 
     [Fact]
+    public void The_attended_copy_says_exactly_what_the_golden_says()
+    {
+        foreach (var entry in SandboxGoldens.Object("copy.json")["entries"]!.AsArray().Cast<JsonObject>())
+        {
+            var reason = (string)entry["reason"]!;
+            var copy = SandboxCopy.For((string)entry["code"]!, reason.Replace("<status>", "502", StringComparison.Ordinal), (string?)entry["source"], values: null, attended: true);
+
+            Assert.NotNull(copy);
+            Assert.Equal(((string)entry["attendedText"]!).Replace("<status>", "502", StringComparison.Ordinal), copy.Text);
+            Assert.Equal((string?)entry["command"], copy.Command);
+            Assert.Equal((string?)entry["state"], copy.State);
+        }
+    }
+
+    [Fact]
+    public void The_session_cap_sentence_fills_its_count_and_cap_from_the_refusal()
+    {
+        var refusal = SandboxRefusal.For(SindriErrors.LaunchSessionWait, SandboxReasons.Sessions, details: new Dictionary<string, string>(StringComparer.Ordinal) { ["running"] = "3", ["cap"] = "3" });
+
+        var line = SandboxBlockerLine.From(SandboxBlocker.Of(refusal));
+
+        Assert.Equal("Waiting for a free session slot (3 of 3 running). This Step starts by itself.", line.Text);
+    }
+
+    [Fact]
     public void An_open_value_is_filled_from_the_refusal()
     {
         var refusal = SandboxRefusal.For(SindriErrors.LaunchSandboxUnavailable, SandboxReasons.NoCgroupControllers, details: new Dictionary<string, string>(StringComparer.Ordinal) { ["which"] = "memory" });

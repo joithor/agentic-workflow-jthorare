@@ -1,3 +1,4 @@
+using System.Globalization;
 using Aw.Connectors.Core;
 using Aw.Connectors.Core.GitHub;
 using Aw.Connectors.Features;
@@ -70,6 +71,120 @@ public sealed class PullGitHubTests
     }
 
     [Fact, Trait("Lane", "unit")]
+    public async Task Comments_are_folded_into_the_text_oldest_first_and_a_hash_reference_relates()
+    {
+        var reader = new FakeGitHubReader()
+            .Add(Repo, A.GitHubIssue(7).UpdatedAt(T.AddHours(3)).WithBody("Crash.").WithComments(2))
+            .AddComment(Repo, A.GitHubComment(2).On(7).By("ada").UpdatedAt(T.AddHours(3)).WithBody("Same as #5, and see acme/other#9 and #7."))
+            .AddComment(Repo, A.GitHubComment(1).On(7).By(author: null).UpdatedAt(T.AddHours(2)).WithBody("<!-- x -->Me too."))
+            .AddComment(Repo, A.GitHubComment(3).On(8).UpdatedAt(T.AddHours(2)).WithBody("Other issue, mentions #6."));
+
+        var item = Assert.Single((await Service(reader).Handle(A.PullGitHubRequest().Build(), Ct)).Value.Items);
+
+        Assert.Equal("Issue 7\n\nCrash.\n\nghost: Me too.\n\nada: Same as #5, and see acme/other#9 and #7.", item.Text);
+        Assert.Equal([new ConnectorLink("relates", "github:issue/acme/widgets/5")], item.Links);
+        Assert.Equal(["comments acme/widgets"], reader.Reads);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Only_the_newest_comments_up_to_the_cap_are_kept()
+    {
+        var reader = new FakeGitHubReader().Add(Repo, A.GitHubIssue(7).UpdatedAt(T.AddHours(5)).WithComments(3));
+        for (var i = 1; i <= 3; i++)
+        {
+            _ = reader.AddComment(Repo, A.GitHubComment(i).On(7).UpdatedAt(T.AddHours(i)).WithBody(string.Create(CultureInfo.InvariantCulture, $"c{i}")));
+        }
+
+        var item = Assert.Single((await Service(reader).Handle(A.PullGitHubRequest().WithCommentCap(2).Build(), Ct)).Value.Items);
+
+        Assert.EndsWith("hubot: c2\n\nhubot: c3", item.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain("c1", item.Text, StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_zero_cap_reads_no_comments()
+    {
+        var reader = new FakeGitHubReader().Add(Repo, A.GitHubIssue(7).UpdatedAt(T.AddHours(1)).WithComments(2));
+
+        _ = await Service(reader).Handle(A.PullGitHubRequest().WithCommentCap(0).Build(), Ct);
+
+        Assert.Empty(reader.Reads);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task An_issue_whose_older_comments_the_repo_wide_read_missed_is_read_on_its_own()
+    {
+        var reader = new FakeGitHubReader()
+            .Add(Repo, A.GitHubIssue(7).UpdatedAt(T.AddHours(3)).WithComments(2))
+            .AddComment(Repo, A.GitHubComment(1).On(7).UpdatedAt(T.AddDays(-30)).WithBody("old"))
+            .AddComment(Repo, A.GitHubComment(2).On(7).UpdatedAt(T.AddHours(3)).WithBody("new"));
+
+        var item = Assert.Single((await Service(reader).Handle(A.PullGitHubRequest().Build(), Ct)).Value.Items);
+
+        Assert.EndsWith("hubot: old\n\nhubot: new", item.Text, StringComparison.Ordinal);
+        Assert.Equal(["comments acme/widgets", "comments acme/widgets#7"], reader.Reads);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_rate_limit_on_the_repo_wide_comment_read_returns_nothing_and_leaves_the_cursor()
+    {
+        var reset = T.AddDays(3);
+        var after = new GitHubCursor(T, [9]);
+        var reader = new FakeGitHubReader().Add(Repo, A.GitHubIssue(7).UpdatedAt(T.AddHours(1)).WithComments(1)).RateLimitComments(reset);
+
+        var response = (await Service(reader).Handle(A.PullGitHubRequest().After(after).Build(), Ct)).Value;
+
+        Assert.Empty(response.Items);
+        Assert.Equal(after, response.Next);
+        Assert.Equal(reset, response.RateLimitedUntil);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task A_merged_pull_request_is_merged_keeps_its_raw_state_and_touches_its_paths()
+    {
+        var reader = new FakeGitHubReader()
+            .Add(Repo, A.GitHubIssue(12).AsPullRequest().Closed().UpdatedAt(T.AddHours(1)).WithBody("Fixes #3. Related to #4."))
+            .AddPull(Repo, 12, new GitHubPullDetail(Merged: true, Draft: false, T.AddHours(1), ["src/a.cs", "src/a.cs", "../etc/passwd", "docs/b.md"]));
+
+        var item = Assert.Single((await Service(reader).Handle(A.PullGitHubRequest().Build(), Ct)).Value.Items);
+
+        Assert.Equal("merged", item.State);
+        Assert.Equal("closed", item.StateRaw);
+        Assert.Equal(
+            [
+                new ConnectorLink("closes", "github:issue/acme/widgets/3"),
+                new ConnectorLink("relates", "github:issue/acme/widgets/4"),
+                new ConnectorLink("touches", "path:acme/widgets/src/a.cs"),
+                new ConnectorLink("touches", "path:acme/widgets/docs/b.md"),
+            ],
+            item.Links);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task An_open_draft_pull_request_is_a_draft_and_an_open_one_is_open()
+    {
+        var reader = new FakeGitHubReader()
+            .Add(Repo, A.GitHubIssue(1).AsPullRequest().UpdatedAt(T.AddHours(1)))
+            .Add(Repo, A.GitHubIssue(2).AsPullRequest().UpdatedAt(T.AddHours(2)))
+            .AddPull(Repo, 1, new GitHubPullDetail(Merged: false, Draft: true, MergedAt: null, []));
+
+        var items = (await Service(reader).Handle(A.PullGitHubRequest().Build(), Ct)).Value.Items;
+
+        Assert.Equal(["draft", "open"], items.Select(static i => i.State), StringComparer.Ordinal);
+        Assert.Equal(["open", "open"], items.Select(static i => i.StateRaw), StringComparer.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task An_issue_never_reads_a_pull_request_detail()
+    {
+        var reader = new FakeGitHubReader().Add(Repo, A.GitHubIssue(1).UpdatedAt(T.AddHours(1)));
+
+        _ = await Service(reader).Handle(A.PullGitHubRequest().Build(), Ct);
+
+        Assert.DoesNotContain(reader.Reads, static r => r.StartsWith("pull", StringComparison.Ordinal));
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public async Task The_next_cursor_and_the_rate_limit_come_through()
     {
         var reader = new FakeGitHubReader().Add(Repo, A.GitHubIssue(1).UpdatedAt(T.AddHours(2)));
@@ -113,6 +228,19 @@ public sealed class PullGitHubTests
         var reader = new FakeGitHubReader();
 
         var result = await Service(reader).Handle(A.PullGitHubRequest().ForRepo(repo).WithLimit(limit).Build(), Ct);
+
+        Assert.Equal(ConnectorsErrors.Invalid.Code, result.Error.Code);
+        Assert.Empty(reader.Calls);
+    }
+
+    [Theory, Trait("Lane", "unit")]
+    [InlineData(-1)]
+    [InlineData(1001)]
+    public async Task A_comment_cap_outside_the_range_is_refused_before_any_read(int cap)
+    {
+        var reader = new FakeGitHubReader();
+
+        var result = await Service(reader).Handle(A.PullGitHubRequest().WithCommentCap(cap).Build(), Ct);
 
         Assert.Equal(ConnectorsErrors.Invalid.Code, result.Error.Code);
         Assert.Empty(reader.Calls);

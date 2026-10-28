@@ -12,11 +12,21 @@ public sealed class GitHubClientContractTests : GitHubReaderContract, IDisposabl
 
     public void Dispose() => _server.Dispose();
 
-    protected override IGitHubReader Reader(IReadOnlyList<GitHubIssue> issues)
+    protected override IGitHubReader Reader(IReadOnlyList<GitHubIssue> issues, IReadOnlyList<GitHubComment> comments, IReadOnlyDictionary<int, GitHubPullDetail> pulls)
     {
         foreach (var issue in issues)
         {
             _ = _server.Add(Repo, issue);
+        }
+
+        foreach (var comment in comments)
+        {
+            _ = _server.AddComment(Repo, comment);
+        }
+
+        foreach (var (number, detail) in pulls)
+        {
+            _ = _server.AddPull(Repo, number, detail);
         }
 
         return new GitHubClient(

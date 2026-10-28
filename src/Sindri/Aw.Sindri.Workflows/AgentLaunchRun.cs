@@ -1,6 +1,7 @@
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Core.Workflow.Engine.Runtime;
 using Aw.Sindri.Core.Workflow.Ids;
+using Aw.Sindri.Core.Workflow.Recipes;
 
 namespace Aw.Sindri.Infrastructure.Workflows;
 
@@ -19,5 +20,6 @@ namespace Aw.Sindri.Infrastructure.Workflows;
 /// <param name="Floor">The state's model floor ('cheap', 'standard' or 'strong'), or null for none (model-pick spec 8).</param>
 /// <param name="Recipe">The recipe the instance runs, for the step's model history; null when unknown.</param>
 /// <param name="RecipeVersion">The recipe's version.</param>
+/// <param name="Agent">The state's 'agent:' (#1269): an agent id or a state to differ from; null for the profile's agent.</param>
 /// <param name="ModelProfile">The profile key when the Step's 'model' is '{ profile: … }'; the launch refuses it (<see cref="AgentModels.Refusal"/>).</param>
-internal sealed record AgentLaunchRun(AgentStepRun Run, FactValue? Item, FactValue? Workspace = null, string? Bundle = null, string? Subject = null, FactValue? LensQueue = null, IReadOnlyDictionary<FactKey, FactValue>? Facts = null, IReadOnlyList<FactKey>? Payloads = null, string? Model = null, string? ModelProfile = null, PreviousRun? Previous = null, int Escalation = 0, string? Floor = null, RecipeId? Recipe = null, int RecipeVersion = 0);
+internal sealed record AgentLaunchRun(AgentStepRun Run, FactValue? Item, FactValue? Workspace = null, string? Bundle = null, string? Subject = null, FactValue? LensQueue = null, IReadOnlyDictionary<FactKey, FactValue>? Facts = null, IReadOnlyList<FactKey>? Payloads = null, string? Model = null, string? ModelProfile = null, PreviousRun? Previous = null, int Escalation = 0, string? Floor = null, RecipeId? Recipe = null, int RecipeVersion = 0, StateAgent? Agent = null);

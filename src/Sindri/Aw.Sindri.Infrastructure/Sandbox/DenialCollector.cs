@@ -2,7 +2,6 @@ using Aw.Sindri.Core.Sandbox.Denials;
 
 namespace Aw.Sindri.Infrastructure.Sandbox;
 
-#pragma warning disable MA0182 // until the launcher's sandbox step (SB-5a flow) calls it
 /// <summary>
 /// Reads a session's denials at its end (sandbox spec §3.6, SB-5a): the CLI's own refusals and failed paths from the transcript tail, and the hooks that
 /// failed open from <c lang="text">failopen.log</c>, into the launch's counter, which is then written and published, so the events precede 'session.ended'.

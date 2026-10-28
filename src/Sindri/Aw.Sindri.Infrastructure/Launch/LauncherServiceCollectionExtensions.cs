@@ -77,6 +77,7 @@ internal static class LauncherServiceCollectionExtensions
             Config = () => catalog.Current,
             Models = sp.GetRequiredService<IModelCatalog>(),
             Trust = sp.GetRequiredService<IAgentTrust>(),
+            Sandbox = sp.GetService<ISandboxLaunch>(),   // null until the product registers a sandbox: Steps then run unconfined
             EndLive = async (launch, cancellationToken) =>
             {
                 var scope = sp.CreateAsyncScope();

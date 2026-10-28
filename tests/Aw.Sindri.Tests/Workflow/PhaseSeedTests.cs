@@ -6,7 +6,7 @@ using Aw.Sindri.Testing;
 using Aw.Sindri.Testing.Prepare;
 using Aw.Sindri.Testing.Scoping;
 using Aw.Sindri.Testing.Worktrees;
-using Aw.Sindri.Tests.Workflow.BuildShip;
+using Aw.Sindri.Tests.Workflow.Blocks.Contracts;
 
 namespace Aw.Sindri.Tests.Workflow;
 

@@ -139,7 +139,7 @@ public sealed class WorkspacePrepareTests
         public ValueTask<Result<LoadedProfile?>> Latest(CancellationToken cancellationToken)
         {
             var declared = dirs.Length == 0 ? new SandboxRepoSettings() : new SandboxRepoSettings(Prepare: new SandboxPrepare(dirs));
-            var profile = new SindriProfile(1, "thor", Repos: [new RepoEntry("web", Repo)], Sandbox: new SandboxSettings(Repos: new Dictionary<string, SandboxRepoSettings> { ["web"] = declared }));
+            var profile = new SindriProfile(1, "thor", Repos: [new RepoEntry("web", Repo)], Sandbox: new SandboxSettings(Repos: new Dictionary<string, SandboxRepoSettings>(StringComparer.Ordinal) { ["web"] = declared }));
             return ValueTask.FromResult(Results.Success<LoadedProfile?>(new LoadedProfile(profile, ProfileHashing.Of("{}"u8), "/home/profile.yaml")));
         }
     }

@@ -16,6 +16,7 @@ namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 /// </summary>
 internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxLaunchStages stages, SandboxLaunchOptions options) : ISandboxLaunch
 {
+    private static readonly TimeSpan _fallbackLongMax = TimeSpan.FromHours(2);   // workflow.steps.longMax's default when no profile is approved
     private readonly ConcurrentDictionary<LaunchId, SandboxPlan> _plans = new();
 
     /// <inheritdoc/>
@@ -58,10 +59,10 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
 
         var plan = planned.Value;
         _plans[plan.Launch] = plan;
-        var home = await Stage(plan, cancellationToken).ConfigureAwait(false);
-        if (home.IsError)
+        var staged = await Stage(request, plan, cancellationToken).ConfigureAwait(false);
+        if (staged.IsError)
         {
-            return home.Error;
+            return staged.Error;
         }
 
         var checkedPlan = await sandbox.SelfCheck(plan, cancellationToken).ConfigureAwait(false);
@@ -70,19 +71,19 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
             return checkedPlan.Error;
         }
 
-        var wrapped = sandbox.Wrap(plan, argv);
+        var wrapped = sandbox.Wrap(plan, [.. argv, .. staged.Value.Args]);   // the Step form's extra arguments (a sandboxed Codex Step's -c overrides) go after the launcher's own
         if (wrapped.IsError)
         {
             return wrapped.Error;
         }
 
-        var limits = ScopeLimits.From(request.Settings?.Limits, options.Box, request.StepTimeout, options.LongMax, request.Attended);
+        var limits = ScopeLimits.From(request.Settings?.Limits, options.Box, request.StepTimeout, request.LongMax ?? _fallbackLongMax, request.Attended);
         var scoped = SystemdScopeArgv.Start(options.SystemdRun, plan.Launch, limits, wrapped.Value);
-        return new PreparedSandbox(plan.ToSummary(), scoped, home.Value, plan.RunDirectory);
+        return new PreparedSandbox(plan.ToSummary(), scoped, staged.Value.Home, plan.RunDirectory);
     }
 
-    /// <summary>The host side before the self-check: the session home, the policy files in it, and the egress.</summary>
-    private async ValueTask<Result<string>> Stage(SandboxPlan plan, CancellationToken cancellationToken)
+    /// <summary>The host side before the self-check: the session home, the Step's policy files, and the egress.</summary>
+    private async ValueTask<Result<Staged>> Stage(SandboxRequest request, SandboxPlan plan, CancellationToken cancellationToken)
     {
         var home = MakeHome(plan);
         if (home.IsError)
@@ -90,15 +91,17 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
             return home.Error;
         }
 
-        var policy = await stages.WritePolicy(plan, home.Value, cancellationToken).ConfigureAwait(false);
+        var policy = await stages.WritePolicy(request, plan, cancellationToken).ConfigureAwait(false);
         if (policy.IsError)
         {
             return policy.Error;
         }
 
         var egress = await stages.StartEgress(plan, cancellationToken).ConfigureAwait(false);
-        return egress.IsError ? egress.Error : home;
+        return egress.IsError ? egress.Error : new Staged(home.Value, policy.Value);
     }
+
+    private sealed record Staged(string Home, IReadOnlyList<string> Args);
 
     /// <summary>Makes the session home with the launch's one-read secret moved in (the launcher's own file is deleted: the wrap reads the home's) and control.json as a file, which a sandbox needs.</summary>
     private Result<string> MakeHome(SandboxPlan plan)

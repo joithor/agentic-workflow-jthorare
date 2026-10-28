@@ -1,0 +1,152 @@
+using Aw.Kernel;
+using Aw.Kernel.Testing;
+using Aw.Sindri.Core;
+using Aw.Sindri.Core.Launch;
+using Aw.Sindri.Core.Profile;
+using Aw.Sindri.Core.Sandbox;
+using Aw.Sindri.Core.Sandbox.Credentials;
+using Aw.Sindri.Core.Sandbox.Plan;
+using Aw.Sindri.Core.Workflow.Engine;
+using Aw.Sindri.Infrastructure.Launch;
+using Aw.Sindri.Infrastructure.Sandbox;
+using Aw.Sindri.Infrastructure.Sandbox.Launch;
+using Aw.Sindri.Tests.Sandbox.Egress;
+using Aw.Sindri.Testing;
+using Aw.Sindri.Testing.Sandbox;
+using Microsoft.Extensions.Time.Testing;
+
+namespace Aw.Sindri.Tests.Sandbox.Launch;
+
+/// <summary>The sandbox step's launch parts: the plan request from the launch, the login and the learn history; the egress and its release.</summary>
+[Lane(TestLane.Unit)]
+public sealed class SandboxLaunchStagesTests : IDisposable
+{
+    private readonly FakeTimeProvider _clock = new(KnownInstants.Epoch);
+    private readonly StubInputs _inputs;
+    private readonly TempDirectory _temp = new();
+    private readonly FakeModelCredentialSource _login = new FakeModelCredentialSource(ModelLoginSource.OwnerCopy).With(AgentId.From("claude-code"), LoginState.Ready);
+
+    private SandboxLaunchStages Make(params IModelCredentialSource[] logins) =>
+        new(new NoProfile(), new EmptyLearn(), logins.Length == 0 ? [_login] : logins, _inputs, Registry(), _clock);
+
+    public SandboxLaunchStagesTests()
+    {
+        _inputs = new StubInputs(_temp.Path);
+    }
+
+    public void Dispose() => _temp.Dispose();
+
+    private LaunchSandboxRegistry Registry() =>
+        new(new EgressService(new FakeEgressResolver(new Dictionary<string, System.Net.IPAddress[]>(StringComparer.Ordinal)), new FakeEgressDialer(), static _ => "/nonexistent/socat", Path.Combine(_temp.Path, "run")));
+
+    private static LaunchRequest Step() =>
+        A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: null, Ref: new StepRef("build", "agent"))).Build();
+
+    [Fact]
+    public async Task Request_names_the_launch_paths_net_host_login_and_learn_history()
+    {
+        var request = Step();
+
+        var built = await Make().Request(request, CancellationToken.None);
+
+        Expect.True(built.IsSuccess);
+        var r = built.Value;
+        Expect.Equal(request.Launch, r.Launch);
+        Expect.Equal("/run/area/" + request.Launch.Value, r.Paths.RunArea);
+        Expect.Equal("/net/" + request.Launch.Value, r.Net.NetDir);
+        Expect.Equal(7480, r.Net.SindriPort);
+        Expect.True(!r.Attended && r.Login is { Source: ModelLoginSource.OwnerCopy });
+        Expect.True(r.Learn is { } learn && learn.Now == _clock.GetUtcNow());
+        Expect.Equal("web", r.Repo.Value);   // no profile repo: the directory's name
+    }
+
+    [Fact]
+    public async Task Request_refuses_with_the_login_code_when_no_source_supports_the_agent()
+    {
+        var built = await Make(new FakeModelCredentialSource(ModelLoginSource.OwnerCopy)).Request(Step(), CancellationToken.None);
+
+        Expect.True(built.IsError && string.Equals(built.Error.Code, SindriErrors.LaunchLoginUnavailable.Code, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task StartEgress_without_socat_refuses_with_the_unavailable_code_and_Release_is_a_no_op()
+    {
+        var stages = Make();
+        var (_, plan) = await PlanFor(new StepPolicy([], StepPermissionMode.Default, WritablePath: null));
+
+        var started = await stages.StartEgress(plan, CancellationToken.None);
+        await stages.Release(plan.Launch, CancellationToken.None);
+
+        Expect.True(started.IsError && string.Equals(started.Error.Code, SindriErrors.LaunchSandboxUnavailable.Code, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task A_claude_Step_gets_its_policy_file_rewritten_with_the_plan_and_no_extra_arguments()
+    {
+        var policy = new StepPolicy([], StepPermissionMode.Default, WritablePath: null);
+        var (asked, plan) = await PlanFor(policy);
+        _inputs.Form = PolicyForm.ClaudeSettingsFile;
+
+        var args = await Make().WritePolicy(asked, plan, CancellationToken.None);
+
+        Expect.True(args.IsSuccess && args.Value.Count == 0);
+        Expect.True(File.Exists(StepPolicyFile.PathFor(_inputs.PolicyDirectory(), plan.Launch)));
+    }
+
+    [Fact]
+    public async Task A_codex_Step_gets_the_override_arguments_and_no_file()
+    {
+        var policy = new StepPolicy([], StepPermissionMode.Default, WritablePath: null);
+        var (asked, plan) = await PlanFor(policy);
+        _inputs.Form = PolicyForm.CodexOverrides;
+
+        var args = await Make().WritePolicy(asked, plan, CancellationToken.None);
+
+        Expect.True(args.IsSuccess && args.Value.Count > 0);
+        Expect.True(!File.Exists(StepPolicyFile.PathFor(_inputs.PolicyDirectory(), plan.Launch)));
+    }
+
+    private static LaunchRequest Asked(StepPolicy policy) =>
+        A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: policy, Ref: new StepRef("build", "agent"))).Build();
+
+    private async Task<(SandboxRequest Request, SandboxPlan Plan)> PlanFor(StepPolicy policy)
+    {
+        var asked = (await Make().Request(Asked(policy), CancellationToken.None)).Value;
+        return (asked, SandboxPlanner.Build(SandboxMechanism.Bubblewrap, asked).Value);
+    }
+
+    private sealed class NoProfile : IApprovedProfile
+    {
+        public ValueTask<Result<LoadedProfile?>> Latest(CancellationToken cancellationToken) => ValueTask.FromResult(Results.Success<LoadedProfile?>(value: null));
+    }
+
+    private sealed class EmptyLearn : ILearnHistory
+    {
+        public ValueTask<LearnHistory> Read(string repo, CancellationToken cancellationToken) => ValueTask.FromResult(new LearnHistory(FirstLearnRun: null, LearnRuns: 0, EndedAt: null));
+    }
+
+    private sealed class StubInputs(string directory) : ISandboxLaunchInputs
+    {
+        public PolicyForm Form { get; set; }
+
+        public string PolicyDirectory() => directory;
+
+        public PolicyForm PolicyFormOf(AgentId agent) => Form;
+
+        public DenialCounter? DenialCounterFor(LaunchId launch) => null;
+
+        public (string? Transcript, TranscriptKind Kind, string? FailOpenLog) DenialFiles(LaunchId launch) => (null, TranscriptKind.Claude, null);
+
+        public SandboxHostFacts Host() => SandboxRequests.Host;
+
+        public ValueTask<string> GitCommonDir(string repoPath, CancellationToken cancellationToken) => ValueTask.FromResult(repoPath + "/.git");
+
+        public string RunAreaFor(LaunchId launch) => "/run/area/" + launch.Value;
+
+        public string NetDirFor(LaunchId launch) => "/net/" + launch.Value;
+
+        public int SindriPort() => 7480;
+
+        public int ProxyPort() => 3128;
+    }
+}

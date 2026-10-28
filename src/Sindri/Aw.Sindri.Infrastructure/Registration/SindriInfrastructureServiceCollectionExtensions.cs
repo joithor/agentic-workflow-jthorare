@@ -211,6 +211,7 @@ public static class SindriInfrastructureServiceCollectionExtensions
             .AddSingleton<IOnyxProvisioning, HttpOnyxProvisioning>()                                        // the setup-only requests, loopback, five on the list (spec §5.2)
             .AddSingleton<ISecretWriter>(static sp => new KeychainSecretWriter(new ProcessToolRunner(), sp.GetRequiredService<ISindriHome>()))   // the key into the OS store, else an owner-only file
             .AddSingleton<IOnyxProfileWriter, YamlOnyxProfileWriter>()                                     // context.sources.onyx in the live profile
+            .AddSingleton<ISourceTokenProfileWriter, YamlSourceTokenProfileWriter>()                       // the source pointer line in the live profile
             .AddSingleton<IOnyxPrompts, TerminalPrompts>()                                                  // the owner at the terminal, no echo for the password
             .AddSingleton<IBrowser, SystemBrowser>();                                                     // the OS opener, loopback pages only
 

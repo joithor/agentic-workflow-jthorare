@@ -161,6 +161,7 @@ scripts/check-env-example.sh            # Every env var the code reads is in .en
 bash scripts/ci/bash-tests.sh   # each suite runs with its own fresh temp HOME and AW_STATE_DIR and without the lane environment (AW_META_LANE*, AW_SINDRI_CHILD, TMUX, ...) (tools keep working through GIT_CONFIG_GLOBAL, DOTNET_ROOT, NUGET_PACKAGES, npm_config_cache)
 bash providers/tests/install.test.sh
 bash providers/tests/voice.test.sh       # the aw:voice block in ~/.claude/CLAUDE.md and ~/.codex/AGENTS.md: created, appended, replaced in place, an unclosed block refused, dry run, joi.md <= 4000 bytes
+bash providers/tests/install-hooks-target.test.sh   # --target-dir on providers/{claude,codex}/install-hooks.sh: files and hook command paths rooted at DIR, the real home untouched, usage exit 2, idempotent (SB-8)
 bash scripts/tests/sync-rules.test.sh
 bash scripts/tests/test-grep.test.sh
 bash scripts/tests/check-deps.test.sh

@@ -85,14 +85,15 @@ public sealed class SlackConnectTests
     }
 
     [Fact, Trait("Lane", "unit")]
-    public async Task A_direct_message_in_the_profile_is_refused_with_013_before_the_token_is_asked_for()
+    public async Task A_direct_message_in_the_profile_is_refused_when_the_profile_is_read_so_connect_never_asks_for_a_token()
     {
         _profiles.Live = Profile("""{"sources":{"slack":{"channels":[{"id":"C0001GEN","name":"general"},{"id":"D0003DMX","name":"a-dm"}],"workspace":"example"}}}""");
 
         var result = await Connect().Run(human: true, Ct);
 
-        Assert.Equal(ConnectorsErrors.ChannelNotAllowed.Code, result.Error.Code);
-        Assert.Equal("SND-INDEX-013", result.Error.Code);
+        // The settings reader refuses a D… id at load (SND-CONTEXT-001), earlier than connect and for every caller; connect's own 013 check is the second line.
+        Assert.Equal("SND-CONTEXT-001", result.Error.Code);
+        Assert.Contains("context.sources.slack.channels", result.Error.Message, StringComparison.Ordinal);
         Assert.Empty(_prompts.Asked);
         Assert.Empty(_reader.Probed);
     }

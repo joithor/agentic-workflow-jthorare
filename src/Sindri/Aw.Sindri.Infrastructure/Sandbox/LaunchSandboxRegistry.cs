@@ -1,9 +1,12 @@
 using Aw.Kernel;
+using Aw.Sindri.Core;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
 
 namespace Aw.Sindri.Infrastructure.Sandbox;
 
+#pragma warning disable MA0182 // until the launcher's sandbox step (SB-5a flow) uses it
+#pragma warning disable CA2000 // the registry owns every egress it holds and disposes it in Release and DisposeAsync
 /// <summary>
 /// The running egress of every launch in flight (sandbox spec §3.2, SB-5a): the launcher starts it before the self-check, the session's end disposes it
 /// (which flushes <c lang="text">egress.log</c> and the denial counter, then removes the socket directory). Safe to call from any thread; disposing the
@@ -22,7 +25,7 @@ internal sealed class LaunchSandboxRegistry(EgressService service) : IAsyncDispo
     /// <param name="denials">The launch's denial counter, or null.</param>
     /// <param name="time">The clock the proxy checks the learn expiry against; null is the system clock.</param>
     /// <returns>The running egress, or the refusal of <see cref="EgressService.Start"/> (-014 no-forwarder, -016 net-forward); nothing is kept for a refusal.</returns>
-    public Result<RunningEgress> Start(LaunchId launch, PlanNetwork network, DenialCounter? denials, TimeProvider? time = null)
+    public async ValueTask<Result<RunningEgress>> Start(LaunchId launch, PlanNetwork network, DenialCounter? denials, TimeProvider? time = null)
     {
         var started = service.Start(network, EgressCaps.Default, denials, time);
         if (started.IsError)
@@ -30,38 +33,40 @@ internal sealed class LaunchSandboxRegistry(EgressService service) : IAsyncDispo
             return started;
         }
 
-        RunningEgress? replaced;
-        var refused = false;
+        RunningEgress? replaced = null;
+        bool kept;
         lock (_lock)
         {
-            refused = _disposed;
-            _ = _running.Remove(launch, out replaced);
-            if (!refused)
+            kept = !_disposed;
+            if (kept)
             {
+                _ = _running.Remove(launch, out replaced);
                 _running[launch] = started.Value;
             }
         }
 
-        if (refused)
+        if (!kept)
         {
-            // The registry is gone: nobody would release this one.
-            started.Value.DisposeAsync().AsTask().GetAwaiter().GetResult();
-            return Aw.Sindri.Core.SindriErrors.NotRunning.With("the sandbox registry is disposed");
+            await started.Value.DisposeAsync().ConfigureAwait(false);   // the registry is gone: nobody would release this one
+            return SindriErrors.NotRunning.With("the sandbox registry is disposed");
         }
 
-        replaced?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        if (replaced is not null)
+        {
+            await replaced.DisposeAsync().ConfigureAwait(false);
+        }
+
         return started;
     }
 
     /// <summary>The launch's running egress.</summary>
     /// <param name="launch">The launch.</param>
-    /// <param name="egress">The egress when there is one.</param>
-    /// <returns>True when the launch has one.</returns>
-    public bool TryGet(LaunchId launch, out RunningEgress egress)
+    /// <returns>The egress, or null when the launch has none.</returns>
+    public RunningEgress? Get(LaunchId launch)
     {
         lock (_lock)
         {
-            return _running.TryGetValue(launch, out egress!);
+            return _running.GetValueOrDefault(launch);
         }
     }
 

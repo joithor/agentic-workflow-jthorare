@@ -43,12 +43,11 @@ public sealed class LaunchSandboxRegistryTests : IDisposable
     {
         await using var registry = Registry();
 
-        var started = registry.Start(_one, Net("n1"), denials: null);
+        var started = await registry.Start(_one, Net("n1"), denials: null);
 
         Assert.False(started.IsError);
-        Assert.True(registry.TryGet(_one, out var egress));
-        Assert.Same(started.Value, egress);
-        Assert.False(registry.TryGet(_two, out _));
+        Assert.Same(started.Value, registry.Get(_one));
+        Assert.Null(registry.Get(_two));
     }
 
     [Fact, Lane(TestLane.Unit)]
@@ -56,11 +55,11 @@ public sealed class LaunchSandboxRegistryTests : IDisposable
     {
         await using var registry = Registry(socat: false);
 
-        var started = registry.Start(_one, Net("n1"), denials: null);
+        var started = await registry.Start(_one, Net("n1"), denials: null);
 
         Assert.True(started.IsError);
         Assert.Equal(SindriErrors.LaunchSandboxUnavailable.Code, started.Error.Code);
-        Assert.False(registry.TryGet(_one, out _));
+        Assert.Null(registry.Get(_one));
     }
 
     [Fact, Lane(TestLane.Integration)]
@@ -68,12 +67,12 @@ public sealed class LaunchSandboxRegistryTests : IDisposable
     {
         await using var registry = Registry();
         var net = Net("n1");
-        _ = registry.Start(_one, net, denials: null);
+        _ = await registry.Start(_one, net, denials: null);
         Assert.True(Directory.Exists(net.NetDir));
 
         Assert.True(await registry.Release(_one));
 
-        Assert.False(registry.TryGet(_one, out _));
+        Assert.Null(registry.Get(_one));
         Assert.False(Directory.Exists(net.NetDir));
     }
 
@@ -89,7 +88,7 @@ public sealed class LaunchSandboxRegistryTests : IDisposable
     public async Task Releasing_twice_disposes_once()
     {
         await using var registry = Registry();
-        _ = registry.Start(_one, Net("n1"), denials: null);
+        _ = await registry.Start(_one, Net("n1"), denials: null);
 
         Assert.True(await registry.Release(_one));
         Assert.False(await registry.Release(_one));
@@ -101,8 +100,8 @@ public sealed class LaunchSandboxRegistryTests : IDisposable
         var registry = Registry();
         var a = Net("n1");
         var b = Net("n2");
-        _ = registry.Start(_one, a, denials: null);
-        _ = registry.Start(_two, b, denials: null);
+        _ = await registry.Start(_one, a, denials: null);
+        _ = await registry.Start(_two, b, denials: null);
 
         await registry.DisposeAsync();
 
@@ -118,12 +117,12 @@ public sealed class LaunchSandboxRegistryTests : IDisposable
 
         await Task.WhenAll(ids.Select(async (id, i) =>
         {
-            _ = registry.Start(id, Net("c" + i), denials: null);
+            _ = await registry.Start(id, Net("c" + i), denials: null);
             await Task.Yield();
             _ = await registry.Release(id);
         }));
 
-        Assert.All(ids, id => Assert.False(registry.TryGet(id, out _)));
+        Assert.All(ids, id => Assert.Null(registry.Get(id)));
     }
 
     [Fact, Lane(TestLane.Integration)]
@@ -131,13 +130,12 @@ public sealed class LaunchSandboxRegistryTests : IDisposable
     {
         await using var registry = Registry();
         var first = Net("n1");
-        _ = registry.Start(_one, first, denials: null);
+        _ = await registry.Start(_one, first, denials: null);
 
-        var second = registry.Start(_one, Net("n2"), denials: null);
+        var second = await registry.Start(_one, Net("n2"), denials: null);
 
         Assert.False(second.IsError);
         Assert.False(Directory.Exists(first.NetDir));
-        Assert.True(registry.TryGet(_one, out var current));
-        Assert.Same(second.Value, current);
+        Assert.Same(second.Value, registry.Get(_one));
     }
 }

@@ -46,15 +46,17 @@ internal static class StepPolicyFile
             DefaultMode = policy.Mode == StepPermissionMode.Default ? null : "plan",
             AdditionalDirectories = directories,
         };
-        var document = sandbox is null
-            ? new ClaudeSettingsDocument(permissions, TurnHooks())
-            : new ClaudeSettingsDocument(SandboxPolicyFiles.Merge(permissions, policy.Mode, sandbox), TurnHooks())
-            {
-                DisableBypassPermissionsMode = "disable",
-                Sandbox = new ClaudeSandbox(sandbox.InnerSandboxOn),
-            };
+        var document = Document(permissions, policy, sandbox);
         return [.. AwJson.Serialize(document, _json), .. "\n"u8];
     }
+
+    private static ClaudeSettingsDocument Document(ClaudePermissions permissions, StepPolicy policy, SandboxPolicyOverlay? sandbox) => sandbox is null
+        ? new ClaudeSettingsDocument(permissions, TurnHooks())
+        : new ClaudeSettingsDocument(SandboxPolicyFiles.Merge(permissions, policy.Mode, sandbox), TurnHooks())
+        {
+            DisableBypassPermissionsMode = "disable",
+            Sandbox = new ClaudeSandbox(sandbox.InnerSandboxOn),
+        };
 
     // The Step's session tells Sindri when its turn ends (the Stop hook touches launches/<launch>.turn-ended; StopFailure, which runs instead of Stop when an API error ends the turn, touches .turn-failed) and starts
     // (a prompt or a tool call deletes those files), so a session that ends its turn with no report can be ended as idle and one an API error stopped can be nudged first. A tool call in flight is marked (.tool-running,

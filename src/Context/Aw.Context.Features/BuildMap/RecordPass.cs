@@ -29,6 +29,7 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
     private int _removedTouches;
     private int _overCap;
     private int _overCapPaths;
+    private readonly List<RolledRecord> _overflow = [];
 
     /// <summary>Reads the docs, then the tracker records.</summary>
     /// <param name="cancellationToken">Cancels the read.</param>
@@ -62,7 +63,7 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
         var map = new ExtractedMap(
             [.. _nodes.Values.OrderBy(n => n.Key.Value, StringComparer.Ordinal)],
             [.. _edges.Values.OrderBy(e => e.From.Value, StringComparer.Ordinal).ThenBy(e => e.To.Value, StringComparer.Ordinal)]);
-        return new MapRecordReading(map, stamp, Notes(stamp));
+        return new MapRecordReading(map, stamp, Notes(stamp)) { Overflow = [.. _overflow.OrderBy(r => r.Node.Key.Value, StringComparer.Ordinal)] };
     }
 
     private async ValueTask<Error?> Docs(MapRepoFiles repo, CancellationToken cancellationToken)
@@ -86,7 +87,7 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
                     return failed;
                 }
 
-                _ = Emit(doc.Key, node.Key, targets);
+                _ = Emit(doc.Key, node, targets);
             }
         }
 
@@ -107,9 +108,10 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
             return failed;
         }
 
-        if (Links(record, from) + Emit(record.Key, from, targets) > 0)
+        var node = Node(record, from);
+        if (Links(record, from) + Emit(record.Key, node, targets) > 0)
         {
-            _ = _nodes.TryAdd(from.Value, Node(record, from));
+            _ = _nodes.TryAdd(from.Value, node);
         }
 
         return null;
@@ -226,17 +228,18 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
         }
     }
 
-    // A record's file edges, from everything it touched, cited or defined: past TouchCap (counted by (repo, path), so one relative path in two repos is two) it gets none (the per-feature roll-up is the next PR) and is counted.
-    private int Emit(RecordKey evidence, NodeKey from, HashSet<(string Repo, string Path)> targets)
+    // A record's file edges, from everything it touched, cited or defined: past TouchCap (counted by (repo, path), so one relative path in two repos is two) it gets none, is counted, and is handed on to roll up to features once the homes are known.
+    private int Emit(RecordKey evidence, GraphNode node, HashSet<(string Repo, string Path)> targets)
     {
         if (targets.Count > MapRecordSources.TouchCap)
         {
             _overCap++;
             _overCapPaths += targets.Count;
+            _overflow.Add(new RolledRecord(node, evidence, [.. targets.Select(t => t.Path).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal)]));
             return 0;
         }
 
-        return targets.OrderBy(t => t.Path, StringComparer.Ordinal).ThenBy(t => t.Repo, StringComparer.Ordinal).Count(t => AddCode(from, t.Path, evidence));
+        return targets.OrderBy(t => t.Path, StringComparer.Ordinal).ThenBy(t => t.Repo, StringComparer.Ordinal).Count(t => AddCode(node.Key, t.Path, evidence));
     }
 
     private bool AddCode(NodeKey from, string path, RecordKey evidence) =>

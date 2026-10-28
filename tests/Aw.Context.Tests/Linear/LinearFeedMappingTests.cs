@@ -45,7 +45,7 @@ public sealed class LinearFeedMappingTests
 
         Assert.Equal(("linear:issue/a1", RecordKind.Issue, "Title a1", "Text a1", "Ada"), (item.Key.Value, item.Kind, item.Title, item.Text, item.Author));
         Assert.Equal(new DateTimeOffset(2026, 10, 2, 8, 0, 0, TimeSpan.Zero), item.ClosedAt);
-        Assert.Equal("linear:team-1", item.Audience?.Value);
+        Assert.Equal("linear:SPL", item.Audience?.Value);
         Assert.Equal(_at, item.UpdatedAt);
         Assert.False(string.IsNullOrEmpty(item.Version.Value));
     }

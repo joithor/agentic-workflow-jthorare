@@ -112,4 +112,20 @@ internal static class RecordSql
     ];
 
     internal const string DeleteRecords = "DELETE FROM source_record WHERE source = @source";
+
+    /// <summary>
+    /// The lexical leg (spec §6.1): chunks that match, of records that are stored, not blocked and in an allowed audience. The mask is part of the query, so the limit
+    /// is taken after it. A record with no audience never matches the IN list.
+    /// </summary>
+    internal const string LexicalSearch =
+        "SELECT c.key, r.title, c.line_start, c.line_end, bm25(chunk_fts) " +
+        "FROM chunk_fts " +
+        "JOIN chunk c ON c.id = chunk_fts.rowid " +
+        "JOIN source_record r ON r.key = c.record " +
+        "WHERE chunk_fts MATCH @match AND r.removed_at IS NULL AND r.blocked = 0 AND r.audience_key IN (SELECT value FROM json_each(@audiences)) " +
+        "ORDER BY bm25(chunk_fts), c.id " +
+        "LIMIT @limit";
+
+    /// <summary>Whether the store holds any chunk at all, whatever its audience.</summary>
+    internal const string AnyChunk = "SELECT EXISTS (SELECT 1 FROM chunk)";
 }

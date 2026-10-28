@@ -55,15 +55,66 @@ internal static class SandboxShims
             }
 
             var path = Path.Combine(directory, tool);
-            File.WriteAllText(path, Script(tool, realPath, heavyPath));
-            if (OperatingSystem.IsWindows())
-            {
-                continue;
-            }
-
-            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+            WriteExecutable(path, Script(tool, realPath, heavyPath));
         }
     }
+
+    private static void WriteExecutable(string path, string content)
+    {
+        File.WriteAllText(path, content);
+        if (!OperatingSystem.IsWindows())
+        {
+            File.SetUnixFileMode(path, ExecutableMode);
+        }
+    }
+
+    /// <summary>The file name of the git credential helper shim (SB-7); the plan's `credential.helper` entry names it.</summary>
+    internal const string CredentialHelperName = "git-credential-sindri";
+
+    private const UnixFileMode ExecutableMode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
+
+    /// <summary>
+    /// Writes the agent-app shims (SB-7): the git credential helper, and `gh` when <paramref name="realGh"/> is known. Both read <paramref name="tokenFile"/> at each call,
+    /// so a refreshed token is seen without a restart and the token is never in the agent's environment or in an argument list.
+    /// </summary>
+    internal static void WriteGithub(string directory, string? realGh, string tokenFile)
+    {
+        Directory.CreateDirectory(directory);
+        WriteExecutable(Path.Combine(directory, CredentialHelperName), CredentialHelperScript(tokenFile));
+        if (realGh is not null)
+        {
+            WriteExecutable(Path.Combine(directory, "gh"), GhScript(realGh, tokenFile));
+        }
+    }
+
+    /// <summary>The `gh` shim: runs the real gh with the token in gh's own environment only.</summary>
+    internal static string GhScript(string realGh, string tokenFile) =>
+        "#!/bin/sh\n# Sindri sandbox shim for gh: the agent GitHub App token goes into gh's own environment, never the agent's (docs/csharp/sindri-sandbox.md).\n"
+        + "real=" + Quote(realGh) + "\ntoken_file=" + Quote(tokenFile) + "\n"
+        + "token=$(cat \"$token_file\" 2>/dev/null) || token=\n"
+        + "if [ -z \"$token\" ]; then echo \"gh: the GitHub token is not available in this Step ($token_file is missing or empty)\" >&2; exit 1; fi\n"
+        + "GH_TOKEN=$token\nexport GH_TOKEN\nexec \"$real\" \"$@\"\n";
+
+    /// <summary>The git credential helper: answers `get` for https://github.com only; `store` and `erase` do nothing.</summary>
+    internal static string CredentialHelperScript(string tokenFile) =>
+        "#!/bin/sh\n# Sindri sandbox git credential helper: the agent GitHub App token for github.com over https, read at each call.\n"
+        + "token_file=" + Quote(tokenFile) + "\n"
+        + "[ \"${1:-}\" = get ] || exit 0\n"
+        + "proto=; host=\nwhile IFS= read -r line || [ -n \"$line\" ]; do\n  case \"$line\" in\n    protocol=*) proto=${line#protocol=} ;;\n    host=*) host=${line#host=} ;;\n  esac\ndone\n"
+        + "[ \"$proto\" = https ] && [ \"$host\" = github.com ] || exit 0\n"
+        + "token=$(cat \"$token_file\" 2>/dev/null) || token=\n"
+        + "[ -n \"$token\" ] || exit 0\n"
+        + "printf 'username=x-access-token\\npassword=%s\\n' \"$token\"\n";
+
+    /// <summary>The agent-app pre-push hook: allows a push only to the run branch or under it, and never a delete.</summary>
+    internal static string BranchOnlyPrePush(string runNamespace) =>
+        "#!/bin/sh\n# Sindri sandbox pre-push: only the run branch can be pushed.\nns=" + Quote(runNamespace) + "\n"
+        + "refuse() { echo \"git push to $1 is not allowed in this Step: only the run branch refs/heads/$ns can be pushed.\" >&2; exit 1; }\n"
+        + "while read -r lref lsha rref rsha || [ -n \"$rref\" ]; do\n"
+        + "  [ -n \"$ns\" ] || refuse \"$rref\"\n"
+        + "  case \"$rref\" in \"refs/heads/$ns\"|\"refs/heads/$ns/\"*) ;; *) refuse \"$rref\" ;; esac\n"
+        + "  case \"$lsha\" in *[!0]*) ;; *) refuse \"$rref\" ;; esac\n"
+        + "done\nexit 0\n";
 
     /// <summary>The sh script of one shim.</summary>
     internal static string Script(string tool, string realPath, string heavyPath)

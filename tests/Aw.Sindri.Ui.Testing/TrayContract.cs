@@ -48,9 +48,10 @@ public abstract class TrayContract
     public static TheoryData<TrayState> States => [.. Enum.GetValues<TrayState>()];
 
     // One case per state: through the Avalonia adapter each Show and Shown is dispatched to the assembly's one headless UI thread, so a single test looping every state
-    // queued behind the other tests' dispatches for over a minute in the parallel integration lane.
+    // queued behind the other tests' dispatches for over a minute in the parallel integration lane. The data is discovered row by row
+    // (an enum serializes), so each state is its own test case and the per-test cap times each one.
     [Theory]
-    [MemberData(nameof(States), DisableDiscoveryEnumeration = true)]
+    [MemberData(nameof(States))]
     public void Each_state_shows(TrayState state)
     {
         var tray = Create();

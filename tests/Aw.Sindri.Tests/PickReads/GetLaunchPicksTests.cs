@@ -210,6 +210,20 @@ public sealed class GetLaunchPicksTests
         Assert.Equal(["claude-haiku-4-5", "claude-sonnet-4-5"], read.Escalation!.Select(static e => e.Model), StringComparer.Ordinal);
     }
 
+    /// <summary>The rows M-6 writes when a refusal is mirrored: the start row before the picks, step.failed refused, the retry's own opening row, step.completed.</summary>
+    [Fact]
+    public async Task A_mirrored_refusal_and_a_mirrored_retry_pair_by_run_token_even_when_the_start_row_precedes_the_picks()
+    {
+        await Started(_first, _one, run: "1.1");
+        await Picked(_first, _one, model: "claude-haiku-4-5");
+        await Closed(_one, "step.failed", "refused", run: "1.1");
+        await Picked(_second, _one, model: "claude-sonnet-4-5", by: "constraint", from: "claude-haiku-4-5", kind: "refused");
+        await Opened(_second, _one, run: "1.1");
+        await Closed(_one, "step.completed", run: "1.1");
+
+        Assert.Equal([LaunchPickOutcomes.Refused, LaunchPickOutcomes.Passed], (await Read()).Picks.Select(static p => p.Outcome), StringComparer.Ordinal);
+    }
+
     [Fact]
     public async Task With_no_history_for_the_picked_model_there_is_no_escalation_footer()
     {

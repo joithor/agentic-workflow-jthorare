@@ -85,7 +85,7 @@ public sealed record SandboxPlan(
         var session = EnvValue("AW_SINDRI_HOME");
         var refs = "/refs/heads/" + RunNamespace;
         var gitDir = RunNamespace.Length == 0 ? null : Mounts.FirstOrDefault(m => m.Path.EndsWith(refs, StringComparison.Ordinal))?.Path[..^refs.Length];
-        string Rebase(string path) => Under(path, area) ? execArea + path[area.Length..] : path;
+        string Rebase(string path) => Under(path, area) ? execArea + path[area.Length..] : Under(path, Network.NetDir) ? execNetDir + path[Network.NetDir.Length..] : path;   // the stored launch's socket directory went with its egress
         PlanMount Mount(PlanMount m) => m with { Path = Rebase(m.Path), Source = m.Source is { } source ? Rebase(source) : null, Kind = ReadOnlyWhenShared(m, area, gitDir) };
 
         return this with

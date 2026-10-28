@@ -9031,3 +9031,5 @@ override Aw.Context.Core.Concepts.PinRollupResult.GetHashCode() -> int
 override Aw.Context.Core.Concepts.PinRollupResult.ToString() -> string!
 static Aw.Context.Core.Concepts.PinRollupResult.operator !=(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
 static Aw.Context.Core.Concepts.PinRollupResult.operator ==(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
+Aw.Context.Core.Sync.RecordBatches
+static Aw.Context.Core.Sync.RecordBatches.From(Aw.Context.Core.Sources.SourceId source, Aw.Context.Core.Sync.RecordPage! page, Aw.Context.Core.Records.SyncPhase phase, Aw.Context.Core.Trust.Scrubbers! scrubbers, System.DateTimeOffset at) -> Aw.Context.Core.Records.RecordBatch!

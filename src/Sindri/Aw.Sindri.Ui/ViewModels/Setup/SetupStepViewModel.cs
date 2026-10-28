@@ -8,7 +8,7 @@ namespace Aw.Sindri.Ui.ViewModels.Setup;
 /// the ids and codes it holds are for the closed Details, never the words up front. A step opens by itself when it needs the person or failed; the person's own choice to open or
 /// close a row is kept across reads.
 /// </summary>
-internal sealed class SetupStepViewModel : ObservableObject
+internal sealed partial class SetupStepViewModel : ObservableObject
 {
     private static readonly string[] _all =
     [
@@ -90,6 +90,7 @@ internal sealed class SetupStepViewModel : ObservableObject
             field = value;
             value?.Summary.PropertyChanged += (_, _) => OnChanged(nameof(HasPreview));
             value?.FocusRequested += (_, e) => FocusRequested?.Invoke(this, e);
+            value?.PropertyChanged += (_, _) => OnChanged(nameof(ShowsProfile));
         }
     }
 

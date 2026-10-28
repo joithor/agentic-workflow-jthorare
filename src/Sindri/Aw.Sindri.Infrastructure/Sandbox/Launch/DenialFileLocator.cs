@@ -11,7 +11,7 @@ internal static class DenialFileLocator
     /// <param name="chosen">The id the launcher chose, or null.</param>
     /// <param name="reported">Reads the reported id; only asked when nothing was chosen.</param>
     /// <returns>The id, or null when there is none.</returns>
-    internal static string? SessionFor(Aw.Sindri.Core.Ids.SessionId? chosen, Func<string?> reported)
+    internal static string? SessionFor(Core.Ids.SessionId? chosen, Func<string?> reported)
     {
         ArgumentNullException.ThrowIfNull(reported);
         return chosen?.Value ?? reported();

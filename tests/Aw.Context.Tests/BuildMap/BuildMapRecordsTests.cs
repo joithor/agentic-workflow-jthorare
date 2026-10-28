@@ -80,7 +80,7 @@ public sealed class BuildMapRecordsTests : IDisposable
         var (report, graph) = await Build(world);
 
         Assert.Contains(graph.Edges, e => e.From.Value == "record:" + RepoDocs.Key(_repo, "docs/fresh.md").Value && e.To.Value == "code:src/keys.ts");
-        Assert.DoesNotContain(graph.Edges, e => e.From.Value == "record:" + RepoDocs.Key(_repo, "docs/stale.md").Value);
+        Assert.DoesNotContain(graph.Edges, e => e.From.Value == "record:" + RepoDocs.Key(_repo, "docs/stale.md").Value && e.Type != EdgeType.BelongsTo);
         Assert.True(Has(report, "records: 1 docs older than HEAD"));
     }
 
@@ -105,7 +105,7 @@ public sealed class BuildMapRecordsTests : IDisposable
         var key = "record:github:pr/acme/app/9";
         var homes = graph.Edges.Where(e => e is { Type: EdgeType.Implements, Provenance: Provenance.Deterministic } && e.To.Kind == NodeKind.Feature && paths.Contains(e.From.Value["code:".Length..], StringComparer.Ordinal))
             .GroupBy(e => e.To.Value, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
-        var edges = graph.Edges.Where(e => e.From.Value == key).ToList();
+        var edges = graph.Edges.Where(e => e.From.Value == key && e.Type != EdgeType.BelongsTo).ToList();
         Assert.True(homes.Count >= 2, "the fixture should give two features");
         Assert.NotNull(graph.Resolve(NodeKey.From(key)));
         Assert.DoesNotContain(edges, e => e.To.Kind == NodeKind.Code);

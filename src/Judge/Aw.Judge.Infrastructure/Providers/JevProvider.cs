@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
+using Aw.Judge.Core.Config;
 using Aw.Judge.Core.Evaluation;
 using Aw.Judge.Core.Ports;
 using Aw.Judge.Core.Providers;
@@ -14,8 +15,9 @@ namespace Aw.Judge.Infrastructure.Providers;
 /// call whose options are the question's outputs, each with its criterion (or its own name). The API key comes from
 /// the secret source; without one Jev is unavailable ('no-api-key'), which is not a failure. Everything taken from the
 /// input leaves the machine for a third party, so both the request's state and its instructions (the question's prompt,
-/// which embeds input fields word for word) are redacted, then capped like the stored input (InputCap), or at the question's
-/// own cap (QuestionRef.InputCapChars). A non-success status is
+/// which embeds input fields word for word) are redacted, then capped at the question's own cap (QuestionRef.InputCapChars), else at
+/// config.json's providers.inputCapChars (the catalog sets it on the question), else at ProvidersConfig.DefaultInputCapChars; over the cap
+/// only the longest strings are cut (InputCap). A non-success status is
 /// errored ('http-NNN'); past the budget, the key read included, it is unavailable ('timeout'); unreachable is unavailable ('network-error').
 /// </summary>
 /// <param name="http">Sends the request (owned: disposed with the provider).</param>
@@ -30,6 +32,11 @@ internal sealed partial class JevProvider(HttpClient http, ISecretSource secrets
     public const int MaxOptions = 255;
 
     private const string QuestionId = "decision";
+
+    // The least state a call is sent, and what the request's own JSON (model, keys, quotes) takes out of the cap.
+    private const int MinStateChars = 1_000;
+
+    private const int EnvelopeChars = 500;
 
     private static readonly Uri _endpoint = new("https://api.typesafe.ai/v1/systemone");
 
@@ -60,8 +67,8 @@ internal sealed partial class JevProvider(HttpClient http, ISecretSource secrets
                 return new ProviderUnavailable(ProviderReasons.NoApiKey);
             }
 
-            var cap = question.InputCapChars ?? InputCap.MaxChars;
-            using var request = Request(question, CappedState(input, cap), CappedInstructions(question.Prompt, cap), key);
+            var cap = question.InputCapChars ?? ProvidersConfig.DefaultInputCapChars;
+            using var request = Request(question, input, cap, key);
             using var response = await http.SendAsync(request, deadline.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
@@ -92,16 +99,21 @@ internal sealed partial class JevProvider(HttpClient http, ISecretSource secrets
 
     // Jev is a third party: it gets what decision_details would store, the redacted input capped the same way, unless the
     // question sets a cap of its own (model-pick sends a whole pack).
-    private JsonNode? State(JsonNode? input) => CappedState(input, InputCap.MaxChars);
-
     private JsonNode? CappedState(JsonNode? input, int cap) => JsonNode.Parse(InputCap.Write(redactor.Redact(input), cap, WireJson.Options));
 
     // The prompt carries the input's text too (ask-check's transcript tail, a rule-check hunk): redacted, then capped.
-    private string Instructions(string prompt) => CappedInstructions(prompt, InputCap.MaxChars);
-
-    // why: not an overload of Instructions, so the batch path's Select(Instructions) can't bind the cap to the element index
     private string CappedInstructions(string prompt, int cap) =>
         InputCap.Truncate(redactor.Redact(JsonValue.Create(prompt))?.GetValue<string>() ?? "", cap);
+
+    // State and instructions together fit the cap: the instructions take at most half of it, the state the rest less the
+    // criteria and the JSON around them. Choose's instructions leave its facts out (they are in the state once).
+    private HttpRequestMessage Request(QuestionRef question, JsonNode? input, int cap, string key)
+    {
+        var instructions = CappedInstructions(question.PromptWithoutInput ?? question.Prompt, cap / 2);
+        var criteriaChars = question.Outputs.Sum(option => option.Length + (question.Criteria?.GetValueOrDefault(option) ?? option).Length + 8);
+        var stateCap = Math.Max(MinStateChars, cap - instructions.Length - criteriaChars - EnvelopeChars);
+        return Request(question, CappedState(input, stateCap), instructions, key);
+    }
 
     private static HttpRequestMessage Request(QuestionRef question, JsonNode? input, string instructions, string key)
     {

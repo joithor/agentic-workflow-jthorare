@@ -51,9 +51,24 @@ public sealed class IndexVerbsTests : IDisposable
         Assert.Equal(1, exit);
         Assert.Equal(
             "linear  complete · last sync 2026-10-27 12:00:00Z\n" +
-            "github  syncing recent window · no sync yet · SND-CONTEXT-010\n" +
-            "slack   not started · no sync yet\n",
+            "github  last sync failed: SND-CONTEXT-010 (A context source is unavailable) · not synced yet\n" +
+            "slack   not started · not synced yet\n",
             Printed);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task Status_never_calls_a_source_usable_when_its_last_sync_failed()
+    {
+        const string rows = """{"sources":[{"source":"linear","phase":"backfill","usable":true,"complete":false,"lastSync":"2026-10-27T12:00:00.0000000Z","lastCode":"SND-CONTEXT-072"},{"source":"github","phase":"backfill","usable":true,"complete":false,"lastSync":"2026-10-27T12:00:00.0000000Z","lastCode":"SND-CONTEXT-059"},{"source":"slack","phase":null,"usable":false,"complete":false,"lastSync":null,"lastCode":null}]}""";
+
+        _ = await Run(new ScriptedApi((HttpStatusCode.OK, rows)), "status");
+
+        var lines = Printed.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var linear = Assert.Single(lines, l => l.StartsWith("linear", StringComparison.Ordinal));
+        Assert.Contains("last sync failed: SND-CONTEXT-072", linear, StringComparison.Ordinal);
+        Assert.DoesNotContain("usable", linear, StringComparison.Ordinal);
+        Assert.Contains("usable", Assert.Single(lines, l => l.StartsWith("github", StringComparison.Ordinal)), StringComparison.Ordinal);   // the time cap is not a failure
+        Assert.Contains("not synced yet", Assert.Single(lines, l => l.StartsWith("slack", StringComparison.Ordinal)), StringComparison.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]

@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using ConfigReading = Aw.Judge.Core.Config.ConfigReading;
 using Aw.Judge.Core.Errors;
 using Aw.Judge.Core.Evaluation;
 using Aw.Judge.Core.Labels;
@@ -9,6 +8,7 @@ using Aw.Judge.Core.Ports;
 using Aw.Judge.Core.Providers;
 using Aw.Kernel;
 using Aw.Kernel.Services;
+using ConfigReading = Aw.Judge.Core.Config.ConfigReading;
 
 namespace Aw.Judge.Features.EvaluateQuestion;
 

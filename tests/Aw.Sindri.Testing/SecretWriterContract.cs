@@ -1,4 +1,3 @@
-using Aw.Sindri.Core.Onyx;
 using Aw.Sindri.Core.Secrets;
 using Xunit;
 

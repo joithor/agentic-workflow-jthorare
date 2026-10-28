@@ -1,3 +1,5 @@
+using Aw.Connectors.Testing.GitHub;
+
 namespace Aw.Connectors.Testing;
 
 /// <summary>The builder root: A.&lt;Slice&gt;Request() and the like, with deterministic defaults (spec §4b.5).</summary>
@@ -6,4 +8,9 @@ public static class A
     /// <summary>A PullGitHubRequest builder with deterministic defaults.</summary>
     /// <returns>A new builder.</returns>
     public static PullGitHubRequestBuilder PullGitHubRequest() => new();
+
+    /// <summary>A GitHub issue (or pull request) builder with deterministic defaults.</summary>
+    /// <param name="id">GitHub's global id; the number defaults to it.</param>
+    /// <returns>A new builder.</returns>
+    public static GitHubIssueBuilder GitHubIssue(long id) => new(id);
 }

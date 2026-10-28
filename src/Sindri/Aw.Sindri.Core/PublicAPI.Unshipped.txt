@@ -12286,8 +12286,8 @@ Aw.Sindri.Core.Onyx.IOnyxPrompts.Pause(string! message, System.Threading.Cancell
 Aw.Sindri.Core.Onyx.IOnyxProvisioning
 Aw.Sindri.Core.Onyx.IOnyxProvisioning.SignIn(int port, string! email, string! password, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Onyx.IOnyxSession!>!>
 Aw.Sindri.Core.Onyx.IOnyxSession
-Aw.Sindri.Core.Onyx.ISecretWriter
-Aw.Sindri.Core.Onyx.ISecretWriter.Store(string! service, string! account, string! secret) -> Aw.Kernel.Result<Aw.Sindri.Core.Secrets.SecretPointer!>!
+Aw.Sindri.Core.Secrets.ISecretWriter
+Aw.Sindri.Core.Secrets.ISecretWriter.Store(string! service, string! account, string! secret) -> Aw.Kernel.Result<Aw.Sindri.Core.Secrets.SecretPointer!>!
 Aw.Sindri.Core.Onyx.OnyxSetupState.Deconstruct(out int Port, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Steps, out string? Project, out int SchemaVersion, out string? KeyPointer) -> void
 Aw.Sindri.Core.Onyx.OnyxSetupState.KeyPointer.get -> string?
 Aw.Sindri.Core.Onyx.OnyxSetupState.KeyPointer.init -> void

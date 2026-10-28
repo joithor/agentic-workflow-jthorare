@@ -77,7 +77,7 @@ public sealed class ModelPickLaunchTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
         await using var rig = await Rig(new ModelPickSettings(PickOn: true), ct, drafter: new DrafterRan("opus"));
 
-        _ = await rig.Launch(Challenge(1), floor: "standard", ct);
+        _ = await rig.Launch(Challenge(1), floor: "standard", ct, agent: new StateAgent(DifferentFrom: "draft"));
 
         Expect.Equal("sonnet", rig.Launcher.Requests[0].Step?.Model);
         Expect.Equal(0, rig.Judge.Asks.Count);

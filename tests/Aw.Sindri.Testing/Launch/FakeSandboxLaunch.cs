@@ -22,7 +22,7 @@ public sealed class FakeSandboxLaunch : ISandboxLaunch
 
     /// <summary>The summary Prepare hands back.</summary>
     public SandboxSummary Summary { get; } = new(SandboxMechanism.Bubblewrap, "9f2c0a41d8e6", ["/work"], ["model"], NetworkMode.Enforce, InnerState.On,
-        new SandboxLimitsSummary("12GiB", "400%", 2048), new SandboxCredentialsSummary(Aw.Sindri.Core.Sandbox.Credentials.GithubCredentials.None), ModelLoginSource.OwnerCopy);
+        new SandboxLimitsSummary("12GiB", "400%", 2048), new SandboxCredentialsSummary(GithubCredentials.None), ModelLoginSource.OwnerCopy);
 
     /// <summary>The launches Prepare was called for, with the argv it got.</summary>
     public IReadOnlyList<(LaunchRequest Request, IReadOnlyList<string> Argv)> Prepared => _prepared;

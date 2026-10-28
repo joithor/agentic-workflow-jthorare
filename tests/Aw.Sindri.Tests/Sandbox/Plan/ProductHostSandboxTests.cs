@@ -1,8 +1,10 @@
+using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Credentials;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Host;
 using Aw.Sindri.Infrastructure.Sandbox;
+using Aw.Sindri.Infrastructure.Sandbox.Launch;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
 
@@ -55,5 +57,19 @@ public sealed class ProductHostSandboxTests
 
         Assert.Equal(OperatingSystem.IsLinux(), sources.Has(ModelLoginSource.OwnerCopy));
         Assert.False(sources.Has(ModelLoginSource.SeparateLogin));
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    [System.Runtime.Versioning.SupportedOSPlatform("linux")]
+    public void On_Linux_the_product_container_resolves_the_sandbox_step_the_launcher_is_given()
+    {
+        Assert.SkipUnless(OperatingSystem.IsLinux(), "the sandbox step is registered on Linux only");
+        using var provider = Compose().BuildServiceProvider();
+
+        // LauncherParts is private to the launcher registration, which reads exactly this: Sandbox = sp.GetService<ISandboxLaunch>().
+        var step = provider.GetService<ISandboxLaunch>();
+
+        _ = Assert.IsType<SandboxLaunch>(step);
+        _ = provider.GetRequiredService<ILauncher>();   // the launcher itself builds with it
     }
 }

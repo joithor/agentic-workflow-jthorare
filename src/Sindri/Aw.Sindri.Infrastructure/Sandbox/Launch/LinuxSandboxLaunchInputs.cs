@@ -15,7 +15,6 @@ namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 /// <param name="HostFacts">Reads the host facts at each launch (the switch step's BoxHostFacts.Read).</param>
 /// <param name="Control">The running control plane's endpoint record, or null when unknown.</param>
 /// <param name="Counters">What a launch's denial counter is made from, or null to count no denials.</param>
-#pragma warning disable MA0182 // registered by the product Host in SB-5a's switch step
 internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentCatalog Catalog, ISandboxProcesses Processes, Func<SandboxHostFacts> HostFacts, Func<ControlEndpoint?> Control, DenialCounterParts? Counters = null) : ISandboxLaunchInputs
 {
     /// <summary>The proxy port inside every sandbox (its network namespace is private, so one fixed port can't clash).</summary>
@@ -69,4 +68,3 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
     internal static string NetDir(string baseDirectory, LaunchId launch) =>
         Path.Combine(baseDirectory, "aw-net", launch.Value.Replace("LCH-", string.Empty, StringComparison.Ordinal)[..12]);
 }
-#pragma warning restore MA0182

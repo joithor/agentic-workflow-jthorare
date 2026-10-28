@@ -1,6 +1,7 @@
 using Aw.Sindri.Core.Control;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Profile;
+using Aw.Sindri.Core.Text;
 using Aw.Sindri.Core.Sandbox.Credentials;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
@@ -49,7 +50,11 @@ public static class PlatformSandboxServiceCollectionExtensions
             .AddSingleton<LaunchSandboxRegistry>()
             .AddSingleton<ISandboxLaunchStages>(sp => new SandboxLaunchStages(
                 sp.GetRequiredService<IApprovedProfile>(), sp.GetRequiredService<ILearnHistory>(), [.. sp.GetServices<IModelCredentialSource>()], sp.GetRequiredService<ISandboxLaunchInputs>(),
-                sp.GetRequiredService<LaunchSandboxRegistry>(), sp.GetRequiredService<TimeProvider>()))   // TODO(flow): ISandboxLaunchInputs has no registration until flow's class lands; resolving ISandboxLaunch throws until then
+                sp.GetRequiredService<LaunchSandboxRegistry>(), sp.GetRequiredService<TimeProvider>()))
+            .AddSingleton<ISandboxLaunchInputs>(sp => new LinuxSandboxLaunchInputs(
+                sp.GetRequiredService<LauncherOptions>(), sp.GetRequiredService<ReloadingAgentCatalog>(), sp.GetRequiredService<ISandboxProcesses>(),
+                () => BoxHostFacts.Read(environment, sp.GetRequiredService<SindriSettings>().Home, sp.GetRequiredService<ISandboxMachine>()), ControlFor(sp),
+                new DenialCounterParts(new ScopedSandboxDenials(sp.GetRequiredService<IServiceScopeFactory>()), sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>(), sp.GetRequiredService<ITextScrubber>(), sp.GetRequiredService<TimeProvider>())))
             .AddSingleton<ISandboxLaunch>(sp => new SandboxLaunch(
                 sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<ISandboxLaunchStages>(), LaunchOptions(sp, environment)));
     }
@@ -57,14 +62,21 @@ public static class PlatformSandboxServiceCollectionExtensions
     private static SandboxLaunchOptions LaunchOptions(IServiceProvider sp, Func<string, string?> environment)
     {
         var settings = sp.GetRequiredService<SindriSettings>();
-        var json = sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>();
         var machine = sp.GetRequiredService<ISandboxMachine>();
         return new SandboxLaunchOptions(
             environment("AW_SANDBOX_SYSTEMD_RUN") is { Length: > 0 } run ? run : "systemd-run",
             new BoxFacts(machine.RamBytes, machine.Cores),   // one source for machine memory: doctor's limits row and the scope limits agree
             settings.Home,
             sp.GetRequiredService<LauncherOptions>().SecretsDirectory,
-            () => ReadEndpoint(settings.EndpointPath, json));
+            ControlFor(sp));
+    }
+
+    /// <summary>Gets the reader of the running control plane's endpoint record (control.json), shared by the launch options and the inputs.</summary>
+    private static Func<ControlEndpoint?> ControlFor(IServiceProvider sp)
+    {
+        var path = sp.GetRequiredService<SindriSettings>().EndpointPath;
+        var json = sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>();
+        return () => ReadEndpoint(path, json);
     }
 
     /// <summary>Reads control.json (a tiny local file) as FileEndpoint does; a missing or damaged record is none.</summary>

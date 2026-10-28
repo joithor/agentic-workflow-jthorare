@@ -341,6 +341,8 @@ characters, no id or code name; `RCP-DISPLAY-002`) says why the state is in the 
 
 An active state that runs an agent may also say `model: { floor: strong }` (model-pick spec 8): the lowest tier of model the state accepts, `cheap`, `standard` or `strong`, never a model id (`SND-MODEL-002` at `recipe validate`; written into the hashed form only when set, so a recipe that gains one bumps its version).
 
+**Writing a recipe: floors.** Set a `floor` on a state when a model that is too weak makes the state's work worse than useless, and leave it off when the pick (or the agent's default) is good enough. A floor is the only way a recipe constrains the model: the pick chooses among the models at or above it (and, for a challenger, other than the drafter's), the escalation retry stays above the model that failed, and with `workflow.agent.pick` off the state still runs on the cheapest model at or above the floor, so an install that never turned the pick on does not run the state below it. Do not also write `with: { model: ... }` on a state you give a floor: a named model is a constraint of its own, the pick is skipped for that state and the floor has nothing to decide. `workflow.scoping` v18 gives `draft` `floor: strong` and `challenge` `floor: standard` and names no model on either; `questions` and `apply` have no floor, so the pick may run them on the cheapest model. Adding a floor changes the recipe's content, so bump its version (`RCP-VERSION-001`).
+
 An active state may also say which launcher agent runs its Step (#1269): `agent: codex` (a bare agent id) or `agent: { differentFrom: draft }` (another agent than the earlier state `draft` ran on; with only one usable agent it stays on that one and the model pick takes the other state's model out of the candidates, `SND-MODEL-003` when none is left, `SND-LAUNCH-028` when no agent may run a Step at all). A model is never named there: it stays in the Step's `with.model`. `RCP-AGENT-001` refuses an agent the approved profile has not approved for Steps (skipped while no profile is approved), `RCP-AGENT-002` a `differentFrom` that names no state that runs an agent Step, and `RCP-AGENT-003` a state that names both forms or differs from itself. An agent Step's `workflow.transition` row records the `agent` and `model` it ran on. Written into the hashed form only when set; `workflow.scoping`'s `challenge` state says `differentFrom: draft`.
 
 A state that runs a Step may also carry `onOutcome`, a map from an outcome of its Step to one plain sentence (at most 200 characters, no id or code name) on what choosing that outcome does:
@@ -1444,7 +1446,9 @@ sends it on to the desk twin. A Step with no registered runtime keeps opening a 
   events` prints `via block · decision <id>` (a `sindri workflow why` verb that explains the decision comes with DT-J3); the API's event detail has `via` and
   `decision`, left out when null. Desk reports carry neither.
 - **Profile:** `workflow.judge.providers` (and `repos[].workflow.judge.providers`) narrows which providers a Judge
-  Step may ask; see `sindri-profile.md`.
+  Step may ask; see `sindri-profile.md`. `workflow.judge.parallel` (1 to 16) sets how many calls the scoping judge Steps run at once: a Step's `parallel: { profile: workflow.judge.parallel }`
+  resolves from the approved profile (the repo's value, else the box's) and is left out when neither sets it, so the Step's default of 8 applies; recipe validation accepts that profile key for
+  `parallel` and no other (`RCP-BLOCK-003`).
 
 ## Agent runtime (P8)
 

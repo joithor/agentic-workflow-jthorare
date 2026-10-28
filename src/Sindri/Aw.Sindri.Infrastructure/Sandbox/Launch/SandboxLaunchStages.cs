@@ -14,6 +14,7 @@ namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 /// The sandbox step's launch-specific parts (<see cref="ISandboxLaunchStages"/>): the plan request from the approved profile, the login and the learn history, the egress, and what
 /// the end of a launch releases. The session home itself is made and removed by <see cref="SandboxLaunch"/>.
 /// </summary>
+#pragma warning disable MA0182 // registered by the product Host in SB-5a's switch step
 internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistory learn, IReadOnlyList<IModelCredentialSource> logins, ISandboxLaunchInputs inputs, ILaunchEgress egress, TimeProvider clock) : ISandboxLaunchStages
 {
     /// <inheritdoc/>
@@ -41,7 +42,7 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
         return new SandboxRequest(
             request.Launch, request.Item, request.Agent, repo, request.Instance,
             new SandboxPaths(request.RepoPath, common, request.Worktree, run, inputs.RunAreaFor(request.Launch)),
-            request.Instance is { } instance && request.Run is { } token ? $"sindri/{instance.Value}/{token.Number}" : string.Empty,
+            request.Instance is { } instance && request.Run is { } token ? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"sindri/{instance.Value}/{token.Number}") : string.Empty,
             request.Step?.Policy, request.Attended,
             StepTimeout: null, LongMax: null, SlotHeld: false,   // not on the launch request: TODO(lead) the Step's timeout, longMax and heavy-slot fact
             new SandboxNetFacts(inputs.NetDirFor(request.Launch), inputs.SindriPort(), inputs.ProxyPort()),
@@ -63,11 +64,8 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
     }
 
     /// <inheritdoc/>
-    public async ValueTask Release(LaunchId launch, CancellationToken cancellationToken)
-    {
-        // TODO(policy builder): DenialCollector.Collect(...) here, before the egress stops and before session.ended.
-        await egress.Release(launch).ConfigureAwait(false);
-    }
+    public ValueTask Release(LaunchId launch, CancellationToken cancellationToken) =>
+        egress.Release(launch);   // TODO(policy builder): DenialCollector.Collect(...) before this, and before session.ended
 
     private static RepoName RepoNameOf(SindriProfile? loaded, string repoPath) =>
         RepoName.From(loaded?.Repos?.FirstOrDefault(r => string.Equals(r.Path.TrimEnd('/'), repoPath.TrimEnd('/'), StringComparison.Ordinal))?.Name ?? Path.GetFileName(repoPath.TrimEnd('/')));
@@ -81,3 +79,4 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
             : await chosen.Prepare(request.Agent, request.Launch, cancellationToken).ConfigureAwait(false);
     }
 }
+#pragma warning restore MA0182

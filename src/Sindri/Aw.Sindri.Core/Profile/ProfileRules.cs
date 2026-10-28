@@ -224,7 +224,30 @@ public static class ProfileRules
             }
         }
 
-        return null;
+        return JudgeWidths(profile);
+    }
+
+    /// <summary>The judge call width (issue 1440): the box's and each repo's 'parallel' is 1 to 16.</summary>
+    private static Error? JudgeWidths(SindriProfile profile)
+    {
+        var (path, width) = JudgeWidthKeys(profile).FirstOrDefault(static w => w.Width is < JudgeParallel.Min or > JudgeParallel.Max);
+        return path is null ? null : Invalid(path, string.Create(CultureInfo.InvariantCulture, $"{width} is not between {JudgeParallel.Min} and {JudgeParallel.Max}"));
+    }
+
+    private static IEnumerable<(string Path, int Width)> JudgeWidthKeys(SindriProfile profile)
+    {
+        if (profile.Workflow?.Judge?.Parallel is { } box)
+        {
+            yield return ("workflow.judge.parallel", box);
+        }
+
+        foreach (var repo in profile.Repos ?? [])
+        {
+            if (repo.Workflow?.Judge?.Parallel is { } own)
+            {
+                yield return ($"repos.{repo.Name}.workflow.judge.parallel", own);
+            }
+        }
     }
 
     private static IEnumerable<(string Path, IReadOnlyList<string> Names)> JudgeLists(SindriProfile profile)

@@ -136,6 +136,10 @@ public sealed class RelevanceJudgeStepTests
     }
 
     [Fact]
+    public void Without_a_parallel_argument_the_Step_runs_eight_calls_at_once() =>
+        Assert.Equal(8, RelevanceJudgeStep.DefaultParallel);
+
+    [Fact]
     public async Task A_decided_answer_becomes_a_ruling_with_its_confidence_provider_and_decision()
     {
         var judge = new ScriptedJudge(static _ => new ChooseAnswer(ChooseStatus.Decided, "noise", "model", 0.91, "jev", "JD-0001"));

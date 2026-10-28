@@ -1,6 +1,6 @@
 schema: 1
 id: workflow.scoping
-version: 18
+version: 19
 description: "Station 1 of the line: scope a change from a brief, a tracker item, a rough idea or a PR, close the behaviour gaps by interview, and park at the owner's after-scoping stop with a cited, covered and challenged scope packet."
 displayName: "Decide what will change"
 why: "Pins down exactly what will change and what done means, then waits for your approval before anything is designed."
@@ -52,7 +52,7 @@ states:
     next: "Label each thing {item}'s lenses returned as on topic, off to the side or noise, with a reason and a citation."
   relevance-judge:
     kind: active
-    step: { use: step.scope.relevance-judge, with: { parallel: 4, threshold: 0.6, providers: { profile: workflow.judge.providers } } }
+    step: { use: step.scope.relevance-judge, with: { parallel: { profile: workflow.judge.parallel }, threshold: 0.6, providers: { profile: workflow.judge.providers } } }
     timeout: { after: 1d, then: park }
     next: "A judge, who never sees those labels, rules on each thing {item}'s lenses returned."
   relevance-apply: { kind: active, step: step.scope.relevance-apply, timeout: { after: 1d, then: park },
@@ -74,7 +74,7 @@ states:
     next: "Search for what {item}'s scope misses, without seeing the lenses or the map (round {loop.gapsearch}/{loop.gapsearch.cap})."
   gap-judge:
     kind: active
-    step: { use: step.scope.gap-judge, with: { parallel: 4, threshold: 0.6, providers: { profile: workflow.judge.providers } } }
+    step: { use: step.scope.gap-judge, with: { parallel: { profile: workflow.judge.parallel }, threshold: 0.6, providers: { profile: workflow.judge.providers } } }
     timeout: { after: 1d, then: park }
     next: "A judge rules on each missing-part candidate for {item}: a real gap, already covered or not in scope."
   gap-log:      { kind: active, step: step.scope.gap-log, timeout: { after: 1d, then: park },

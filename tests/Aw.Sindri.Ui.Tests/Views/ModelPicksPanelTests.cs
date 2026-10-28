@@ -1,11 +1,12 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.VisualTree;
-using Avalonia;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Ui.Testing;
 using Aw.Sindri.Ui.ViewModels.Instance;
+using Aw.Sindri.Ui.ViewModels.Shell;
 
 namespace Aw.Sindri.Ui.Tests.Views;
 
@@ -14,7 +15,7 @@ namespace Aw.Sindri.Ui.Tests.Views;
 [Collection(HeadlessWindows.Name)]
 public sealed class ModelPicksPanelTests : FrameHost
 {
-    private async Task<(Window Window, Avalonia.Controls.Button Why, Aw.Sindri.Ui.ViewModels.Shell.ShellViewModel Shell)> Shown(int width = 1600)
+    private async Task<(Window Window, Button Why, ShellViewModel Shell)> Shown(int width = 1600)
     {
         var (window, shell) = await Connected(ready: null, width: width, height: 1000);
         Server.LaunchPicksAnswer = RouteAnswer.Api("launch-picks", "picked-with-usage");
@@ -23,7 +24,7 @@ public sealed class ModelPicksPanelTests : FrameHost
         await Until(window, () => shell.Instance.Phase == FramePhase.Shown && shell.Instance.ModelPicks is not null);
         Named<Expander>(window, "InstanceModelPicksExpander").IsExpanded = true;
         Settle(window);
-        var why = Named<Control>(window, "InstanceModelPickRows").GetVisualDescendants().OfType<Avalonia.Controls.Button>().First(b => b.IsEffectivelyVisible);
+        var why = Named<Control>(window, "InstanceModelPickRows").GetVisualDescendants().OfType<Button>().First(b => b.IsEffectivelyVisible);
         return (window, why, shell);
     }
 

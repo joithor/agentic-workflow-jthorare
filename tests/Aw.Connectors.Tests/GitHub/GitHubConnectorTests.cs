@@ -90,7 +90,7 @@ public sealed class GitHubConnectorTests
     [Fact, Trait("Lane", "unit")]
     public void A_cursor_that_does_not_parse_starts_that_repo_over()
     {
-        var parsed = Aw.Connectors.Features.PullGitHub.GitHubCursors.Parse("acme/widgets|notanumber|1;acme/gadgets|638000000000000000|4,5");
+        var parsed = Features.PullGitHub.GitHubCursors.Parse("acme/widgets|notanumber|1;acme/gadgets|638000000000000000|4,5");
 
         Assert.True(parsed.Keys.SequenceEqual(["acme/gadgets"], StringComparer.Ordinal));
         Assert.Equal([4L, 5L], parsed["acme/gadgets"].SeenIds);

@@ -22,11 +22,10 @@ public static class ConnectorsFeaturesServiceCollectionExtensions
                 new ValidatingService<PullGitHubRequest, PullGitHubResponse>(
                     new PullGitHubService(sp.GetRequiredService<IGitHubReader>()),   // a factory registration: the reader is the caller's to add, so a host that builds readers per token registers none
                     sp.GetRequiredService<IValidator<PullGitHubRequest>>()))
-            .AddScoped<PullSlackService>()
             .AddScoped<IValidator<PullSlackRequest>, PullSlackValidator>()
             .AddScoped<IService<PullSlackRequest, PullSlackResponse>>(static sp =>
                 new ValidatingService<PullSlackRequest, PullSlackResponse>(
-                    sp.GetRequiredService<PullSlackService>(),
+                    new PullSlackService(sp.GetRequiredService<ISlackReader>()),   // a factory registration, as PullGitHub's: a host without Slack adds no reader and still validates
                     sp.GetRequiredService<IValidator<PullSlackRequest>>()))
             .AddSingleton<IGitHubConnectorFactory>(static sp => new GitHubConnectorFactory(sp.GetService<TimeProvider>() ?? TimeProvider.System));
         return services;

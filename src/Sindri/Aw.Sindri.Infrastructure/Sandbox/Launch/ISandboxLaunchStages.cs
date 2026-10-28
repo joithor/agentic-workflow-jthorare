@@ -17,11 +17,12 @@ internal interface ISandboxLaunchStages
     /// <returns>The request, or the SND-LAUNCH-015/017 refusal.</returns>
     public ValueTask<Result<SandboxRequest>> Request(LaunchRequest request, CancellationToken cancellationToken);
 
-    /// <summary>TODO(home builder): makes the launch's session home (0700, links, secret, control.json) and writes the policy files the plan names.</summary>
+    /// <summary>TODO(policy+egress builder): writes the policy files the plan names (claude settings, codex overrides) into the session home the adapter just made.</summary>
     /// <param name="plan">The plan.</param>
+    /// <param name="sessionHome">The launch's session home.</param>
     /// <param name="cancellationToken">Cancels the work.</param>
-    /// <returns>The session home's path, or a refusal.</returns>
-    public ValueTask<Result<string>> MakeHome(SandboxPlan plan, CancellationToken cancellationToken);
+    /// <returns>Success, or a refusal.</returns>
+    public ValueTask<Result<Unit>> WritePolicy(SandboxPlan plan, string sessionHome, CancellationToken cancellationToken);
 
     /// <summary>TODO(policy+egress builder): starts the launch's egress (registered per launch) before the self-check.</summary>
     /// <param name="plan">The plan.</param>
@@ -29,7 +30,7 @@ internal interface ISandboxLaunchStages
     /// <returns>Success, or the SND-LAUNCH-016 refusal.</returns>
     public ValueTask<Result<Unit>> StartEgress(SandboxPlan plan, CancellationToken cancellationToken);
 
-    /// <summary>TODO(home + policy+egress builders): what the end of a launch removes: collects its denials, stops its egress, removes its session home. A launch with none is a no-op.</summary>
+    /// <summary>TODO(policy+egress builder): what the end of a launch removes besides the session home (the adapter removes that): collects its denials and stops its egress. A launch with none is a no-op.</summary>
     /// <param name="launch">The launch.</param>
     /// <param name="cancellationToken">Cancels the work.</param>
     /// <returns>A task that completes when it is gone.</returns>

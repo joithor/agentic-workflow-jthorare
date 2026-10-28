@@ -52,6 +52,7 @@ public sealed class LauncherSandboxTests : IDisposable
         var at = session.Argv.ToList().FindIndex(a => string.Equals(a, "fake-sandbox", StringComparison.Ordinal));
         Expect.True(at > 0 && session.Argv[at + 1] == "--");   // 'sindri session wrap -- fake-sandbox -- <agent argv>'
         Expect.Equal("/sessions/home", session.Env["AW_SINDRI_HOME"]);
+        Expect.Equal("/sessions/home/launch.secret", session.Env["AW_SINDRI_LAUNCH_SECRET_FILE"]);
         Expect.Equal(1, _sandbox.Prepared.Count);
         Expect.True(_sandbox.Prepared[0].Argv.SequenceEqual(session.Argv.Skip(at + 2), StringComparer.Ordinal));
     }

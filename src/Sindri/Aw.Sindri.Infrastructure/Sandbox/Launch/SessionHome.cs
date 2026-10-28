@@ -9,7 +9,7 @@ namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 /// (<c lang="text">launches</c>, <c lang="text">approved</c>), the control.json that names Sindri, the launch's one-read secret file and an empty <c lang="text">gh-config/</c>. The launcher makes it
 /// before the sandbox and removes it at run close and in the crash sweep. The Step's policy file and MCP config are written into it by their own writers.
 /// </summary>
-public static class SessionHome
+internal static class SessionHome
 {
     /// <summary>The name of the launch's one-read secret file inside the session home.</summary>
     public const string SecretName = "launch.secret";

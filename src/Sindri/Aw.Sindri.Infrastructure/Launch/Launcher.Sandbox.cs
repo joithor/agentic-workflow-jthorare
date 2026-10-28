@@ -2,6 +2,7 @@ using Aw.Kernel;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Workflow.Engine;
+using Aw.Sindri.Infrastructure.Sandbox.Launch;
 
 namespace Aw.Sindri.Infrastructure.Launch;
 
@@ -26,6 +27,7 @@ internal sealed partial class Launcher
         }
 
         env["AW_SINDRI_HOME"] = prepared.Value.SessionHome;
+        env["AW_SINDRI_LAUNCH_SECRET_FILE"] = SessionHome.SecretFile(prepared.Value.SessionHome);   // the file moved into the home: the launcher's own directory isn't bound
         return new Confined(prepared.Value.Argv, env, prepared.Value.Summary);
     }
 

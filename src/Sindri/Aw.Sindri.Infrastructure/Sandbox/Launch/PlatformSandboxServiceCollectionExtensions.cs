@@ -77,7 +77,8 @@ public static class PlatformSandboxServiceCollectionExtensions
         var machine = sp.GetRequiredService<ISandboxMachine>();
         return new SandboxExec(
             sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<EgressService>(), sp.GetRequiredService<IApprovedProfile>(),
-            new BoxFacts(machine.RamBytes, machine.Cores), environment("AW_SANDBOX_SYSTEMD_RUN") is { Length: > 0 } run ? run : "systemd-run");
+            new BoxFacts(machine.RamBytes, machine.Cores), environment("AW_SANDBOX_SYSTEMD_RUN") is { Length: > 0 } run ? run : "systemd-run",
+            () => sp.GetRequiredService<LauncherOptions>().LaunchDirectory);   // why: lazily, so a container without the launcher can still resolve the exec
     }
 
     private static SandboxLaunchOptions LaunchOptions(IServiceProvider sp, Func<string, string?> environment)

@@ -1,11 +1,16 @@
 using Aw.Kernel;
-using Aw.Sindri.Core.Sandbox.Plan;
+using Aw.Sindri.Core.Workflow.Engine;
 
-namespace Aw.Sindri.Infrastructure.Sandbox;
+namespace Aw.Sindri.Core.Sandbox.Plan;
 
 /// <summary>Runs a command in the reproduction sandbox of an ended launch ('sindri sandbox exec', sandbox spec §3.6); the CLI verb's port, so its tests need no bubblewrap.</summary>
-internal interface ISandboxExec
+public interface ISandboxExec
 {
+    /// <summary>Where a launch's stored plan is kept.</summary>
+    /// <param name="launch">The ended launch.</param>
+    /// <returns>The path of its sandbox-plan.json.</returns>
+    public string PlanFileOf(LaunchId launch);
+
     /// <summary>Runs <paramref name="command"/> with this process's terminal and waits for it.</summary>
     /// <param name="stored">The launch's stored plan.</param>
     /// <param name="command">The command and its arguments.</param>

@@ -3,7 +3,7 @@ using Aw.Kernel.Json;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Host;
 using Aw.Sindri.Host.Commands;
-using Aw.Sindri.Infrastructure.Sandbox;
+using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Tests.Ledger;
 using Aw.Sindri.Tests.Sandbox.Plan;
 using Microsoft.Extensions.DependencyInjection;
@@ -135,6 +135,8 @@ public sealed class SandboxExecCliTests : IDisposable
         public IReadOnlyList<string>? Command { get; private set; }
 
         public SandboxPlan? Stored { get; private set; }
+
+        public string PlanFileOf(LaunchId launch) => Path.Combine("/nonexistent", launch.Value, "sandbox-plan.json");
 
         public Task<Result<int>> Run(SandboxPlan stored, IReadOnlyList<string> command, CancellationToken cancellationToken)
         {

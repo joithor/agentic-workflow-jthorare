@@ -21089,3 +21089,6 @@ Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks
 Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.Violations(System.Collections.Generic.IReadOnlyDictionary<Aw.Sindri.Core.Workflow.Ids.FactKey, System.ReadOnlyMemory<byte>>! outputs, System.Collections.Generic.IReadOnlySet<Aw.Sindri.Core.Workflow.Ids.FactKey>! payloads, bool scopingQuestions) -> System.Collections.Generic.IReadOnlyList<string!>!
 static Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.Instance.get -> Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks!
 Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.PayloadReportChecks() -> void
+Aw.Sindri.Core.Sandbox.Plan.ISandboxExec
+Aw.Sindri.Core.Sandbox.Plan.ISandboxExec.PlanFileOf(Aw.Sindri.Core.Workflow.Engine.LaunchId launch) -> string!
+Aw.Sindri.Core.Sandbox.Plan.ISandboxExec.Run(Aw.Sindri.Core.Sandbox.Plan.SandboxPlan! stored, System.Collections.Generic.IReadOnlyList<string!>! command, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Aw.Kernel.Result<int>!>!

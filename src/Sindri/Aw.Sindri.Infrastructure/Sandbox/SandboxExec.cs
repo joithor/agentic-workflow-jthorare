@@ -5,6 +5,7 @@ using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
+using Aw.Sindri.Infrastructure.Processes;
 
 namespace Aw.Sindri.Infrastructure.Sandbox;
 
@@ -18,9 +19,13 @@ namespace Aw.Sindri.Infrastructure.Sandbox;
 /// <param name="profile">The approved profile: the cap and the limits.</param>
 /// <param name="box">The box's RAM and cores.</param>
 /// <param name="systemdRun">The systemd-run program.</param>
-internal sealed class SandboxExec(ISandbox sandbox, ISessionCap cap, EgressService egress, IApprovedProfile profile, BoxFacts box, string systemdRun) : ISandboxExec
+/// <param name="launchDirectory">The launcher's directory, read when a launch's plan is looked up.</param>
+internal sealed class SandboxExec(ISandbox sandbox, ISessionCap cap, EgressService egress, IApprovedProfile profile, BoxFacts box, string systemdRun, Func<string> launchDirectory) : ISandboxExec
 {
     private static readonly TimeSpan _unusedLongMax = TimeSpan.FromHours(2);   // the exec is attended: it has no wall, so no longMax applies
+
+    /// <inheritdoc/>
+    public string PlanFileOf(LaunchId launch) => Path.Combine(launchDirectory(), "areas", launch.Value, "sandbox-plan.json");
 
     /// <inheritdoc/>
     public async Task<Result<int>> Run(SandboxPlan stored, IReadOnlyList<string> command, CancellationToken cancellationToken)
@@ -110,11 +115,7 @@ internal sealed class SandboxExec(ISandbox sandbox, ISessionCap cap, EgressServi
         }
 
         var argv = SystemdScopeArgv.Start(systemdRun, plan.Launch, limits, wrapped.Value);
-        var info = new ProcessStartInfo(argv[0]) { UseShellExecute = false };   // no redirection: the command has this terminal
-        foreach (var argument in argv.Skip(1))
-        {
-            info.ArgumentList.Add(argument);
-        }
+        var info = ChildEnvironment.Start(argv[0], argv.Skip(1));   // no redirection: the command has this terminal
 
         try
         {

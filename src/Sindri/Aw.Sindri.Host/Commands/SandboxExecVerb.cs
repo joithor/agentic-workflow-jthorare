@@ -4,8 +4,6 @@ using Aw.Kernel.Json;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
-using Aw.Sindri.Infrastructure.Launch;
-using Aw.Sindri.Infrastructure.Sandbox;
 
 namespace Aw.Sindri.Host.Commands;
 
@@ -15,7 +13,7 @@ namespace Aw.Sindri.Host.Commands;
 /// Human-only and not an API route: a session Sindri launched, or a CLI with no readable per-start token, is refused (SND-AUTH-002). Exit code: the command's; 2 for usage, a refusal or a sandbox that can't be made.
 /// </summary>
 /// <param name="output">Where the verb writes.</param>
-/// <param name="services">The container: the launcher's directory and the exec service.</param>
+/// <param name="services">The container: the exec service.</param>
 /// <param name="caller">Tells a human from a session.</param>
 internal sealed class SandboxExecVerb(Output output, IServiceProvider services, CallerHeaders caller)
 {
@@ -44,7 +42,7 @@ internal sealed class SandboxExecVerb(Output output, IServiceProvider services, 
             return await output.Error(SindriErrors.LaunchSandboxUnavailable.With("sandbox exec needs the Linux sandbox, and this build has none for this machine")).ConfigureAwait(false);
         }
 
-        var read = await ReadPlan(target, ct).ConfigureAwait(false);
+        var read = await ReadPlan(FileFor(target, exec), ct).ConfigureAwait(false);
         if (read.IsError)
         {
             return await output.Error(read.Error).ConfigureAwait(false);
@@ -74,9 +72,8 @@ internal sealed class SandboxExecVerb(Output output, IServiceProvider services, 
         return words.Count == 1 ? (words[0], json, command, null) : (string.Empty, false, command, "exec needs one launch id or run-area path");
     }
 
-    private async Task<Kernel.Result<SandboxPlan>> ReadPlan(string target, CancellationToken ct)
+    private static async Task<Kernel.Result<SandboxPlan>> ReadPlan(string file, CancellationToken ct)
     {
-        var file = FileFor(target);
         byte[] bytes;
         try
         {
@@ -92,11 +89,11 @@ internal sealed class SandboxExecVerb(Output output, IServiceProvider services, 
     }
 
     // A launch id names the launcher's area for it; anything else is a run area (or the plan file itself).
-    private string FileFor(string target)
+    private static string FileFor(string target, ISandboxExec exec)
     {
         if (LaunchId.TryFrom(target, out var launch))
         {
-            return Path.Combine(services.GetRequiredService<LauncherOptions>().LaunchDirectory, "areas", launch.Value, PlanFile);
+            return exec.PlanFileOf(launch);
         }
 
         return Directory.Exists(target) ? Path.Combine(target, PlanFile) : target;

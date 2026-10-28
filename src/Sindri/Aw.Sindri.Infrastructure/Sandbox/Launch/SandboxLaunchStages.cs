@@ -44,11 +44,11 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
 
         var history = await learn.Read(repo.Value, cancellationToken).ConfigureAwait(false);
         var common = await inputs.GitCommonDir(request.RepoPath, cancellationToken).ConfigureAwait(false);
-        var run = StepEnvironment.For(request).GetValueOrDefault(StepEnvironment.RunDirectory, request.Worktree ?? request.RepoPath);
+        var run = RunDirectory(request);
         return new SandboxRequest(
             request.Launch, request.Item, request.Agent, repo, request.Instance,
             new SandboxPaths(request.RepoPath, common, request.Worktree, run, inputs.RunAreaFor(request.Launch)),
-            request.Instance is { } instance && request.Run is { } token ? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"sindri/{instance.Value}/{token.Number}") : string.Empty,
+            request.Instance is { } instance && request.Run is { } token ? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"sindri/{WorkflowInstanceId.Of(instance).Value}/{token.Number}") : string.Empty,
             request.Step?.Policy, request.Attended,
             StepTimeout: null, LongMax: LongMax(loaded), SlotHeld: false,   // not on the launch request: the Step's own timeout and the heavy-slot fact
             new SandboxNetFacts(inputs.NetDirFor(request.Launch), inputs.SindriPort(), inputs.ProxyPort()),
@@ -120,4 +120,7 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
             ? SandboxRefusal.For(SindriErrors.LaunchLoginUnavailable, SandboxReasons.NoLogin, $"no {source} login source supports {request.Agent.Value}", source)
             : await chosen.Prepare(request.Agent, request.Launch, cancellationToken).ConfigureAwait(false);
     }
+
+    // The launcher's run directory for the Step; a launch with none plans against its worktree, else the repo.
+    private string RunDirectory(LaunchRequest request) => inputs.RunDirectoryFor(request) ?? request.Worktree ?? request.RepoPath;
 }

@@ -77,25 +77,37 @@ internal sealed partial class Launcher
     }
 
     /// <summary>LN-WF5: the Step's pack, in its directory before the session starts (an attended launch has none); an error when the pack is refused.</summary>
-    private static Error? WriteBundle(LaunchRequest request, string workDir) =>
+    private Error? WriteBundle(LaunchRequest request, string workDir) =>
         request is { Attended: false, Step.Bundle: { } bundle }
-            ? PackBundleFiles.Write(StepEnvironment.For(request).GetValueOrDefault(StepEnvironment.RunDirectory, workDir), bundle)
+            ? PackBundleFiles.Write(StepEnvironment.For(request, parts.Options.SindriHome).GetValueOrDefault(StepEnvironment.RunDirectory, workDir), bundle)
             : null;
 
     /// <summary>The Step's pack and its declared read facts, in its run directory before the session starts; the first refusal, else null.</summary>
-    private static async ValueTask<Error?> WriteStepFiles(LaunchRequest request, string workDir, CancellationToken cancellationToken) =>
-        WriteBundle(request, workDir) ?? await WriteFacts(request, workDir, cancellationToken).ConfigureAwait(false) ?? await WriteOutputFolder(request, workDir, cancellationToken).ConfigureAwait(false);
+    private async ValueTask<Error?> WriteStepFiles(LaunchRequest request, string workDir, CancellationToken cancellationToken)
+    {
+        MakeRunDirectory(request);
+        return WriteBundle(request, workDir) ?? await WriteFacts(request, workDir, cancellationToken).ConfigureAwait(false) ?? await WriteOutputFolder(request, workDir, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>SB17: the Step's own run directory under Sindri's home (0700), made before its files and before the sandbox checks that it exists; nothing without a home (the run directory is then the worktree).</summary>
+    private void MakeRunDirectory(LaunchRequest request)
+    {
+        if (!request.Attended && parts.Options.SindriHome is not null && StepEnvironment.RunDirectoryOf(request, parts.Options.SindriHome) is { } runDirectory)
+        {
+            OwnerOnly.EnsureDirectory(runDirectory);
+        }
+    }
 
     /// <summary>The folder the Step's outputs go to, made and excluded from git before the session starts (an attended launch has no Step and no outputs).</summary>
-    private static async ValueTask<Error?> WriteOutputFolder(LaunchRequest request, string workDir, CancellationToken cancellationToken) =>
+    private async ValueTask<Error?> WriteOutputFolder(LaunchRequest request, string workDir, CancellationToken cancellationToken) =>
         request is { Attended: false, Step: not null }
-            ? await StepFactWriter.Outputs(StepEnvironment.For(request).GetValueOrDefault(StepEnvironment.RunDirectory, workDir), cancellationToken).ConfigureAwait(false)
+            ? await StepFactWriter.Outputs(StepEnvironment.For(request, parts.Options.SindriHome).GetValueOrDefault(StepEnvironment.RunDirectory, workDir), cancellationToken).ConfigureAwait(false)
             : null;
 
     /// <summary>The Step's declared read facts, as files in its run directory before the session starts (an attended launch has none, as it has no bundle: a human open has no Step directory and no brief to name the files); an error when a name is refused.</summary>
-    private static async ValueTask<Error?> WriteFacts(LaunchRequest request, string workDir, CancellationToken cancellationToken) =>
+    private async ValueTask<Error?> WriteFacts(LaunchRequest request, string workDir, CancellationToken cancellationToken) =>
         request is { Attended: false, Step.Facts: { Count: > 0 } facts }
-            ? await StepFactWriter.Write(StepEnvironment.For(request).GetValueOrDefault(StepEnvironment.RunDirectory, workDir), facts, cancellationToken).ConfigureAwait(false)
+            ? await StepFactWriter.Write(StepEnvironment.For(request, parts.Options.SindriHome).GetValueOrDefault(StepEnvironment.RunDirectory, workDir), facts, cancellationToken).ConfigureAwait(false)
             : null;
 
     /// <summary>Where the session runs: the holdout evaluator's own scratch checkout at the head sha (removed with the launch, LN-LCH2), else the launch's worktree or the repo.</summary>
@@ -209,7 +221,7 @@ internal sealed partial class Launcher
 
     private Dictionary<string, string> Environment(LaunchRequest request, string workDir)
     {
-        var env = new Dictionary<string, string>(StepEnvironment.For(request), StringComparer.Ordinal)
+        var env = new Dictionary<string, string>(StepEnvironment.For(request, parts.Options.SindriHome), StringComparer.Ordinal)
         {
             ["AW_SINDRI_CHILD"] = "1",
             ["AW_SINDRI_ITEM"] = request.Item.Value,

@@ -9260,7 +9260,8 @@ Aw.Sindri.Core.Launch.Argv.ArgvInputs.PolicyFilePath.get -> string?
 Aw.Sindri.Core.Launch.Argv.ArgvInputs.PolicyFilePath.init -> void
 Aw.Sindri.Core.Launch.Argv.StepForms
 const Aw.Sindri.Core.Launch.StepEnvironment.RunDirectory = "AW_SINDRI_RUN_DIR" -> string!
-static Aw.Sindri.Core.Launch.StepEnvironment.For(Aw.Sindri.Core.Launch.LaunchRequest! request) -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+static Aw.Sindri.Core.Launch.StepEnvironment.For(Aw.Sindri.Core.Launch.LaunchRequest! request, string? sindriHome) -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+static Aw.Sindri.Core.Launch.StepEnvironment.RunDirectoryOf(Aw.Sindri.Core.Launch.LaunchRequest! request, string? sindriHome) -> string?
 Aw.Sindri.Core.Launch.StepEnvironment
 const Aw.Sindri.Core.Launch.StepEnvironment.Instance = "AW_SINDRI_INSTANCE" -> string!
 Aw.Sindri.Core.Launch.Argv.ArgvInputs.ArgvInputs(Aw.Sindri.Core.Ids.ItemId Item, string! RepoPath, string! SessionName, string! Seed, Aw.Sindri.Core.Ids.SessionId? SessionId = null, string? McpConfigPath = null, Aw.Sindri.Core.Launch.StepArgs? Step = null, string? PolicyFilePath = null) -> void
@@ -10839,6 +10840,8 @@ static Aw.Sindri.Core.Launch.RecordedProbe.operator !=(Aw.Sindri.Core.Launch.Rec
 static Aw.Sindri.Core.Launch.RecordedProbe.operator ==(Aw.Sindri.Core.Launch.RecordedProbe? left, Aw.Sindri.Core.Launch.RecordedProbe? right) -> bool
 Aw.Sindri.Core.Launch.StartedLaunch.ChosenSession.get -> string?
 Aw.Sindri.Core.Launch.StartedLaunch.ChosenSession.init -> void
+Aw.Sindri.Core.Launch.StartedLaunch.RunDirectory.get -> string?
+Aw.Sindri.Core.Launch.StartedLaunch.RunDirectory.init -> void
 Aw.Sindri.Core.Launches.AgentSpend
 Aw.Sindri.Core.Launches.AgentSpend.<Clone>$() -> Aw.Sindri.Core.Launches.AgentSpend!
 Aw.Sindri.Core.Launches.AgentSpend.AgentSpend(decimal Usd, long Tokens, Aw.Sindri.Core.Launches.SpendBasis Basis) -> void

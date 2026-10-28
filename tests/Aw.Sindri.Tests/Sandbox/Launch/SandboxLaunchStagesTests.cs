@@ -10,9 +10,9 @@ using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Infrastructure.Launch;
 using Aw.Sindri.Infrastructure.Sandbox;
 using Aw.Sindri.Infrastructure.Sandbox.Launch;
-using Aw.Sindri.Tests.Sandbox.Egress;
 using Aw.Sindri.Testing;
 using Aw.Sindri.Testing.Sandbox;
+using Aw.Sindri.Tests.Sandbox.Egress;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Aw.Sindri.Tests.Sandbox.Launch;
@@ -42,7 +42,7 @@ public sealed class SandboxLaunchStagesTests : IDisposable
         new(new EgressService(new FakeEgressResolver(new Dictionary<string, System.Net.IPAddress[]>(StringComparer.Ordinal)), new FakeEgressDialer(), static _ => "/nonexistent/socat", Path.Combine(_temp.Path, "run")));
 
     private static LaunchRequest Step() =>
-        A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: null, Ref: new StepRef("build", "agent"))).Build();
+        A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: null, Ref: new StepRef("build", "agent"))).OnInstance(InstanceAddress.From("ITM-1/spec/1"), RunToken.For(1, 1)).Build();   // a real Step: an instance address with slashes and a run token
 
     [Fact]
     public async Task Request_names_the_launch_paths_net_host_login_and_learn_history()
@@ -54,10 +54,12 @@ public sealed class SandboxLaunchStagesTests : IDisposable
         Expect.True(built.IsSuccess);
         var r = built.Value;
         Expect.Equal(request.Launch, r.Launch);
-        Expect.Equal("/run/area/" + request.Launch.Value, r.Paths.RunArea);
+        Expect.Equal(SandboxRequests.SindriHome + "/launch/areas/" + request.Launch.Value, r.Paths.RunArea);
+        Expect.Equal(SandboxRequests.SindriHome + "/workflow/runs/WFI-1/build/" + request.Launch.Value, r.Paths.RunDirectory);
         Expect.Equal("/net/" + request.Launch.Value, r.Net.NetDir);
         Expect.Equal(7480, r.Net.SindriPort);
         Expect.True(!r.Attended && r.Login is { Source: ModelLoginSource.OwnerCopy });
+        Expect.Equal("sindri/" + WorkflowInstanceId.Of(InstanceAddress.From("ITM-1/spec/1")).Value + "/1", r.RunNamespace);   // the instance id, never the address with its slashes
         Expect.True(r.Learn is { } learn && learn.Now == _clock.GetUtcNow());
         Expect.Equal("web", r.Repo.Value);   // no profile repo: the directory's name
     }
@@ -121,7 +123,7 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     }
 
     private static LaunchRequest Asked(StepPolicy policy) =>
-        A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: policy, Ref: new StepRef("build", "agent"))).Build();
+        A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: policy, Ref: new StepRef("build", "agent"))).OnInstance(InstanceAddress.From("ITM-1/spec/1"), RunToken.For(1, 1)).Build();
 
     private async Task<(SandboxRequest Request, SandboxPlan Plan)> PlanFor(StepPolicy policy)
     {
@@ -153,7 +155,9 @@ public sealed class SandboxLaunchStagesTests : IDisposable
 
         public ValueTask<string> GitCommonDir(string repoPath, CancellationToken cancellationToken) => ValueTask.FromResult(repoPath + "/.git");
 
-        public string RunAreaFor(LaunchId launch) => "/run/area/" + launch.Value;
+        public string RunAreaFor(LaunchId launch) => SandboxRequests.SindriHome + "/launch/areas/" + launch.Value;
+
+        public string? RunDirectoryFor(LaunchRequest request) => SandboxRequests.SindriHome + "/workflow/runs/WFI-1/build/" + request.Launch.Value;
 
         public string NetDirFor(LaunchId launch) => "/net/" + launch.Value;
 

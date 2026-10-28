@@ -177,7 +177,7 @@ internal sealed partial class Launcher(LauncherParts parts) : ILauncher, ILaunch
             return null;   // the host didn't answer in time: the start that follows has its own bound
         }
 
-        return new StartedLaunch(session, ViewerOutcome.Skipped, host.AttachArgv(session), entry.Source, entry.ArgvHash ?? string.Empty);
+        return new StartedLaunch(session, ViewerOutcome.Skipped, host.AttachArgv(session), entry.Source, entry.ArgvHash ?? string.Empty) { RunDirectory = RunDirectoryOf(request) };
     }
 
     private Error? Refusal(LaunchRequest request)
@@ -255,7 +255,7 @@ internal sealed partial class Launcher(LauncherParts parts) : ILauncher, ILaunch
             throw;
         }
 
-        return new StartedLaunch(started.Value, viewer, host.AttachArgv(started.Value), source.Source, source.Item2) { ChosenSession = prepared.Session, Sandbox = prepared.Sandbox };
+        return new StartedLaunch(started.Value, viewer, host.AttachArgv(started.Value), source.Source, source.Item2) { ChosenSession = prepared.Session, Sandbox = prepared.Sandbox, RunDirectory = RunDirectoryOf(request) };
     }
 
     private async ValueTask<LaunchResult> RunOnViewer(LaunchRequest request, ISessionHost host, (string Name, string WorkDir, List<string> Argv) session, ((CatalogSource Source, string Hash) Entry, string? Chosen, SandboxSummary? Sandbox) started, CancellationToken cancellationToken)
@@ -266,7 +266,7 @@ internal sealed partial class Launcher(LauncherParts parts) : ILauncher, ILaunch
             : await Background(cancellationToken).ConfigureAwait(false);
         if (outcome.Kind != ViewerOutcomeKind.Failed)
         {
-            return new StartedLaunch(none, outcome, session.Argv, started.Entry.Source, started.Entry.Hash) { ChosenSession = started.Chosen, Sandbox = started.Sandbox };
+            return new StartedLaunch(none, outcome, session.Argv, started.Entry.Source, started.Entry.Hash) { ChosenSession = started.Chosen, Sandbox = started.Sandbox, RunDirectory = RunDirectoryOf(request) };
         }
 
         _ = await host.Stop(none, CancellationToken.None).ConfigureAwait(false);   // a viewer that started a thread before failing
@@ -287,4 +287,7 @@ internal sealed partial class Launcher(LauncherParts parts) : ILauncher, ILaunch
             return ViewerOutcome.Failed(SindriErrors.LaunchTimedOut.Code, "the viewer did not return within its window");
         }
     }
+
+    // The run directory the Step got (AW_SINDRI_RUN_DIR): the same pure rule Prepare used, so a relaunch that stays on a live session names it too.
+    private string? RunDirectoryOf(LaunchRequest request) => request.Attended ? null : StepEnvironment.RunDirectoryOf(request, parts.Options.SindriHome);
 }

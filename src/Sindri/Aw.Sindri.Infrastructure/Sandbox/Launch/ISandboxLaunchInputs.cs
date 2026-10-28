@@ -22,6 +22,11 @@ internal interface ISandboxLaunchInputs
     /// <returns>The path.</returns>
     public string RunAreaFor(LaunchId launch);
 
+    /// <summary>The Step's run directory the launcher makes (<see cref="StepEnvironment.RunDirectoryOf"/> over Sindri's own home), or null for a launch with none.</summary>
+    /// <param name="request">The launch.</param>
+    /// <returns>The path, or null.</returns>
+    public string? RunDirectoryFor(LaunchRequest request);
+
     /// <summary>The short per-launch socket directory on the host.</summary>
     /// <param name="launch">The launch.</param>
     /// <returns>The path.</returns>

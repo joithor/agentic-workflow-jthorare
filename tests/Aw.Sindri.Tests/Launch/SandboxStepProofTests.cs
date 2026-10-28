@@ -1,5 +1,6 @@
 using Aw.Kernel;
 using Aw.Kernel.Testing;
+using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
@@ -59,6 +60,8 @@ public sealed class SandboxStepProofTests : IDisposable
         _ = Assert.Single(_sandbox.Wrapped);
         Assert.Equal(1, _launch.Prepared);
         Assert.NotNull(started.Sandbox);
+        Assert.True(_launch.Chosen is not null);   // claude-code pre-chooses its session id: the sandbox step gets it
+        Assert.Equal(started.ChosenSession, _launch.Chosen?.Value);
         Assert.True(_tmux.HasSession(started.Host.Name));
 
         var stopped = await launcher.Stop(request.Launch, TestContext.Current.CancellationToken);
@@ -73,10 +76,13 @@ public sealed class SandboxStepProofTests : IDisposable
     {
         public int Prepared { get; private set; }
 
+        public SessionId? Chosen { get; private set; }
+
         public List<LaunchId> Released { get; } = [];
 
-        public async ValueTask<Result<PreparedSandbox>> Prepare(LaunchRequest request, IReadOnlyList<string> argv, CancellationToken cancellationToken)
+        public async ValueTask<Result<PreparedSandbox>> Prepare(LaunchRequest request, IReadOnlyList<string> argv, SessionId? chosenSession, CancellationToken cancellationToken)
         {
+            Chosen = chosenSession;
             var plan = sandbox.Plan(SandboxRequests.ReadOnly with { Launch = request.Launch });
             if (plan.IsError)
             {

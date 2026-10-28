@@ -204,6 +204,19 @@ public sealed class NeedsYouBarViewModelTests
         Assert.Equal("approve", Assert.Single(_server.CompleteCalls).Body.Outcome);
     }
 
+    // #1170: the golden's desk requires fact:output (a file), and the engine refuses a 'done' report without it ("step.produce reported 'done' without fact:output"). The bar has no file to give,
+    // so it must not send: the person completes it from the row's sheet, which carries the file inputs (the spec's "or sends the human to the sheet").
+    [Fact]
+    public async Task Approve_on_a_row_whose_step_needs_an_output_file_sends_nothing_and_does_not_show_it_done()
+    {
+        var bar = await Bar(NeedsYouRows.Desk(), read: true);
+
+        await bar.PressApprove();
+
+        Assert.Empty(_server.CompleteCalls);
+        Assert.False(bar.IsApproved);
+    }
+
     [Fact]
     public async Task Reading_to_the_end_clears_the_question_and_showing_another_request_does_too()
     {

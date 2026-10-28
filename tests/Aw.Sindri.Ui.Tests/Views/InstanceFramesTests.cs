@@ -145,10 +145,17 @@ public sealed class InstanceFramesTests : FrameHost
         Assert.Equal(served.Count(c => !Protected(c) && c.Verb == StatusVerb.Complete), Buttons(window, "CommandComplete").Count);
         Assert.Equal(served.Count(c => !Protected(c) && c.Verb == StatusVerb.Handback), Buttons(window, "CommandHandBack").Count);
         Assert.Equal(served.Count(c => !Protected(c) && c.Verb == StatusVerb.Cancel), Buttons(window, "CommandAsk").Count);
-        var command = window.GetVisualDescendants().OfType<Border>().First(b => b.Name == "CommandLabelName" && b.IsEffectivelyVisible);   // the peer's name, not the view model's (a TextBlock's peer ignores one)
-        var heard = Heard.Wrapper(command);
-        Assert.Equal(((ExpandedCommandViewModel)command.DataContext!).Name, heard);
-        Assert.Contains(Labels.AvailableWithU8b, heard, StringComparison.Ordinal);
+        var chipped = served.Count(c => !Protected(c) && c.Verb is not (StatusVerb.Takeover or StatusVerb.Cancel or StatusVerb.Handback or StatusVerb.Complete));
+        if (chipped > 0)
+        {
+            var command = window.GetVisualDescendants().OfType<Border>().First(b => b.Name == "CommandLabelName" && b.IsEffectivelyVisible);   // the peer's name, not the view model's (a TextBlock's peer ignores one)
+            var heard = Heard.Wrapper(command);
+            Assert.Equal(((ExpandedCommandViewModel)command.DataContext!).Name, heard);
+            Assert.Contains(Labels.AvailableWithU8b, heard, StringComparison.Ordinal);
+        }
+
+        var complete = Buttons(window, "CommandComplete").Single();   // the frame's own send: its button is named by the command's Name (AutomationProperties.Name="{Binding Name}")
+        Assert.Equal(((ExpandedCommandViewModel)complete.DataContext!).Name, Heard.Name(complete));
         Frame(window, "triage-desk");
     });
 

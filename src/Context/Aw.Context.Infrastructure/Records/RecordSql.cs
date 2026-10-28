@@ -80,6 +80,13 @@ internal static class RecordSql
     internal const string ReadVectors =
         "SELECT seq, key, model, text_hash, dim, vec FROM embedding WHERE space = @space AND seq > @after ORDER BY seq LIMIT @limit";
 
+    /// <summary>The embed job's work list: chunks of live records with no vector of this model made from their current text, newest-updated record first.</summary>
+    internal const string ChunksToEmbed =
+        "SELECT c.key, c.text, c.text_hash FROM chunk c JOIN source_record r ON r.key = c.record " +
+        "WHERE r.blocked = 0 AND r.removed_at IS NULL " +
+        "AND NOT EXISTS (SELECT 1 FROM embedding e WHERE e.space = 'chunk' AND e.key = c.key AND e.model = @model AND e.text_hash = c.text_hash) " +
+        "ORDER BY r.updated_at IS NULL, r.updated_at DESC, c.record, c.seq LIMIT @limit";
+
     /// <summary>A re-embed replaces the row (a new seq), but only for a chunk that still has the hash.</summary>
     internal const string ReplaceChunkVector =
         "DELETE FROM embedding WHERE space = 'chunk' AND key = @key AND model = @model AND EXISTS (SELECT 1 FROM chunk WHERE key = @key AND text_hash = @hash)";
@@ -118,4 +125,20 @@ internal static class RecordSql
         "(SELECT COUNT(*) FROM embedding WHERE space = 'chunk' AND key IN (SELECT key FROM chunk WHERE record IN (SELECT key FROM source_record WHERE source = @source)))";
 
     internal const string DeleteRecords = "DELETE FROM source_record WHERE source = @source";
+
+    /// <summary>
+    /// The lexical leg (spec §6.1): chunks that match, of records that are stored, not blocked and in an allowed audience. The mask is part of the query, so the limit
+    /// is taken after it. A record with no audience never matches the IN list.
+    /// </summary>
+    internal const string LexicalSearch =
+        "SELECT c.key, r.title, c.line_start, c.line_end, bm25(chunk_fts) " +
+        "FROM chunk_fts " +
+        "JOIN chunk c ON c.id = chunk_fts.rowid " +
+        "JOIN source_record r ON r.key = c.record " +
+        "WHERE chunk_fts MATCH @match AND r.removed_at IS NULL AND r.blocked = 0 AND r.audience_key IN (SELECT value FROM json_each(@audiences)) " +
+        "ORDER BY bm25(chunk_fts), c.id " +
+        "LIMIT @limit";
+
+    /// <summary>Whether the store holds any chunk at all, whatever its audience.</summary>
+    internal const string AnyChunk = "SELECT EXISTS (SELECT 1 FROM chunk)";
 }

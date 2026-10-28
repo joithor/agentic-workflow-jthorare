@@ -21,6 +21,7 @@ using Aw.Context.Core.Search;
 using Aw.Context.Core.Sources;
 using Aw.Context.Core.Subgraph;
 using Aw.Context.Core.Sync;
+using Aw.Context.Core.Vectors;
 using Aw.Context.Core.WholeMap;
 using Aw.Kernel;
 
@@ -38,9 +39,12 @@ public sealed class FakeContextEngine : IContextEngine
 
     private readonly ProbeSet? _probes;
 
-    private FakeContextEngine(ProbeSet? probes)
+    private readonly Func<EmbedRecordsRequest, Result<EmbedRecordsReport>>? _embed;
+
+    private FakeContextEngine(ProbeSet? probes, Func<EmbedRecordsRequest, Result<EmbedRecordsReport>>? embed = null)
     {
         _probes = probes;
+        _embed = embed;
     }
 
     /// <summary>The one instance, with no probe file.</summary>
@@ -50,6 +54,11 @@ public sealed class FakeContextEngine : IContextEngine
     /// <param name="probes">The probes of the file.</param>
     /// <returns>The engine.</returns>
     public static FakeContextEngine WithProbes(ProbeSet probes) => new(probes);
+
+    /// <summary>An engine like <see cref="Instance"/> whose embed runs answer with <paramref name="embed"/> (a report, or the error of a model that is down).</summary>
+    /// <param name="embed">Answers one embed request.</param>
+    /// <returns>The engine.</returns>
+    public static FakeContextEngine WithEmbed(Func<EmbedRecordsRequest, Result<EmbedRecordsReport>> embed) => new(probes: null, embed);
 
     /// <inheritdoc />
     public Result<ContextSettings> CheckSettings(JsonElement? section, IReadOnlyList<ProfileRepoEntry> repos) =>
@@ -74,6 +83,10 @@ public sealed class FakeContextEngine : IContextEngine
     /// <summary>No map: every map call answers SND-CONTEXT-030.</summary>
     public ValueTask<Result<SyncReport>> Sync(string? source, ContextScope scope, CancellationToken cancellationToken) =>
         ValueTask.FromResult<Result<SyncReport>>(Down());
+
+    /// <summary>An embed run answers like every query (all sources unavailable) unless the engine came from <see cref="WithEmbed"/>.</summary>
+    public ValueTask<Result<EmbedRecordsReport>> Embed(EmbedRecordsRequest request, ContextScope scope, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_embed is null ? (Result<EmbedRecordsReport>)Down() : _embed(request));
 
     /// <summary>The fake runs no feeds.</summary>
     public ValueTask<Result<SyncReport>> Tick(ContextScope scope, CancellationToken cancellationToken) =>

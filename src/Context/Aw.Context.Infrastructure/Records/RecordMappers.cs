@@ -35,6 +35,8 @@ internal static class RecordMappers
     internal static IRowMapper<RecordLink> Link { get; } = new Mapper<RecordLink>(r =>
         new RecordLink(r.GetString(0), RecordWire.Link(r.GetString(1)), Text(r, 2), Text(r, 3) is { } to ? RecordKey.From(to) : null));
 
+    internal static IRowMapper<ChunkToEmbed> ToEmbed { get; } = new Mapper<ChunkToEmbed>(r => new ChunkToEmbed(r.GetString(0), r.GetString(1), r.GetString(2)));
+
     internal static IRowMapper<RecordChunk> Chunk { get; } = new Mapper<RecordChunk>(r =>
         new RecordChunk(r.GetInt32(0), r.GetString(1), r.GetInt32(2), r.GetString(3), r.IsDBNull(4) ? null : r.GetInt32(4), r.IsDBNull(5) ? null : r.GetInt32(5)));
 

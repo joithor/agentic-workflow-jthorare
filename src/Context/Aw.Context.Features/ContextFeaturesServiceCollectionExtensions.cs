@@ -19,8 +19,8 @@ using Aw.Context.Core.Review;
 using Aw.Context.Core.ScopeGraph;
 using Aw.Context.Core.Search;
 using Aw.Context.Core.Subgraph;
-using Aw.Context.Core.Sync;
 using Aw.Context.Core.Symbols;
+using Aw.Context.Core.Sync;
 using Aw.Context.Core.Walks;
 using Aw.Context.Core.WholeMap;
 using Aw.Context.Features.Adjudicate;
@@ -29,6 +29,7 @@ using Aw.Context.Features.BuildMap;
 using Aw.Context.Features.CheckMap;
 using Aw.Context.Features.CheckRetention;
 using Aw.Context.Features.CleanMap;
+using Aw.Context.Features.EmbedRecords;
 using Aw.Context.Features.EvalMap;
 using Aw.Context.Features.EvalProbes;
 using Aw.Context.Features.EvalPurge;
@@ -104,8 +105,10 @@ public static class ContextFeaturesServiceCollectionExtensions
         services.TryAddSingleton<IMergeHistory>(sp => sp.GetRequiredService<UnconfiguredBacktest>());
         services.TryAddSingleton<IAsOfDocs>(sp => sp.GetRequiredService<UnconfiguredBacktest>());
         services.TryAddSingleton<IEvalStore>(sp => sp.GetRequiredService<UnconfiguredBacktest>());
-        return services.AddMapHeads().AddIndexSync().AddContextSlices();
+        return services.AddMapHeads().AddIndexSync().AddRecordSearch().AddEmbedRecords().AddContextSlices();
     }
+
+    private static IServiceCollection AddRecordSearch(this IServiceCollection services) => services.AddScoped<RecordSearch>();
 
     private static IServiceCollection AddIndexSync(this IServiceCollection services) => services.AddScoped<IIndexSync, IndexSync>();
 

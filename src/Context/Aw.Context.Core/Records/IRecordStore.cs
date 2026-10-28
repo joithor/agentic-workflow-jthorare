@@ -60,6 +60,13 @@ public interface IRecordStore
     /// <returns>Rows in 'Seq' order.</returns>
     public ValueTask<Result<IReadOnlyList<VectorRow>>> Vectors(VectorSpace space, long afterSeq, int limit, CancellationToken cancellationToken);
 
+    /// <summary>Lists chunks that have no vector for a model, or one made from other text, newest-updated record first (spec §5.6): the embed job's work list.</summary>
+    /// <param name="model">The model name and digest.</param>
+    /// <param name="limit">At most this many, 1 to 10,000.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>Chunks of records that are neither blocked nor removed, records ordered by 'UpdatedAt' newest first (none last), then by key and 'Seq'; none when all are embedded.</returns>
+    public ValueTask<Result<IReadOnlyList<ChunkToEmbed>>> ChunksToEmbed(string model, int limit, CancellationToken cancellationToken);
+
     /// <summary>Removes vectors by key (the map build retires a node), moving the delete epoch when any went.</summary>
     /// <param name="space">Which space.</param>
     /// <param name="keys">The keys.</param>

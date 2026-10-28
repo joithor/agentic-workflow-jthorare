@@ -683,12 +683,12 @@ edges:
   - from: Sindri
     to: Connectors
     kind: project
-    status: planned
+    status: current
     note: "Host only (Aw.Sindri.Features already has 4 project references, the limit): the Host adapter maps IConnector onto Context's RecordFeed"
   - from: Sindri
     to: Connectors
     kind: compose
-    status: planned
+    status: current
     note: "Host calls AddConnectorsFeatures and AddConnectorsInfrastructure and nothing else from them"
 
 exceptions:

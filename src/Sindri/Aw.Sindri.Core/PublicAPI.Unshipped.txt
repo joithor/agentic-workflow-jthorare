@@ -21107,3 +21107,15 @@ Aw.Sindri.Core.Sandbox.Credentials.AgentHomes
 static Aw.Sindri.Core.Sandbox.Credentials.AgentHomes.For(string! sindriHome, Aw.Sindri.Core.Launch.AgentId target) -> string!
 Aw.Sindri.Core.Sandbox.Credentials.ISandboxLogin
 Aw.Sindri.Core.Sandbox.Credentials.ISandboxLogin.Run(Aw.Sindri.Core.Launch.AgentId target, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Aw.Kernel.Result<int>!>!
+Aw.Sindri.Core.Launch.IPrepareCache
+Aw.Sindri.Core.Launch.IPrepareCache.Has(string! key) -> bool
+Aw.Sindri.Core.Launch.IPrepareCache.Restore(string! key, string! packageDirectory, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>
+Aw.Sindri.Core.Launch.IPrepareCache.Store(string! key, string! packageDirectory, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>
+Aw.Sindri.Core.Launch.IPrepareSource
+Aw.Sindri.Core.Launch.IPrepareSource.FileAtCommit(string! repoPath, string! commit, string! path, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<string?>!>
+Aw.Sindri.Core.Launch.IWorkspacePrepare
+Aw.Sindri.Core.Launch.IWorkspacePrepare.Prepare(Aw.Sindri.Core.Launch.LaunchRequest! request, string! workDirectory, System.IProgress<string!>? progress, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>
+Aw.Sindri.Core.Launch.LaunchRequest.BaseCommit.get -> string?
+Aw.Sindri.Core.Launch.LaunchRequest.BaseCommit.init -> void
+Aw.Sindri.Core.Launch.PrepareKey
+static Aw.Sindri.Core.Launch.PrepareKey.Of(string! lockfile, System.Collections.Generic.IReadOnlyList<string!>! allowScripts) -> string!

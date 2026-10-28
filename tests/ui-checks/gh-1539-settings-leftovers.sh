@@ -104,7 +104,6 @@ APP_WRAPPER_PID=$!
 
 onyx_title="Connect Linear and Slack (Onyx)"
 wf_title="Approve the workflows"
-not_now=(--type Button --name "Not now")
 
 # Settings at 1280x800, by the Ctrl+, chord.
 timeout 120 "$DRIVER" window --width 1280 --height 800 >/dev/null 2>&1 || setup_fail "could not size the window"
@@ -127,15 +126,9 @@ wait_step() { # <name prefix> <tries of 0.5 s>
 onyx_id="$(wait_step "$onyx_title, " 240)"
 [ -n "$onyx_id" ] || setup_fail "no '$onyx_title' step in Settings"
 
-# The Onyx step must say skipped. With Docker unusable it may do so on its own; if it still offers "Not now", press it once.
-onyx_skipped="$(wait_step "$onyx_title, skipped" 20)"
-if [ -z "$onyx_skipped" ]; then
-  "$DRIVER" action --node-id "$onyx_id" --do expand >/dev/null 2>&1 || true
-  if "$DRIVER" wait-for "${not_now[@]}" --state visible --wait-ms 10000 >/dev/null 2>&1; then
-    "$DRIVER" click "${not_now[@]}" >/dev/null 2>&1 || setup_fail "the Not now click was not accepted by the driver"
-  fi
-  onyx_skipped="$(wait_step "$onyx_title, skipped" 60)"
-fi
+# The Onyx step must say skipped because Docker is unusable (its "Install Docker" line carries the link). "Not now" would skip it
+# too, but with no link, so it is never pressed: a stub that didn't take is a setup failure.
+onyx_skipped="$(wait_step "$onyx_title, skipped" 120)"
 [ -n "$onyx_skipped" ] || setup_fail "the Onyx step never said skipped (with a docker stub first on PATH: $STUB_DIR/docker)"
 
 # ---- Part 1: the Docker URL is a clickable link -------------------------------------------------------------------------------

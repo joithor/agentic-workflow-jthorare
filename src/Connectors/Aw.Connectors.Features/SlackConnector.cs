@@ -12,7 +12,12 @@ namespace Aw.Connectors.Features;
 /// The Slack source as an <see cref="IConnector"/> (owned index spec §5.2, §5.3): <see cref="Pull"/> runs the PullSlack slice over the profile's channels from a cursor that is the per-channel watermark
 /// map; a rate limit that stopped the run before any channel moved is AW-CONNECTORS-009 with the reset time, one that stopped it after some progress returns that progress and the next pull reports the limit.
 /// </summary>
-internal sealed partial class SlackConnector(SlackSettings settings, ISlackReader reader, IService<PullSlackRequest, PullSlackResponse> pull) : IConnector
+internal sealed partial class SlackConnector(
+    SlackSettings settings,
+    ISlackReader reader,
+    IService<PullSlackRequest, PullSlackResponse> pull,
+    TimeSpan? window = null,
+    TimeProvider? clock = null) : IConnector
 {
     public ConnectorDescription Describe() => new("slack", "Slack");
 
@@ -20,7 +25,7 @@ internal sealed partial class SlackConnector(SlackSettings settings, ISlackReade
     {
         var parsed = SlackCursor.Parse(after?.Value);
         var cursor = parsed ?? SlackCursor.Empty;
-        var result = await pull.Handle(new PullSlackRequest(settings.Channels, settings.Workspace, cursor, limit), cancellationToken).ConfigureAwait(false);
+        var result = await pull.Handle(new PullSlackRequest(settings.Channels, settings.Workspace, cursor, limit) { WindowStart = window is { } back ? (clock ?? TimeProvider.System).GetUtcNow() - back : null }, cancellationToken).ConfigureAwait(false);
         if (result.IsError)
         {
             return result.Error;

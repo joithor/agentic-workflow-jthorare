@@ -33,3 +33,5 @@ static Aw.Connectors.Features.PullGitHub.PullGitHubRequest.operator !=(Aw.Connec
 static Aw.Connectors.Features.PullGitHub.PullGitHubRequest.operator ==(Aw.Connectors.Features.PullGitHub.PullGitHubRequest? left, Aw.Connectors.Features.PullGitHub.PullGitHubRequest? right) -> bool
 static Aw.Connectors.Features.PullGitHub.PullGitHubResponse.operator !=(Aw.Connectors.Features.PullGitHub.PullGitHubResponse? left, Aw.Connectors.Features.PullGitHub.PullGitHubResponse? right) -> bool
 static Aw.Connectors.Features.PullGitHub.PullGitHubResponse.operator ==(Aw.Connectors.Features.PullGitHub.PullGitHubResponse? left, Aw.Connectors.Features.PullGitHub.PullGitHubResponse? right) -> bool
+Aw.Connectors.Features.PullGitHub.PullGitHubRequest.CommentCap.get -> int
+Aw.Connectors.Features.PullGitHub.PullGitHubRequest.CommentCap.init -> void

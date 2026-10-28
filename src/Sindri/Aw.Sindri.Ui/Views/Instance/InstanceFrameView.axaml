@@ -91,12 +91,7 @@
                           <TextBlock Classes="caption" Text="{Binding Why}" TextWrapping="Wrap" />
                           <Button.Flyout>
                             <Flyout Placement="BottomEdgeAlignedLeft">
-                              <StackPanel Spacing="4" MaxWidth="420" DataContext="{Binding Panel}" x:DataType="inst:WhyPanelViewModel">
-                                <TextBlock Classes="caption" Text="{Binding Command}" TextWrapping="Wrap" />
-                                <ItemsControl ItemsSource="{Binding Candidates}" />
-                                <ItemsControl ItemsSource="{Binding Files}" />
-                                <ItemsControl ItemsSource="{Binding Omitted}" />
-                              </StackPanel>
+                              <iv:WhyPanel DataContext="{Binding Panel}" />
                             </Flyout>
                           </Button.Flyout>
                         </Button>

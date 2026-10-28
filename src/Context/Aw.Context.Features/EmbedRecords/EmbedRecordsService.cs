@@ -16,24 +16,26 @@ internal sealed class EmbedRecordsService(IRecordStore store, IChunkEmbedder emb
     public async ValueTask<Result<EmbedRecordsReport>> Handle(EmbedRecordsRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (request.MaxChunks is < 1 or > 100_000 || request.BatchSize is < 1 or > 32)
+        if (!InRange(request))
         {
             return ContextErrors.QueryInvalid.With("an embed run takes 1 to 100,000 chunks in batches of 1 to 32");
         }
 
         var embedded = 0;
         var stored = 0;
+        string? stuckOn = null;
         while (embedded < request.MaxChunks)
         {
             var batch = await store.ChunksToEmbed(embedder.Model, Math.Min(request.BatchSize, request.MaxChunks - embedded), cancellationToken).ConfigureAwait(false);
-            if (batch.IsError)
+            if (batch.IsError || batch.Value.Count == 0)
             {
-                return batch.Error;
+                return batch.IsError ? batch.Error : new EmbedRecordsReport(embedded, stored, Done: true);
             }
 
-            if (batch.Value.Count == 0)
+            var worklist = Worklist(batch.Value);
+            if (worklist == stuckOn)
             {
-                return new EmbedRecordsReport(embedded, stored, Done: true);
+                return new EmbedRecordsReport(embedded, stored, Done: false);   // the same chunks and texts as the batch that stored nothing: asking again would loop
             }
 
             var kept = await EmbedAndStore(batch.Value, cancellationToken).ConfigureAwait(false);
@@ -44,16 +46,16 @@ internal sealed class EmbedRecordsService(IRecordStore store, IChunkEmbedder emb
 
             embedded += batch.Value.Count;
             stored += kept.Value;
-            if (kept.Value == 0)
-            {
-                // Nothing stuck: every chunk of the batch changed under it. Looping would ask for the same work again.
-                return new EmbedRecordsReport(embedded, stored, Done: false);
-            }
+            stuckOn = kept.Value == 0 ? worklist : null;   // nothing stuck: a changed chunk gets one retry with its new text
         }
 
         var left = await store.ChunksToEmbed(embedder.Model, 1, cancellationToken).ConfigureAwait(false);
         return left.IsError ? left.Error : new EmbedRecordsReport(embedded, stored, left.Value.Count == 0);
     }
+
+    private static bool InRange(EmbedRecordsRequest request) => request.MaxChunks is >= 1 and <= 100_000 && request.BatchSize is >= 1 and <= 32;
+
+    private static string Worklist(IReadOnlyList<ChunkToEmbed> chunks) => string.Join('\n', chunks.Select(static c => c.Key + "\t" + c.TextHash));
 
     private async ValueTask<Result<int>> EmbedAndStore(IReadOnlyList<ChunkToEmbed> chunks, CancellationToken cancellationToken)
     {

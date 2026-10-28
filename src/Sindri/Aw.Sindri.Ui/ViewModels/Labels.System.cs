@@ -163,6 +163,7 @@ internal static partial class Labels
         "context-map-refresh" => "Builds the context map again so it stays current.",
         "context-sync-gaps" => "Starts a sync for a source that has never synced.",
         "index-embed" => "Gives the indexed records their meaning vectors, so searches match by meaning as well as by words.",
+        "index-sync" => "Pulls new records from each source into the index.",
         "pr-watch" => "Watches the pull requests that wait on the forge.",
         "router-stub" => "Routes each started item to its workflow.",
         "setup" => "Keeps the setup checklist in step with the profile.",

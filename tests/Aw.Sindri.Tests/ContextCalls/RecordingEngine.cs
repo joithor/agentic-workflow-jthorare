@@ -16,6 +16,7 @@ using Aw.Context.Core.Review;
 using Aw.Context.Core.ScopeGraph;
 using Aw.Context.Core.Search;
 using Aw.Context.Core.Subgraph;
+using Aw.Context.Core.Sync;
 using Aw.Context.Core.Vectors;
 using Aw.Context.Core.WholeMap;
 using Aw.Kernel;
@@ -71,6 +72,10 @@ internal sealed class RecordingEngine(IContextEngine inner, List<(ContextCaller 
     public ValueTask<Result<SyncReport>> Sync(string? source, ContextScope scope, CancellationToken cancellationToken) => inner.Sync(source, scope, cancellationToken);
 
     public ValueTask<Result<EmbedRecordsReport>> Embed(EmbedRecordsRequest request, ContextScope scope, CancellationToken cancellationToken) => inner.Embed(request, scope, cancellationToken);
+
+    public ValueTask<Result<SyncReport>> Tick(ContextScope scope, CancellationToken cancellationToken) => inner.Tick(scope, cancellationToken);
+
+    public ValueTask<Result<IReadOnlyList<SourceProgress>>> Progress(ContextScope scope, CancellationToken cancellationToken) => inner.Progress(scope, cancellationToken);
 
     public ValueTask<Result<MapFilePreview>> PreviewMap(string path, ContextScope scope, CancellationToken cancellationToken) => inner.PreviewMap(path, scope, cancellationToken);
 

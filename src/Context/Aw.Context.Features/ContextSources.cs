@@ -5,6 +5,7 @@ using Aw.Context.Core.Linking;
 using Aw.Context.Core.Results;
 using Aw.Context.Core.Sources;
 using Aw.Context.Core.Vectors;
+using Aw.Context.Core.Sync;
 using Aw.Context.Features.RefreshDocs;
 using Aw.Context.Features.SourcesStatus;
 using Aw.Context.Features.SyncSources;
@@ -13,13 +14,14 @@ using Aw.Kernel.Services;
 
 namespace Aw.Context.Features;
 
-/// <summary>The source verbs of the facade: status, the docs refresh, the sync, the embed and the stored-state gap check (kept apart so the engine stays under the constructor limit).</summary>
+/// <summary>The source verbs of the facade: status, the docs refresh, the sync, the embed, the record-feed tick and progress, and the stored-state gap check (kept apart so the engine stays under the constructor limit).</summary>
 internal sealed class ContextSources(
     IService<SourcesStatusRequest, SourcesView> status,
     IService<RefreshDocsRequest, RefreshReport> refresh,
     IService<SyncSourcesRequest, SyncReport> sync,
     IService<EmbedRecordsRequest, EmbedRecordsReport> embed,
-    IIntentStore intents)
+    IIntentStore intents,
+    IIndexSync index)
 {
     private static readonly SourceId _onyx = SourceId.From("onyx");
 
@@ -41,6 +43,10 @@ internal sealed class ContextSources(
 
     public ValueTask<Result<EmbedRecordsReport>> Embed(EmbedRecordsRequest request, CancellationToken cancellationToken) =>
         embed.Handle(request, cancellationToken);
+
+    public ValueTask<Result<SyncReport>> Tick(ContextScope scope, CancellationToken cancellationToken) => index.Tick(scope, cancellationToken);
+
+    public ValueTask<Result<IReadOnlyList<SourceProgress>>> Progress(ContextScope scope, CancellationToken cancellationToken) => index.Progress(scope, cancellationToken);
 
     public ValueTask<Result<RefreshReport>> Refresh(ContextScope scope, CancellationToken cancellationToken) =>
         refresh.Handle(new RefreshDocsRequest(scope), cancellationToken);

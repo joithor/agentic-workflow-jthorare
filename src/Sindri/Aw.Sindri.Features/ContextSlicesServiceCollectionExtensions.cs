@@ -32,6 +32,11 @@ internal static class ContextSlicesServiceCollectionExtensions
         .AddScoped<IScheduledService, IndexEmbedService>()
         .AddSingleton(IndexEmbedService.BuiltIn);
 
+    /// <summary>The 'index-sync' service (owned-index spec §5.5) and its five-minute built-in schedule.</summary>
+    private static IServiceCollection AddIndexSyncService(this IServiceCollection services) => services
+        .AddScoped<IScheduledService, IndexSyncService>()
+        .AddSingleton(IndexSyncService.BuiltIn);
+
     /// <summary>The context engine's slices (stages S-3 and S-4): the review, promote and proposals commands and the reads of the map, lenses, subgraph and filemap.</summary>
     internal static IServiceCollection AddContextSlices(this IServiceCollection services)
     {
@@ -49,7 +54,7 @@ internal static class ContextSlicesServiceCollectionExtensions
             .AddSingleton(ContextMapRefreshService.BuiltIn)
             .AddScoped<IScheduledService, ContextConceptScanService>()
             .AddSingleton(ContextConceptScanService.BuiltIn)
-            .AddScoped<SyncGaps>().AddIndexEmbedService()
+            .AddScoped<SyncGaps>().AddIndexEmbedService().AddIndexSyncService()
             .AddScoped<ContextInputScopes>()
             .AddScoped<ContextInputFacts>()
             .AddScoped<IScopingTextShape, ContextTextShape>()

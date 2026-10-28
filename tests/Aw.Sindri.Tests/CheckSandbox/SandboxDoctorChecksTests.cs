@@ -3,12 +3,12 @@ using Aw.Kernel.Json;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Doctor;
-using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Profile;
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
-using Aw.Sindri.Tests.Sandbox;
 using Aw.Sindri.Features.CheckSandbox;
 using Aw.Sindri.Testing.Sandbox;
+using Aw.Sindri.Tests.Sandbox;
 
 namespace Aw.Sindri.Tests.CheckSandbox;
 
@@ -148,7 +148,7 @@ public sealed class SandboxDoctorChecksTests
         }
     }
 
-    internal readonly record struct ErrorDefinitionPair(Aw.Kernel.ErrorDefinition Error, string Reason);
+    internal readonly record struct ErrorDefinitionPair(ErrorDefinition Error, string Reason);
 
     private sealed class Report(params SandboxBlocker[] blockers) : ISandboxChecks
     {

@@ -12,7 +12,7 @@ public sealed record SandboxBlocker(SandboxCode Code, string Reason, string? Sou
     /// <summary>Makes the blocker of a sandbox refusal.</summary>
     /// <param name="refusal">An error made by <see cref="SandboxRefusal"/>; any other error is told as an unsupported platform, so a check never hides a failure.</param>
     /// <returns>The blocker.</returns>
-    public static SandboxBlocker Of(Aw.Kernel.Error refusal)
+    public static SandboxBlocker Of(Kernel.Error refusal)
     {
         ArgumentNullException.ThrowIfNull(refusal);
         var code = SandboxCodes.All.FirstOrDefault(c => string.Equals(c.Error.Code, refusal.Code, StringComparison.Ordinal));

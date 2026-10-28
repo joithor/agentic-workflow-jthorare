@@ -34,7 +34,7 @@ public sealed class SandboxChecksTests
         var report = await Checks(new UnavailableSandbox(), [form], [login]).Run(Token);
 
         Assert.False(report.Ready);
-        Assert.Equal<string>(["SND-LAUNCH-014", "SND-LAUNCH-015", "SND-LAUNCH-017"], [.. report.Blockers.Select(b => b.Code.Error.Code)]);
+        Assert.Equal(["SND-LAUNCH-014", "SND-LAUNCH-015", "SND-LAUNCH-017"], [.. report.Blockers.Select(b => b.Code.Error.Code)]);
         Assert.Equal(SandboxReasons.UnsupportedPlatform, report.Blockers[0].Reason);
         Assert.Empty(report.ReadyToResume);
     }
@@ -47,7 +47,7 @@ public sealed class SandboxChecksTests
 
         var report = await Checks(sandbox, logins: [login], fixture: SandboxRequests.ReadOnly).Run(Token);
 
-        Assert.Equal<string>(["SND-LAUNCH-017", "SND-LAUNCH-016"], [.. report.Blockers.Select(b => b.Code.Error.Code)]);
+        Assert.Equal(["SND-LAUNCH-017", "SND-LAUNCH-016"], [.. report.Blockers.Select(b => b.Code.Error.Code)]);
         Assert.Equal(SandboxReasons.FsDeny, report.Blockers[1].Reason);
     }
 
@@ -80,7 +80,7 @@ public sealed class SandboxChecksTests
 
         var report = await Checks(new PassThroughSandbox(), parked: parked, free: 2).Run(Token);
 
-        Assert.Equal<WorkflowInstanceId>([Instance(1), Instance(2)], [.. report.ReadyToResume]);
+        Assert.Equal([Instance(1), Instance(2)], [.. report.ReadyToResume]);
     }
 
     [Fact]

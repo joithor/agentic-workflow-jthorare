@@ -18,7 +18,7 @@ public sealed class DenialFileLocatorTests : IDisposable
 
     private static SandboxPlan PlanWith(params PlanEnvVar[] extra)
     {
-        var plan = SandboxPlanner.Build(Aw.Sindri.Core.Sandbox.SandboxMechanism.Bubblewrap, SandboxRequests.WriteScope).Value;
+        var plan = SandboxPlanner.Build(Core.Sandbox.SandboxMechanism.Bubblewrap, SandboxRequests.WriteScope).Value;
         return plan with { Environment = [.. plan.Environment.Where(e => !extra.Any(x => string.Equals(x.Name, e.Name, StringComparison.Ordinal))), .. extra] };   // the plan's own login dir would win otherwise
     }
 
@@ -69,7 +69,7 @@ public sealed class DenialFileLocatorTests : IDisposable
         var dir = Path.Combine(_temp.Path, "projects", "x");
         _ = Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, "11111111-1111-4111-8111-111111111111.jsonl"), "{}");
-        var chosen = Aw.Sindri.Core.Ids.SessionId.From("11111111-1111-4111-8111-111111111111");
+        var chosen = Core.Ids.SessionId.From("11111111-1111-4111-8111-111111111111");
 
         var session = DenialFileLocator.SessionFor(chosen, () => throw new InvalidOperationException("the reported file must not be read"));
         var (transcript, _, _) = DenialFileLocator.For(PlanWith(new PlanEnvVar("CLAUDE_CONFIG_DIR", _temp.Path, "login")), Glob, session);

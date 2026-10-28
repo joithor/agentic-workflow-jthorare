@@ -41,7 +41,7 @@ public sealed class SandboxParkedInstancesTests
     }
 
     private static WorkflowInstance Park(Trigger trigger) =>
-        Assert.IsType<Applied>(EngineFixture.Decide(Running(), Step, trigger, context: AgentOnly())).Changes[0].After;
+        Assert.IsType<Applied>(Decide(Running(), Step, trigger, context: AgentOnly())).Changes[0].After;
 
     private static Task<IReadOnlyList<ParkedOnSandbox>> Listed(WorkflowInstance parked)
     {

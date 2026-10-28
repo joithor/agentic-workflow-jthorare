@@ -66,6 +66,7 @@ public static class ContextInfrastructureServiceCollectionExtensions
             .AddSingleton<IConceptHintStore, SqliteConceptHintStore>()
             .AddSingleton<IIntentStore, SqliteIntentStore>()
             .AddSingleton<IRecordStore, SqliteRecordStore>()
+            .AddSingleton<ILexicalLeg, SqliteLexicalLeg>()
             .AddSingleton<IScopeRunStore, SqliteScopeRunStore>()
             .AddSingleton<IMapFileReader, MapFileReader>()
             .AddSingleton<IMapSearchIndexFactory, SqliteMapSearchIndexFactory>()

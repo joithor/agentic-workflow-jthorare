@@ -9031,3 +9031,62 @@ override Aw.Context.Core.Concepts.PinRollupResult.GetHashCode() -> int
 override Aw.Context.Core.Concepts.PinRollupResult.ToString() -> string!
 static Aw.Context.Core.Concepts.PinRollupResult.operator !=(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
 static Aw.Context.Core.Concepts.PinRollupResult.operator ==(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
+Aw.Context.Core.Audience.ProfileAudiencePolicy
+Aw.Context.Core.Audience.ProfileAudiencePolicy.For(Aw.Context.Core.Engine.ContextRepoName repo, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Audience.AudienceScope!>!>
+Aw.Context.Core.Audience.ProfileAudiencePolicy.ProfileAudiencePolicy(Aw.Context.Core.Engine.ContextSettings! settings, System.Collections.Generic.IReadOnlyCollection<Aw.Context.Core.Engine.ContextRepoName>! profileRepos) -> void
+Aw.Context.Core.Records.ILexicalLeg
+Aw.Context.Core.Records.ILexicalLeg.Search(System.Collections.Generic.IReadOnlyList<string!>! terms, Aw.Context.Core.Audience.AudienceScope! scope, int limit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Records.LexicalAnswer!>!>
+Aw.Context.Core.Records.LexicalAnswer
+Aw.Context.Core.Records.LexicalAnswer.<Clone>$() -> Aw.Context.Core.Records.LexicalAnswer!
+Aw.Context.Core.Records.LexicalAnswer.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Records.RecordHit!>! Hits, out Aw.Context.Core.Records.LexicalDegraded? Degraded) -> void
+Aw.Context.Core.Records.LexicalAnswer.Degraded.get -> Aw.Context.Core.Records.LexicalDegraded?
+Aw.Context.Core.Records.LexicalAnswer.Degraded.init -> void
+Aw.Context.Core.Records.LexicalAnswer.Equals(Aw.Context.Core.Records.LexicalAnswer? other) -> bool
+Aw.Context.Core.Records.LexicalAnswer.Hits.get -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Records.RecordHit!>!
+Aw.Context.Core.Records.LexicalAnswer.Hits.init -> void
+Aw.Context.Core.Records.LexicalAnswer.LexicalAnswer(System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Records.RecordHit!>! Hits, Aw.Context.Core.Records.LexicalDegraded? Degraded) -> void
+Aw.Context.Core.Records.LexicalDegraded
+Aw.Context.Core.Records.LexicalDegraded.<Clone>$() -> Aw.Context.Core.Records.LexicalDegraded!
+Aw.Context.Core.Records.LexicalDegraded.Code.get -> string!
+Aw.Context.Core.Records.LexicalDegraded.Code.init -> void
+Aw.Context.Core.Records.LexicalDegraded.Deconstruct(out string! Code, out string! Message) -> void
+Aw.Context.Core.Records.LexicalDegraded.Equals(Aw.Context.Core.Records.LexicalDegraded? other) -> bool
+Aw.Context.Core.Records.LexicalDegraded.LexicalDegraded(string! Code, string! Message) -> void
+Aw.Context.Core.Records.LexicalDegraded.Message.get -> string!
+Aw.Context.Core.Records.LexicalDegraded.Message.init -> void
+Aw.Context.Core.Records.LexicalMatch
+Aw.Context.Core.Records.RecordHit
+Aw.Context.Core.Records.RecordHit.Chunk.get -> Aw.Context.Core.Records.ChunkKey
+Aw.Context.Core.Records.RecordHit.Chunk.init -> void
+Aw.Context.Core.Records.RecordHit.<Clone>$() -> Aw.Context.Core.Records.RecordHit!
+Aw.Context.Core.Records.RecordHit.Deconstruct(out Aw.Context.Core.Records.ChunkKey Chunk, out string! Title, out int? LineStart, out int? LineEnd, out double Score) -> void
+Aw.Context.Core.Records.RecordHit.Equals(Aw.Context.Core.Records.RecordHit? other) -> bool
+Aw.Context.Core.Records.RecordHit.LineEnd.get -> int?
+Aw.Context.Core.Records.RecordHit.LineEnd.init -> void
+Aw.Context.Core.Records.RecordHit.LineStart.get -> int?
+Aw.Context.Core.Records.RecordHit.LineStart.init -> void
+Aw.Context.Core.Records.RecordHit.RecordHit(Aw.Context.Core.Records.ChunkKey Chunk, string! Title, int? LineStart, int? LineEnd, double Score) -> void
+Aw.Context.Core.Records.RecordHit.Score.get -> double
+Aw.Context.Core.Records.RecordHit.Score.init -> void
+Aw.Context.Core.Records.RecordHit.Title.get -> string!
+Aw.Context.Core.Records.RecordHit.Title.init -> void
+const Aw.Context.Core.Records.ILexicalLeg.DefaultLimit = 50 -> int
+const Aw.Context.Core.Records.LexicalMatch.MaxTermLength = 256 -> int
+const Aw.Context.Core.Records.LexicalMatch.MaxTerms = 32 -> int
+override Aw.Context.Core.Records.LexicalAnswer.Equals(object? obj) -> bool
+override Aw.Context.Core.Records.LexicalAnswer.GetHashCode() -> int
+override Aw.Context.Core.Records.LexicalAnswer.ToString() -> string!
+override Aw.Context.Core.Records.LexicalDegraded.Equals(object? obj) -> bool
+override Aw.Context.Core.Records.LexicalDegraded.GetHashCode() -> int
+override Aw.Context.Core.Records.LexicalDegraded.ToString() -> string!
+override Aw.Context.Core.Records.RecordHit.Equals(object? obj) -> bool
+override Aw.Context.Core.Records.RecordHit.GetHashCode() -> int
+override Aw.Context.Core.Records.RecordHit.ToString() -> string!
+static Aw.Context.Core.Audience.ProfileAudiencePolicy.OwnRepo(Aw.Context.Core.Engine.ContextRepoName repo, System.Collections.Generic.IReadOnlyList<string!>! githubRepos) -> Aw.Context.Core.Records.AudienceKey?
+static Aw.Context.Core.Records.LexicalAnswer.operator !=(Aw.Context.Core.Records.LexicalAnswer? left, Aw.Context.Core.Records.LexicalAnswer? right) -> bool
+static Aw.Context.Core.Records.LexicalAnswer.operator ==(Aw.Context.Core.Records.LexicalAnswer? left, Aw.Context.Core.Records.LexicalAnswer? right) -> bool
+static Aw.Context.Core.Records.LexicalDegraded.operator !=(Aw.Context.Core.Records.LexicalDegraded? left, Aw.Context.Core.Records.LexicalDegraded? right) -> bool
+static Aw.Context.Core.Records.LexicalDegraded.operator ==(Aw.Context.Core.Records.LexicalDegraded? left, Aw.Context.Core.Records.LexicalDegraded? right) -> bool
+static Aw.Context.Core.Records.LexicalMatch.Of(System.Collections.Generic.IReadOnlyList<string!>! terms) -> string?
+static Aw.Context.Core.Records.RecordHit.operator !=(Aw.Context.Core.Records.RecordHit? left, Aw.Context.Core.Records.RecordHit? right) -> bool
+static Aw.Context.Core.Records.RecordHit.operator ==(Aw.Context.Core.Records.RecordHit? left, Aw.Context.Core.Records.RecordHit? right) -> bool

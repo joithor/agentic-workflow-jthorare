@@ -17,7 +17,7 @@ namespace Aw.Sindri.Tests.ContextCalls;
 /// <summary>Doctor's 'context:index-*' rows for the Sindri-owned record index (Part of #1394): never a value, bounded, ok when not configured.</summary>
 public sealed class IndexDoctorChecksTests
 {
-    private const string AllSources = """{"sources":{"github":{"repos":["owner/name"],"token":"env:GH_KEY"},"linear":{"token":"env:LINEAR_KEY"},"slack":{"channels":[{"id":"C1","name":"eng"}],"token":"env:SLACK_KEY"}}}""";
+    private const string AllSources = """{"sources":{"github":{"repos":["owner/name"],"token":"env:GH_KEY"},"linear":{"token":"env:LINEAR_KEY"},"slack":{"channels":[{"id":"C0001GEN","name":"eng"}],"token":"env:SLACK_KEY"}}}""";
     private static readonly PointerSecrets _noSecrets = new(_ => null, new FakeToolRunner(ToolRun.Missing));
     private static readonly PointerSecrets _githubOnly = new(name => name == "GH_KEY" ? "ghp_live-secret-0123" : null, new FakeToolRunner(ToolRun.Missing));
     private static readonly RepoEntry[] _repos = [new RepoEntry("split-panes", "/repos/split-panes")];

@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Aw.Sindri.Features.ContextCalls;
 
 /// <summary>Registers doctor's 'context:index-*' rows (owned index, Part of #1394).</summary>
-internal static class IndexDoctorRegistration
+internal static class IndexDoctorServiceCollectionExtensions
 {
     /// <summary>Adds the rows and a records-embedder probe that never answers, which a host with an Ollama probe replaces.</summary>
     /// <param name="services">The service collection.</param>

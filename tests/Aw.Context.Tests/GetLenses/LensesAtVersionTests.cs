@@ -131,9 +131,8 @@ public sealed class LensesAtVersionTests : IDisposable
 
         var view = (await Set([Manager, Groups])).Value;
 
-        Assert.Equal(["map", "repo-docs", "code-index"], [.. view.Searched.Sources.Select(s => s.Id.Value)], StringComparer.Ordinal);
-        var docs = Assert.Single(view.Searched.Sources, s => s.Id.Value == "repo-docs");
-        Assert.Equal((SearchedState.Unavailable, "not-synced", "SND-CONTEXT-161"), (docs.State, docs.Reason, docs.Code));
+        Assert.Equal(["map", "code-index"], [.. view.Searched.Sources.Select(s => s.Id.Value)], StringComparer.Ordinal);
+        Assert.DoesNotContain(view.Searched.Sources, s => s.Id.Value == "onyx");
         var index = Assert.Single(view.Searched.Sources, s => s.Id.Value == "code-index");
         Assert.Equal((SearchedState.Unavailable, "index-not-built"), (index.State, index.Reason));
         Assert.Equal(SearchedState.Ok, Assert.Single(view.Searched.Sources, s => s.Id.Value == "map").State);

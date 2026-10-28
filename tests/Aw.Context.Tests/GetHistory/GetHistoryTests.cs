@@ -299,9 +299,8 @@ public sealed class GetHistoryTests : IDisposable
 
         var view = (await Ask(world)).Value;
 
-        Assert.Equal(["map", "repo-docs", "git-history", "incidents"], [.. view.Searched.Sources.Select(s => s.Id.Value)], StringComparer.Ordinal);
-        var docs = Row(view, "repo-docs");
-        Assert.Equal((SearchedState.Unavailable, "not-synced", "SND-CONTEXT-161"), (docs.State, docs.Reason, docs.Code));
+        Assert.Equal(["map", "git-history", "incidents"], [.. view.Searched.Sources.Select(s => s.Id.Value)], StringComparer.Ordinal);
+        Assert.DoesNotContain(view.Searched.Sources, s => s.Id.Value == "onyx");
         Assert.Equal((SearchedState.Ok, SearchedState.NotConfigured), (Row(view, "git-history").State, Row(view, "incidents").State));
         Assert.Equal((SearchedState.NotConfigured, "not-configured"), (view.Incidents.State, view.Incidents.Reason));
         Assert.Equal(0, view.Searched.Depth);

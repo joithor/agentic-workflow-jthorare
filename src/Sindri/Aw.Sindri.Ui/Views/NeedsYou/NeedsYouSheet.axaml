@@ -1,7 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ny="using:Aw.Sindri.Ui.ViewModels.NeedsYou"
-             xmlns:inst="using:Aw.Sindri.Ui.ViewModels.Instance"
              xmlns:ctl="using:Aw.Sindri.Ui.Views.Controls"
              x:Class="Aw.Sindri.Ui.Views.NeedsYou.NeedsYouSheet"
              x:DataType="ny:NeedsYouRowViewModel">
@@ -31,7 +30,7 @@
     <!-- A desk task's required outputs (#1170): a path box and Browse each, and what Complete waits for. -->
     <ItemsControl x:Name="SheetRowOutputs" ItemsSource="{Binding Outputs}" IsVisible="{Binding HasOutputs}">
       <ItemsControl.ItemTemplate>
-        <DataTemplate x:DataType="inst:DeskOutputViewModel">
+        <DataTemplate x:DataType="ny:DeskOutputViewModel">
           <StackPanel Margin="0,0,0,6" Spacing="4">
             <TextBlock Name="DeskOutputCaption" Classes="caption" Text="{Binding Caption}" TextWrapping="Wrap" AutomationProperties.AccessibilityView="Raw" />
             <Grid ColumnDefinitions="*,Auto">

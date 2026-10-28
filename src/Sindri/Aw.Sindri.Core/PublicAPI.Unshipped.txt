@@ -21100,3 +21100,7 @@ Aw.Sindri.Core.Sandbox.Plan.ISandboxExec.Run(Aw.Sindri.Core.Sandbox.Plan.Sandbox
 Aw.Sindri.Core.Doctor.IRecordEmbedderProbe
 Aw.Sindri.Core.Doctor.IRecordEmbedderProbe.Model.get -> string!
 Aw.Sindri.Core.Doctor.IRecordEmbedderProbe.Probe(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>
+Aw.Sindri.Core.Sandbox.Credentials.AgentHomes
+static Aw.Sindri.Core.Sandbox.Credentials.AgentHomes.For(string! sindriHome, Aw.Sindri.Core.Launch.AgentId target) -> string!
+Aw.Sindri.Core.Sandbox.Credentials.ISandboxLogin
+Aw.Sindri.Core.Sandbox.Credentials.ISandboxLogin.Run(Aw.Sindri.Core.Launch.AgentId target, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Aw.Kernel.Result<int>!>!

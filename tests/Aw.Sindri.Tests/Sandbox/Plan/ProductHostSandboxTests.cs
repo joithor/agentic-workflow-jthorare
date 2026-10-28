@@ -49,14 +49,14 @@ public sealed class ProductHostSandboxTests
     }
 
     [Fact, Trait("Lane", "unit")]
-    public void The_credential_registry_has_the_owner_copy_source_on_Linux_only()
+    public void The_credential_registry_has_the_owner_copy_and_separate_login_sources_on_Linux_only()
     {
         using var provider = Compose().BuildServiceProvider();
 
         var sources = provider.GetRequiredService<ModelCredentialSources>();
 
         Assert.Equal(OperatingSystem.IsLinux(), sources.Has(ModelLoginSource.OwnerCopy));
-        Assert.False(sources.Has(ModelLoginSource.SeparateLogin));
+        Assert.Equal(OperatingSystem.IsLinux(), sources.Has(ModelLoginSource.SeparateLogin));
     }
 
     [Fact, Trait("Lane", "unit")]

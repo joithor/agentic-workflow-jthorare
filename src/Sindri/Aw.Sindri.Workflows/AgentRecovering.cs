@@ -24,7 +24,7 @@ internal sealed class AgentRecovering(BlockCatalog catalog, IStepOutputs outputs
     public async Task<AgentRecovered> Recover(AgentRecoverRun run, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(run);
-        var names = await outputs.Names(run.Worktree, run.Since, cancellationToken).ConfigureAwait(false);
+        var names = await outputs.Names(run.Root, run.Since, cancellationToken).ConfigureAwait(false);
         if (names.IsError)
         {
             throw new InvalidOperationException($"{names.Error.Code}: {names.Error.Message}");   // the activity retries: the folder could not be read this time
@@ -35,7 +35,7 @@ internal sealed class AgentRecovering(BlockCatalog catalog, IStepOutputs outputs
             return AgentRecovered.Nothing;
         }
 
-        var folder = Path.Combine(run.Worktree, AgentRecovery.OutputFolder);
+        var folder = Path.Combine(run.Root, AgentRecovery.OutputFolder);
         var decision = AgentRecovery.Decide(catalog.Find(BlockId.From(run.Block)), names.Value, folder);
         if (decision.Outcome is not { } outcome)
         {
@@ -52,7 +52,7 @@ internal sealed class AgentRecovering(BlockCatalog catalog, IStepOutputs outputs
         var report = new StringBuilder().Append(CultureInfo.InvariantCulture, $"recovered run {run.Run}\noutcome {outcome}\n");
         foreach (var (fact, name) in files.OrderBy(static f => f.Key.Value, StringComparer.Ordinal))
         {
-            var content = await outputs.Read(run.Worktree, name, cancellationToken).ConfigureAwait(false);
+            var content = await outputs.Read(run.Root, name, cancellationToken).ConfigureAwait(false);
             if (content.IsError)
             {
                 return AgentRecovered.Nothing with { Reason = $"the agent finished but its result was not recorded: {folder} ({content.Error.Message})" };

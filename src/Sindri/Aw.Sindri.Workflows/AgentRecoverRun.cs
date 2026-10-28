@@ -6,4 +6,8 @@ namespace Aw.Sindri.Infrastructure.Workflows;
 /// <param name="Run">The run's token.</param>
 /// <param name="Since">When the run's session was launched: a file older than this belongs to an earlier Step that shared the run directory; null reads every file.</param>
 /// <param name="RunDirectory">The Step's run directory (AgentLaunched.RunDirectory); the output folder is .sindri-out under it. Null reads the worktree.</param>
-internal sealed record AgentRecoverRun(string Worktree, string Block, string Run, DateTimeOffset? Since = null, string? RunDirectory = null);
+internal sealed record AgentRecoverRun(string Worktree, string Block, string Run, DateTimeOffset? Since = null, string? RunDirectory = null)
+{
+    /// <summary>Where the output folder is: the run directory, else the worktree.</summary>
+    public string Root => RunDirectory ?? Worktree;
+}

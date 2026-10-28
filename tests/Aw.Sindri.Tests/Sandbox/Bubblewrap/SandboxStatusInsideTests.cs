@@ -43,7 +43,7 @@ public sealed class SandboxStatusInsideTests
 
             _ = SessionHome.Create(box.SindriHome, request.Launch, "secret", endpoint);
             await using var egress = StartEgress(plan.Value);
-            var wrapped = sandbox.Wrap(plan.Value, [sindri, "status", "--json"]);
+            var wrapped = sandbox.Wrap(Unlaunched(plan.Value), [sindri, "status", "--json"]);
             Assert.True(wrapped.IsSuccess, wrapped.IsError ? wrapped.Error.ToString() : null);
 
             var output = Path.Combine(box.Root, "status.out");
@@ -52,9 +52,7 @@ public sealed class SandboxStatusInsideTests
             Assert.NotNull(tmux.Run("new-session", "-d", "-s", "status-inside", "-c", box.Root, "sh", "-c", line));
             await WaitForFile(code, ct);
 
-            var printed = await File.ReadAllTextAsync(output, ct);
-            Assert.True((await File.ReadAllTextAsync(code, ct)).Trim() == "0", "sindri status inside the sandbox: " + printed);
-            Assert.Contains("apiVersion", printed, StringComparison.Ordinal);   // `sindri status --json` carries it (aot-smoke expected.txt)
+            await AssertAnswered(output, code, ct);
         }
         finally
         {
@@ -62,6 +60,19 @@ public sealed class SandboxStatusInsideTests
             Stop(serve);
         }
     }
+
+    // Exit 1 is attention (the scratch profile isn't approved); "running":true means serve answered through the forwarder, not SND-API-001 "not running".
+    private static async Task AssertAnswered(string output, string code, CancellationToken ct)
+    {
+        var printed = await File.ReadAllTextAsync(output, ct);
+        var exit = (await File.ReadAllTextAsync(code, ct)).Trim();
+        Assert.True(string.Equals(exit, "0", StringComparison.Ordinal) || string.Equals(exit, "1", StringComparison.Ordinal), "sindri status inside the sandbox: " + printed);
+        Assert.Contains("\"running\":true", printed, StringComparison.Ordinal);
+        Assert.Contains("apiVersion", printed, StringComparison.Ordinal);   // `sindri status --json` carries it (aot-smoke expected.txt)
+    }
+
+    // This serve never opened the launch, so the CLI's X-Sindri-Launch header would be SND-AUTH-003: the proof is the path to serve, not launch auth.
+    private static SandboxPlan Unlaunched(SandboxPlan plan) => plan with { Environment = [.. plan.Environment.Where(static e => e.Name != "AW_SINDRI_LAUNCH")] };
 
     private static void RemoveSessionHome(SandboxBox box) => SessionHome.Remove(SessionHomePaths.For(box.SindriHome, box.WriteScope().Launch));
 

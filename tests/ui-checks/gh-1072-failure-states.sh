@@ -135,9 +135,10 @@ done < <(jq -r "$lines"' | [.. | objects | select(.type == "TextBlock" and .visi
 
 # 3b. While the health word is Degraded, no problem is marked with the Down glyph.
 for icon_id in $(jq -r "$lines"' | [.. | objects | select(.type == "StateIcon" and .visible)] | .[].id' "$OUT/tree3.json"); do
-  "$DRIVER" props --node-id "$icon_id" >"$OUT/icon-props-$icon_id.json" 2>/dev/null
-  glyph="$(jq -r '.properties.Glyph // empty' "$OUT/icon-props-$icon_id.json")"
-  [ -n "$glyph" ] || setup_fail "the driver gave no Glyph property for StateIcon $icon_id (props in $OUT/icon-props-$icon_id.json)"
+  props="$OUT/icon-props-${icon_id//\//-}.json"   # node ids hold slashes
+  "$DRIVER" props --node-id "$icon_id" >"$props" 2>/dev/null
+  glyph="$(jq -r '.properties.Glyph // empty' "$props")"
+  [ -n "$glyph" ] || setup_fail "the driver gave no Glyph property for StateIcon $icon_id (props in $props)"
   if [ "$glyph" = "Down" ]; then
     fail "the Health page marks a degraded problem with the ✕ glyph (StateIcon $icon_id, screenshot in $OUT)"
   fi

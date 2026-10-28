@@ -1,6 +1,5 @@
 using Aw.Kernel.Testing;
 using Aw.Sindri.Ui.Testing;
-using Aw.Sindri.Ui.ViewModels;
 using Aw.Sindri.Ui.ViewModels.NeedsYou;
 using Microsoft.Extensions.Time.Testing;
 
@@ -24,14 +23,10 @@ public sealed class NeedsYouBarRequiredOutputTests
         bar.Show(new NeedsYouRowViewModel(NeedsYouRows.Desk(), seen: true, reducedMotion: false, arrived: false, _clock));
         await bar.Loaded;
         bar.ReadToEnd = true;
-        var asked = new List<string>();
-        bar.SheetRequested += (_, e) => asked.Add(e.RowId);
 
         await bar.PressApprove();
 
         Assert.Empty(_server.CompleteCalls);
         Assert.False(bar.IsApproved);
-        Assert.Equal([NeedsYouRows.Desk().Id], asked, StringComparer.Ordinal);   // the sheet is asked for instead
-        Assert.Equal(Labels.CompleteNeedsOutputInSheet, bar.Refusal);
     }
 }

@@ -144,6 +144,10 @@ internal static class PlanMounts
         m.Add(new PlanMount(session, PlanMountKind.ReadOnly, Reason: "this launch's session home: the Step's policy file and MCP config; the agent can't rewrite its own policy"));
         m.Add(new PlanMount(session + "/control.json", PlanMountKind.ReadOnly, Reason: "written by the launcher: the endpoint record with the forwarder's URL"));
         m.Add(new PlanMount(session + "/gh-config", PlanMountKind.ReadWrite, Reason: "the GitHub CLI's empty config directory, so gh finds no login"));
+        if (c.Github == GithubCredentials.AgentApp)
+        {
+            m.Add(new PlanMount(SessionHomePaths.GhTokenDirectory(session), PlanMountKind.ReadOnly, Reason: "the agent GitHub token's folder, bound as a directory so a refresh's rename is seen (R1-14)"));
+        }
     }
 
     private static PlanMount Inventory(string path, StatePathEntry entry, string spool)

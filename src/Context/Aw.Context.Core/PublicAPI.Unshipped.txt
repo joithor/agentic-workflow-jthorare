@@ -9036,8 +9036,8 @@ static Aw.Context.Core.Concepts.PinRollupResult.operator ==(Aw.Context.Core.Conc
 Aw.Context.Core.Audience.ProfileAudiencePolicy
 Aw.Context.Core.Audience.ProfileAudiencePolicy.For(Aw.Context.Core.Engine.ContextRepoName repo, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Audience.AudienceScope!>!>
 Aw.Context.Core.Audience.ProfileAudiencePolicy.ProfileAudiencePolicy(Aw.Context.Core.Engine.ContextSettings! settings, System.Collections.Generic.IReadOnlyCollection<Aw.Context.Core.Engine.ContextRepoName>! profileRepos) -> void
-Aw.Context.Core.Records.ILexicalLeg
-Aw.Context.Core.Records.ILexicalLeg.Search(System.Collections.Generic.IReadOnlyList<string!>! terms, Aw.Context.Core.Audience.AudienceScope! scope, int limit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Records.LexicalAnswer!>!>
+Aw.Context.Core.Search.ILexicalLeg
+Aw.Context.Core.Search.ILexicalLeg.Search(System.Collections.Generic.IReadOnlyList<string!>! terms, Aw.Context.Core.Audience.AudienceScope! scope, int limit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Records.LexicalAnswer!>!>
 Aw.Context.Core.Records.LexicalAnswer
 Aw.Context.Core.Records.LexicalAnswer.<Clone>$() -> Aw.Context.Core.Records.LexicalAnswer!
 Aw.Context.Core.Records.LexicalAnswer.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Records.RecordHit!>! Hits, out Aw.Context.Core.Records.LexicalDegraded? Degraded) -> void
@@ -9072,7 +9072,7 @@ Aw.Context.Core.Records.RecordHit.Score.get -> double
 Aw.Context.Core.Records.RecordHit.Score.init -> void
 Aw.Context.Core.Records.RecordHit.Title.get -> string!
 Aw.Context.Core.Records.RecordHit.Title.init -> void
-const Aw.Context.Core.Records.ILexicalLeg.DefaultLimit = 50 -> int
+const Aw.Context.Core.Search.ILexicalLeg.DefaultLimit = 50 -> int
 const Aw.Context.Core.Records.LexicalMatch.MaxTermLength = 256 -> int
 const Aw.Context.Core.Records.LexicalMatch.MaxTerms = 32 -> int
 override Aw.Context.Core.Records.LexicalAnswer.Equals(object? obj) -> bool

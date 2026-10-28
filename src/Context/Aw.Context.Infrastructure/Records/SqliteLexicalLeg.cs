@@ -2,6 +2,7 @@ using System.Text.Json;
 using Aw.Context.Core;
 using Aw.Context.Core.Audience;
 using Aw.Context.Core.Records;
+using Aw.Context.Core.Search;
 using Aw.Context.Infrastructure.Store;
 using Aw.Kernel;
 using Aw.Kernel.Data;

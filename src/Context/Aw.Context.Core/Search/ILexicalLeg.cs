@@ -1,7 +1,8 @@
 using Aw.Context.Core.Audience;
+using Aw.Context.Core.Records;
 using Aw.Kernel;
 
-namespace Aw.Context.Core.Records;
+namespace Aw.Context.Core.Search;
 
 /// <summary>The lexical leg over the record store (spec §6.1): full-text search of the chunks, under the caller's audience mask.</summary>
 public interface ILexicalLeg

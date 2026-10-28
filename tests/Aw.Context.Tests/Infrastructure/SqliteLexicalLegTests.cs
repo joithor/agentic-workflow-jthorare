@@ -1,5 +1,6 @@
 using Aw.Context.Core.Audience;
 using Aw.Context.Core.Records;
+using Aw.Context.Core.Search;
 using Aw.Context.Infrastructure.Records;
 using Aw.Context.Testing.Records;
 

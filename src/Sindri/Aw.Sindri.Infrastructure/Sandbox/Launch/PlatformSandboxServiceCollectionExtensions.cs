@@ -38,7 +38,7 @@ public static class PlatformSandboxServiceCollectionExtensions
             return services;
         }
 
-        _ = services.RemoveAll<ISandbox>().RemoveAll<ISandboxFixture>().AddSingleton<IAgentTokenSource, UnmintedAgentTokenSource>();   // the fixture-plan self-check replaces Features' NoSandboxFixture; SB-7 replaces the token stand-in with the real mint
+        _ = services.RemoveAll<ISandbox>().RemoveAll<ISandboxFixture>().AddSingleton<IAgentTokenSource>(sp => new GitHubAppTokenSource(environment, GitHubAppTokenSource.CreateClient(), sp.GetRequiredService<TimeProvider>()));   // the fixture-plan self-check replaces Features' NoSandboxFixture; the agent-app token mint
         return services
             .AddSindriBubblewrapSandbox(environment)
             .AddSingleton<ISliceScopes>(new CgroupSliceScopes(SliceDirectory(uid)))
@@ -50,7 +50,7 @@ public static class PlatformSandboxServiceCollectionExtensions
             .AddSingleton<LaunchSandboxRegistry>()
             .AddSingleton<ISandboxLaunchStages>(sp => new SandboxLaunchStages(
                 sp.GetRequiredService<IApprovedProfile>(), sp.GetRequiredService<ILearnHistory>(), [.. sp.GetServices<IModelCredentialSource>()], sp.GetRequiredService<ISandboxLaunchInputs>(),
-                sp.GetRequiredService<LaunchSandboxRegistry>(), sp.GetRequiredService<TimeProvider>(), sp.GetRequiredService<IAgentTokenSource>()))
+                sp.GetRequiredService<LaunchSandboxRegistry>(), sp.GetRequiredService<TimeProvider>(), new AgentTokenRenewal(sp.GetRequiredService<IAgentTokenSource>(), sp.GetRequiredService<TimeProvider>(), static message => Console.Error.WriteLine(message))))
             .AddSingleton<ISandboxLaunchInputs>(sp => new LinuxSandboxLaunchInputs(
                 sp.GetRequiredService<LauncherOptions>(), sp.GetRequiredService<ReloadingAgentCatalog>(), sp.GetRequiredService<ISandboxProcesses>(),
                 () => BoxHostFacts.Read(environment, sp.GetRequiredService<SindriSettings>().Home, sp.GetRequiredService<ISandboxMachine>()), ControlFor(sp),

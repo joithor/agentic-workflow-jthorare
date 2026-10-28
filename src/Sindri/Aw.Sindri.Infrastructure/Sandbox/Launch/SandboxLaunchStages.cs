@@ -17,7 +17,7 @@ namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 /// The sandbox step's launch-specific parts (<see cref="ISandboxLaunchStages"/>): the plan request from the approved profile, the login and the learn history, the egress, and what
 /// the end of a launch releases. The session home itself is made and removed by <see cref="SandboxLaunch"/>.
 /// </summary>
-internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistory learn, IReadOnlyList<IModelCredentialSource> logins, ISandboxLaunchInputs inputs, LaunchSandboxRegistry egress, TimeProvider clock, IAgentTokenSource agentTokens) : ISandboxLaunchStages
+internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistory learn, IReadOnlyList<IModelCredentialSource> logins, ISandboxLaunchInputs inputs, LaunchSandboxRegistry egress, TimeProvider clock, AgentTokenRenewal agentTokens) : ISandboxLaunchStages
 {
     private readonly ConcurrentDictionary<LaunchId, (SandboxPlan Plan, AgentId Target)> _plans = new();
     private readonly ConcurrentDictionary<LaunchId, SessionId?> _sessions = new();
@@ -42,7 +42,7 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
             return prepared.Error;
         }
 
-        var minted = await MintAgentToken(request, settings, cancellationToken).ConfigureAwait(false);
+        var minted = await MintAgentToken(request, settings, repo, cancellationToken).ConfigureAwait(false);
         if (minted.IsError)
         {
             return minted.Error;
@@ -76,6 +76,12 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(plan);
         _plans[plan.Launch] = (plan, request.Target);
+        var token = agentTokens.Write(plan.Launch, sessionHome);   // before the wrap binds the folder
+        if (token.IsError)
+        {
+            return ValueTask.FromResult<Result<PolicyFiles>>(token.Error);
+        }
+
         if (request.Policy is not { } policy)
         {
             return Done(PolicyFiles.None);
@@ -113,6 +119,7 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
             await DenialCollector.Collect(new DenialSources(started.Plan, SessionHomePaths.For(inputs.Host().SindriHome, launch), transcript, kind, failOpen), counter, cancellationToken).ConfigureAwait(false);   // before the egress stops and before session.ended
         }
 
+        agentTokens.Release(launch);
         _ = await egress.Release(launch).ConfigureAwait(false);
     }
 
@@ -125,10 +132,15 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
         RepoName.From(loaded?.Repos?.FirstOrDefault(r => string.Equals(r.Path.TrimEnd('/'), repoPath.TrimEnd('/'), StringComparison.Ordinal))?.Name ?? Path.GetFileName(repoPath.TrimEnd('/')));
 
     // why: the same resolution PlanContext makes (an attended session never gets one); minting here makes a failure a Step failure, not an unconfined launch with no token
-    private async ValueTask<Result<Unit>> MintAgentToken(LaunchRequest request, SandboxSettings? settings, CancellationToken cancellationToken)
+    private async ValueTask<Result<Unit>> MintAgentToken(LaunchRequest request, SandboxSettings? settings, RepoName repo, CancellationToken cancellationToken)
     {
         var github = request.Attended ? GithubCredentials.None : settings?.Credentials?.Github ?? SandboxDefaults.Github;
-        return github == GithubCredentials.AgentApp ? await agentTokens.Mint(request.Launch, cancellationToken).ConfigureAwait(false) : Unit.Value;
+        if (github != GithubCredentials.AgentApp)
+        {
+            return Unit.Value;
+        }
+
+        return await agentTokens.Mint(request.Launch, repo, cancellationToken).ConfigureAwait(false);
     }
 
     private async ValueTask<Result<PreparedLogin>> Login(LaunchRequest request, SandboxSettings? settings, RepoName repo, CancellationToken cancellationToken)

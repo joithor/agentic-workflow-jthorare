@@ -17,7 +17,6 @@ namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 /// The sandbox step's launch-specific parts (<see cref="ISandboxLaunchStages"/>): the plan request from the approved profile, the login and the learn history, the egress, and what
 /// the end of a launch releases. The session home itself is made and removed by <see cref="SandboxLaunch"/>.
 /// </summary>
-#pragma warning disable MA0182 // registered by the product Host in SB-5a's switch step
 internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistory learn, IReadOnlyList<IModelCredentialSource> logins, ISandboxLaunchInputs inputs, LaunchSandboxRegistry egress, TimeProvider clock) : ISandboxLaunchStages
 {
     private readonly ConcurrentDictionary<LaunchId, SandboxPlan> _plans = new();
@@ -114,4 +113,3 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
             : await chosen.Prepare(request.Agent, request.Launch, cancellationToken).ConfigureAwait(false);
     }
 }
-#pragma warning restore MA0182

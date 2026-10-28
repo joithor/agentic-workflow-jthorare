@@ -1,5 +1,7 @@
 using Aw.Sindri.Core.Control;
 using Aw.Sindri.Core.Launch;
+using Aw.Sindri.Core.Profile;
+using Aw.Sindri.Core.Sandbox.Credentials;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Infrastructure.Launch;
@@ -40,12 +42,14 @@ public static class PlatformSandboxServiceCollectionExtensions
             .AddSindriBubblewrapSandbox(environment)
             .AddSingleton<ISliceScopes>(new CgroupSliceScopes(SliceDirectory(uid)))
             .AddSingleton<ISessionCap>(sp => new FileSessionCap(LockFile(sp.GetRequiredService<SindriSettings>().Home), sp.GetRequiredService<ISliceScopes>()))
-            .AddSingleton<ISandboxFixture>(sp => new LinuxSandboxFixture(sp.GetRequiredService<SindriSettings>().Home, environment, sp.GetRequiredService<ISandboxProcesses>()))
+            .AddSingleton<ISandboxFixture>(sp => new LinuxSandboxFixture(sp.GetRequiredService<SindriSettings>().Home, environment, sp.GetRequiredService<ISandboxProcesses>(), sp.GetRequiredService<ISandboxMachine>()))
             .AddSingleton<SystemEgressNetwork>()
             .AddSingleton<EgressService>(sp => new EgressService(
                 sp.GetRequiredService<SystemEgressNetwork>(), sp.GetRequiredService<SystemEgressNetwork>(), environment, EgressLogDirectory(sp.GetRequiredService<SindriSettings>().Home)))
             .AddSingleton<LaunchSandboxRegistry>()
-            .AddSingleton<ISandboxLaunchStages, PendingSandboxLaunchStages>()   // TODO(flow): replace with the flow builder's ISandboxLaunchStages implementation (the one line that remains)
+            .AddSingleton<ISandboxLaunchStages>(sp => new SandboxLaunchStages(
+                sp.GetRequiredService<IApprovedProfile>(), sp.GetRequiredService<ILearnHistory>(), [.. sp.GetServices<IModelCredentialSource>()], sp.GetRequiredService<ISandboxLaunchInputs>(),
+                sp.GetRequiredService<LaunchSandboxRegistry>(), sp.GetRequiredService<TimeProvider>()))   // TODO(flow): ISandboxLaunchInputs has no registration until flow's class lands; resolving ISandboxLaunch throws until then
             .AddSingleton<ISandboxLaunch>(sp => new SandboxLaunch(
                 sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<ISandboxLaunchStages>(), LaunchOptions(sp, environment)));
     }
@@ -54,10 +58,10 @@ public static class PlatformSandboxServiceCollectionExtensions
     {
         var settings = sp.GetRequiredService<SindriSettings>();
         var json = sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>();
+        var machine = sp.GetRequiredService<ISandboxMachine>();
         return new SandboxLaunchOptions(
             environment("AW_SANDBOX_SYSTEMD_RUN") is { Length: > 0 } run ? run : "systemd-run",
-            ReadBox(),
-            TimeSpan.FromHours(2),   // workflow.steps.longMax's default; the launch reads no profile here yet
+            new BoxFacts(machine.RamBytes, machine.Cores),   // one source for machine memory: doctor's limits row and the scope limits agree
             settings.Home,
             sp.GetRequiredService<LauncherOptions>().SecretsDirectory,
             () => ReadEndpoint(settings.EndpointPath, json));
@@ -75,25 +79,6 @@ public static class PlatformSandboxServiceCollectionExtensions
         {
             return null;
         }
-    }
-
-    /// <summary>Reads the box's RAM (MemTotal in /proc/meminfo, in kB) and logical cores.</summary>
-    /// <returns>The facts; 0 bytes of RAM when /proc/meminfo can't be read.</returns>
-    internal static BoxFacts ReadBox()
-    {
-        long ram = 0;
-        try
-        {
-            var line = File.ReadLines("/proc/meminfo").FirstOrDefault(l => l.StartsWith("MemTotal:", StringComparison.Ordinal));
-            var kb = line?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1).FirstOrDefault();
-            ram = long.TryParse(kb, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var parsed) ? parsed * 1024 : 0;
-        }
-        catch (IOException)
-        {
-            // No /proc: the planner treats 0 bytes as unknown.
-        }
-
-        return new BoxFacts(ram, Environment.ProcessorCount);
     }
 
     /// <summary>Gets the cgroup directory whose '*.scope' children are the live Step sessions.</summary>

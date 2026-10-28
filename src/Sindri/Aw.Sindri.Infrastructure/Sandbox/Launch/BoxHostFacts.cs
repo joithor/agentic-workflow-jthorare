@@ -1,3 +1,4 @@
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Infrastructure.Sessions;
 
@@ -9,14 +10,15 @@ internal static class BoxHostFacts
     /// <summary>Reads the facts from the box.</summary>
     /// <param name="environment">Reads an environment variable.</param>
     /// <param name="sindriHome">The real AW_SINDRI_HOME.</param>
+    /// <param name="machine">The machine's memory and cores (the one source doctor and the scope limits share).</param>
     /// <returns>The facts.</returns>
-    internal static SandboxHostFacts Read(Func<string, string?> environment, string sindriHome)
+    internal static SandboxHostFacts Read(Func<string, string?> environment, string sindriHome, ISandboxMachine machine)
     {
         ArgumentNullException.ThrowIfNull(environment);
+        ArgumentNullException.ThrowIfNull(machine);
         var home = environment("HOME") is { Length: > 0 } configured ? configured : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var state = StateDir(environment, home);
-        var box = PlatformSandboxServiceCollectionExtensions.ReadBox();
-        return new SandboxHostFacts(home, state, sindriHome, CsBinDir(state), OwnUid.Read(), box.RamBytes, box.Cores, IsMacOs: false, ProcessEnvironment(), OtherHomes(Path.GetDirectoryName(home) ?? "/home", home));
+        return new SandboxHostFacts(home, state, sindriHome, CsBinDir(state), OwnUid.Read(), machine.RamBytes, machine.Cores, IsMacOs: false, ProcessEnvironment(), OtherHomes(Path.GetDirectoryName(home) ?? "/home", home));
     }
 
     /// <summary>Gets AW_STATE_DIR, or ~/.agentic-workflow.</summary>

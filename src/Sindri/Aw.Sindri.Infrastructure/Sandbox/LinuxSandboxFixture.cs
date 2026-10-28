@@ -14,7 +14,8 @@ namespace Aw.Sindri.Infrastructure.Sandbox;
 /// <param name="sindriHome">The real AW_SINDRI_HOME.</param>
 /// <param name="environment">Reads an environment variable.</param>
 /// <param name="processes">Runs git for the one 'git init'.</param>
-internal sealed class LinuxSandboxFixture(string sindriHome, Func<string, string?> environment, ISandboxProcesses processes) : ISandboxFixture
+/// <param name="machine">The machine's memory and cores.</param>
+internal sealed class LinuxSandboxFixture(string sindriHome, Func<string, string?> environment, ISandboxProcesses processes, ISandboxMachine machine) : ISandboxFixture
 {
     private static readonly TimeSpan _gitTimeout = TimeSpan.FromSeconds(30);
 
@@ -62,7 +63,7 @@ internal sealed class LinuxSandboxFixture(string sindriHome, Func<string, string
             LongMax: null,
             SlotHeld: false,
             new SandboxNetFacts(netDir, SindriPort: 7480, ProxyPort: 41234),
-            BoxHostFacts.Read(environment, sindriHome),
+            BoxHostFacts.Read(environment, sindriHome, machine),
             Settings: null,
             Login: null);
 

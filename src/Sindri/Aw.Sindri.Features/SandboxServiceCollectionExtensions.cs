@@ -7,6 +7,7 @@ using Aw.Sindri.Features.AllowDenial;
 using Aw.Sindri.Features.CheckSandbox;
 using Aw.Sindri.Features.Commands;
 using Aw.Sindri.Features.EndLearnMode;
+using Aw.Sindri.Features.GetSandboxStatus;
 using Aw.Sindri.Features.ListDenials;
 using Aw.Sindri.Features.PlanSandbox;
 using Aw.Sindri.Features.RecordLimitHit;
@@ -70,7 +71,10 @@ internal static class SandboxServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         return services
             .AddScoped<IValidator<CheckSandboxRequest>, AcceptAllValidator<CheckSandboxRequest>>().AddQuery<CheckSandboxRequest, CheckSandboxResponse, CheckSandboxService>()
-            .AddScoped<ISandboxChecks, SandboxChecks>().AddScoped<SandboxResumeList>()
+            .AddScoped<IValidator<GetSandboxStatusRequest>, AcceptAllValidator<GetSandboxStatusRequest>>()
+            .AddQuery<GetSandboxStatusRequest, SandboxStatusResponse, GetSandboxStatusService>().AddSingleton<ISandboxPlatformName, OperatingSystemPlatformName>()
+            .AddSingleton<LastSandboxCheck>().AddScoped<SandboxChecks>().AddScoped<SandboxResumeList>()
+            .AddScoped<ISandboxChecks>(static sp => new RecordingSandboxChecks(sp.GetRequiredService<SandboxChecks>(), sp.GetRequiredService<LastSandboxCheck>(), sp.GetRequiredService<TimeProvider>()))
             .AddScoped<ISandboxFormCheck, SandboxFormCheck>().AddScoped<ISandboxLoginCheck, SandboxLoginCheck>()
             .AddScoped<ISandboxParks, SandboxParkedInstances>().AddScoped<ISandboxSlots, SandboxSlots>()
             .AddSingleton<ISandboxFixture, NoSandboxFixture>().AddSingleton<ISandboxMachine, ProcessSandboxMachine>()

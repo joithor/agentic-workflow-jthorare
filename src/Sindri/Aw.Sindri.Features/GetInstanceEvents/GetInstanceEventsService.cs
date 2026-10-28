@@ -19,9 +19,11 @@ namespace Aw.Sindri.Features.GetInstanceEvents;
 /// <param name="events">Reads each event's payload.</param>
 /// <param name="directory">Resolves the reference to the instance's address.</param>
 /// <param name="runtime">The existence check for an instance with no events.</param>
-internal sealed class GetInstanceEventsService(ILedgerReader ledger, EventFactory events, IInstanceDirectory directory, IInstanceReader runtime) : IService<GetInstanceEventsRequest, GetInstanceEventsResponse>
+/// <param name="limits">Adds how a sandbox limit ended a run to its failure row; null leaves the rows as the payloads read.</param>
+internal sealed class GetInstanceEventsService(ILedgerReader ledger, EventFactory events, IInstanceDirectory directory, IInstanceReader runtime, LimitEndingReader? limits = null) : IService<GetInstanceEventsRequest, GetInstanceEventsResponse>
 {
     private const int Page = 500;
+    private const string LimitReason = "limit";   // the reason a Step a sandbox limit ended fails with (Core's Unavailables.LimitReason)
 
     public async ValueTask<Result<GetInstanceEventsResponse>> Handle(GetInstanceEventsRequest request, CancellationToken cancellationToken)
     {
@@ -55,11 +57,31 @@ internal sealed class GetInstanceEventsService(ILedgerReader ledger, EventFactor
                     }
                 }
 
-                return new GetInstanceEventsResponse(found, page.Value.Next);
+                return new GetInstanceEventsResponse(await WithLimits(found, request.Instance, address, cancellationToken).ConfigureAwait(false), page.Value.Next);
             }
 
             cursor = page.Value.Next;
         }
+    }
+
+    /// <summary>Adds how a sandbox limit ended a run to each 'step.failed' row whose reason is 'limit'.</summary>
+    private async ValueTask<List<InstanceEventView>> WithLimits(List<InstanceEventView> found, string reference, InstanceAddress? address, CancellationToken cancellationToken)
+    {
+        var instance = WorkflowInstanceId.TryFrom(reference, out var id) ? id : address is { } known ? WorkflowInstanceId.Of(known) : (WorkflowInstanceId?)null;
+        if (limits is null || instance is not { } owner)
+        {
+            return found;
+        }
+
+        for (var i = 0; i < found.Count; i++)
+        {
+            if (string.Equals(found[i].Transition.Trigger, TriggerNames.StepFailed, StringComparison.Ordinal) && string.Equals(found[i].Transition.Reason, LimitReason, StringComparison.Ordinal))
+            {
+                found[i] = found[i] with { Transition = await limits.Add(found[i].Transition, owner, cancellationToken).ConfigureAwait(false) };
+            }
+        }
+
+        return found;
     }
 
     /// <summary>One read of the ledger past a cursor: the instance's rows, where the next read starts, and whether the page filled.</summary>

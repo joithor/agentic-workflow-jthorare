@@ -15,6 +15,7 @@ using Aw.Sindri.Host.Models;
 using Aw.Sindri.Host.Registration;
 using Aw.Sindri.Infrastructure.Processes;
 using Aw.Sindri.Infrastructure.Registration;
+using Aw.Sindri.Infrastructure.Sandbox.Launch;
 using Aw.Sindri.Infrastructure.Workflows;
 
 namespace Aw.Sindri.Host;
@@ -37,6 +38,7 @@ internal static class Composition
             .AddSindriCore()
             .AddSindriFeatures()
             .AddSindriInfrastructure(environment)
+            .AddSindriPlatformSandbox(environment)   // SB-5a: the one switch (bubblewrap + session cap on Linux, UnavailableSandbox elsewhere)
             .AddSindriWorkflows(environment, ChildEnvironment.Start)   // the Temporal dev server serve keeps beside itself (engine spec rev 8 §0), the worker and 'workflow complete'
             .AddContextCore()
             .AddContextFeatures()

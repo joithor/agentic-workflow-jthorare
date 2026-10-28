@@ -5228,3 +5228,28 @@ static Aw.Sindri.Features.ListDenials.ListDenialsRequest.operator !=(Aw.Sindri.F
 static Aw.Sindri.Features.ListDenials.ListDenialsRequest.operator ==(Aw.Sindri.Features.ListDenials.ListDenialsRequest? left, Aw.Sindri.Features.ListDenials.ListDenialsRequest? right) -> bool
 static Aw.Sindri.Features.ListDenials.ListDenialsResponse.operator !=(Aw.Sindri.Features.ListDenials.ListDenialsResponse? left, Aw.Sindri.Features.ListDenials.ListDenialsResponse? right) -> bool
 static Aw.Sindri.Features.ListDenials.ListDenialsResponse.operator ==(Aw.Sindri.Features.ListDenials.ListDenialsResponse? left, Aw.Sindri.Features.ListDenials.ListDenialsResponse? right) -> bool
+Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest.CheckSandboxRequest() -> void
+Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest.<Clone>$() -> Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest!
+Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest.Equals(Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest? other) -> bool
+Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest
+override Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest.GetHashCode() -> int
+override Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest.ToString() -> string!
+static Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest.operator !=(Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest? left, Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest? right) -> bool
+static Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest.operator ==(Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest? left, Aw.Sindri.Features.CheckSandbox.CheckSandboxRequest? right) -> bool
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.ReadyToResume.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId>!
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.ReadyToResume.init -> void
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Ready.get -> bool
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Ready.init -> void
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.CheckSandboxResponse(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlockerLine!>! Blockers, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId>! ReadyToResume, bool Ready) -> void
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.<Clone>$() -> Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse!
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlockerLine!>! Blockers, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId>! ReadyToResume, out bool Ready) -> void
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Equals(Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse? other) -> bool
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse
+override Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.GetHashCode() -> int
+override Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.ToString() -> string!
+static Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.operator !=(Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse? left, Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse? right) -> bool
+static Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.operator ==(Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse? left, Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse? right) -> bool
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Blockers.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlockerLine!>!
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Blockers.init -> void

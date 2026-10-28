@@ -6,7 +6,6 @@ using Aw.Sindri.Core.Sandbox.Plan;
 
 namespace Aw.Sindri.Infrastructure.Sandbox;
 
-#pragma warning disable MA0182 // until sandbox launcher (SB-5a) starts it
 /// <summary>The outside half of §3.2: the socket directory, the Sindri forward and the proxy, for one launch.</summary>
 /// <param name="resolver">Resolves names for the proxy.</param>
 /// <param name="dialer">Opens outbound connections.</param>

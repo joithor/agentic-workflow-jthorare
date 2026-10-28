@@ -79,7 +79,7 @@ public sealed class SlackRecordFeedsTests
     {
         public ConnectorDescription Describe() => new("slack", "Slack");
 
-        public ValueTask<Result<ConnectorPage>> Pull(SourceCursor? after, int limit, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public ValueTask<Result<ConnectorPage>> Pull(SourceCursor? after, int limit, DateTimeOffset? before, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public ValueTask<Result<IReadOnlyDictionary<string, string>>> Versions(IReadOnlyList<string> keys, CancellationToken cancellationToken) => throw new NotSupportedException();
 
@@ -88,7 +88,7 @@ public sealed class SlackRecordFeedsTests
 
     private sealed class NoReader : ISlackReader
     {
-        public ValueTask<Result<SlackMessagePage>> History(string channel, string? oldest, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public ValueTask<Result<SlackMessagePage>> History(string channel, string? oldest, string? latest, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public ValueTask<Result<SlackMessagePage>> Replies(string channel, string threadTs, CancellationToken cancellationToken) => throw new NotSupportedException();
 

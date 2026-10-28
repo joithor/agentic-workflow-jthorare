@@ -98,7 +98,7 @@ public sealed class SlackIndexEndToEndTests : IDisposable
 
     private sealed class CannedSlack(string rootTs, string replyTs, string laterTs) : ISlackReader
     {
-        public ValueTask<Result<SlackMessagePage>> History(string channel, string? oldest, CancellationToken cancellationToken)
+        public ValueTask<Result<SlackMessagePage>> History(string channel, string? oldest, string? latest, CancellationToken cancellationToken)
         {
             Assert.Equal("C0001GEN", channel);
             return ValueTask.FromResult<Result<SlackMessagePage>>(new SlackMessagePage(

@@ -37,7 +37,7 @@ public sealed class SlackClientTests : IDisposable
     {
         _ = _server.Add(General, A.SlackMessage(At(1)));
 
-        var result = await Client().History(General, At(1), Ct);
+        var result = await Client().History(General, At(1), latest: null, Ct);
 
         Assert.True(result.IsSuccess);
         var request = Assert.Single(_server.Requests);
@@ -47,9 +47,17 @@ public sealed class SlackClientTests : IDisposable
     }
 
     [Fact, Trait("Lane", "unit")]
+    public async Task A_bound_is_sent_as_latest()
+    {
+        _ = await Client().History(General, oldest: null, At(2), Ct);
+
+        Assert.Contains($"latest={At(2)}", Decoded(Assert.Single(_server.Requests)), StringComparison.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public async Task A_first_read_sends_no_oldest()
     {
-        _ = await Client().History(General, oldest: null, Ct);
+        _ = await Client().History(General, oldest: null, latest: null, Ct);
 
         Assert.All(_server.Requests, static r => Assert.DoesNotContain("oldest", r.Uri.Query, StringComparison.Ordinal));
     }
@@ -64,7 +72,7 @@ public sealed class SlackClientTests : IDisposable
 
         _server.MaxPageSize = 2;
 
-        var page = (await Client().History(General, oldest: null, Ct)).Value;
+        var page = (await Client().History(General, oldest: null, latest: null, Ct)).Value;
 
         Assert.Equal(["m5", "m4", "m3", "m2", "m1"], page.Items.Select(static m => m.Text), StringComparer.Ordinal);
         Assert.Equal(3, _server.Requests.Count);
@@ -113,7 +121,7 @@ public sealed class SlackClientTests : IDisposable
         _server.MaxPageSize = 2;
         _ = _server.ScriptThrough().ScriptRateLimit(30);
 
-        var result = await Client().History(General, oldest: null, Ct);
+        var result = await Client().History(General, oldest: null, latest: null, Ct);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(_clock.GetUtcNow().AddSeconds(30), result.Value.RateLimitedUntil);
@@ -154,7 +162,7 @@ public sealed class SlackClientTests : IDisposable
     {
         _ = _server.ScriptError(slackCode);
 
-        var error = (await Client().History(General, oldest: null, Ct)).Error;
+        var error = (await Client().History(General, oldest: null, latest: null, Ct)).Error;
 
         Assert.Equal(expected, error.Code);
         Assert.Contains(slackCode, error.Message, StringComparison.Ordinal);
@@ -165,7 +173,7 @@ public sealed class SlackClientTests : IDisposable
     {
         _ = _server.ScriptRedirect("https://evil.example.net/api/conversations.history");
 
-        var error = (await Client().History(General, oldest: null, Ct)).Error;
+        var error = (await Client().History(General, oldest: null, latest: null, Ct)).Error;
 
         Assert.Equal(ConnectorsErrors.RedirectRefused.Code, error.Code);
         _ = Assert.Single(_server.Requests);
@@ -179,7 +187,7 @@ public sealed class SlackClientTests : IDisposable
     {
         _ = _server.ScriptStatus(status);
 
-        Assert.Equal(expected, (await Client().History(General, oldest: null, Ct)).Error.Code);
+        Assert.Equal(expected, (await Client().History(General, oldest: null, latest: null, Ct)).Error.Code);
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -187,7 +195,7 @@ public sealed class SlackClientTests : IDisposable
     {
         var client = Client();
 
-        var error = (await client.History(Other, oldest: null, Ct)).Error;
+        var error = (await client.History(Other, oldest: null, latest: null, Ct)).Error;
 
         Assert.Equal("SND-INDEX-013", error.Code);
         Assert.Empty(_server.Requests);
@@ -205,7 +213,7 @@ public sealed class SlackClientTests : IDisposable
     {
         var client = Client(Token, General, id);
 
-        Assert.Equal("SND-INDEX-013", (await client.History(id, oldest: null, Ct)).Error.Code);
+        Assert.Equal("SND-INDEX-013", (await client.History(id, oldest: null, latest: null, Ct)).Error.Code);
         Assert.Empty(_server.Requests);
     }
 
@@ -221,7 +229,7 @@ public sealed class SlackClientTests : IDisposable
     [Fact, Trait("Lane", "unit")]
     public async Task No_token_is_refused_with_no_request_sent()
     {
-        Assert.Equal(ConnectorsErrors.Unauthorized.Code, (await Client(token: null).History(General, oldest: null, Ct)).Error.Code);
+        Assert.Equal(ConnectorsErrors.Unauthorized.Code, (await Client(token: null).History(General, oldest: null, latest: null, Ct)).Error.Code);
         Assert.Empty(_server.Requests);
     }
 
@@ -230,7 +238,7 @@ public sealed class SlackClientTests : IDisposable
     {
         var spaced = Token + " extra";
 
-        var error = (await Client(spaced).History(General, oldest: null, Ct)).Error;
+        var error = (await Client(spaced).History(General, oldest: null, latest: null, Ct)).Error;
 
         Assert.Equal(ConnectorsErrors.Invalid.Code, error.Code);
         Assert.DoesNotContain(Token, error.Message, StringComparison.Ordinal);
@@ -254,7 +262,7 @@ public sealed class SlackClientTests : IDisposable
         {
             using var server = new FakeSlackServer(General);
             script(server);
-            var result = await new SlackClient(new HttpClient(server), new SlackClientSettings { Token = Token, Channels = [General] }, _clock).History(General, oldest: null, Ct);
+            var result = await new SlackClient(new HttpClient(server), new SlackClientSettings { Token = Token, Channels = [General] }, _clock).History(General, oldest: null, latest: null, Ct);
             if (result.IsError)
             {
                 errors.Add(result.Error.Code + " " + result.Error.Message);
@@ -271,7 +279,7 @@ public sealed class SlackClientTests : IDisposable
     {
         _ = _server.Script(static _ => throw new HttpRequestException("down"));
 
-        Assert.Equal(ConnectorsErrors.Unreachable.Code, (await Client().History(General, oldest: null, Ct)).Error.Code);
+        Assert.Equal(ConnectorsErrors.Unreachable.Code, (await Client().History(General, oldest: null, latest: null, Ct)).Error.Code);
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -279,7 +287,7 @@ public sealed class SlackClientTests : IDisposable
     {
         _ = _server.Script(static _ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"ok\":true,\"messages\":[{\"text\":\"no ts\"}]}") });
 
-        Assert.Equal(ConnectorsErrors.BadReply.Code, (await Client().History(General, oldest: null, Ct)).Error.Code);
+        Assert.Equal(ConnectorsErrors.BadReply.Code, (await Client().History(General, oldest: null, latest: null, Ct)).Error.Code);
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -294,7 +302,7 @@ public sealed class SlackClientTests : IDisposable
                 + "{\"ts\":\"1790000001.000100\",\"user\":\"U0000CCCC\",\"text\":\"c\"}]}"),
         });
 
-        var items = (await Client().History(General, oldest: null, Ct)).Value.Items;
+        var items = (await Client().History(General, oldest: null, latest: null, Ct)).Value.Items;
 
         Assert.Equal(["Ada Real", "deploy-bot", null], items.Select(static m => m.Author), StringComparer.Ordinal);
         Assert.Equal("bot_message", items[1].Subtype);

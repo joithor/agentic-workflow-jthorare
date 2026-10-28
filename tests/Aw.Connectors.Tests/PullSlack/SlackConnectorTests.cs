@@ -42,7 +42,7 @@ public sealed class SlackConnectorTests
     {
         var reader = Reader().Add(General.Channel, A.SlackMessage(At(0))).Add(Ops.Channel, A.SlackMessage(At(4)));
 
-        var page = (await Connector(reader).Pull(after: null, 100, Ct)).Value;
+        var page = (await Connector(reader).Pull(after: null, 100, before: null, Ct)).Value;
 
         Assert.Equal(["slack:C0001GEN/day/2026-10-27", "slack:G0002OPS/day/2026-10-27"], page.Items.Select(static i => i.Key), StringComparer.Ordinal);
         Assert.Equal($"C0001GEN={At(0)},G0002OPS={At(4)}", page.Next.Value);
@@ -55,10 +55,10 @@ public sealed class SlackConnectorTests
     {
         var reader = Reader().Add(General.Channel, A.SlackMessage(At(0)));
         var connector = Connector(reader);
-        var first = (await connector.Pull(after: null, 100, Ct)).Value;
+        var first = (await connector.Pull(after: null, 100, before: null, Ct)).Value;
         _ = reader.Add(General.Channel, A.SlackMessage(At(40)).WithText("later"));
 
-        var second = (await connector.Pull(first.Next, 100, Ct)).Value;
+        var second = (await connector.Pull(first.Next, 100, before: null, Ct)).Value;
 
         Assert.Contains("later", Assert.Single(second.Items).Text, StringComparison.Ordinal);
         Assert.Equal($"C0001GEN={At(40)}", second.Next.Value);
@@ -69,7 +69,7 @@ public sealed class SlackConnectorTests
     {
         var reader = Reader().Add(General.Channel, A.SlackMessage(At(0)));
 
-        var page = (await Connector(reader).Pull(new SourceCursor("garbage"), 100, Ct)).Value;
+        var page = (await Connector(reader).Pull(new SourceCursor("garbage"), 100, before: null, Ct)).Value;
 
         Assert.True(page.CursorReset);
         _ = Assert.Single(page.Items);
@@ -81,7 +81,7 @@ public sealed class SlackConnectorTests
         var reset = new DateTimeOffset(2026, 10, 27, 10, 0, 0, TimeSpan.Zero);
         var reader = Reader().Add(General.Channel, A.SlackMessage(At(0))).RateLimitHistory(reset);
 
-        var error = (await Connector(reader).Pull(after: null, 100, Ct)).Error;
+        var error = (await Connector(reader).Pull(after: null, 100, before: null, Ct)).Error;
 
         Assert.Equal(ConnectorsErrors.RateLimited.Code, error.Code);
         Assert.Contains("2026-10-27T10:00:00", error.Message, StringComparison.Ordinal);
@@ -94,11 +94,11 @@ public sealed class SlackConnectorTests
         var reader = Reader().Add(General.Channel, A.SlackMessage(At(0))).Add(Ops.Channel, A.SlackMessage(At(4))).RateLimitHistory(reset, Ops.Channel);
         var connector = Connector(reader);
 
-        var page = (await connector.Pull(after: null, 100, Ct)).Value;
+        var page = (await connector.Pull(after: null, 100, before: null, Ct)).Value;
 
         _ = Assert.Single(page.Items);
         Assert.Equal($"C0001GEN={At(0)}", page.Next.Value);
-        Assert.Equal(ConnectorsErrors.RateLimited.Code, (await connector.Pull(page.Next, 100, Ct)).Error.Code);
+        Assert.Equal(ConnectorsErrors.RateLimited.Code, (await connector.Pull(page.Next, 100, before: null, Ct)).Error.Code);
     }
 
     [Fact, Trait("Lane", "unit")]

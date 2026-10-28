@@ -119,7 +119,11 @@ internal sealed class RecordSyncRun(RecordFeed feed, IRecordStore store, (Scrubb
     }
 
     /// <summary>Where Recent starts now: 30 days back, but never before the window's start.</summary>
-    private DateTimeOffset RecentStart() => Max(clock.GetUtcNow() - RecentWindow, clock.GetUtcNow() - TimeSpan.FromDays(context.Index.WindowDays));
+    private DateTimeOffset RecentStart()
+    {
+        var now = clock.GetUtcNow();
+        return Max(now - RecentWindow, now - TimeSpan.FromDays(context.Index.WindowDays));
+    }
 
     /// <summary>The position after a page with records: the cursor of the phase moves, the others stay.</summary>
     private static SyncPosition Advance(SyncPhase phase, SyncPosition position, RecordPage page) =>

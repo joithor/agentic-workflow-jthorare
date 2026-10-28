@@ -94,7 +94,7 @@ internal sealed partial class ShellViewModel
         else if (target.RequiredOutputs.Count > 0)
         {
             row.ActionNote = Labels.CompleteNeedsOutputInSheet;   // the engine refuses a 'done' without its files: the row's sheet has the inputs
-            OpenNeedsYouRow(row.Id);
+            OpenNeedsYouRowSheet(row.Id);
         }
         else if (await desk.Complete(target, "approve", answers: null).ConfigureAwait(true) is { } answer)
         {

@@ -1,7 +1,6 @@
 using Aw.Kernel;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Launch;
-using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Infrastructure.Launch;
@@ -57,7 +56,7 @@ public sealed class SandboxStepProofTests : IDisposable
         var result = await launcher.Launch(request, TestContext.Current.CancellationToken);
 
         var started = Assert.IsType<StartedLaunch>(result);
-        Assert.Equal(1, _sandbox.Wrapped.Count);
+        _ = Assert.Single(_sandbox.Wrapped);
         Assert.Equal(1, _launch.Prepared);
         Assert.NotNull(started.Sandbox);
         Assert.True(_tmux.HasSession(started.Host.Name));
@@ -74,7 +73,7 @@ public sealed class SandboxStepProofTests : IDisposable
     {
         public int Prepared { get; private set; }
 
-        public List<Aw.Sindri.Core.Ids.LaunchId> Released { get; } = [];
+        public List<LaunchId> Released { get; } = [];
 
         public async ValueTask<Result<PreparedSandbox>> Prepare(LaunchRequest request, IReadOnlyList<string> argv, CancellationToken cancellationToken)
         {
@@ -95,7 +94,7 @@ public sealed class SandboxStepProofTests : IDisposable
             return wrapped.IsError ? wrapped.Error : new PreparedSandbox(plan.Value.ToSummary(), wrapped.Value, "/unused/session-home", SandboxRequests.RunArea);
         }
 
-        public ValueTask Release(Aw.Sindri.Core.Ids.LaunchId launch, CancellationToken cancellationToken)
+        public ValueTask Release(LaunchId launch, CancellationToken cancellationToken)
         {
             Released.Add(launch);
             return ValueTask.CompletedTask;

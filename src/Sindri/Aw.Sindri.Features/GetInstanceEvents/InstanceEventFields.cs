@@ -19,6 +19,14 @@ public sealed record InstanceEventFields(string? From = null, string? To = null,
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? Tokens { get; init; }
 
+    /// <summary>The launcher agent an agent run ran on (#1269). Not written when null.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Agent { get; init; }
+
+    /// <summary>The model an agent run asked for (#1269). Not written when null.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Model { get; init; }
+
     /// <summary>Why a Step failed ('launch', 'lost', 'exit' or 'limit', or a free text); read from the detail of a 'step.failed' row only. Not written when null.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Reason { get; init; }

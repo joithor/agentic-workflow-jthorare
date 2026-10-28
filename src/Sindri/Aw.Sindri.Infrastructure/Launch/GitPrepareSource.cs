@@ -16,6 +16,6 @@ internal sealed class GitPrepareSource : IPrepareSource
         ArgumentNullException.ThrowIfNull(path);
         // why: a ':' or leading '-' in the commit would change what git reads; the commit is a sha the launcher recorded, and "--end-of-options" keeps it from being a flag
         var shown = await ViewerProcess.Output("git", ["-C", repoPath, "show", "--end-of-options", commit + ":" + path], _budget, cancellationToken).ConfigureAwait(false);
-        return Results.Success<string?>(shown);   // null: git failed or the commit has no such file, which the prepare reports as lockfile-missing
+        return Results.Success(shown);   // null: git failed or the commit has no such file, which the prepare reports as lockfile-missing
     }
 }

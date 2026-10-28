@@ -27,6 +27,6 @@ public sealed class FakePrepareSource : IPrepareSource
     public ValueTask<Result<string?>> FileAtCommit(string repoPath, string commit, string path, CancellationToken cancellationToken)
     {
         _reads.Add((repoPath, commit, path));
-        return ValueTask.FromResult(Results.Success<string?>(_files.TryGetValue((commit, path), out var text) ? text : null));
+        return ValueTask.FromResult(Results.Success(_files.TryGetValue((commit, path), out var text) ? text : null));
     }
 }

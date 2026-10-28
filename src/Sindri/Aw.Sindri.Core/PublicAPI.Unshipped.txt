@@ -20965,11 +20965,11 @@ Aw.Sindri.Core.Sandbox.SandboxBlocker
 Aw.Sindri.Core.Sandbox.SandboxBlocker.<Clone>$() -> Aw.Sindri.Core.Sandbox.SandboxBlocker!
 Aw.Sindri.Core.Sandbox.SandboxBlocker.Code.get -> Aw.Sindri.Core.Sandbox.SandboxCode!
 Aw.Sindri.Core.Sandbox.SandboxBlocker.Code.init -> void
-Aw.Sindri.Core.Sandbox.SandboxBlocker.Deconstruct(out Aw.Sindri.Core.Sandbox.SandboxCode! Code, out string! Reason, out string? Source) -> void
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Deconstruct(out Aw.Sindri.Core.Sandbox.SandboxCode! Code, out string! Reason, out string? Source, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>? Values) -> void
 Aw.Sindri.Core.Sandbox.SandboxBlocker.Equals(Aw.Sindri.Core.Sandbox.SandboxBlocker? other) -> bool
 Aw.Sindri.Core.Sandbox.SandboxBlocker.Reason.get -> string!
 Aw.Sindri.Core.Sandbox.SandboxBlocker.Reason.init -> void
-Aw.Sindri.Core.Sandbox.SandboxBlocker.SandboxBlocker(Aw.Sindri.Core.Sandbox.SandboxCode! Code, string! Reason, string? Source = null) -> void
+Aw.Sindri.Core.Sandbox.SandboxBlocker.SandboxBlocker(Aw.Sindri.Core.Sandbox.SandboxCode! Code, string! Reason, string? Source = null, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? Values = null) -> void
 Aw.Sindri.Core.Sandbox.SandboxBlocker.Source.get -> string?
 Aw.Sindri.Core.Sandbox.SandboxBlocker.Source.init -> void
 Aw.Sindri.Core.Sandbox.SandboxCheckReport
@@ -20997,3 +20997,73 @@ static Aw.Sindri.Core.Sandbox.SandboxBlocker.operator !=(Aw.Sindri.Core.Sandbox.
 static Aw.Sindri.Core.Sandbox.SandboxBlocker.operator ==(Aw.Sindri.Core.Sandbox.SandboxBlocker? left, Aw.Sindri.Core.Sandbox.SandboxBlocker? right) -> bool
 static Aw.Sindri.Core.Sandbox.SandboxCheckReport.operator !=(Aw.Sindri.Core.Sandbox.SandboxCheckReport? left, Aw.Sindri.Core.Sandbox.SandboxCheckReport? right) -> bool
 static Aw.Sindri.Core.Sandbox.SandboxCheckReport.operator ==(Aw.Sindri.Core.Sandbox.SandboxCheckReport? left, Aw.Sindri.Core.Sandbox.SandboxCheckReport? right) -> bool
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Values.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Aw.Sindri.Core.Sandbox.SandboxBlocker.Values.init -> void
+static Aw.Sindri.Core.Sandbox.SandboxBlocker.Of(Aw.Kernel.Error! refusal) -> Aw.Sindri.Core.Sandbox.SandboxBlocker!
+Aw.Sindri.Core.Sandbox.ISandboxFormCheck
+Aw.Sindri.Core.Sandbox.ISandboxFormCheck.Check(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlocker!>!>
+Aw.Sindri.Core.Sandbox.ISandboxLoginCheck
+Aw.Sindri.Core.Sandbox.ISandboxLoginCheck.Check(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlocker!>!>
+Aw.Sindri.Core.Sandbox.ISandboxFixture
+Aw.Sindri.Core.Sandbox.ISandboxFixture.Request() -> Aw.Sindri.Core.Sandbox.Plan.SandboxRequest?
+Aw.Sindri.Core.Sandbox.ISandboxParks
+Aw.Sindri.Core.Sandbox.ISandboxParks.Parked(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.ParkedOnSandbox!>!>
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox
+Aw.Sindri.Core.Sandbox.ISandboxSlots
+Aw.Sindri.Core.Sandbox.ISandboxSlots.Free(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<int>
+Aw.Sindri.Core.Sandbox.SandboxCopy
+static Aw.Sindri.Core.Sandbox.SandboxCopy.For(string! code, string! reason, string? source = null, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? values = null) -> Aw.Sindri.Core.Sandbox.OwnerCopy?
+Aw.Sindri.Core.Sandbox.OwnerCopy
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine
+static Aw.Sindri.Core.Sandbox.SandboxBlockerLine.From(Aw.Sindri.Core.Sandbox.SandboxBlocker! blocker) -> Aw.Sindri.Core.Sandbox.SandboxBlockerLine!
+static Aw.Sindri.Core.Sandbox.Plan.SandboxPlanRenderer.Lead(Aw.Sindri.Core.Sandbox.Plan.SandboxPlan! plan) -> string!
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.<Clone>$() -> Aw.Sindri.Core.Sandbox.ParkedOnSandbox!
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId Instance, out System.DateTimeOffset Since) -> void
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Equals(Aw.Sindri.Core.Sandbox.ParkedOnSandbox? other) -> bool
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.ParkedOnSandbox(Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId Instance, System.DateTimeOffset Since) -> void
+override Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.ParkedOnSandbox.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.ParkedOnSandbox.ToString() -> string!
+static Aw.Sindri.Core.Sandbox.ParkedOnSandbox.operator !=(Aw.Sindri.Core.Sandbox.ParkedOnSandbox? left, Aw.Sindri.Core.Sandbox.ParkedOnSandbox? right) -> bool
+static Aw.Sindri.Core.Sandbox.ParkedOnSandbox.operator ==(Aw.Sindri.Core.Sandbox.ParkedOnSandbox? left, Aw.Sindri.Core.Sandbox.ParkedOnSandbox? right) -> bool
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Instance.get -> Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Instance.init -> void
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Since.get -> System.DateTimeOffset
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Since.init -> void
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Command.get -> string?
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Command.init -> void
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.State.get -> string?
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.State.init -> void
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.<Clone>$() -> Aw.Sindri.Core.Sandbox.SandboxBlockerLine!
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Deconstruct(out string! Code, out string! Reason, out string? Source, out string! Text, out string? Command, out string? State) -> void
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Equals(Aw.Sindri.Core.Sandbox.SandboxBlockerLine? other) -> bool
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.SandboxBlockerLine(string! Code, string! Reason, string? Source, string! Text, string? Command, string? State) -> void
+override Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.SandboxBlockerLine.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.SandboxBlockerLine.ToString() -> string!
+static Aw.Sindri.Core.Sandbox.SandboxBlockerLine.operator !=(Aw.Sindri.Core.Sandbox.SandboxBlockerLine? left, Aw.Sindri.Core.Sandbox.SandboxBlockerLine? right) -> bool
+static Aw.Sindri.Core.Sandbox.SandboxBlockerLine.operator ==(Aw.Sindri.Core.Sandbox.SandboxBlockerLine? left, Aw.Sindri.Core.Sandbox.SandboxBlockerLine? right) -> bool
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Code.get -> string!
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Code.init -> void
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Reason.get -> string!
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Reason.init -> void
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Source.get -> string?
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Source.init -> void
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Text.get -> string!
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Text.init -> void
+Aw.Sindri.Core.Sandbox.OwnerCopy.<Clone>$() -> Aw.Sindri.Core.Sandbox.OwnerCopy!
+Aw.Sindri.Core.Sandbox.OwnerCopy.Deconstruct(out string! Text, out string? Command, out string? State) -> void
+Aw.Sindri.Core.Sandbox.OwnerCopy.Equals(Aw.Sindri.Core.Sandbox.OwnerCopy? other) -> bool
+Aw.Sindri.Core.Sandbox.OwnerCopy.OwnerCopy(string! Text, string? Command, string? State) -> void
+override Aw.Sindri.Core.Sandbox.OwnerCopy.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.OwnerCopy.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.OwnerCopy.ToString() -> string!
+static Aw.Sindri.Core.Sandbox.OwnerCopy.operator !=(Aw.Sindri.Core.Sandbox.OwnerCopy? left, Aw.Sindri.Core.Sandbox.OwnerCopy? right) -> bool
+static Aw.Sindri.Core.Sandbox.OwnerCopy.operator ==(Aw.Sindri.Core.Sandbox.OwnerCopy? left, Aw.Sindri.Core.Sandbox.OwnerCopy? right) -> bool
+Aw.Sindri.Core.Sandbox.OwnerCopy.Text.get -> string!
+Aw.Sindri.Core.Sandbox.OwnerCopy.Text.init -> void
+Aw.Sindri.Core.Sandbox.OwnerCopy.Command.get -> string?
+Aw.Sindri.Core.Sandbox.OwnerCopy.Command.init -> void
+Aw.Sindri.Core.Sandbox.OwnerCopy.State.get -> string?
+Aw.Sindri.Core.Sandbox.OwnerCopy.State.init -> void
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Quiet.get -> bool

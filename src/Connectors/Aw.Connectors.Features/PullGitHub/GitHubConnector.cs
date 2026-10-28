@@ -28,7 +28,7 @@ internal sealed class GitHubConnector(
     public ConnectorDescription Describe() => new("github", "GitHub");
 
     /// <inheritdoc />
-    public async ValueTask<Result<ConnectorPage>> Pull(Aw.Connectors.Core.SourceCursor? after, int limit, CancellationToken cancellationToken)
+    public async ValueTask<Result<ConnectorPage>> Pull(SourceCursor? after, int limit, CancellationToken cancellationToken)
     {
         var cursors = GitHubCursors.Parse(after?.Value);
         var items = new List<ConnectorItem>();

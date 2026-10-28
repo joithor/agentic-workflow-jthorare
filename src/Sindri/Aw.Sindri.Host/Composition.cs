@@ -47,7 +47,7 @@ internal static class Composition
             .AddContextInfrastructure(ContextEnvironment(environment))   // context engine: $AW_SINDRI_HOME/context (compose edge); pointers resolve here
             .AddCodeIndexFeatures()
             .AddCodeIndexInfrastructure(environment)   // the code index: $AW_SINDRI_HOME/code-index (compose edge)
-            .AddConnectorsFeatures()   // the source readers (owned-index spec §9.2); the Host adapter over IConnector is IndexSources/ConnectorFeed
+            .AddGitHubConnectorFactory()   // the source readers are built per token (owned-index spec §9.2), so only the factory; the Host adapter over IConnector is IndexSources/ConnectorFeed
             .AddConnectorsInfrastructure(environment)
             .AddContextLabeling()   // the labeling pass over IModelPort; a build asks it only when the approved profile turns 'context.labeling' on
             .AddSingleton<IModelPort>(sp => new JudgeModelPort(new JudgeCatalog(environment, sp.GetRequiredService<TimeProvider>(), sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>()).Get))

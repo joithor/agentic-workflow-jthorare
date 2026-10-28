@@ -37,6 +37,6 @@ internal sealed class ProfileRepoMap
     /// <summary>Places a GitHub record: its profile repo, its audience and the connector's path prefix 'owner/name'.</summary>
     /// <param name="item">The record.</param>
     /// <returns>The placement, or null to skip the record (no repo, an unlisted repo, no profile repo of that name).</returns>
-    internal Placement? Place(Aw.Connectors.Core.ConnectorItem item) =>
+    internal Placement? Place(Connectors.Core.ConnectorItem item) =>
         item.Repo is { } gitHubRepo && Find(gitHubRepo) is { } match ? new Placement(match.Repo, match.Audience, gitHubRepo) : null;
 }

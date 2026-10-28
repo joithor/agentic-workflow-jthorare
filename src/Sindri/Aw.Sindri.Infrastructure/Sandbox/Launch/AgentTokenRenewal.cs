@@ -47,7 +47,7 @@ internal sealed class AgentTokenRenewal(IAgentTokenSource source, TimeProvider c
 
         try
         {
-            TokenFile.Replace(sessionHome, held.Token.Value);
+            _ = TokenFile.Replace(sessionHome, held.Token.Value);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -115,7 +115,11 @@ internal sealed class AgentTokenRenewal(IAgentTokenSource source, TimeProvider c
                 return _retry;
             }
 
-            TokenFile.Replace(home, minted.Value.Value);
+            if (!TokenFile.Replace(home, minted.Value.Value, create: false))
+            {
+                return null;   // the session home is gone: the launch closed, so the token is not written back
+            }
+
             held.Token = minted.Value;
             return _every;
         }
@@ -124,6 +128,13 @@ internal sealed class AgentTokenRenewal(IAgentTokenSource source, TimeProvider c
             warn?.Invoke($"{SindriErrors.LaunchGitHubTokenFailed.Code}: the GitHub token could not be renewed ({e.Message}); the old token stays");
             return _retry;
         }
+#pragma warning disable CA1031 // why: any other failure (a keychain process that won't start, an unexpected reply) must not end the renewals; it is said and retried
+        catch (Exception e) when (e is not OperationCanceledException and not ObjectDisposedException)
+        {
+            warn?.Invoke($"{SindriErrors.LaunchGitHubTokenFailed.Code}: the GitHub token could not be renewed ({e.GetType().Name}); the old token stays");
+            return _retry;
+        }
+#pragma warning restore CA1031
     }
 
     private void Say(Error error) =>

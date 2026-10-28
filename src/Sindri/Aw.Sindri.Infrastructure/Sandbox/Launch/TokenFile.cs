@@ -11,7 +11,9 @@ internal static class TokenFile
     /// <summary>Puts <paramref name="token"/> in the session home's token file, replacing what was there.</summary>
     /// <param name="sessionHome">The launch's session home.</param>
     /// <param name="token">The token.</param>
-    internal static void Replace(string sessionHome, string token)
+    /// <param name="create">False for a renewal: a folder that is gone means the launch closed, and the token is not written back.</param>
+    /// <returns>False when <paramref name="create"/> is false and the folder is gone.</returns>
+    internal static bool Replace(string sessionHome, string token, bool create = true)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -19,6 +21,11 @@ internal static class TokenFile
         }
 
         var directory = SessionHomePaths.GhTokenDirectory(sessionHome);
+        if (!create && !Directory.Exists(directory))
+        {
+            return false;
+        }
+
         _ = Directory.CreateDirectory(directory, OwnerDirectory);
         File.SetUnixFileMode(directory, OwnerDirectory);
         var temp = $"{directory}/.token.{Guid.NewGuid():N}";
@@ -31,6 +38,7 @@ internal static class TokenFile
             }
 
             File.Move(temp, SessionHomePaths.GhTokenFile(sessionHome), overwrite: true);
+            return true;
         }
         finally
         {

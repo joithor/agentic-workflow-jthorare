@@ -23,10 +23,19 @@ internal sealed class FakeAgentTokenSource(params Result<AgentToken>[] results) 
         _ = Interlocked.Exchange(ref _served, 0);
     }
 
+    /// <summary>Sets an exception the next mint throws instead of answering (once).</summary>
+    internal Exception? ThrowNext { get; set; }
+
     /// <inheritdoc/>
     public ValueTask<Result<AgentToken>> Mint(LaunchId launch, RepoName repo, CancellationToken cancellationToken)
     {
         _ = Interlocked.Increment(ref _calls);
+        if (ThrowNext is { } thrown)
+        {
+            ThrowNext = null;
+            throw thrown;
+        }
+
         var n = Interlocked.Increment(ref _served);
         return ValueTask.FromResult(_results[Math.Min(n, _results.Length) - 1]);
     }

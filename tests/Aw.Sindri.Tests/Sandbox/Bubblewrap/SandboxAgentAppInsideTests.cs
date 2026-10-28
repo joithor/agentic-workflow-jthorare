@@ -86,7 +86,7 @@ public sealed class SandboxAgentAppInsideTests
         await WaitFor(f.Box.RunDirectory + "/ready");
         var inode = Inode(f.TokenFile);
         var second = await f.Mint("ghs_proof_second");
-        TokenFile.Replace(f.SessionHome, second);
+        _ = TokenFile.Replace(f.SessionHome, second);
         await File.WriteAllTextAsync(f.Box.RunDirectory + "/go", string.Empty, ct);
         await WaitFor(code);
         return new Ran(int.Parse((await Read(code)).Trim(), CultureInfo.InvariantCulture), await Read(output), inode, second);
@@ -180,7 +180,7 @@ public sealed class SandboxAgentAppInsideTests
             var env = new Dictionary<string, string?>(StringComparer.Ordinal) { ["AGENT_APP_KEY_FILE"] = keyFile, ["AGENT_APP_API_URL"] = f.Api.Url };
             f._source = new GitHubAppTokenSource(name => env.GetValueOrDefault(name), GitHubAppTokenSource.CreateClient(), RealTime.Clock);
             f.First = await f.Mint("ghs_proof_first");
-            Infrastructure.Sandbox.Launch.TokenFile.Replace(f.SessionHome, f.First);
+            _ = Infrastructure.Sandbox.Launch.TokenFile.Replace(f.SessionHome, f.First);
 
             Assert.Equal(0, SandboxBox.Run("git", ["clone", "-q", "--bare", box.Repo, f.Remote]).Exit);
             f.DefaultBranch = Git("--git-dir", f.Remote, "symbolic-ref", "HEAD");

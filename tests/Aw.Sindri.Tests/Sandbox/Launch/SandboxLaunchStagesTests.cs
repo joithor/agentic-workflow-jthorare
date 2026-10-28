@@ -119,6 +119,40 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     }
 
     [Fact]
+    public async Task A_renewal_that_throws_is_said_and_retried_not_dropped()
+    {
+        var warnings = new List<string>();
+        var (stages, plan) = await WriteAgentAppToken(warnings.Add);
+        _tokens.ThrowNext = new InvalidOperationException("the keychain process did not start");
+        _tokens.Then(Results.Success(new AgentToken("ghs_after_throw", KnownInstants.Epoch.AddHours(2))));
+
+        _clock.Advance(TimeSpan.FromMinutes(45));
+        await WaitUntil(() => warnings.Count == 1);
+        Expect.True(warnings[0].Contains("SND-LAUNCH-018", StringComparison.Ordinal) && warnings[0].Contains(nameof(InvalidOperationException), StringComparison.Ordinal));
+        await WaitUntil(() =>
+        {
+            _clock.Advance(TimeSpan.FromMinutes(1));
+            return File.ReadAllText(SessionHomePaths.GhTokenFile(Home)) == "ghs_after_throw\n";
+        });
+        await stages.Release(plan.Launch, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task A_renewal_after_the_session_home_is_gone_writes_nothing_back()
+    {
+        var (stages, plan) = await WriteAgentAppToken();
+        _tokens.Then(Results.Success(new AgentToken("ghs_late", KnownInstants.Epoch.AddHours(2))));
+        Directory.Delete(SessionHomePaths.GhTokenDirectory(Home), recursive: true);
+
+        _clock.Advance(TimeSpan.FromMinutes(45));
+        await WaitUntil(() => _tokens.Calls == 2);
+        _clock.Advance(TimeSpan.FromMinutes(45));
+        Expect.True(!Directory.Exists(SessionHomePaths.GhTokenDirectory(Home)));
+        Expect.Equal(2, _tokens.Calls);   // a closed launch is not renewed again
+        await stages.Release(plan.Launch, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task A_failed_renewal_keeps_the_old_token_warns_and_tries_again_in_5_minutes()
     {
         var warnings = new List<string>();

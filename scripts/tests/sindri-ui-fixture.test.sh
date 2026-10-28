@@ -16,6 +16,22 @@ check() {
 contains() { # $1 name, $2 haystack, $3 needle
   case "$2" in *"$3"*) echo "ok - $1" ;; *) echo "not ok - $1"; echo "  missing: $3"; echo "  in:      $2"; fail=1 ;; esac
 }
+# `timeout` is GNU coreutils: macOS has none (gtimeout only with Homebrew coreutils), so the stub checks used to exit 127 there.
+# Same contract: runs "$@" with this shell's stdin, exits 124 when it is still running after $1 seconds.
+with_timeout() {
+  local secs=$1; shift
+  if command -v timeout >/dev/null 2>&1; then timeout "$secs" "$@"; return; fi
+  if command -v gtimeout >/dev/null 2>&1; then gtimeout "$secs" "$@"; return; fi
+  exec 3<&0
+  "$@" <&3 &
+  local pid=$!
+  ( sleep "$secs"; kill -TERM "$pid" 2>/dev/null ) &
+  local watcher=$!
+  wait "$pid"; local rc=$?
+  exec 3<&-
+  if kill -0 "$watcher" 2>/dev/null; then kill "$watcher" 2>/dev/null; wait "$watcher" 2>/dev/null; return "$rc"; fi
+  return 124
+}
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
@@ -647,9 +663,9 @@ check "the judge stub answers m1 as Jev" "$(echo '{}' | "$PD/stub-judge/judge" m
 AW_SINDRI_HOME="$P" SINDRI="$STUB" FIXTURE_AGENT_WAIT=2 bash "$FIXTURE" model-picks-run unpriced >/dev/null 2>&1
 contains "unpriced lists a model the price table lacks after the cheap one" "$(cat "$P/profile/profile.yaml")" "list: [claude-haiku-4-5, fixture-unpriced-model]"
 AW_SINDRI_HOME="$P" SINDRI="$STUB" FIXTURE_AGENT_WAIT=2 bash "$FIXTURE" model-picks-run picking >/dev/null 2>&1
-check "picking holds the judge stub (its call outlasts the wait)" "$(echo '{}' | timeout 1 "$PD/stub-judge/judge" model-pick >/dev/null 2>&1; echo $?)" "124"
+check "picking holds the judge stub (its call outlasts the wait)" "$(echo '{}' | with_timeout 1 "$PD/stub-judge/judge" model-pick >/dev/null 2>&1; echo $?)" "124"
 AW_SINDRI_HOME="$P" SINDRI="$STUB" FIXTURE_AGENT_WAIT=2 bash "$FIXTURE" model-picks-run picked >/dev/null 2>&1
-check "the next state lets the judge stub answer again" "$(echo '{}' | timeout 1 "$PD/stub-judge/judge" model-pick >/dev/null 2>&1; echo $?)" "0"
+check "the next state lets the judge stub answer again" "$(echo '{}' | with_timeout 1 "$PD/stub-judge/judge" model-pick >/dev/null 2>&1; echo $?)" "0"
 
 # The launcher stub: what it writes and what it reports, run by hand with the environment a launch gives it. Each run has its own folders.
 AW_SINDRI_HOME="$P" SINDRI="$STUB" FIXTURE_AGENT_WAIT=2 bash "$FIXTURE" model-picks-run escalated >/dev/null 2>&1   # the stub refuses Haiku in this state only
@@ -657,8 +673,8 @@ R="$TMPDIR/picksstub"
 mkdir -p "$R/home/launches" "$R/run1" "$R/claude1" "$R/run2" "$R/claude2"
 seed='Sindri Step brief. Report with: sindri workflow complete ITM-0f/wf/1 --run RUN-abc --outcome done --output fact:resolution=$AW_SINDRI_RUN_DIR/.sindri-out/resolution'
 : > "$STUB_LOG"
-env AW_SINDRI_HOME="$R/home" AW_SINDRI_LAUNCH=LCH-1 AW_SINDRI_INSTANCE=ITM-0f/wf/1 AW_SINDRI_RUN_DIR="$R/run1" CLAUDE_CONFIG_DIR="$R/claude1" \
-  timeout 5 "$PD/stub-bin-pick/claude" --model claude-haiku-4-5 --session-id 11111111-2222-4333-8444-555555555555 "$seed" >/dev/null 2>&1
+with_timeout 5 env AW_SINDRI_HOME="$R/home" AW_SINDRI_LAUNCH=LCH-1 AW_SINDRI_INSTANCE=ITM-0f/wf/1 AW_SINDRI_RUN_DIR="$R/run1" CLAUDE_CONFIG_DIR="$R/claude1" \
+  "$PD/stub-bin-pick/claude" --model claude-haiku-4-5 --session-id 11111111-2222-4333-8444-555555555555 "$seed" >/dev/null 2>&1
 check "the stub on the model it refuses reports twice (the second bad report ends its session)" "$(grep -c '^workflow complete ITM-0f/wf/1 --run RUN-abc --outcome done --output fact:resolution=' "$STUB_LOG")" "2"
 check "the stub's refused report is not JSON" "$(jq -e . "$R/run1/bad-report" >/dev/null 2>&1 && echo json || echo not-json)" "not-json"
 check "the refused stub leaves no file in .sindri-out (recovery would prove the outcome from one)" "$(ls -A "$R/run1/.sindri-out" | wc -l | tr -d ' ')" "0"
@@ -666,8 +682,8 @@ contains "the stub logs each workflow complete call in stub.log" "$(cat "$R/run1
 check "stub.log has one entry per call" "$(grep -c '^exit ' "$R/run1/stub.log")" "2"
 check "the stub writes the session's transcript under the session id, naming the model it ran on" "$(jq -r '[.type, .message.model] | join(",")' "$R/claude1/projects/fixture/11111111-2222-4333-8444-555555555555.jsonl")" "assistant,claude-haiku-4-5"
 : > "$STUB_LOG"
-env AW_SINDRI_HOME="$R/home" AW_SINDRI_LAUNCH=LCH-2 AW_SINDRI_INSTANCE=ITM-0f/wf/1 AW_SINDRI_RUN_DIR="$R/run2" CLAUDE_CONFIG_DIR="$R/claude2" \
-  timeout 5 "$PD/stub-bin-pick/claude" --model claude-sonnet-4-5 --session-id 66666666-2222-4333-8444-555555555555 "$seed" >/dev/null 2>&1
+with_timeout 5 env AW_SINDRI_HOME="$R/home" AW_SINDRI_LAUNCH=LCH-2 AW_SINDRI_INSTANCE=ITM-0f/wf/1 AW_SINDRI_RUN_DIR="$R/run2" CLAUDE_CONFIG_DIR="$R/claude2" \
+  "$PD/stub-bin-pick/claude" --model claude-sonnet-4-5 --session-id 66666666-2222-4333-8444-555555555555 "$seed" >/dev/null 2>&1
 check "the stub on any other model reports once" "$(grep -c '^workflow complete ' "$STUB_LOG")" "1"
 check "the stub's good report is a JSON object" "$(jq -r type "$R/run2/.sindri-out/resolution")" "object"
 check "the stub's usage is read from its transcript as tokens on that model" "$(jq -r '[.message.model, .message.usage.input_tokens > 0, .message.usage.output_tokens > 0] | join(",")' "$R/claude2/projects/fixture/66666666-2222-4333-8444-555555555555.jsonl")" "claude-sonnet-4-5,true,true"

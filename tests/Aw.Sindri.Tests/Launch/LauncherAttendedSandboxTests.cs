@@ -61,6 +61,18 @@ public sealed class LauncherAttendedSandboxTests : IDisposable
     }
 
     [Fact]
+    public async Task Attended_opens_worktree_is_on_its_own_run_branch()
+    {
+        var (request, repo) = await Open();
+
+        _ = Assert.IsType<StartedLaunch>(await Make(_sandbox).Launch(request, TestContext.Current.CancellationToken));
+
+        var worktree = Assert.IsType<string>(Assert.Single(_sandbox.Prepared).Request.Worktree);
+        // why: the sandbox lets the session write refs under sindri/open/<launch> only, so a detached HEAD would leave its commits on no branch (sandbox spec §3.9)
+        Assert.Equal($"sindri/open/{request.Launch.Value}/work", (await repo.Git("-C", worktree, "rev-parse", "--abbrev-ref", "HEAD")).Trim());
+    }
+
+    [Fact]
     public async Task Attended_open_has_no_unconfined_fallback()
     {
         var (request, _) = await Open();

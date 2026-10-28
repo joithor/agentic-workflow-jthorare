@@ -44,7 +44,7 @@ public sealed class SandboxLaunchAttendedCapTests : IDisposable
 
         Assert.True(result.IsError);
         Assert.Equal(SindriErrors.LaunchSessionWait.Code, result.Error.Code);
-        Assert.Contains("No free session slot (3 of 3 running). Close one, then open again.", result.Error.Message, StringComparison.Ordinal);
+        Assert.Contains("No free session slot (`3` of `3` running). Close one, then open again.", result.Error.Message, StringComparison.Ordinal);
         Assert.Equal(SandboxReasons.Sessions, SandboxRefusal.ReasonOf(result.Error));
     }
 
@@ -52,8 +52,9 @@ public sealed class SandboxLaunchAttendedCapTests : IDisposable
     public async Task A_full_cap_still_tells_a_Step_to_wait()
     {
         var launch = Make(static () => Req.WriteScope);
+        var step = A.LaunchRequest().Unattended(new StepArgs(Model: null, Policy: null, new StepRef("build", "agent"))).OnInstance(InstanceAddress.From("ITM-1/spec/1"), RunToken.For(1, 1)).Build();   // A.LaunchRequest() alone is an attended open
 
-        var result = await launch.Prepare(A.LaunchRequest().Build(), ["claude"], chosenSession: null, TestContext.Current.CancellationToken);
+        var result = await launch.Prepare(step, ["claude"], chosenSession: null, TestContext.Current.CancellationToken);
 
         Assert.Equal(SindriErrors.LaunchSessionWait.Code, result.Error.Code);
         Assert.DoesNotContain("Close one", result.Error.Message, StringComparison.Ordinal);

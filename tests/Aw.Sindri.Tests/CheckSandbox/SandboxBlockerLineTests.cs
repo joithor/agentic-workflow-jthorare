@@ -47,7 +47,7 @@ public sealed class SandboxBlockerLineTests
 
         var line = SandboxBlockerLine.From(SandboxBlocker.Of(refusal));
 
-        Assert.Equal("Waiting for a free session slot (3 of 3 running). This Step starts by itself.", line.Text);
+        Assert.Equal("Waiting for a free session slot (`3` of `3` running). This Step starts by itself.", line.Text);
     }
 
     [Fact]

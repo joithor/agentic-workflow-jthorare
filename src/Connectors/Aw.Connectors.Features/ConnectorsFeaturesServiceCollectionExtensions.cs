@@ -23,9 +23,10 @@ public static class ConnectorsFeaturesServiceCollectionExtensions
                     new PullGitHubService(sp.GetRequiredService<IGitHubReader>()),   // a factory registration: the reader is the caller's to add, so a host that builds readers per token registers none
                     sp.GetRequiredService<IValidator<PullGitHubRequest>>()))
             .AddScoped<IValidator<PullSlackRequest>, PullSlackValidator>()
+            .AddSingleton<ISlackConnectorFactory>(static sp => new SlackConnectorFactory(sp.GetService<TimeProvider>() ?? TimeProvider.System))
             .AddScoped<IService<PullSlackRequest, PullSlackResponse>>(static sp =>
                 new ValidatingService<PullSlackRequest, PullSlackResponse>(
-                    new PullSlackService(sp.GetRequiredService<ISlackReader>()),   // a factory registration, as PullGitHub's: a host without Slack adds no reader and still validates
+                    new PullSlackService(sp.GetRequiredService<ISlackReader>()),   // a factory registration: the reader is the caller's to add, so a host that builds readers per token registers none
                     sp.GetRequiredService<IValidator<PullSlackRequest>>()))
             .AddSingleton<IGitHubConnectorFactory>(static sp => new GitHubConnectorFactory(sp.GetService<TimeProvider>() ?? TimeProvider.System));
         return services;
@@ -36,6 +37,12 @@ public static class ConnectorsFeaturesServiceCollectionExtensions
     /// <returns>The same collection.</returns>
     public static IServiceCollection AddGitHubConnectorFactory(this IServiceCollection services) =>
         services.AddSingleton<IGitHubConnectorFactory>(static sp => new GitHubConnectorFactory(sp.GetService<TimeProvider>() ?? TimeProvider.System));
+
+    /// <summary>Adds only the Slack connector factory: for a host that builds a reader per token and so registers no <see cref="ISlackReader"/> (Sindri's Host).</summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same collection.</returns>
+    public static IServiceCollection AddSlackConnectorFactory(this IServiceCollection services) =>
+        services.AddSingleton<ISlackConnectorFactory>(static sp => new SlackConnectorFactory(sp.GetService<TimeProvider>() ?? TimeProvider.System));
 
     /// <summary>Adds the Slack connector as an <see cref="IConnector"/> over the registered <see cref="ISlackReader"/> (add the reader with AddSlackReader) and the PullSlack slice.</summary>
     /// <param name="services">The service collection.</param>

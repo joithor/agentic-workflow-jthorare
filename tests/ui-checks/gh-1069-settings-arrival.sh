@@ -49,7 +49,7 @@ trap cleanup EXIT
 command -v jq >/dev/null 2>&1 || setup_fail "jq is needed"
 
 # 1. The control plane with an approved profile, then the profile changes so Settings asks for the approval.
-bash "$FIXTURE" up >/dev/null 2>&1 || setup_fail "sindri-ui-fixture up"
+bash "$FIXTURE" up >"$OUT/fixture-up.log" 2>&1 || setup_fail "sindri-ui-fixture up (see $OUT/fixture-up.log)"
 
 # The fixture's profile has no repo, and the settings step waits for one ("Waits for a repository"). Give the profile a repo the
 # way 'context up' does (a git repo under the home, a repos: block after user:) and approve it as the owner; then change it.
@@ -73,7 +73,7 @@ fi
 hash="$("$PROVE" profile validate --json 2>/dev/null | jq -r ".hash // empty")"
 [ -n "$hash" ] || setup_fail "profile validate gave no hash"
 printf "approve profile %s\n" "${hash:0:6}" | "$PROVE" human profile approve "$hash" >/dev/null 2>&1 || setup_fail "the owner's approval of the profile with a repo"
-bash "$FIXTURE" drift >/dev/null 2>&1 || setup_fail "sindri-ui-fixture drift"
+bash "$FIXTURE" drift >"$OUT/fixture-drift.log" 2>&1 || setup_fail "sindri-ui-fixture drift (see $OUT/fixture-drift.log)"
 
 # 2. The real app, drivable, on the fixture's control plane: this checkout's debug build (sindri-app.sh's publish would
 #    make the build the owner's current one), unless AW_SINDRI_UI names a binary.

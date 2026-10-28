@@ -1,4 +1,5 @@
 using Aw.Kernel;
+using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Workflow.Engine;
@@ -31,7 +32,7 @@ public sealed class FakeSandboxLaunch : ISandboxLaunch
     public IReadOnlyList<LaunchId> Released => _released;
 
     /// <inheritdoc/>
-    public ValueTask<Result<PreparedSandbox>> Prepare(LaunchRequest request, IReadOnlyList<string> argv, CancellationToken cancellationToken)
+    public ValueTask<Result<PreparedSandbox>> Prepare(LaunchRequest request, IReadOnlyList<string> argv, SessionId? chosenSession, CancellationToken cancellationToken)
     {
         _prepared.Add((request, argv));
         return ValueTask.FromResult(Refuse is { } error

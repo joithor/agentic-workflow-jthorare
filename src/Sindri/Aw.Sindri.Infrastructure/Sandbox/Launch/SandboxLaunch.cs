@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Aw.Kernel;
 using Aw.Sindri.Core;
+using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Sandbox;
@@ -20,7 +21,7 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
     private readonly ConcurrentDictionary<LaunchId, SandboxPlan> _plans = new();
 
     /// <inheritdoc/>
-    public async ValueTask<Result<PreparedSandbox>> Prepare(LaunchRequest request, IReadOnlyList<string> argv, CancellationToken cancellationToken)
+    public async ValueTask<Result<PreparedSandbox>> Prepare(LaunchRequest request, IReadOnlyList<string> argv, SessionId? chosenSession, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(argv);
@@ -30,7 +31,7 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
             return probed.Error;
         }
 
-        var asked = await stages.Request(request, cancellationToken).ConfigureAwait(false);
+        var asked = await stages.Request(request, chosenSession, cancellationToken).ConfigureAwait(false);
         if (asked.IsError)
         {
             return asked.Error;

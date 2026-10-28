@@ -20,11 +20,13 @@ namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistory learn, IReadOnlyList<IModelCredentialSource> logins, ISandboxLaunchInputs inputs, LaunchSandboxRegistry egress, TimeProvider clock) : ISandboxLaunchStages
 {
     private readonly ConcurrentDictionary<LaunchId, (SandboxPlan Plan, AgentId Target)> _plans = new();
+    private readonly ConcurrentDictionary<LaunchId, SessionId?> _sessions = new();
 
     /// <inheritdoc/>
-    public async ValueTask<Result<SandboxRequest>> Request(LaunchRequest request, CancellationToken cancellationToken)
+    public async ValueTask<Result<SandboxRequest>> Request(LaunchRequest request, SessionId? chosenSession, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        _sessions[request.Launch] = chosenSession ?? request.Resume;
         var approved = await profile.Latest(cancellationToken).ConfigureAwait(false);
         if (approved.IsError)
         {
@@ -90,9 +92,12 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
     /// <inheritdoc/>
     public async ValueTask Release(LaunchId launch, CancellationToken cancellationToken)
     {
-        if (_plans.TryRemove(launch, out var started) && egress.Get(launch)?.Denials is { } counter)
+        var known = _plans.TryRemove(launch, out var started);
+        _ = _sessions.TryRemove(launch, out var chosen);
+        if (known && egress.Get(launch)?.Denials is { } counter)
         {
-            var (transcript, kind, failOpen) = DenialFileLocator.For(started.Plan, inputs.TranscriptGlob(started.Target), inputs.ReportedSession(launch));
+            var session = DenialFileLocator.SessionFor(chosen, () => inputs.ReportedSession(launch));
+            var (transcript, kind, failOpen) = DenialFileLocator.For(started.Plan, inputs.TranscriptGlob(started.Target), session);
             await DenialCollector.Collect(new DenialSources(started.Plan, SessionHomePaths.For(inputs.Host().SindriHome, launch), transcript, kind, failOpen), counter, cancellationToken).ConfigureAwait(false);   // before the egress stops and before session.ended
         }
 

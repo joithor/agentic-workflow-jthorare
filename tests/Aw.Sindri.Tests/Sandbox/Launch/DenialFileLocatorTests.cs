@@ -62,4 +62,25 @@ public sealed class DenialFileLocatorTests : IDisposable
         Expect.Equal(TranscriptKind.Codex, kind);
         Expect.Equal(Path.Combine(dir, "rollout-abc.jsonl"), transcript);
     }
+
+    [Fact]
+    public void A_pre_chosen_claude_launch_finds_its_transcript_with_no_session_id_file()
+    {
+        var dir = Path.Combine(_temp.Path, "projects", "x");
+        _ = Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "11111111-1111-4111-8111-111111111111.jsonl"), "{}");
+        var chosen = Aw.Sindri.Core.Ids.SessionId.From("11111111-1111-4111-8111-111111111111");
+
+        var session = DenialFileLocator.SessionFor(chosen, () => throw new InvalidOperationException("the reported file must not be read"));
+        var (transcript, _, _) = DenialFileLocator.For(PlanWith(new PlanEnvVar("CLAUDE_CONFIG_DIR", _temp.Path, "login")), Glob, session);
+
+        Expect.Equal(Path.Combine(dir, "11111111-1111-4111-8111-111111111111.jsonl"), transcript);
+    }
+
+    [Fact]
+    public void A_reported_launch_falls_back_to_the_id_the_session_id_file_holds()
+    {
+        Expect.Equal("abc", DenialFileLocator.SessionFor(chosen: null, () => "abc"));
+        Expect.True(DenialFileLocator.SessionFor(chosen: null, () => null) is null);
+    }
 }

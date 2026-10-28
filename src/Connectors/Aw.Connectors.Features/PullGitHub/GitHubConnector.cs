@@ -28,7 +28,7 @@ internal sealed class GitHubConnector(
     public ConnectorDescription Describe() => new("github", "GitHub");
 
     /// <inheritdoc />
-    public async ValueTask<Result<ConnectorPage>> Pull(SourceCursor? after, int limit, CancellationToken cancellationToken)
+    public async ValueTask<Result<ConnectorPage>> Pull(SourceCursor? after, int limit, DateTimeOffset? before, CancellationToken cancellationToken)
     {
         var cursors = GitHubCursors.Parse(after?.Value);
         var items = new List<ConnectorItem>();
@@ -41,7 +41,7 @@ internal sealed class GitHubConnector(
             }
 
             var from = cursors.TryGetValue(repo, out var known) ? known : GitHubCursor.From(clock.GetUtcNow() - window);
-            var one = await pull.Handle(new PullGitHubRequest(repo, from, limit - items.Count) { CommentCap = commentCap }, cancellationToken).ConfigureAwait(false);
+            var one = await pull.Handle(new PullGitHubRequest(repo, from, limit - items.Count) { CommentCap = commentCap, Before = before }, cancellationToken).ConfigureAwait(false);
             if (one.IsError)
             {
                 stopped = one.Error;
@@ -74,7 +74,7 @@ internal sealed class GitHubConnector(
             return Unit.Value;
         }
 
-        var read = await reader.Issues(repos[0], GitHubCursor.From(clock.GetUtcNow()), 1, cancellationToken).ConfigureAwait(false);
+        var read = await reader.Issues(repos[0], GitHubCursor.From(clock.GetUtcNow()), 1, before: null, cancellationToken).ConfigureAwait(false);
         return read.IsError ? read.Error : Unit.Value;
     }
 }

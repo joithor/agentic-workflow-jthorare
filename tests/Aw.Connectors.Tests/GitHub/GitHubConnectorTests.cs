@@ -28,9 +28,9 @@ public sealed class GitHubConnectorTests
             .Add("acme/gadgets", A.GitHubIssue(2).UpdatedAt(_now.AddDays(-1)));
         var connector = Connector(reader, "acme/widgets", "acme/gadgets");
 
-        var first = (await connector.Pull(after: null, limit: 10, Ct)).Value;
+        var first = (await connector.Pull(after: null, limit: 10, before: null, Ct)).Value;
         _ = reader.Add("acme/widgets", A.GitHubIssue(3).UpdatedAt(_now.AddHours(-3)));
-        var second = (await connector.Pull(first.Next, limit: 10, Ct)).Value;
+        var second = (await connector.Pull(first.Next, limit: 10, before: null, Ct)).Value;
 
         Assert.True(first.Items.Select(static i => i.Key).SequenceEqual(["github:issue/acme/widgets/1", "github:issue/acme/gadgets/2"], StringComparer.Ordinal));
         Assert.True(second.Items.Select(static i => i.Key).SequenceEqual(["github:issue/acme/widgets/3"], StringComparer.Ordinal));
@@ -43,7 +43,7 @@ public sealed class GitHubConnectorTests
             .Add("acme/widgets", A.GitHubIssue(1).UpdatedAt(_now.AddDays(-90)))
             .Add("acme/widgets", A.GitHubIssue(2).UpdatedAt(_now.AddDays(-5)));
 
-        var page = (await Connector(reader, "acme/widgets").Pull(after: null, limit: 10, Ct)).Value;
+        var page = (await Connector(reader, "acme/widgets").Pull(after: null, limit: 10, before: null, Ct)).Value;
 
         Assert.True(page.Items.Select(static i => i.Key).SequenceEqual(["github:issue/acme/widgets/2"], StringComparer.Ordinal));
     }
@@ -56,7 +56,7 @@ public sealed class GitHubConnectorTests
             .Add("acme/widgets", A.GitHubIssue(2).UpdatedAt(_now.AddDays(-2)))
             .Add("acme/gadgets", A.GitHubIssue(3).UpdatedAt(_now.AddDays(-1)));
 
-        var page = (await Connector(reader, "acme/widgets", "acme/gadgets").Pull(after: null, limit: 2, Ct)).Value;
+        var page = (await Connector(reader, "acme/widgets", "acme/gadgets").Pull(after: null, limit: 2, before: null, Ct)).Value;
 
         Assert.Equal(2, page.Items.Count);
         Assert.DoesNotContain(reader.Calls, static c => c.Repo == "acme/gadgets");
@@ -68,7 +68,7 @@ public sealed class GitHubConnectorTests
         var until = _now.AddMinutes(30);
         var reader = new FakeGitHubReader().Add("acme/widgets", A.GitHubIssue(1).UpdatedAt(_now.AddDays(-1)).WithComments(2)).RateLimitComments(until);
 
-        var result = await Connector(reader, "acme/widgets").Pull(after: null, limit: 10, Ct);
+        var result = await Connector(reader, "acme/widgets").Pull(after: null, limit: 10, before: null, Ct);
 
         Assert.True(result.IsError);
         Assert.Equal(ConnectorsErrors.RateLimited.Code, result.Error.Code);
@@ -82,7 +82,7 @@ public sealed class GitHubConnectorTests
         var connector = Connector(reader, "acme/widgets", "acme/gadgets");
         _ = reader.Fail(ConnectorsErrors.Unreachable.With("down"));
 
-        var failing = await connector.Pull(after: null, limit: 10, Ct);
+        var failing = await connector.Pull(after: null, limit: 10, before: null, Ct);
 
         Assert.True(failing.IsError);
     }

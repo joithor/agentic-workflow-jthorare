@@ -18,12 +18,12 @@ internal sealed class SlackStore
         list.Add(message);
     }
 
-    /// <summary>Top-level messages with ts at or after <paramref name="oldest"/>, newest first; a root carries the reply count the store holds and its own ts as thread_ts.</summary>
-    public List<SlackMessage> Top(string channelId, string? oldest)
+    /// <summary>Top-level messages with ts at or after <paramref name="oldest"/> and before <paramref name="latest"/> (when given), newest first; a root carries the reply count the store holds and its own ts as thread_ts.</summary>
+    public List<SlackMessage> Top(string channelId, string? oldest, string? latest = null)
     {
         var all = All(channelId);
         return [.. all
-            .Where(m => (m.ThreadTs is null || m.ThreadTs == m.Ts) && (oldest is null || string.CompareOrdinal(Pad(m.Ts), Pad(oldest)) >= 0))
+            .Where(m => (m.ThreadTs is null || m.ThreadTs == m.Ts) && (oldest is null || string.CompareOrdinal(Pad(m.Ts), Pad(oldest)) >= 0) && (latest is null || string.CompareOrdinal(Pad(m.Ts), Pad(latest)) < 0))
             .OrderByDescending(static m => Pad(m.Ts), StringComparer.Ordinal)
             .Select(m =>
             {

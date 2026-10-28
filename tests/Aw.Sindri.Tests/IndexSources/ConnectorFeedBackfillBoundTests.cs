@@ -34,7 +34,7 @@ public sealed class ConnectorFeedBackfillBoundTests
     {
         public ConnectorDescription Describe() => new("github", "GitHub");
 
-        public ValueTask<Result<ConnectorPage>> Pull(Connectors.Core.SourceCursor? after, int limit, CancellationToken cancellationToken) =>
+        public ValueTask<Result<ConnectorPage>> Pull(Connectors.Core.SourceCursor? after, int limit, DateTimeOffset? before, CancellationToken cancellationToken) =>
             ValueTask.FromResult<Result<ConnectorPage>>(new ConnectorPage(items, [], new Connectors.Core.SourceCursor("next-cursor"), CursorReset: false));
 
         public ValueTask<Result<IReadOnlyDictionary<string, string>>> Versions(IReadOnlyList<string> keys, CancellationToken cancellationToken) => throw new NotSupportedException();

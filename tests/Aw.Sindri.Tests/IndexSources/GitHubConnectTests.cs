@@ -145,7 +145,7 @@ public sealed class GitHubConnectTests
 
         public Dictionary<string, Error> Failures { get; } = new(StringComparer.Ordinal);
 
-        public ValueTask<Result<GitHubPullPage>> Issues(string repo, GitHubCursor after, int limit, CancellationToken cancellationToken)
+        public ValueTask<Result<GitHubPullPage>> Issues(string repo, GitHubCursor after, int limit, DateTimeOffset? before, CancellationToken cancellationToken)
         {
             Checked.Add(repo);
             return ValueTask.FromResult<Result<GitHubPullPage>>(Failures.TryGetValue(repo, out var failure) ? failure : new GitHubPullPage([], after, RateLimitedUntil: null));

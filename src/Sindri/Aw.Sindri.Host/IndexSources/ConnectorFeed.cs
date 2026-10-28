@@ -29,7 +29,7 @@ internal sealed class ConnectorFeed(SourceId source, IConnector connector, Func<
     {
         ArgumentNullException.ThrowIfNull(pull);
         var after = pull.After is { } cursor ? new Aw.Connectors.Core.SourceCursor(cursor.Value) : null;
-        var read = await connector.Pull(after, pull.Limit, cancellationToken).ConfigureAwait(false);
+        var read = await connector.Pull(after, pull.Limit, pull.Before, cancellationToken).ConfigureAwait(false);
         if (read.IsError)
         {
             return read.Error;

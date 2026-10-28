@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Aw.Kernel.Testing;
@@ -125,9 +126,11 @@ public sealed class TopBarTests : IDisposable
 
         var placeholder = Named<TextBlock>(window, "SearchText");
         var problems = Named<TextBlock>(window, "PillProblems");
-        var natural = new TextBlock { Text = placeholder.Text, Classes = { "caption" } };
-        natural.Measure(Size.Infinity);
-        Assert.True(placeholder.Bounds.Width >= natural.DesiredSize.Width - 1, string.Create(System.Globalization.CultureInfo.InvariantCulture, $"the placeholder was trimmed to {placeholder.Bounds.Width}"));
+        using var layout = new TextLayout(placeholder.Text, new Typeface(placeholder.FontFamily, placeholder.FontStyle, placeholder.FontWeight), placeholder.FontSize, foreground: null);
+        var natural = layout.Width;
+        Assert.True(
+            placeholder.Bounds.Width >= natural - 0.5,
+            string.Create(System.Globalization.CultureInfo.InvariantCulture, $"the placeholder got {placeholder.Bounds.Width} of its {natural}"));
         Assert.True(problems.IsEffectivelyVisible);
         Assert.Equal(shell.Pill.Text, ToolTip.GetTip(Named<Button>(window, "HealthPill")));
         Assert.Equal(shell.Pill.Text, AutomationProperties.GetName(Named<Button>(window, "HealthPill")));

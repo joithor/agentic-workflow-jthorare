@@ -81,7 +81,13 @@ internal sealed partial class TopBar : UserControl
             InvalidateMeasure();
         }
 
-        return base.ArrangeOverride(finalSize);
+        var arranged = base.ArrangeOverride(finalSize);
+        if (LowerCapByShortfall(finalSize.Width))
+        {
+            InvalidateMeasure();
+        }
+
+        return arranged;
     }
 
     // The widest step that fits: the bar's padding, the brand and the navigation are fixed; then the ⌘K field (full or

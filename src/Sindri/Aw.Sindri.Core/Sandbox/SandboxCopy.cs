@@ -8,12 +8,12 @@ public static class SandboxCopy
 {
     private static readonly CopyRow[] _rows =
     [
-        Row("SND-LAUNCH-014", "no-bwrap", "This machine has no sandbox tool, so this Step can't run by itself. Install bubblewrap (`sudo apt install bubblewrap`), then press Check again.", command: "sudo apt install bubblewrap"),
-        Row("SND-LAUNCH-014", "no-user-namespace", "The system blocks the sandbox tool. Allow bubblewrap in AppArmor, then press Check again.", command: "printf 'abi <abi/4.0>,\\ninclude <tunables/global>\\nprofile bwrap /usr/bin/bwrap flags=(unconfined) {\\n  userns,\\n  include if exists <local/bwrap>\\n}\\n' | sudo tee /etc/apparmor.d/bwrap && sudo apparmor_parser -r /etc/apparmor.d/bwrap"),
-        Row("SND-LAUNCH-014", "no-user-manager", "The sandbox needs your user session manager, which isn't running. Run `loginctl enable-linger $USER`, then press Check again.", command: "loginctl enable-linger $USER"),
+        Row("SND-LAUNCH-014", "no-bwrap", "This machine has no sandbox tool, so this Step can't run by itself. Install bubblewrap (`sudo apt install bubblewrap`), then press Check again.") with { Command = "sudo apt install bubblewrap" },
+        Row("SND-LAUNCH-014", "no-user-namespace", "The system blocks the sandbox tool. Allow bubblewrap in AppArmor, then press Check again.") with { Command = "printf 'abi <abi/4.0>,\\ninclude <tunables/global>\\nprofile bwrap /usr/bin/bwrap flags=(unconfined) {\\n  userns,\\n  include if exists <local/bwrap>\\n}\\n' | sudo tee /etc/apparmor.d/bwrap && sudo apparmor_parser -r /etc/apparmor.d/bwrap" },
+        Row("SND-LAUNCH-014", "no-user-manager", "The sandbox needs your user session manager, which isn't running. Run `loginctl enable-linger $USER`, then press Check again.") with { Command = "loginctl enable-linger $USER" },
         Row("SND-LAUNCH-014", "no-cgroup-controllers", "The system doesn't give your account memory or CPU limits. Enable the missing limit (<which>) in systemd, then press Check again."),
-        Row("SND-LAUNCH-014", "no-forwarder", "The sandbox needs `socat` to reach Sindri. Install it, then press Check again.", command: "sudo apt install socat"),
-        Row("SND-LAUNCH-014", "unsupported-platform", "Steps can't run by themselves on macOS yet.", state: "gray"),
+        Row("SND-LAUNCH-014", "no-forwarder", "The sandbox needs `socat` to reach Sindri. Install it, then press Check again.") with { Command = "sudo apt install socat" },
+        Row("SND-LAUNCH-014", "unsupported-platform", "Steps can't run by themselves on macOS yet.") with { State = "gray" },
         Row("SND-LAUNCH-015", "form-none", "This agent hasn't been taught how to follow a Step's rules, so it can't run by itself. Use Claude Code or Codex, or add its policy setting."),
         Row("SND-LAUNCH-015", "form-reserved", "This agent hasn't been taught how to follow a Step's rules, so it can't run by itself. Use Claude Code or Codex, or add its policy setting."),
         Row("SND-LAUNCH-015", "tool-not-expressible", "This Step allows `<tool>`, which this agent can't restrict. Change the Step's tools, or use another agent."),
@@ -29,17 +29,17 @@ public static class SandboxCopy
         Row("SND-LAUNCH-016", "net-forward", "The sandbox could not reach Sindri from inside."),
         Row("SND-LAUNCH-016", "net-deny", "The sandbox did not stop a connection it should block."),
         Row("SND-LAUNCH-016", "login", "The sandbox could not give the Step its sign-in without exposing yours."),
-        Row("SND-LAUNCH-017", "no-login", "Claude Code (or Codex) isn't signed in for Steps. Sign in as yourself, then press Check again.", source: "owner-copy"),
-        Row("SND-LAUNCH-017", "no-login", "Steps have their own Claude Code (or Codex) sign-in, and it's missing or has expired. Run `sindri sandbox login <target>`, then press Check again.", source: "separate-login", command: "sindri sandbox login <target>"),
-        Row("SND-LAUNCH-017", "expired", "Claude Code (or Codex) isn't signed in for Steps. Sign in as yourself, then press Check again.", source: "owner-copy"),
-        Row("SND-LAUNCH-017", "expired", "Steps have their own Claude Code (or Codex) sign-in, and it's missing or has expired. Run `sindri sandbox login <target>`, then press Check again.", source: "separate-login", command: "sindri sandbox login <target>"),
+        Row("SND-LAUNCH-017", "no-login", "Claude Code (or Codex) isn't signed in for Steps. Sign in as yourself, then press Check again.") with { Source = "owner-copy" },
+        Row("SND-LAUNCH-017", "no-login", "Steps have their own Claude Code (or Codex) sign-in, and it's missing or has expired. Run `sindri sandbox login <target>`, then press Check again.") with { Source = "separate-login", Command = "sindri sandbox login <target>" },
+        Row("SND-LAUNCH-017", "expired", "Claude Code (or Codex) isn't signed in for Steps. Sign in as yourself, then press Check again.") with { Source = "owner-copy" },
+        Row("SND-LAUNCH-017", "expired", "Steps have their own Claude Code (or Codex) sign-in, and it's missing or has expired. Run `sindri sandbox login <target>`, then press Check again.") with { Source = "separate-login", Command = "sindri sandbox login <target>" },
         Row("SND-LAUNCH-017", "source-unsupported", "The sign-in method chosen for Steps (`<source>`) isn't available for `<target>`. Change `sandbox.login.source` in the profile, then press Check again."),
         Row("SND-LAUNCH-018", "no-key", "Sindri couldn't get a short-lived GitHub token for this Step: the agent GitHub key is missing. Retry the Step, or do it at your desk."),
         Row("SND-LAUNCH-018", "http-<status>", "Sindri couldn't get a short-lived GitHub token for this Step: GitHub refused the request (`<status>`). Retry the Step, or do it at your desk."),
         Row("SND-LAUNCH-018", "no-network", "Sindri couldn't get a short-lived GitHub token for this Step: there is no network to GitHub. Retry the Step, or do it at your desk."),
         Row("SND-LAUNCH-019", "memory", "This Step ran out of memory (`<limit>`) after `<time>`. Its work so far is kept on branch `<name>`. Raise `sandbox.limits.memory` in the profile (now `<limit>`; for example `<1.5 ×>`; a re-approval), then run the Step again; or do it at your desk."),
         Row("SND-LAUNCH-019", "wall", "This Step ran out of time after `<time>`. Its work so far is kept on branch `<name>`. Run it again, or do it at your desk."),
-        Row("SND-LAUNCH-020", "sessions", "Waiting for a free session slot (`<n>` of `<cap>` running). This Step starts by itself.", state: "wait"),
+        Row("SND-LAUNCH-020", "sessions", "Waiting for a free session slot (`<n>` of `<cap>` running). This Step starts by itself.") with { State = "wait" },
         Row("SND-LAUNCH-021", "install-failed", "Sindri couldn't prepare this repo's packages for the Step (the install failed). Open the details, fix what they name, then run the Step again; or do it at your desk."),
         Row("SND-LAUNCH-021", "lockfile-missing", "Sindri couldn't prepare this repo's packages for the Step (a package list is missing). Open the details, fix what they name, then run the Step again; or do it at your desk."),
         Row("SND-LAUNCH-021", "timeout", "Sindri couldn't prepare this repo's packages for the Step (it took too long). Open the details, fix what they name, then run the Step again; or do it at your desk."),
@@ -71,16 +71,17 @@ public static class SandboxCopy
         return new OwnerCopy(Fill(row.Text, filled), row.Command is null ? null : Fill(row.Command, filled), row.State);
     }
 
-    private static CopyRow Row(string code, string reason, string text, string? source = null, string? command = null, string? state = null) => new(code, reason, source, text, command, state);
+    private static CopyRow Row(string code, string reason, string text) => new(code, reason, text);
 
     private static string Fill(string text, Dictionary<string, string> values) =>
         values.Aggregate(text, static (t, v) => t.Replace("<" + v.Key + ">", v.Value, StringComparison.Ordinal));
 
-    private sealed record CopyRow(string Code, string Reason, string? Source, string Text, string? Command, string? State);
-}
+    private sealed record CopyRow(string Code, string Reason, string Text)
+    {
+        public string? Source { get; init; }
 
-/// <summary>One owner sentence.</summary>
-/// <param name="Text">The sentence, in the Step wording.</param>
-/// <param name="Command">The copyable second line, or null.</param>
-/// <param name="State">'gray' (not yet supported, never red), 'wait' (a waiting state, never red), or null.</param>
-public sealed record OwnerCopy(string Text, string? Command, string? State);
+        public string? Command { get; init; }
+
+        public string? State { get; init; }
+    }
+}

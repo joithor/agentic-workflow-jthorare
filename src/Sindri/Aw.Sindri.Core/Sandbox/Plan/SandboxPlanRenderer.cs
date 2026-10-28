@@ -56,9 +56,7 @@ public static partial class SandboxPlanRenderer
         var readable = plan.Mounts.Where(static m => m.Kind == PlanMountKind.ReadOnly).Select(static m => m.Path).Distinct(StringComparer.Ordinal).ToList();
         var shown = string.Join(", ", readable.Take(4)) + (readable.Count > 4 ? string.Create(CultureInfo.InvariantCulture, $" and {readable.Count - 4} more") : string.Empty);
         var network = string.Join(", ", plan.Network.Groups.Select(static g => g.Name));
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"Can write: {(plan.Writable.Count == 0 ? "nothing" : string.Join(", ", plan.Writable))}\nCan read: {(readable.Count == 0 ? "only what it can write" : shown)}\nNetwork: {SandboxWire.Name(plan.Network.Mode)}, {(network.Length == 0 ? "no groups" : network)}\nLimits: {LimitsLine(plan.Limits)}\n");
+        return $"Can write: {(plan.Writable.Count == 0 ? "nothing" : string.Join(", ", plan.Writable))}\nCan read: {(readable.Count == 0 ? "only what it can write" : shown)}\nNetwork: {SandboxWire.Name(plan.Network.Mode)}, {(network.Length == 0 ? "no groups" : network)}\nLimits: {LimitsLine(plan.Limits)}\n";
     }
 
     /// <summary>Why a path, a host or a command is allowed or denied, and how the owner can change it.</summary>

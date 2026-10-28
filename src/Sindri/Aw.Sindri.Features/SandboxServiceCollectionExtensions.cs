@@ -62,7 +62,7 @@ internal static class SandboxServiceCollectionExtensions
             .AddScoped<ISandboxChecks, SandboxChecks>().AddScoped<SandboxResumeList>()
             .AddScoped<ISandboxFormCheck, SandboxFormCheck>().AddScoped<ISandboxLoginCheck, SandboxLoginCheck>()
             .AddScoped<ISandboxParks, SandboxParkedInstances>().AddScoped<ISandboxSlots, SandboxSlots>()
-            .AddSingleton<ISandboxFixture, NoSandboxFixture>()
+            .AddSingleton<ISandboxFixture, NoSandboxFixture>().AddSingleton<ISandboxMachine, ProcessSandboxMachine>()
             .AddScoped<IDoctorChecks, SandboxDoctorChecks>();
     }
 }

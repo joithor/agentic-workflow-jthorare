@@ -26,7 +26,7 @@ internal static class EndpointTable
         _ = queries.MapGetJob();
         _ = queries.MapGetLaunch();
         _ = queries.MapGetLaunchTargets();
-        _ = queries.MapListDenials();
+        _ = MapSandboxQueries(queries);
         _ = queries.MapListJobs();
         _ = queries.MapGetItemTimeline();
         _ = queries.MapGetItemScope();
@@ -57,6 +57,13 @@ internal static class EndpointTable
         _ = MapInstanceQueries(queries);
         _ = MapCodeIndexQueries(queries);
         return MapContextQueries(queries);
+    }
+
+    private static RouteGroupBuilder MapSandboxQueries(RouteGroupBuilder queries)
+    {
+        _ = queries.MapCheckSandbox();
+        _ = queries.MapListDenials();
+        return queries;
     }
 
     private static RouteGroupBuilder MapEngineQueries(RouteGroupBuilder queries)

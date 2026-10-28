@@ -5,7 +5,6 @@ using Aw.Sindri.Core.Sandbox;
 
 namespace Aw.Sindri.Infrastructure.Sandbox;
 
-#pragma warning disable MA0182 // until the launcher (SB-5a) uses it
 /// <summary>
 /// ISessionCap under an exclusive lock on one file in Sindri's real-home 'locks' directory. FileShare.None is a flock on Unix, so the kernel
 /// drops it when the holder dies, and two opens in one process exclude each other too.
@@ -50,4 +49,3 @@ internal sealed class FileSessionCap(string lockFile, ISliceScopes scopes) : ISe
         }
     }
 }
-#pragma warning restore MA0182

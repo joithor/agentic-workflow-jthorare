@@ -5,7 +5,7 @@ using Aw.Judge.Core.Providers;
 namespace Aw.Judge.Infrastructure.Providers;
 
 /// <summary>
-/// Carries config.json's providers.jevInputCapChars to Jev: a question that sets no cap of its own gets this one, so
+/// Carries config.json's providers.inputCapChars to Jev: a question that sets no cap of its own gets this one, so
 /// <see cref="JevProvider"/> (one instance for every call) never reads the config itself.
 /// </summary>
 /// <param name="inner">The Jev adapter.</param>

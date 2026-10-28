@@ -16,7 +16,7 @@ namespace Aw.Judge.Infrastructure.Providers;
 /// the secret source; without one Jev is unavailable ('no-api-key'), which is not a failure. Everything taken from the
 /// input leaves the machine for a third party, so both the request's state and its instructions (the question's prompt,
 /// which embeds input fields word for word) are redacted, then capped at the question's own cap (QuestionRef.InputCapChars), else at
-/// config.json's providers.jevInputCapChars (the catalog sets it on the question), else at ProvidersConfig.DefaultJevInputCapChars; over the cap
+/// config.json's providers.inputCapChars (the catalog sets it on the question), else at ProvidersConfig.DefaultInputCapChars; over the cap
 /// only the longest strings are cut (InputCap). A non-success status is
 /// errored ('http-NNN'); past the budget, the key read included, it is unavailable ('timeout'); unreachable is unavailable ('network-error').
 /// </summary>
@@ -62,7 +62,7 @@ internal sealed partial class JevProvider(HttpClient http, ISecretSource secrets
                 return new ProviderUnavailable(ProviderReasons.NoApiKey);
             }
 
-            var cap = question.InputCapChars ?? ProvidersConfig.DefaultJevInputCapChars;
+            var cap = question.InputCapChars ?? ProvidersConfig.DefaultInputCapChars;
             using var request = Request(question, CappedState(input, cap), CappedInstructions(question.Prompt, cap), key);
             using var response = await http.SendAsync(request, deadline.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)

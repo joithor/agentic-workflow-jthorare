@@ -64,7 +64,7 @@ internal sealed class ProviderCatalog(Func<string, string?> environment, IExecut
     }
 
     private static IModelProvider WithConfiguredCap(IModelProvider provider, ProvidersConfig? config) =>
-        provider.Name == ProviderName.Jev && config?.JevInputCapChars is { } cap ? new JevInputCapProvider(provider, cap) : provider;
+        provider.Name == ProviderName.Jev && config?.InputCapChars is { } cap ? new JevInputCapProvider(provider, cap) : provider;
 
     // config.json's names are checked on read (JudgeConfigParser), so an unknown one can't reach here; skip it if it does.
     private static List<AgentCliName>? Configured(IReadOnlyList<string>? names) =>

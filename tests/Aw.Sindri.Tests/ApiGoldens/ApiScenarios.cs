@@ -72,6 +72,8 @@ internal static class ApiScenarios
             ? await ItemScopeScenarios.Start(ct)
             : WrapSessionScenarios.Handles(slug, scenario)
             ? await GoldenHost.Start(temporary: true, ct, ItemScenarios.ProfileYaml)
+            : SessionScenarios.NeedsCgroup(slug, scenario)
+            ? await SessionScenarios.Start(ct)
             : await GoldenHost.Start(temporary: !NeedsNonTemporaryHome(slug, scenario), ct, ProfileYaml(slug, scenario));
 
     /// <summary>Whether the scenario is a setup one (the steps, or adding a repo).</summary>

@@ -5,4 +5,4 @@ namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 /// <param name="Json">The package's JSON options.</param>
 /// <param name="Scrubber">Takes secrets out of a target.</param>
 /// <param name="Clock">The time.</param>
-internal sealed record DenialCounterParts(Aw.Sindri.Core.Sandbox.Denials.ISandboxDenials Sink, System.Text.Json.JsonSerializerOptions Json, Aw.Sindri.Core.Text.ITextScrubber Scrubber, TimeProvider Clock);
+internal sealed record DenialCounterParts(Core.Sandbox.Denials.ISandboxDenials Sink, System.Text.Json.JsonSerializerOptions Json, Core.Text.ITextScrubber Scrubber, TimeProvider Clock);

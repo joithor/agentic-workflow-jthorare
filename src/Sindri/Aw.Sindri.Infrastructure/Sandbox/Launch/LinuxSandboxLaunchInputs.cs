@@ -48,7 +48,7 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
     public string NetDirFor(LaunchId launch)
     {
         var runtime = string.Create(CultureInfo.InvariantCulture, $"/run/user/{Uid()}");
-        return NetDir(System.IO.Directory.Exists(runtime) ? runtime : "/tmp", launch);
+        return NetDir(Directory.Exists(runtime) ? runtime : "/tmp", launch);
     }
 
     /// <inheritdoc/>
@@ -84,7 +84,7 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
     {
         try
         {
-            return System.IO.Directory.Exists(root)
+            return Directory.Exists(root)
                 ? [.. System.IO.Directory.EnumerateDirectories(root).Where(d => !string.Equals(d, ownHome.TrimEnd('/'), StringComparison.Ordinal)).Order(StringComparer.Ordinal)]
                 : [];
         }
@@ -99,7 +99,7 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
         var current = Path.Combine(state, "bin", "cs", "current");
         try
         {
-            return System.IO.Directory.ResolveLinkTarget(current, returnFinalTarget: true)?.FullName ?? string.Empty;
+            return Directory.ResolveLinkTarget(current, returnFinalTarget: true)?.FullName ?? string.Empty;
         }
         catch (IOException)
         {

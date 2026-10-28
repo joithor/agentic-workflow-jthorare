@@ -98,10 +98,18 @@ not_now=(--type Button --name "Not now")
 timeout 120 "$DRIVER" window --width 1280 --height 800 >/dev/null 2>&1 || setup_fail "could not size the window"
 sleep 2
 timeout 120 "$DRIVER" key --chord Ctrl+OemComma --node-id 0 >/dev/null 2>&1 || setup_fail "the Ctrl+, chord was not accepted"
-"$DRIVER" wait-for --type Expander --contains "$onyx_title" --state visible --wait-ms 60000 >/dev/null 2>&1 \
-  || setup_fail "no '$onyx_title' step in Settings"
-onyx_id="$("$DRIVER" search --type Expander --contains "$onyx_title" 2>/dev/null | jq -r '[.matches[] | select(.visible) | .nodeId // .id][0] // empty')"
-[ -n "$onyx_id" ] || setup_fail "no node id for the Onyx step"
+# --contains matches shown text, and an Expander shows none: find the step by its accessible name, which starts with the title.
+step_id() {
+  "$DRIVER" search --type Expander --limit 200 2>/dev/null \
+    | jq -r --arg p "$1" '[.matches[] | select(.visible and ((.name // "") | startswith($p))) | .id][0] // empty'
+}
+onyx_id=""
+for _ in $(seq 1 120); do
+  onyx_id="$(step_id "$onyx_title, ")"
+  [ -n "$onyx_id" ] && break
+  sleep 0.5
+done
+[ -n "$onyx_id" ] || setup_fail "no '$onyx_title' step in Settings"
 
 # 4. Open the step if it is closed, press "Not now", wait for the row to say "skipped" (name: "<title>, skipped. <sub>").
 if ! "$DRIVER" search "${not_now[@]}" 2>/dev/null | jq -e '[.matches[] | select(.visible)] | length > 0' >/dev/null; then
@@ -111,7 +119,7 @@ fi
 "$DRIVER" click "${not_now[@]}" >/dev/null 2>&1 || setup_fail "the Not now click was not accepted by the driver"
 skipped=0
 for _ in $(seq 1 60); do
-  if "$DRIVER" search --type Expander --contains "$onyx_title, skipped" 2>/dev/null | jq -e '[.matches[] | select(.visible)] | length > 0' >/dev/null; then skipped=1; break; fi
+  if [ -n "$(step_id "$onyx_title, skipped")" ]; then skipped=1; break; fi
   sleep 0.5
 done
 [ "$skipped" = 1 ] || setup_fail "the Onyx step never said skipped"

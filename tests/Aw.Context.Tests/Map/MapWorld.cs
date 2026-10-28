@@ -17,6 +17,7 @@ using Aw.Context.Core.ScopeGraph;
 using Aw.Context.Core.Search;
 using Aw.Context.Core.Sources;
 using Aw.Context.Core.Symbols;
+using Aw.Context.Core.Sync;
 using Aw.Context.Core.Trust;
 using Aw.Context.Core.Walks;
 using Aw.Context.Core.WholeMap;
@@ -72,7 +73,7 @@ internal sealed class MapWorld : IDisposable
         ["README.md"] = "# Split panes",
     };
 
-    public MapWorld(IRepoReader? repoReader = null, IContextSource? intent = null, ICodeSearch? codeSearch = null, IFileHistory? history = null, ICodeSymbolSource? symbols = null, WholeMapRules? wholeMapRules = null, WalkOptions? walk = null, IRecordStore? records = null, ILexicalLeg? lexical = null)
+    public MapWorld(IRepoReader? repoReader = null, IContextSource? intent = null, ICodeSearch? codeSearch = null, IFileHistory? history = null, ICodeSymbolSource? symbols = null, WholeMapRules? wholeMapRules = null, WalkOptions? walk = null, IRecordStore? records = null, ILexicalLeg? lexical = null, IIndexSync? indexSync = null)
     {
         Sources = new FixedSourceCatalog(intent is null ? [Docs] : [Docs, intent]);
         Exports = new FakeExportStore(Clock);
@@ -106,13 +107,24 @@ internal sealed class MapWorld : IDisposable
             .AddSingleton<IScopeRunStore>(new FakeScopeRunStore())
             .AddSingleton<IMapSearchIndexFactory>(new Context.Infrastructure.Search.SqliteMapSearchIndexFactory())
             .AddContextFeatures();
+        AddOverrides(services, walk, indexSync);
+
+        _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = false, ValidateScopes = true });
+        _scope = _provider.CreateScope();
+    }
+
+    /// <summary>What a test replaces after AddContextFeatures: the walk options and the owned index's sync port.</summary>
+    private static void AddOverrides(IServiceCollection services, WalkOptions? walk, IIndexSync? indexSync)
+    {
         if (walk is not null)
         {
             _ = services.AddSingleton(walk);
         }
 
-        _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = false, ValidateScopes = true });
-        _scope = _provider.CreateScope();
+        if (indexSync is not null)
+        {
+            _ = services.AddSingleton(indexSync);
+        }
     }
 
     public FakeTimeProvider Clock { get; } = new(DateTimeOffset.Parse("2026-08-01T12:00:00Z", System.Globalization.CultureInfo.InvariantCulture));

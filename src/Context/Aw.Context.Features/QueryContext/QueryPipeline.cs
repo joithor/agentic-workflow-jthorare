@@ -253,7 +253,7 @@ internal sealed partial class QueryPipeline(IScrubberFactory scrubberFactory, II
         var linearRefs = linear is null ? [] : refsOfHits.Where(r => r.Source == RecordStoreSource.Id && LinearRecordKeys.IsLinear(r.Canonical)).ToList();
         if (linear is not null && linearRefs.Count > 0)
         {
-            await CheckBatch(linear, linearRefs, (deadline, checkedRefs), ct).ConfigureAwait(false);   // one batched freshness call for every cited owned Linear record
+            await CheckLinear(linear, linearRefs, (deadline, checkedRefs), ct).ConfigureAwait(false);   // one batched freshness call for every cited owned Linear record
         }
 
         foreach (var group in refsOfHits.Except(linearRefs).GroupBy(r => r.Source))
@@ -263,6 +263,23 @@ internal sealed partial class QueryPipeline(IScrubberFactory scrubberFactory, II
         }
 
         return checkedRefs;
+    }
+
+    /// <summary>The owned refs name the whole key as their id; the Linear source wants the bare UUID, so it is asked with Linear-shaped refs and the answers are kept under the owned ones.</summary>
+    private async Task CheckLinear(IContextSource linear, List<SourceRef> owned, (DateTimeOffset Deadline, Dictionary<SourceRef, (bool, SourceVersion?)> Checked) into, CancellationToken ct)
+    {
+        var asked = new Dictionary<SourceRef, SourceRef>();
+        foreach (var reference in owned)
+        {
+            asked[reference] = LinearRecordKeys.BareId(reference.Canonical) is { } bare ? reference with { Id = bare } : reference;
+        }
+
+        var answers = new Dictionary<SourceRef, (bool, SourceVersion?)>();
+        await CheckBatch(linear, [.. asked.Values.Distinct()], (into.Deadline, answers), ct).ConfigureAwait(false);
+        foreach (var (reference, shaped) in asked)
+        {
+            into.Checked[reference] = answers[shaped];
+        }
     }
 
     private async Task CheckBatch(IContextSource source, List<SourceRef> refs, (DateTimeOffset Deadline, Dictionary<SourceRef, (bool, SourceVersion?)> Checked) into, CancellationToken ct)

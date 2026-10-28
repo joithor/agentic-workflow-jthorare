@@ -86,7 +86,7 @@ public sealed class SandboxStatusInsideTests
     {
         for (var waited = 0; waited < 120; waited++)
         {
-            Assert.False(serve.HasExited, "sindri serve exited early with code " + serve.ExitCode);
+            Assert.False(serve.HasExited, "sindri serve exited early with code " + serve.ExitCode.ToString(System.Globalization.CultureInfo.InvariantCulture));
             if (File.Exists(path) && AwJson.Deserialize<ControlEndpoint>(await File.ReadAllBytesAsync(path, ct), SandboxFilesJson.Options) is { IsSuccess: true } read)
             {
                 return read.Value;

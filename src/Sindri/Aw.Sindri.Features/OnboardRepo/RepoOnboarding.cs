@@ -51,7 +51,6 @@ internal sealed class RepoOnboarding(IApprovedProfile approvals, IRepoHooks hook
             return SindriErrors.NotRunning.With("the control plane doesn't hold the lease (fix: sindri)");   // before anything is changed
         }
 
-        _ = sandbox is null && tracked is null;   // read by the offer, next commit
         var detail = await hooks.Install(entry, cancellationToken).ConfigureAwait(false);
         var appended = await recorder.Onboarded(name, hash, cancellationToken).ConfigureAwait(false);
         if (appended.IsError)
@@ -61,7 +60,16 @@ internal sealed class RepoOnboarding(IApprovedProfile approvals, IRepoHooks hook
 
         known.Add(Marker(name, hash));
         git.Invalidate();
-        return new OnboardedRepo(name, detail);
+        var blockers = sandbox is null ? null : (await sandbox.Run(cancellationToken).ConfigureAwait(false)).Blockers.Select(SandboxBlockerLine.From).ToList();
+        var offer = await Offer(entry, cancellationToken).ConfigureAwait(false);
+        return new OnboardedRepo(name, detail, blockers, offer.Toolchains.Count == 0 ? null : [.. offer.Toolchains.Select(static t => t.Line())], offer.Settings is { } settings ? SandboxOfferYaml.Render(name.Value, settings) : null);
+    }
+
+    // What the repo's files suggest for its 'sandbox.repos.<repo>' entry (sandbox spec §3.7). Only suggested: the profile is the owner's to approve. A repo git can't list offers nothing.
+    private async ValueTask<ToolchainOffer> Offer(RepoEntry entry, CancellationToken cancellationToken)
+    {
+        var listed = tracked is null ? null : await tracked.Paths(entry.Path, cancellationToken).ConfigureAwait(false);
+        return listed is { IsSuccess: true } ? SandboxToolchainDetector.Detect(listed.Value) : new ToolchainOffer([], Settings: null);
     }
 
     private static string Marker(RepoName repo, ProfileHash hash) => $"onboarded:{repo.Value}:{hash.Value}";

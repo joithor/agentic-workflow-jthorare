@@ -41,6 +41,24 @@ internal sealed class RecordFeedSync(IRecordFeedCatalog feeds, IRecordStore stor
     /// <summary>When this process last finished a tick of the source's feed and the code it ended with; null when it has not.</summary>
     public (DateTimeOffset At, string? Code)? LastOutcome(SourceId source) => _outcomes.TryGetValue(source.Value, out var outcome) ? outcome : null;
 
+    /// <summary>Runs a store change (a purge) while holding the source's lock, so it cannot race a tick; a tick running now is SND-CONTEXT-056 at once, never a wait.</summary>
+    public async ValueTask<Result<T>> Exclusive<T>(SourceId id, Func<ValueTask<Result<T>>> run)
+    {
+        if (!_locks.TryEnter(id.Value))
+        {
+            return ContextErrors.SyncRunning.With($"a sync of {id.Value} is running, so it can't be changed now (fix: try again when it ends; sindri index status)");
+        }
+
+        try
+        {
+            return await run().ConfigureAwait(false);
+        }
+        finally
+        {
+            _locks.Leave(id.Value);
+        }
+    }
+
     /// <summary>Runs <paramref name="run"/> while holding the source's lock.</summary>
     public async ValueTask<Result<SourceSync>> Locked(SourceId id, Func<ValueTask<SourceSync>> run)
     {

@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Aw.Context.Core;
-using Aw.Context.Core.Engine;
 using Aw.Context.Core.Records;
 using Aw.Context.Core.Results;
 using Aw.Context.Core.Sources;
@@ -103,21 +102,5 @@ public sealed class IndexSyncServiceTests
         Assert.Equal(complete, progress.Complete);
         Assert.Equal("SND-CONTEXT-010", progress.LastCode);
         Assert.Equal(_now, progress.LastSync);
-    }
-
-    private sealed class FakeIndexSync : IIndexSync
-    {
-        public IReadOnlyList<SourceSync> Rows { get; set; } = [];
-
-        public int Ticks { get; private set; }
-
-        public ValueTask<Result<SyncReport>> Tick(ContextScope scope, CancellationToken cancellationToken)
-        {
-            Ticks++;
-            return ValueTask.FromResult<Result<SyncReport>>(new SyncReport(Rows));
-        }
-
-        public ValueTask<Result<IReadOnlyList<SourceProgress>>> Progress(ContextScope scope, CancellationToken cancellationToken) =>
-            ValueTask.FromResult(Results.Success<IReadOnlyList<SourceProgress>>([]));
     }
 }

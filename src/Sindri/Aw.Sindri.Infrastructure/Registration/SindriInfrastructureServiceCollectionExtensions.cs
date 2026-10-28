@@ -95,6 +95,8 @@ public static class SindriInfrastructureServiceCollectionExtensions
     /// <summary>Engine P8: the diff signal of an agent run (git) and an agent session's end and spend (the ledger).</summary>
     private static IServiceCollection AddAgentRuntimeAdapters(this IServiceCollection services, Func<string, string?> environment) =>
         services.AddSingleton<IRunDiff, GitRunDiff>().AddSingleton<IWorkspaceRebase, GitWorkspaceRebase>().AddSingleton<IDiffContent, GitDiffContent>().AddSingleton<IBranchChanges, GitBranchChanges>().AddSingleton<IAgentSessions, LedgerAgentSessions>().AddSingleton<IRunSuspensions, LedgerRunSuspensions>().AddSingleton<ILearnHistory, LedgerLearnHistory>().AddSingleton<IScopeRunRecords, ScopeRunRecords>()
+            .AddSingleton<IPrepareSource, GitPrepareSource>()
+            .AddSingleton<IPrepareCache>(sp => new FilePrepareCache(Path.Combine(sp.GetRequiredService<ISindriHome>().Path, "cache", "prepare"), new ProcessToolRunner()))   // <real home>/cache/prepare/<key>/ (sandbox spec 3.8)
             .AddSingleton<ICheckCommands>(sp => new ToolCheckCommands(new ProcessToolRunner(), sp.GetRequiredService<ITextScrubber>(), sp.GetRequiredService<TimeProvider>()))
             .AddLensPackAdapters(environment);
 

@@ -50,7 +50,7 @@ public static class PlatformSandboxServiceCollectionExtensions
             .AddSingleton<LaunchSandboxRegistry>()
             .AddSingleton<ISandboxLaunchStages>(sp => new SandboxLaunchStages(
                 sp.GetRequiredService<IApprovedProfile>(), sp.GetRequiredService<ILearnHistory>(), [.. sp.GetServices<IModelCredentialSource>()], sp.GetRequiredService<ISandboxLaunchInputs>(),
-                sp.GetRequiredService<LaunchSandboxRegistry>(), sp.GetRequiredService<TimeProvider>(), new AgentTokenRenewal(sp.GetRequiredService<IAgentTokenSource>(), sp.GetRequiredService<TimeProvider>(), static message => Console.Error.WriteLine(message))))
+                sp.GetRequiredService<LaunchSandboxRegistry>(), sp.GetRequiredService<TimeProvider>(), new AgentTokenRenewal(sp.GetRequiredService<IAgentTokenSource>(), sp.GetRequiredService<TimeProvider>(), static message => Console.Error.WriteLine("{\"level\":\"warn\",\"source\":\"sindri.agent-token\",\"message\":\"" + System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(message) + "\"}"))))   // the JSON line serve's stderr carries, as the egress warns
             .AddSingleton<ISandboxLaunchInputs>(sp => new LinuxSandboxLaunchInputs(
                 sp.GetRequiredService<LauncherOptions>(), sp.GetRequiredService<ReloadingAgentCatalog>(), sp.GetRequiredService<ISandboxProcesses>(),
                 () => BoxHostFacts.Read(environment, sp.GetRequiredService<SindriSettings>().Home, sp.GetRequiredService<ISandboxMachine>()), ControlFor(sp),

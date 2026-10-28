@@ -45,6 +45,10 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     private LaunchSandboxRegistry Registry() =>
         new(new EgressService(new FakeEgressResolver(new Dictionary<string, System.Net.IPAddress[]>(StringComparer.Ordinal)), new FakeEgressDialer(), static _ => "/nonexistent/socat", Path.Combine(_temp.Path, "run")));
 
+    // why: the planner refuses a Step with no policy, so the tests that build a plan use one
+    private static LaunchRequest PlannedStep() =>
+        A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: new StepPolicy([], StepPermissionMode.ReadOnly, WritablePath: null), Ref: new StepRef("build", "agent"))).OnInstance(InstanceAddress.From("ITM-1/spec/1"), RunToken.For(1, 1)).Build();
+
     private static LaunchRequest Step() =>
         A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: null, Ref: new StepRef("build", "agent"))).OnInstance(InstanceAddress.From("ITM-1/spec/1"), RunToken.For(1, 1)).Build();   // a real Step: an instance address with slashes and a run token
 
@@ -83,7 +87,7 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     public async Task WritePolicy_puts_the_agent_app_token_in_a_0600_file_in_a_0700_folder_of_the_session_home()
     {
         var stages = MakeWith(GithubCredentials.AgentApp);
-        var asked = (await stages.Request(Step(), chosenSession: null, CancellationToken.None)).Value;
+        var asked = (await stages.Request(PlannedStep(), chosenSession: null, CancellationToken.None)).Value;
         var plan = SandboxPlanner.Build(SandboxMechanism.Bubblewrap, asked).Value;
 
         var written = await stages.WritePolicy(asked, plan, Home, CancellationToken.None);
@@ -153,7 +157,7 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     private async Task<(SandboxLaunchStages Stages, SandboxPlan Plan)> WriteAgentAppToken(Action<string>? warn = null)
     {
         var stages = new SandboxLaunchStages(new GithubProfile(GithubCredentials.AgentApp), new EmptyLearn(), [_login], _inputs, Registry(), _clock, new AgentTokenRenewal(_tokens, _clock, warn));
-        var asked = (await stages.Request(Step(), chosenSession: null, CancellationToken.None)).Value;
+        var asked = (await stages.Request(PlannedStep(), chosenSession: null, CancellationToken.None)).Value;
         var plan = SandboxPlanner.Build(SandboxMechanism.Bubblewrap, asked).Value;
         Expect.True((await stages.WritePolicy(asked, plan, Home, CancellationToken.None)).IsSuccess);
         return (stages, plan);

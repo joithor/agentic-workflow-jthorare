@@ -62,6 +62,7 @@ internal static class EndpointTable
     private static RouteGroupBuilder MapSandboxQueries(RouteGroupBuilder queries)
     {
         _ = queries.MapCheckSandbox();
+        _ = queries.MapGetSandboxStatus();
         _ = queries.MapListDenials();
         return queries;
     }

@@ -5330,3 +5330,74 @@ static Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.operator !=(Aw.Sindr
 static Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.operator ==(Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse? left, Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse? right) -> bool
 Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Blockers.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlockerLine!>!
 Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Blockers.init -> void
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.CheckedAt.get -> System.DateTimeOffset?
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.CheckedAt.init -> void
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Resume.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.CheckSandbox.SandboxResumeLine!>!
+Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Resume.init -> void
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.<Clone>$() -> Aw.Sindri.Features.CheckSandbox.SandboxResumeLine!
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId Instance, out string? Item, out string? Title, out System.DateTimeOffset Since) -> void
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Equals(Aw.Sindri.Features.CheckSandbox.SandboxResumeLine? other) -> bool
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Instance.get -> Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Instance.init -> void
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Item.get -> string?
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Item.init -> void
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.SandboxResumeLine(Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId Instance, string? Item, string? Title, System.DateTimeOffset Since) -> void
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Since.get -> System.DateTimeOffset
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Since.init -> void
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Title.get -> string?
+Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Title.init -> void
+Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest
+Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest.<Clone>$() -> Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest!
+Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest.Equals(Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest? other) -> bool
+Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest.GetSandboxStatusRequest() -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine
+Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.<Clone>$() -> Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine!
+Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.Deconstruct(out string! Repo, out System.DateTimeOffset EndsAt) -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.EndsAt.get -> System.DateTimeOffset
+Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.EndsAt.init -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.Equals(Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine? other) -> bool
+Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.Repo.get -> string!
+Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.Repo.init -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.SandboxLearnLine(string! Repo, System.DateTimeOffset EndsAt) -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.<Clone>$() -> Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse!
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Blockers.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlockerLine!>!
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Blockers.init -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.CheckedAt.get -> System.DateTimeOffset?
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.CheckedAt.init -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Deconstruct(out System.DateTimeOffset? CheckedAt, out bool? Ready, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlockerLine!>! Blockers, out string! Mechanism, out System.Collections.Generic.IReadOnlyList<string!>! Groups, out Aw.Sindri.Core.Sandbox.SandboxLimitsSummary! Limits, out Aw.Sindri.Core.Sandbox.ModelLoginSource Login, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine!>! Learn) -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Equals(Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse? other) -> bool
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Groups.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Groups.init -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Learn.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine!>!
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Learn.init -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Limits.get -> Aw.Sindri.Core.Sandbox.SandboxLimitsSummary!
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Limits.init -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Login.get -> Aw.Sindri.Core.Sandbox.ModelLoginSource
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Login.init -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Mechanism.get -> string!
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Mechanism.init -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Ready.get -> bool?
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Ready.init -> void
+Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.SandboxStatusResponse(System.DateTimeOffset? CheckedAt, bool? Ready, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlockerLine!>! Blockers, string! Mechanism, System.Collections.Generic.IReadOnlyList<string!>! Groups, Aw.Sindri.Core.Sandbox.SandboxLimitsSummary! Limits, Aw.Sindri.Core.Sandbox.ModelLoginSource Login, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine!>! Learn) -> void
+override Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.Equals(object? obj) -> bool
+override Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.GetHashCode() -> int
+override Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.ToString() -> string!
+override Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest.GetHashCode() -> int
+override Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest.ToString() -> string!
+override Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.Equals(object? obj) -> bool
+override Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.GetHashCode() -> int
+override Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.ToString() -> string!
+override Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.GetHashCode() -> int
+override Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.ToString() -> string!
+static Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.operator !=(Aw.Sindri.Features.CheckSandbox.SandboxResumeLine? left, Aw.Sindri.Features.CheckSandbox.SandboxResumeLine? right) -> bool
+static Aw.Sindri.Features.CheckSandbox.SandboxResumeLine.operator ==(Aw.Sindri.Features.CheckSandbox.SandboxResumeLine? left, Aw.Sindri.Features.CheckSandbox.SandboxResumeLine? right) -> bool
+static Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest.operator !=(Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest? left, Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest? right) -> bool
+static Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest.operator ==(Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest? left, Aw.Sindri.Features.GetSandboxStatus.GetSandboxStatusRequest? right) -> bool
+static Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.operator !=(Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine? left, Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine? right) -> bool
+static Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.operator ==(Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine? left, Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine? right) -> bool
+static Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.operator !=(Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse? left, Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse? right) -> bool
+static Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.operator ==(Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse? left, Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse? right) -> bool

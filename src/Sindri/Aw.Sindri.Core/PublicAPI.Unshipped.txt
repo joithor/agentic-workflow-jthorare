@@ -21032,9 +21032,7 @@ Aw.Sindri.Core.Sandbox.SandboxBlockerLine
 static Aw.Sindri.Core.Sandbox.SandboxBlockerLine.From(Aw.Sindri.Core.Sandbox.SandboxBlocker! blocker) -> Aw.Sindri.Core.Sandbox.SandboxBlockerLine!
 static Aw.Sindri.Core.Sandbox.Plan.SandboxPlanRenderer.Lead(Aw.Sindri.Core.Sandbox.Plan.SandboxPlan! plan) -> string!
 Aw.Sindri.Core.Sandbox.ParkedOnSandbox.<Clone>$() -> Aw.Sindri.Core.Sandbox.ParkedOnSandbox!
-Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId Instance, out System.DateTimeOffset Since) -> void
 Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Equals(Aw.Sindri.Core.Sandbox.ParkedOnSandbox? other) -> bool
-Aw.Sindri.Core.Sandbox.ParkedOnSandbox.ParkedOnSandbox(Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId Instance, System.DateTimeOffset Since) -> void
 override Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Equals(object? obj) -> bool
 override Aw.Sindri.Core.Sandbox.ParkedOnSandbox.GetHashCode() -> int
 override Aw.Sindri.Core.Sandbox.ParkedOnSandbox.ToString() -> string!
@@ -21107,3 +21105,61 @@ Aw.Sindri.Core.Sandbox.Credentials.AgentHomes
 static Aw.Sindri.Core.Sandbox.Credentials.AgentHomes.For(string! sindriHome, Aw.Sindri.Core.Launch.AgentId target) -> string!
 Aw.Sindri.Core.Sandbox.Credentials.ISandboxLogin
 Aw.Sindri.Core.Sandbox.Credentials.ISandboxLogin.Run(Aw.Sindri.Core.Launch.AgentId target, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Aw.Kernel.Result<int>!>!
+Aw.Sindri.Core.Events.SuspensionSummary.Sandbox.get -> Aw.Sindri.Core.Workflow.Engine.SandboxPark?
+Aw.Sindri.Core.Events.SuspensionSummary.Sandbox.init -> void
+Aw.Sindri.Core.NeedsYou.NeedsYouRow.Sandbox.get -> Aw.Sindri.Core.Workflow.Views.StatusSandbox?
+Aw.Sindri.Core.NeedsYou.NeedsYouRow.Sandbox.init -> void
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId Instance, out System.DateTimeOffset Since, out string? Item, out string? Title) -> void
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Item.get -> string?
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Item.init -> void
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.ParkedOnSandbox(Aw.Sindri.Core.Workflow.Engine.WorkflowInstanceId Instance, System.DateTimeOffset Since, string? Item = null, string? Title = null) -> void
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Title.get -> string?
+Aw.Sindri.Core.Sandbox.ParkedOnSandbox.Title.init -> void
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.Resume.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.ParkedOnSandbox!>!
+Aw.Sindri.Core.Sandbox.SandboxCheckReport.Resume.init -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.OpenQuestion.Sandbox.get -> Aw.Sindri.Core.Workflow.Engine.SandboxPark?
+Aw.Sindri.Core.Workflow.Engine.Runtime.OpenQuestion.Sandbox.init -> void
+Aw.Sindri.Core.Workflow.Engine.Runtime.StatusSandboxes
+Aw.Sindri.Core.Workflow.Views.StatusFields.Sandbox.get -> Aw.Sindri.Core.Workflow.Views.StatusSandbox?
+Aw.Sindri.Core.Workflow.Views.StatusFields.Sandbox.init -> void
+Aw.Sindri.Core.Workflow.Views.StatusSandbox
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.<Clone>$() -> Aw.Sindri.Core.Workflow.Views.StatusSandbox!
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Code.get -> string!
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Code.init -> void
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Command.get -> string?
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Command.init -> void
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Deconstruct(out string! Code, out string? Reason, out string? Source, out string! Text, out string? Command, out string? State) -> void
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Equals(Aw.Sindri.Core.Workflow.Views.StatusSandbox? other) -> bool
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Reason.get -> string?
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Reason.init -> void
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Source.get -> string?
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Source.init -> void
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.State.get -> string?
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.State.init -> void
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.StatusSandbox(string! Code, string? Reason, string? Source, string! Text, string? Command = null, string? State = null) -> void
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Text.get -> string!
+Aw.Sindri.Core.Workflow.Views.StatusSandbox.Text.init -> void
+override Aw.Sindri.Core.Workflow.Views.StatusSandbox.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Workflow.Views.StatusSandbox.GetHashCode() -> int
+override Aw.Sindri.Core.Workflow.Views.StatusSandbox.ToString() -> string!
+static Aw.Sindri.Core.Workflow.Engine.Runtime.StatusSandboxes.Of(Aw.Sindri.Core.Workflow.Engine.SandboxPark! park) -> Aw.Sindri.Core.Workflow.Views.StatusSandbox!
+static Aw.Sindri.Core.Workflow.Views.StatusSandbox.operator !=(Aw.Sindri.Core.Workflow.Views.StatusSandbox? left, Aw.Sindri.Core.Workflow.Views.StatusSandbox? right) -> bool
+static Aw.Sindri.Core.Workflow.Views.StatusSandbox.operator ==(Aw.Sindri.Core.Workflow.Views.StatusSandbox? left, Aw.Sindri.Core.Workflow.Views.StatusSandbox? right) -> bool
+Aw.Sindri.Core.Sandbox.LastSandboxCheck
+Aw.Sindri.Core.Sandbox.LastSandboxCheck.LastSandboxCheck() -> void
+Aw.Sindri.Core.Sandbox.LastSandboxCheck.Latest.get -> Aw.Sindri.Core.Sandbox.SandboxCheckRecord?
+Aw.Sindri.Core.Sandbox.LastSandboxCheck.Record(Aw.Sindri.Core.Sandbox.SandboxCheckRecord! record) -> void
+Aw.Sindri.Core.Sandbox.SandboxCheckRecord
+Aw.Sindri.Core.Sandbox.SandboxCheckRecord.<Clone>$() -> Aw.Sindri.Core.Sandbox.SandboxCheckRecord!
+Aw.Sindri.Core.Sandbox.SandboxCheckRecord.At.get -> System.DateTimeOffset
+Aw.Sindri.Core.Sandbox.SandboxCheckRecord.At.init -> void
+Aw.Sindri.Core.Sandbox.SandboxCheckRecord.Deconstruct(out System.DateTimeOffset At, out Aw.Sindri.Core.Sandbox.SandboxCheckReport! Report) -> void
+Aw.Sindri.Core.Sandbox.SandboxCheckRecord.Equals(Aw.Sindri.Core.Sandbox.SandboxCheckRecord? other) -> bool
+Aw.Sindri.Core.Sandbox.SandboxCheckRecord.Report.get -> Aw.Sindri.Core.Sandbox.SandboxCheckReport!
+Aw.Sindri.Core.Sandbox.SandboxCheckRecord.Report.init -> void
+Aw.Sindri.Core.Sandbox.SandboxCheckRecord.SandboxCheckRecord(System.DateTimeOffset At, Aw.Sindri.Core.Sandbox.SandboxCheckReport! Report) -> void
+override Aw.Sindri.Core.Sandbox.SandboxCheckRecord.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.SandboxCheckRecord.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.SandboxCheckRecord.ToString() -> string!
+static Aw.Sindri.Core.Sandbox.SandboxCheckRecord.operator !=(Aw.Sindri.Core.Sandbox.SandboxCheckRecord? left, Aw.Sindri.Core.Sandbox.SandboxCheckRecord? right) -> bool
+static Aw.Sindri.Core.Sandbox.SandboxCheckRecord.operator ==(Aw.Sindri.Core.Sandbox.SandboxCheckRecord? left, Aw.Sindri.Core.Sandbox.SandboxCheckRecord? right) -> bool

@@ -1,4 +1,5 @@
 using Aw.Sindri.Core.Sandbox;
+using Aw.Sindri.Core.Views;
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Core.Workflow.Engine.Desk;
 using Aw.Sindri.Core.Workflow.Engine.Instances;
@@ -12,7 +13,8 @@ namespace Aw.Sindri.Features.CheckSandbox;
 /// </summary>
 /// <param name="instances">The open instances.</param>
 /// <param name="reader">Reads one instance.</param>
-internal sealed class SandboxParkedInstances(IWorkflowInstances instances, IInstanceReader reader) : ISandboxParks
+/// <param name="views">The items view, for the title of the item a park runs for; null leaves the title off.</param>
+internal sealed class SandboxParkedInstances(IWorkflowInstances instances, IInstanceReader reader, IViewReader? views = null) : ISandboxParks
 {
     private const string LaunchCode = "SND-LAUNCH-";
 
@@ -24,6 +26,7 @@ internal sealed class SandboxParkedInstances(IWorkflowInstances instances, IInst
             return [];
         }
 
+        _ = views;
         var found = new List<ParkedOnSandbox>();
         foreach (var row in listed.Value)
         {

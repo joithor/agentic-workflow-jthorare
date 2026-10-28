@@ -14,7 +14,7 @@ internal sealed partial class SetupStepViewModel : ObservableObject
     [
         nameof(Title), nameof(NumberText), nameof(Chip), nameof(ChipWord), nameof(Sub), nameof(DetailText), nameof(ProgressText), nameof(ProgressFraction), nameof(ErrorText), nameof(Items), nameof(Preview), nameof(HasPreview), nameof(Action), nameof(Fields),
         nameof(IsMeterFailed), nameof(HintText), nameof(HasHint), nameof(Agents), nameof(HasAgents), nameof(TrustOnceText), nameof(AgentsNoteText),
-        nameof(Name), nameof(Note), nameof(HasNote), nameof(HasDetail), nameof(HasProgress), nameof(HasError), nameof(HasItems), nameof(HasAction),
+        nameof(Name), nameof(Note), nameof(HasNote), nameof(HasDetail), nameof(HasProgress), nameof(HasError), nameof(HasItems), nameof(HasAction), nameof(LinkUri), nameof(LinkText), nameof(HasLink),
     ];
 
     private readonly Func<SetupStepView, SetupActionViewModel?, SetupActionViewModel?> _action;
@@ -244,9 +244,9 @@ internal sealed partial class SetupStepViewModel : ObservableObject
         var state = running ? "running" : Step.State;
         var (word, said, tone) = Labels.SetupChip(state);
         (Title, Chip, ChipWord) = (Labels.SetupTitle(Step.Id, Step.Title), new StateChip(word, tone), said);
-        Sub = SubFor(state);
+        Sub = TakeLink(SubFor(state), reset: true);
         Note = _overrideNote ?? string.Empty;
-        DetailText = IsFinished || running ? string.Empty : Step.Detail ?? string.Empty;
+        DetailText = IsFinished || running ? string.Empty : TakeLink(Step.Detail ?? string.Empty, reset: false);
         ErrorText = running ? string.Empty : Step.Error?.Sentence ?? string.Empty;
         Name = Labels.SetupStepName(Title, said, Sub);
         Preview = PreviewLines();

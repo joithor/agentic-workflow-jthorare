@@ -1,0 +1,148 @@
+using Aw.Kernel.Testing;
+using Aw.Sindri.Core.Sandbox.Plan;
+using Aw.Sindri.Infrastructure.Sandbox;
+using Aw.Sindri.Testing.Sandbox;
+using Aw.Sindri.Tests.Launch;
+
+namespace Aw.Sindri.Tests.Sandbox.Bubblewrap;
+
+/// <summary>
+/// SB-5b proof (sandbox spec §12 SB-5b): a Step with a write scope in the real bubblewrap sandbox, on a private tmux server. It commits on its run branch and the engine can read
+/// the diff from outside, it can't move another ref or push, and the toolchain answers through PATH. Each fact runs one tight script inside the wrapped sandbox; output and exit
+/// code go to files under the box. Heavy lane: it needs bwrap, socat and git.
+/// </summary>
+[Lane(TestLane.Heavy)]
+[System.Runtime.Versioning.UnsupportedOSPlatform("windows")]
+public sealed class SandboxWriteScopeInsideTests
+{
+    // The run branch the fixture's worktree is on (SandboxBox's namespace 'sindri/x/1' plus '/work').
+    private const string RunBranch = "sindri/x/1/work";
+
+    private static SandboxBox NewBox()
+    {
+        Assert.SkipUnless(OperatingSystem.IsLinux(), "the bubblewrap sandbox is Linux-only");
+        Assert.SkipUnless(BubblewrapBox.Unavailable is null, BubblewrapBox.Unavailable ?? string.Empty);
+        Assert.SkipUnless(SandboxBox.GitAvailable, "git is not installed");
+        return SandboxBox.Create(BubblewrapBox.FixtureParent, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+    }
+
+    [Fact]
+    public async Task A_commit_inside_moves_the_run_branch_and_the_engine_reads_its_diff_after_the_session()
+    {
+        using var box = NewBox();
+        var before = Git(box, "rev-parse", RunBranch);
+
+        var ran = await RunInside(box, $"cd {Quote(box.Worktree)} && echo edited > edited.txt && git add edited.txt && git commit -q -m 'edit inside' && echo committed");
+
+        Assert.True(ran.Exit == 0, "the commit inside the sandbox failed: " + ran.Output);
+        Assert.NotEqual(before, Git(box, "rev-parse", RunBranch), StringComparer.Ordinal);
+        Assert.Contains("edited.txt", Git(box, "diff", "--name-only", "main", RunBranch), StringComparison.Ordinal);   // what the engine reads once the session has ended
+        Assert.Equal("edit inside", Git(box, "log", "-1", "--format=%s", RunBranch), StringComparer.Ordinal);
+        Assert.Empty(ProcessListing.Under(box.Root));
+    }
+
+    [Fact]
+    public async Task Another_ref_can_not_be_written_from_inside()
+    {
+        using var box = NewBox();
+        var main = Git(box, "rev-parse", "main");
+        var other = Git(box, "rev-parse", "other");
+
+        // a commit first, so HEAD differs from every ref the script tries to move
+        var script = $"cd {Quote(box.Worktree)} && echo x > x.txt && git add x.txt && git commit -q -m moved || exit 90\n"
+            + "git update-ref refs/heads/main HEAD; echo \"update-main=$?\"\n"
+            + "git update-ref refs/heads/other HEAD; echo \"update-other=$?\"\n"
+            + "git branch created-inside; echo \"branch=$?\"\n"
+            + "git tag created-inside; echo \"tag=$?\"\n";
+        var ran = await RunInside(box, script);
+
+        Assert.True(ran.Exit == 0, "the script could not commit on the run branch: " + ran.Output);
+        foreach (var attempt in new[] { "update-main", "update-other", "branch", "tag" })
+        {
+            Assert.Matches($"{attempt}=[1-9]", ran.Output);
+        }
+
+        Assert.Equal(main, Git(box, "rev-parse", "main"), StringComparer.Ordinal);
+        Assert.Equal(other, Git(box, "rev-parse", "other"), StringComparer.Ordinal);
+        Assert.Empty(Git(box, "for-each-ref", "refs/heads/created-inside", "refs/tags"));
+        Assert.Empty(ProcessListing.Under(box.Root));
+    }
+
+    [Fact]
+    public async Task A_push_is_refused_by_the_run_areas_pre_push_hook()
+    {
+        using var box = NewBox();
+        var remote = Path.Combine(box.RunDirectory, "remote.git");   // under the run directory, so it is reachable inside and the hook (which runs after connecting) is what stops the push
+        Assert.Equal(0, SandboxBox.Run("git", ["init", "-q", "--bare", remote]).Exit);
+        var main = Git(box, "rev-parse", "main");
+
+        var ran = await RunInside(box, $"cd {Quote(box.Worktree)} && git push {Quote(remote)} HEAD:refs/heads/pushed; echo \"push=$?\"");
+
+        Assert.Matches("push=[1-9]", ran.Output);
+        Assert.Contains("git push is not available in a sandboxed session", ran.Output, StringComparison.Ordinal);   // RunAreaPreparer's refusing pre-push
+        Assert.Empty(SandboxBox.Run("git", ["-C", remote, "for-each-ref"]).Output.Trim());
+        Assert.Equal(main, Git(box, "rev-parse", "main"), StringComparer.Ordinal);
+        Assert.Empty(ProcessListing.Under(box.Root));
+    }
+
+    [Fact]
+    public async Task The_dotnet_toolchain_answers_through_path()
+    {
+        using var box = NewBox();
+        Assert.SkipUnless(box.HasDotnet, "no .NET SDK on this box");
+
+        // why: no shim is asserted. The heavy shims are written into the run area and put first on PATH by the launch; once they are wired, PATH resolves the shim first and it
+        // runs the same SDK through heavy, so this passes with the real dotnet resolved from PATH either way. A restore needs the network and the repo's build props, so the proof is that the SDK and MSBuild start.
+        var ran = await RunInside(box, $"cd {Quote(box.Worktree)} && dotnet --version && dotnet msbuild -version -nologo");
+
+        Assert.True(ran.Exit == 0, "dotnet inside the sandbox failed: " + ran.Output);
+        Assert.Matches(@"^\d+\.\d+\.\d+", ran.Output.TrimStart());
+        Assert.Empty(ProcessListing.Under(box.Root));
+    }
+
+    // Plans the box's write-scope request, starts the launch's egress forwarders and runs 'sh -c script' wrapped, on a private tmux server. Output and exit code come back through files.
+    private static async Task<Ran> RunInside(SandboxBox box, string script)
+    {
+        using var tmux = new PrivateTmux();
+        var ct = TestContext.Current.CancellationToken;
+        var sandbox = BubblewrapBox.Create();
+        var plan = sandbox.Plan(box.WriteScope());
+        Assert.True(plan.IsSuccess, plan.IsError ? plan.Error.ToString() : null);
+
+        await using var egress = StartEgress(plan.Value);
+        var wrapped = sandbox.Wrap(plan.Value, ["/bin/sh", "-c", script]);
+        Assert.True(wrapped.IsSuccess, wrapped.IsError ? wrapped.Error.ToString() : null);
+
+        var output = Path.Combine(box.Root, "inside.out");
+        var code = Path.Combine(box.Root, "inside.code");
+        var line = string.Join(' ', wrapped.Value.Select(Quote)) + $" > {Quote(output)} 2>&1; echo $? > {Quote(code)}";
+        Assert.NotNull(tmux.Run("new-session", "-d", "-s", "write-scope-inside", "-c", box.Root, "sh", "-c", line));
+        for (var waited = 0; waited < 1200 && !File.Exists(code); waited++)
+        {
+            await Task.Delay(100, ct);
+        }
+
+        Assert.True(File.Exists(code), "the script did not finish inside the sandbox in 120 s");
+        return new Ran(int.Parse((await File.ReadAllTextAsync(code, ct)).Trim(), System.Globalization.CultureInfo.InvariantCulture), await File.ReadAllTextAsync(output, ct));
+    }
+
+    private static RunningEgress StartEgress(SandboxPlan plan)
+    {
+        var network = new SystemEgressNetwork();
+        var started = new EgressService(network, network, Environment.GetEnvironmentVariable, Path.Combine(plan.RunDirectory, "egress")).Start(plan.Network, EgressCaps.Default);
+        Assert.True(started.IsSuccess, started.IsError ? started.Error.ToString() : null);
+        return started.Value;
+    }
+
+    // From outside the sandbox, in the box's real repository.
+    private static string Git(SandboxBox box, params string[] args)
+    {
+        var (exit, output) = SandboxBox.Run("git", ["-C", box.Repo, .. args]);
+        Assert.True(exit == 0, $"git {string.Join(' ', args)} failed: {output}");
+        return output.Trim();
+    }
+
+    private static string Quote(string value) => "'" + value.Replace("'", "'\\''", StringComparison.Ordinal) + "'";
+
+    private sealed record Ran(int Exit, string Output);
+}

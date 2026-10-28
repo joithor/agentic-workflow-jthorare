@@ -30,7 +30,7 @@ public sealed record ContextSettings
     public IReadOnlyList<string> DocDirectoryNames { get; init; } = DefaultDocDirectoryNames;
 
     /// <summary>What the doc index and the repo-docs feed index: <see cref="DocGlobs"/> plus a '**/name' glob for each of <see cref="DocDirectoryNames"/>.</summary>
-    public IReadOnlyList<string> IndexedDocGlobs => DocGlobs;
+    public IReadOnlyList<string> IndexedDocGlobs => [.. DocGlobs, .. DocDirectoryNames.Select(static n => "**/" + n)];
 
     /// <summary>The per-query deadline.</summary>
     public TimeSpan Deadline { get; init; } = TimeSpan.FromSeconds(10);

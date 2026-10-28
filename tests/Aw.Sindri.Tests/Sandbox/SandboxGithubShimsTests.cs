@@ -222,7 +222,7 @@ public sealed class SandboxGithubShimsTests : IDisposable
         }
 
         _ = start.Environment.Remove("GH_TOKEN");
-        using var process = Process.Start(start)!;
+        using var process = ExecutableScript.StartWhenNotBusy(start);   // the shim was written by the run-area preparer a moment ago
         process.StandardInput.Write(stdin);
         process.StandardInput.Close();
         var output = process.StandardOutput.ReadToEnd();

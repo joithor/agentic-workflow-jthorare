@@ -27,8 +27,19 @@ public interface IProviderCatalog
     public Result<IModelProvider> Provider(ProviderName name, IReadOnlyCollection<ProviderName>? allowed);
 
     /// <summary>
+    /// <see cref="Provider(ProviderName, IReadOnlyCollection{ProviderName})"/> with config.json's providers block applied the way
+    /// <see cref="Lineup"/> applies it (Jev's input cap), so a provider asked directly sees what it would see in a chain. A catalog
+    /// that has nothing to apply keeps this default.
+    /// </summary>
+    /// <param name="name">The provider.</param>
+    /// <param name="allowed">The allowlist, or null for every provider.</param>
+    /// <param name="config">The providers block, or null.</param>
+    /// <returns>As the overload without a config.</returns>
+    public Result<IModelProvider> Provider(ProviderName name, IReadOnlyCollection<ProviderName>? allowed, ProvidersConfig? config) => Provider(name, allowed);
+
+    /// <summary>
     /// The stronger model 'judge adjudicate' asks: the claude CLI on opus at high effort, in a locked-down child (no tools,
-    /// settings or hooks; a scratch directory; a minimal environment). Same refusals as <see cref="Provider"/> for claude-cli.
+    /// settings or hooks; a scratch directory; a minimal environment). Same refusals as <see cref="Provider(ProviderName, IReadOnlyCollection{ProviderName})"/> for claude-cli.
     /// </summary>
     /// <param name="allowed">The --providers / AW_JUDGE_PROVIDERS allowlist, or null for every provider.</param>
     /// <returns>The provider, AW-JUDGE-012 when the allowlist excludes claude-cli, or AW-JUDGE-013 when the CLI is missing.</returns>

@@ -1,4 +1,5 @@
 using System.Text;
+using Aw.Sindri.Core.Sandbox.Plan;
 
 namespace Aw.Sindri.Infrastructure.Sandbox;
 
@@ -68,8 +69,8 @@ internal static class SandboxShims
         }
     }
 
-    /// <summary>The file name of the git credential helper shim (SB-7); the plan's `credential.helper` entry names it.</summary>
-    internal const string CredentialHelperName = "git-credential-sindri";
+    /// <summary>The file name of the git credential helper shim (SB-7): the plan's own, so its `credential.helper` entry and the file can't drift apart.</summary>
+    internal const string CredentialHelperName = GitSettings.CredentialHelperName;
 
     private const UnixFileMode ExecutableMode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
 

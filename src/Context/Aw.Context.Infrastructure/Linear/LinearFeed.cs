@@ -21,7 +21,7 @@ internal sealed class LinearFeed(LinearClient client, TimeSpan deadline) : Recor
     {
         ArgumentNullException.ThrowIfNull(pull);
         var at = FeedCursor.Read(pull.After);
-        var variables = LinearFilters.Variables(Filter(at.Since, pull.NotBefore), Math.Clamp(pull.Limit, 1, MaxPage), at.After);
+        var variables = LinearFilters.Variables(Filter(at.Since, pull.NotBefore, pull.Before), Math.Clamp(pull.Limit, 1, MaxPage), at.After);
         var data = await client.Query<LinearIssuesData>("IssuesPull", variables, deadline, cancellationToken).ConfigureAwait(false);
         if (data.IsError)
         {
@@ -35,7 +35,7 @@ internal sealed class LinearFeed(LinearClient client, TimeSpan deadline) : Recor
         return new RecordPage(items, [], next.ToCursor(), CursorReset: false);
     }
 
-    private JsonObject Filter(DateTimeOffset? since, DateTimeOffset? notBefore)
+    private JsonObject Filter(DateTimeOffset? since, DateTimeOffset? notBefore, DateTimeOffset? before)
     {
         var filter = client.Settings.Teams.Count > 0 ? LinearFilters.InTeams([], client.Settings.Teams) : [];
         if (since is { } after && (notBefore is not { } window || window <= after))
@@ -45,6 +45,13 @@ internal sealed class LinearFeed(LinearClient client, TimeSpan deadline) : Recor
         else if (notBefore is { } start)
         {
             filter["updatedAt"] = new JsonObject { ["gte"] = Iso(start) };
+        }
+
+        if (before is { } end)
+        {
+            var range = filter["updatedAt"] as JsonObject ?? [];
+            range["lt"] = Iso(end);
+            filter["updatedAt"] = range;
         }
 
         return filter;

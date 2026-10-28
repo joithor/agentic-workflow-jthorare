@@ -51,8 +51,8 @@ internal static class RecordSql
     internal const string DeleteChunks = "DELETE FROM chunk WHERE record = @key";
 
     internal const string SavePosition =
-        "INSERT INTO source_cursor (source, repo, cursor, last_sync, last_error, phase, backfill_cursor) VALUES (@source, 'records', @cursor, @at, NULL, @phase, @backfill) " +
-        "ON CONFLICT (source, repo) DO UPDATE SET cursor = excluded.cursor, last_sync = excluded.last_sync, last_error = NULL, phase = excluded.phase, backfill_cursor = excluded.backfill_cursor";
+        "INSERT INTO source_cursor (source, repo, cursor, last_sync, last_error, phase, backfill_cursor, backfill_before) VALUES (@source, 'records', @cursor, @at, NULL, @phase, @backfill, @before) " +
+        "ON CONFLICT (source, repo) DO UPDATE SET cursor = excluded.cursor, last_sync = excluded.last_sync, last_error = NULL, phase = excluded.phase, backfill_cursor = excluded.backfill_cursor, backfill_before = excluded.backfill_before";
 
     internal const string BumpRecordStamp = "UPDATE store_epoch SET record_stamp = record_stamp + 1 WHERE id = 1";
 
@@ -73,7 +73,7 @@ internal static class RecordSql
         "SELECT " + Columns + " FROM source_record WHERE (@source IS NULL OR source = @source) AND (@repo IS NULL OR repo = @repo) AND (@kind IS NULL OR kind = @kind) " +
         "AND (@removed = 1 OR removed_at IS NULL) AND (@after IS NULL OR key > @after) ORDER BY key LIMIT @limit";
 
-    internal const string ReadPosition = "SELECT cursor, phase, backfill_cursor FROM source_cursor WHERE source = @source AND repo = 'records'";
+    internal const string ReadPosition = "SELECT cursor, phase, backfill_cursor, backfill_before FROM source_cursor WHERE source = @source AND repo = 'records'";
 
     internal const string ReadStamps = "SELECT record_stamp, delete_epoch FROM store_epoch WHERE id = 1";
 

@@ -12,10 +12,10 @@ internal sealed partial class Launcher
     /// <summary>What a launch runs with after the sandbox step: the argv, the environment and the summary (null when it ran unconfined).</summary>
     private sealed record Confined(IReadOnlyList<string> Argv, Dictionary<string, string> Env, SandboxSummary? Summary);
 
-    /// <summary>An unattended launch with a sandbox runs its wrapped argv and sees the session home as AW_SINDRI_HOME, never the real one; anything else runs as built.</summary>
+    /// <summary>A launch with a sandbox (a Step's or a session the owner opens, with no unconfined fallback when it refuses) runs its wrapped argv and sees the session home as AW_SINDRI_HOME, never the real one; anything else runs as built.</summary>
     private async ValueTask<Result<Confined>> Confine(LaunchRequest request, IReadOnlyList<string> argv, Dictionary<string, string> env, SessionId? session, CancellationToken cancellationToken)
     {
-        if (request.Attended || parts.Sandbox is not { } sandbox)
+        if (parts.Sandbox is not { } sandbox)
         {
             return new Confined(argv, env, Summary: null);
         }

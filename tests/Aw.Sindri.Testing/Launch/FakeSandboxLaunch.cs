@@ -25,6 +25,9 @@ public sealed class FakeSandboxLaunch : ISandboxLaunch
     public SandboxSummary Summary { get; } = new(SandboxMechanism.Bubblewrap, "9f2c0a41d8e6", ["/work"], ["model"], NetworkMode.Enforce, InnerState.On,
         new SandboxLimitsSummary("12GiB", "400%", 2048), new SandboxCredentialsSummary(GithubCredentials.None), ModelLoginSource.OwnerCopy);
 
+    /// <summary>The summary Prepare hands back for an attended launch (sandbox spec §3.9).</summary>
+    public SandboxSummary AttendedSummary => Summary with { Attended = true };
+
     /// <summary>The launches Prepare was called for, with the argv it got.</summary>
     public IReadOnlyList<(LaunchRequest Request, IReadOnlyList<string> Argv)> Prepared => _prepared;
 
@@ -37,7 +40,7 @@ public sealed class FakeSandboxLaunch : ISandboxLaunch
         _prepared.Add((request, argv));
         return ValueTask.FromResult(Refuse is { } error
             ? (Result<PreparedSandbox>)error
-            : new PreparedSandbox(Summary, ["fake-sandbox", "--", .. argv], SessionHome, "/run/area"));
+            : new PreparedSandbox(request.Attended ? AttendedSummary : Summary, ["fake-sandbox", "--", .. argv], SessionHome, "/run/area"));
     }
 
     /// <inheritdoc/>

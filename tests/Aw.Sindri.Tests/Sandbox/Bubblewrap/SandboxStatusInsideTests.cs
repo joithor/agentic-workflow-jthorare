@@ -59,6 +59,8 @@ public sealed class SandboxStatusInsideTests
             RemoveSessionHome(box);
             Stop(serve);
         }
+
+        Assert.Empty(ProcessesUnder(box.Root));   // serve's temporal dev server too: it is setsid-detached, so only serve's own shutdown stops it
     }
 
     // Exit 1 is attention (the scratch profile isn't approved); "running":true means serve answered through the forwarder, not SND-API-001 "not running".
@@ -147,10 +149,36 @@ public sealed class SandboxStatusInsideTests
 
     private static void Stop(Process serve)
     {
-        if (!serve.HasExited)
+        if (serve.HasExited)
+        {
+            return;
+        }
+
+        // TERM, not Kill: serve's own shutdown stops its temporal dev server (setsid-detached, so a killed serve orphans it), TERM then KILL after 10 s.
+        using (var term = Process.Start("kill", ["-TERM", serve.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)]))
+        {
+            _ = term?.WaitForExit(5_000);
+        }
+
+        if (!serve.WaitForExit(30_000))
         {
             serve.Kill(entireProcessTree: false);   // this serve only, by its own handle
             _ = serve.WaitForExit(10_000);
+        }
+    }
+
+    private static List<string> ProcessesUnder(string root) =>
+        [.. Directory.GetDirectories("/proc").Where(static d => int.TryParse(Path.GetFileName(d), out _)).Select(CommandLineOf).Where(c => c.Contains(root, StringComparison.Ordinal))];
+
+    private static string CommandLineOf(string procDir)
+    {
+        try
+        {
+            return File.ReadAllText(procDir + "/cmdline").Replace('\0', ' ');
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return string.Empty;   // the process ended while we looked
         }
     }
 

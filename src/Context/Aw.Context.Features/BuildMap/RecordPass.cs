@@ -267,18 +267,18 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
 
     private static GraphNode Node(StoredRecord record, NodeKey key) => new(key, record.Title, Provenance.Deterministic, At: record.UpdatedAt);
 
-    // Every line of the build report's record section; the ones that say something is missing or stale also go in the second list, which is what the report calls degraded.
+    // Every line of the build report's record section; only the docs older than HEAD, unresolved citations and records over the file cap also go in the second list, which is what the report calls degraded. Docs not yet synced, removed files and zero counts are notes.
     private (List<string> All, List<string> Degraded) Notes(long stamp)
     {
         var all = new List<string> { Line($"records: as of stamp {stamp}") };
         var degraded = new List<string>();
-        AddIf(all, degraded, _notSynced, n => Line($"records: {n} docs not yet synced"), stale: true);
+        AddIf(all, degraded, _notSynced, n => Line($"records: {n} docs not yet synced"), stale: false);
         AddIf(all, degraded, _older, n => Line($"records: {n} docs older than HEAD"), stale: true);
         var resolved = _cited.GetValueOrDefault(CitationOutcome.Resolved);
         var missing = _cited.GetValueOrDefault(CitationOutcome.Missing);
         var ambiguous = _cited.GetValueOrDefault(CitationOutcome.Ambiguous);
         AddIf(all, degraded, resolved + missing + ambiguous, _ => Line($"citations: {resolved} resolved, {missing + ambiguous} unresolved ({missing} missing, {ambiguous} ambiguous)"), stale: missing + ambiguous > 0);
-        AddIf(all, degraded, _removedTouches, n => Line($"touched files since removed: {n}"), stale: true);
+        AddIf(all, degraded, _removedTouches, n => Line($"touched files since removed: {n}"), stale: false);
         AddIf(all, degraded, _overCap, n => Line($"records over the file cap: {n} ({_overCapPaths} paths)"), stale: true);
         return (all, degraded);
     }

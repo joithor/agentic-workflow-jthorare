@@ -47,7 +47,7 @@ internal sealed class SyncSourcesService(
         }
 
         rows.AddRange(intent.Value);
-        var fed = await FeedRows(wanted.Value.Feeds, request.Scope, (settings.Value, scrubbers.Value), cancellationToken).ConfigureAwait(false);
+        var fed = await FeedRows(wanted.Value.Feeds, wanted.Value.Intent, request.Scope, (settings.Value, scrubbers.Value), cancellationToken).ConfigureAwait(false);
         if (fed.IsError)
         {
             return fed.Error;
@@ -57,8 +57,11 @@ internal sealed class SyncSourcesService(
         return new SyncReport(rows);
     }
 
-    /// <summary>One tick of each feed, each followed by its decision pass over the stored records, against the map read once.</summary>
-    private async ValueTask<Result<List<SourceSync>>> FeedRows(IReadOnlyList<RecordFeed> wanted, ContextScope scope, (ContextSettings Settings, Scrubbers Scrubbers) context, CancellationToken cancellationToken)
+    /// <summary>
+    /// One tick of each feed, each followed by its decision pass over the stored records, against the map read once; a source the intent walk reads in this call (Linear) keeps its
+    /// decisions from that walk, so its feed gets no pass (two versions of one key would requeue each other, one model call each time).
+    /// </summary>
+    private async ValueTask<Result<List<SourceSync>>> FeedRows(IReadOnlyList<RecordFeed> wanted, IReadOnlyList<IContextSource> walked, ContextScope scope, (ContextSettings Settings, Scrubbers Scrubbers) context, CancellationToken cancellationToken)
     {
         var rows = new List<SourceSync>();
         if (wanted.Count == 0)
@@ -74,8 +77,8 @@ internal sealed class SyncSourcesService(
 
         foreach (var feed in wanted)
         {
-            var decisions = new RecordDecisionRun(feed.Source, map.Value, context, (feeds.OwnedRecords(), intents, model, clock));
-            var row = await feeds.Run(feed, (context.Scrubbers, context.Settings), tick => decisions.Execute(tick, cancellationToken), cancellationToken).ConfigureAwait(false);
+            var decisions = walked.Any(w => w.Describe().Id == feed.Source) ? null : new RecordDecisionRun(feed.Source, map.Value, context, (feeds.OwnedRecords(), intents, model, clock));
+            var row = await feeds.Run(feed, (context.Scrubbers, context.Settings), decisions is null ? null : tick => decisions.Execute(tick, cancellationToken), cancellationToken).ConfigureAwait(false);
             if (row.IsError)
             {
                 return row.Error;

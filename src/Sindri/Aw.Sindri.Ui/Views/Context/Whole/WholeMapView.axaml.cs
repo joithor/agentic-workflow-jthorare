@@ -118,6 +118,9 @@ internal sealed partial class WholeMapView : UserControl
         if (sender is Control { DataContext: NodeEdgeRowViewModel row })
         {
             row.Jump();
+
+            // The card swaps its edge rows for the next node's, so the focused one leaves the tree; the close button stays, and Esc and Tab keep working from it.
+            _ = WholeNodeClose.Focus(NavigationMethod.Tab);
         }
     }
 

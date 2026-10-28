@@ -1,11 +1,14 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Aw.Kernel;
 using Aw.Kernel.Testing;
+using Aw.Sindri.Ui.Api.Context;
 using Aw.Sindri.Ui.ViewModels.Context.Whole;
-using Aw.Sindri.Ui.Views.Context.Whole;
+using MapView = Aw.Sindri.Ui.Views.Context.Whole.WholeMapView;
 
 namespace Aw.Sindri.Ui.Tests.Context.Whole;
 
@@ -27,7 +30,7 @@ public sealed class WholeMapItemsKeyboardTests
         {
             var map = new WholeMapViewModel(() => TimeZoneInfo.Utc);
             map.Show(WholeMapLayoutTests.Draft("nodes-small"));
-            var window = new Window { Content = new WholeMapView { DataContext = map }, Width = 1280, Height = 900 };
+            var window = new Window { Content = new MapView { DataContext = map }, Width = 1280, Height = 900 };
             try
             {
                 window.Show();
@@ -45,6 +48,68 @@ public sealed class WholeMapItemsKeyboardTests
 
                 Assert.Equal(chosen.Key, map.Pinned);
                 Assert.True(map.Panel.IsOpen);
+            }
+            finally
+            {
+                window.Close();
+                Dispatcher.UIThread.RunJobs();
+            }
+
+            return true;
+        }, TestContext.Current.CancellationToken);
+    }
+
+    private static void Press(Window window, Key key, PhysicalKey physical)
+    {
+        window.KeyPress(key, RawInputModifiers.None, physical, keySymbol: null);
+        Settle(window);
+    }
+
+    private static void ServeEdges(WholeMapViewModel map)
+    {
+        var keys = map.Geometry!.Nodes.Select(n => n.Key).ToArray();
+        map.Panel.Loader = (key, _) =>
+        {
+            var others = keys.Where(k => !string.Equals(k, key, StringComparison.Ordinal)).Take(2);
+            var info = new NodeInfo(key, "feature", key, "test", Confirmed: true, "high", Confidence: 1.0);
+            var edges = others.Select(o => new NodeEdge(key, "relates", o, "test", Confirmed: true)).ToArray();
+            return Task.FromResult<Result<NodeView>?>(Results.Success(new NodeView("v1", info, Aliases: [], Out: edges, In: [])));
+        };
+    }
+
+    [Fact]
+    public async Task Enter_on_an_edge_row_keeps_focus_in_the_card()
+    {
+        _ = await HeadlessUnitTestSession.GetOrStartForAssembly(typeof(WholeMapItemsKeyboardTests).Assembly).Dispatch(async () =>
+        {
+            var map = new WholeMapViewModel(() => TimeZoneInfo.Utc);
+            map.Show(WholeMapLayoutTests.Draft("nodes-small"));
+            ServeEdges(map);
+            var window = new Window { Content = new MapView { DataContext = map }, Width = 1280, Height = 900 };
+            try
+            {
+                window.Show();
+                Settle(window);
+                var list = window.GetVisualDescendants().OfType<ListBox>().First(l => string.Equals(l.Name, "WholeItems", StringComparison.Ordinal));
+                _ = list.GetVisualDescendants().OfType<ListBoxItem>().First().Focus(NavigationMethod.Tab);
+                Settle(window);
+                Press(window, Key.Down, PhysicalKey.ArrowDown);
+                Press(window, Key.Enter, PhysicalKey.Enter);
+                await map.Panel.Reading;
+                Settle(window);
+
+                var card = window.GetVisualDescendants().OfType<Border>().First(b => string.Equals(b.Name, "WholeNodePanel", StringComparison.Ordinal));
+                var edge = card.GetVisualDescendants().OfType<ItemsControl>().First(i => string.Equals(i.Name, "WholeNodeGroups", StringComparison.Ordinal)).GetVisualDescendants().OfType<Button>().First();
+                var before = map.Panel.Key;
+                _ = edge.Focus(NavigationMethod.Tab);
+                Settle(window);
+                Press(window, Key.Enter, PhysicalKey.Enter);
+                await map.Panel.Reading;
+                Settle(window);
+
+                Assert.NotEqual(before, map.Panel.Key, StringComparer.Ordinal);
+                var focused = Assert.IsType<Visual>(window.FocusManager.GetFocusedElement(), exactMatch: false);
+                Assert.True(card.IsVisualAncestorOf(focused));
             }
             finally
             {

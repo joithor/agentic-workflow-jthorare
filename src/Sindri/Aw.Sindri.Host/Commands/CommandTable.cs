@@ -37,6 +37,12 @@ internal static partial class CommandTable
             return await SandboxExplainVerb.Run(explain, environment, Console.Out, Console.Error, CancellationToken.None).ConfigureAwait(false);
         }
 
+        if (args is ["sandbox", "show", .. var show])
+        {
+            // before Compose, like explain: show reads only the plan file
+            return await SandboxShowVerb.Run(show, environment, Console.Out, Console.Error, CancellationToken.None).ConfigureAwait(false);
+        }
+
         var services = Composition.Compose(new ServiceCollection(), environment, clock);
         configure?.Invoke(services);   // tests only: a test replaces a port with its fake; Program passes nothing
         var provider = services.BuildServiceProvider();
@@ -118,10 +124,11 @@ internal static partial class CommandTable
         };
     }
 
-    /// <summary>'sindri sandbox learn off|denials …'; any other sandbox verb is an unknown verb.</summary>
+    /// <summary>'sindri sandbox learn off|denials|check …'; any other sandbox verb is an unknown verb.</summary>
     private static async Task<int> Sandbox(string[] args, ControlPlaneClient client, Output output, IServiceProvider services, CancellationToken ct) => args switch
     {
         ["sandbox", "learn", "off", .. var rest] => await new SandboxLearnVerbs(client, output).Run(rest, ct).ConfigureAwait(false),
+        ["sandbox", "check", .. var rest] => await new SandboxCheckVerb(client, output).Run(rest, ct).ConfigureAwait(false),
         ["sandbox", "denials", .. var rest] => await new SandboxDenialsVerb(client, output, services.GetRequiredService<TimeProvider>()).Run(rest, ct).ConfigureAwait(false),
         _ => await UnknownVerb(args, output).ConfigureAwait(false),
     };

@@ -55,6 +55,8 @@ public static partial class TransitionDecision
                 : new TriggerRecord(Trigger.Name, Key, Trigger.Actor, Outcome(Trigger), ReasonOf(Trigger), Via: ViaOf(Trigger), Decision: (Trigger as StepCompleted)?.Decision)
                 {
                     Tokens = Trigger is StepCompleted { Via: StepRuntime.Agent } agent ? agent.Tokens : null,
+                    Agent = Trigger is StepCompleted { Via: StepRuntime.Agent } ran ? ran.Agent : null,
+                    Model = Trigger is StepCompleted { Via: StepRuntime.Agent } asked ? asked.Model : null,
                 };
             return new InstanceChange(after, new WorkflowEvent(
                 type, after.Id, trigger, Started: null, Rules.Delta(before, after),

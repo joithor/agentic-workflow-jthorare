@@ -1,5 +1,8 @@
 using Aw.Kernel.Services;
 using Aw.Sindri.Core.Commands;
+using Aw.Sindri.Core.Doctor;
+using Aw.Sindri.Core.Sandbox;
+using Aw.Sindri.Features.CheckSandbox;
 using Aw.Sindri.Features.Commands;
 using Aw.Sindri.Features.EndLearnMode;
 using Aw.Sindri.Features.ListDenials;
@@ -46,5 +49,20 @@ internal static class SandboxServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         return services.AddScoped<IValidator<ListDenialsRequest>, AcceptAllValidator<ListDenialsRequest>>().AddQuery<ListDenialsRequest, ListDenialsResponse, ListDenialsService>();
+    }
+
+    /// <summary>Adds CheckSandbox, the query behind 'sindri sandbox check' and Check again, with the checks it runs and doctor's sandbox rows (SB-5a).</summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same collection.</returns>
+    internal static IServiceCollection AddCheckSandbox(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        return services
+            .AddScoped<IValidator<CheckSandboxRequest>, AcceptAllValidator<CheckSandboxRequest>>().AddQuery<CheckSandboxRequest, CheckSandboxResponse, CheckSandboxService>()
+            .AddScoped<ISandboxChecks, SandboxChecks>().AddScoped<SandboxResumeList>()
+            .AddScoped<ISandboxFormCheck, SandboxFormCheck>().AddScoped<ISandboxLoginCheck, SandboxLoginCheck>()
+            .AddScoped<ISandboxParks, SandboxParkedInstances>().AddScoped<ISandboxSlots, SandboxSlots>()
+            .AddSingleton<ISandboxFixture, NoSandboxFixture>().AddSingleton<ISandboxMachine, ProcessSandboxMachine>()
+            .AddScoped<IDoctorChecks, SandboxDoctorChecks>();
     }
 }

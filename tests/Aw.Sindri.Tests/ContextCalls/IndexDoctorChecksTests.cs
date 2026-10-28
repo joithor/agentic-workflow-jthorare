@@ -146,14 +146,24 @@ public sealed class IndexDoctorChecksTests
     }
 
     [Fact, Trait("Lane", "unit")]
-    public void Sync_warns_for_a_source_that_never_synced_or_whose_last_tick_ended_with_a_code()
+    public void Sync_warns_for_a_source_not_synced_yet_or_whose_last_sync_failed()
     {
         var at = new DateTimeOffset(2026, 10, 28, 9, 5, 0, TimeSpan.Zero);
 
         var row = IndexSyncRules.Judge([SourceProgress.From(SourceId.From("github"), SyncPhase.Incremental, at, "SND-CONTEXT-010"), SourceProgress.From(SourceId.From("slack"), phase: null, lastSync: null, lastCode: null)]);
 
-        Assert.Equal((CheckState.Warn, "github synced 2026-10-28 09:05Z ended SND-CONTEXT-010; slack never synced"), (row.State, row.Detail));
+        Assert.Equal((CheckState.Warn, "github last sync failed: SND-CONTEXT-010; slack not synced yet"), (row.State, row.Detail));
         Assert.Equal("sindri index sync, then sindri index status", row.Fix);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public void A_time_capped_sync_is_ok_not_a_failure()
+    {
+        var at = new DateTimeOffset(2026, 10, 28, 9, 5, 0, TimeSpan.Zero);
+
+        var row = IndexSyncRules.Judge([SourceProgress.From(SourceId.From("github"), SyncPhase.Incremental, at, "SND-CONTEXT-059")]);
+
+        Assert.Equal((CheckState.Ok, "github synced 2026-10-28 09:05Z"), (row.State, row.Detail));
     }
 
     private IndexDoctorChecks Checks(PointerSecrets secrets, FakeProbe probe, TimeSpan? limit = null) =>

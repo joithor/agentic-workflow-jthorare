@@ -79,13 +79,13 @@ public sealed class JevProviderTests
     {
         var handler = FakeHttpHandler.Answering(HttpStatusCode.OK, Answer);
         using var provider = new JevProvider(new HttpClient(handler), Secrets(), new FakeInputRedactor());
-        var input = new JsonObject { ["text"] = "deploy with " + SampleSecrets.GitHubToken, ["diff"] = new string('d', 100_000) };
+        var input = new JsonObject { ["text"] = "deploy with " + SampleSecrets.GitHubToken, ["diff"] = new string('d', 300_000) };
 
         _ = await provider.Decide(Questions.Text, input, Questions.Budget, TestContext.Current.CancellationToken);
 
         var state = JsonNode.Parse(Assert.Single(handler.Requests).Body)!["state"]!;   // why: the body always carries the state
         Assert.Equal("deploy with " + FakeInputRedactor.Placeholder, state["text"]?.GetValue<string>());
-        Assert.True(state.ToJsonString().Length <= 16_000, $"the state is capped like the stored input, got {state.ToJsonString().Length} chars");
+        Assert.True(state.ToJsonString().Length <= 160_000, $"the state is capped at jev's window, got {state.ToJsonString().Length} chars");
     }
 
     [Fact]
@@ -126,12 +126,12 @@ public sealed class JevProviderTests
     {
         var handler = FakeHttpHandler.Answering(HttpStatusCode.OK, Answer);
         using var provider = new JevProvider(new HttpClient(handler), Secrets(), new FakeInputRedactor());
-        var question = Questions.Text with { Prompt = new string('p', 100_000) };
+        var question = Questions.Text with { Prompt = new string('p', 300_000) };
 
         _ = await provider.Decide(question, Questions.Input, Questions.Budget, TestContext.Current.CancellationToken);
 
         var instructions = JsonNode.Parse(Assert.Single(handler.Requests).Body)!["questions"]?["decision"]?["instructions"]?.GetValue<string>();
-        Assert.InRange(instructions?.Length ?? int.MaxValue, 1, 16_100);   // the stored input's cap plus the truncation marker
+        Assert.InRange(instructions?.Length ?? int.MaxValue, 1, 160_100);   // jev's cap plus the truncation marker
     }
 
     [Fact]

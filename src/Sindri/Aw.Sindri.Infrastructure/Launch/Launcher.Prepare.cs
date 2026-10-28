@@ -92,9 +92,12 @@ internal sealed partial class Launcher
     /// <summary>SB17: the Step's own run directory under Sindri's home (0700), made before its files and before the sandbox checks that it exists; nothing without a home (the run directory is then the worktree).</summary>
     private void MakeRunDirectory(LaunchRequest request)
     {
-        if (!request.Attended && parts.Options.SindriHome is not null && StepEnvironment.RunDirectoryOf(request, parts.Options.SindriHome) is { } runDirectory)
+        var directory = request.Attended
+            ? parts.Sandbox is null ? null : AttendedOpen.RunDirectory(parts.Options.SindriHome, request.Launch)   // why: the sandbox plan keeps its files here (sandbox spec 3.9)
+            : parts.Options.SindriHome is null ? null : StepEnvironment.RunDirectoryOf(request, parts.Options.SindriHome);
+        if (directory is not null)
         {
-            OwnerOnly.EnsureDirectory(runDirectory);
+            OwnerOnly.EnsureDirectory(directory);
         }
     }
 

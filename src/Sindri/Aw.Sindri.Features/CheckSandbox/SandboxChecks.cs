@@ -25,9 +25,13 @@ internal sealed class SandboxChecks(ISandbox sandbox, ISandboxFormCheck forms, I
 
         blockers.AddRange(await forms.Check(cancellationToken).ConfigureAwait(false));
         blockers.AddRange(await logins.Check(cancellationToken).ConfigureAwait(false));
-        if (probe.IsSuccess && await SelfCheck(cancellationToken).ConfigureAwait(false) is { } failed)
+        if (probe.IsSuccess && await SelfCheck(fixture.Request(), cancellationToken).ConfigureAwait(false) is { } failed)
         {
             blockers.Add(failed);
+        }
+        else if (probe.IsSuccess && await SelfCheck(fixture.WriteScopeRequest(), cancellationToken).ConfigureAwait(false) is { } writeFailed)
+        {
+            blockers.Add(writeFailed);   // the git canary only runs for a writable work tree, so the ReadOnly fixture never reaches it
         }
 
         return blockers.Count > 0
@@ -35,10 +39,10 @@ internal sealed class SandboxChecks(ISandbox sandbox, ISandboxFormCheck forms, I
             : new SandboxCheckReport(blockers, await resume.Next(cancellationToken).ConfigureAwait(false));
     }
 
-    /// <summary>Plans the fixture and proves the plan inside the sandbox; the first failure is the blocker. No fixture on this box skips it.</summary>
-    private async ValueTask<SandboxBlocker?> SelfCheck(CancellationToken cancellationToken)
+    /// <summary>Plans a fixture and proves the plan inside the sandbox; the first failure is the blocker. No fixture on this box skips it.</summary>
+    private async ValueTask<SandboxBlocker?> SelfCheck(SandboxRequest? request, CancellationToken cancellationToken)
     {
-        if (fixture.Request() is not { } request)
+        if (request is null)
         {
             return null;
         }

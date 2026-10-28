@@ -114,7 +114,7 @@ internal static partial class CommandTable
             ["launch" or "session", ..] => await LaunchOrSession(args, client, (output, environment), services, (ct, interrupt.Again)).ConfigureAwait(false),
             ["doctor", ..] => await Doctor(args, verbs, new ProbeCommands(services.GetRequiredService<IProcessAncestry>(), services.GetRequiredService<IHarnessVersions>(), environment, Interactive()), output, ct).ConfigureAwait(false),
             ["onyx", .. var rest] => await Onyx(rest, verbs, new OnyxVerbs(services, output, (hash, to, c) => new Verbs(client, probe, to, services, e => start.EnsureRunning(launch: true, e)).Approve(hash, c)), output, ct).ConfigureAwait(false),
-            ["sandbox", ..] => await Sandbox(args, client, output, services, ct).ConfigureAwait(false),
+            ["sandbox", ..] => await Sandbox(args, client, output, services, (ct, Headers(session, services))).ConfigureAwait(false),
             ["mcp", .. var rest] => await new McpVerbs(services, output).Run(rest, ct).ConfigureAwait(false),
             ["context", ..] => await Context(args, client, output, services, (ct, interrupt.Again)).ConfigureAwait(false),
             ["line", "holdout", .. var rest] => await new LineHoldoutVerbs(client, output, Interactive(), Console.In).Run(rest, ct).ConfigureAwait(false),
@@ -123,15 +123,6 @@ internal static partial class CommandTable
             _ => await UnknownVerb(args, output).ConfigureAwait(false),
         };
     }
-
-    /// <summary>'sindri sandbox learn off|denials|check …'; any other sandbox verb is an unknown verb.</summary>
-    private static async Task<int> Sandbox(string[] args, ControlPlaneClient client, Output output, IServiceProvider services, CancellationToken ct) => args switch
-    {
-        ["sandbox", "learn", "off", .. var rest] => await new SandboxLearnVerbs(client, output).Run(rest, ct).ConfigureAwait(false),
-        ["sandbox", "check", .. var rest] => await new SandboxCheckVerb(client, output).Run(rest, ct).ConfigureAwait(false),
-        ["sandbox", "denials", .. var rest] => await new SandboxDenialsVerb(client, output, services.GetRequiredService<TimeProvider>()).Run(rest, ct).ConfigureAwait(false),
-        _ => await UnknownVerb(args, output).ConfigureAwait(false),
-    };
 
     /// <summary>'sindri recipe|workflow|scoping|outbox|takeover|handback|docs|pr …': the recipe family, one arm per verb.</summary>
     private static async Task<int> Workflows(string[] args, ScopingCommandTable.Host host, CancellationToken ct)

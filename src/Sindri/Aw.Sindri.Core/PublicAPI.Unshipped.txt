@@ -19634,6 +19634,7 @@ Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Deconstruct(out int PlanVersion, out Aw.
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Environment.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.PlanEnvVar!>!
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Environment.init -> void
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Equals(Aw.Sindri.Core.Sandbox.Plan.SandboxPlan? other) -> bool
+Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.ForExec(Aw.Sindri.Core.Workflow.Engine.LaunchId execLaunch, string! execArea, string! execNetDir) -> Aw.Kernel.Result<Aw.Sindri.Core.Sandbox.Plan.SandboxPlan!>!
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Git.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.GitSetting!>!
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Git.init -> void
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Github.get -> Aw.Sindri.Core.Sandbox.GithubCredentials
@@ -21015,13 +21016,14 @@ Aw.Sindri.Core.Sandbox.ISandboxLoginCheck
 Aw.Sindri.Core.Sandbox.ISandboxLoginCheck.Check(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.SandboxBlocker!>!>
 Aw.Sindri.Core.Sandbox.Plan.ISandboxFixture
 Aw.Sindri.Core.Sandbox.Plan.ISandboxFixture.Request() -> Aw.Sindri.Core.Sandbox.Plan.SandboxRequest?
+Aw.Sindri.Core.Sandbox.Plan.ISandboxFixture.WriteScopeRequest() -> Aw.Sindri.Core.Sandbox.Plan.SandboxRequest?
 Aw.Sindri.Core.Sandbox.ISandboxParks
 Aw.Sindri.Core.Sandbox.ISandboxParks.Parked(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.ParkedOnSandbox!>!>
 Aw.Sindri.Core.Sandbox.ParkedOnSandbox
 Aw.Sindri.Core.Sandbox.ISandboxSlots
 Aw.Sindri.Core.Sandbox.ISandboxSlots.Free(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<int>
 Aw.Sindri.Core.Sandbox.SandboxCopy
-static Aw.Sindri.Core.Sandbox.SandboxCopy.For(string! code, string! reason, string? source = null, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? values = null) -> Aw.Sindri.Core.Sandbox.OwnerCopy?
+static Aw.Sindri.Core.Sandbox.SandboxCopy.For(string! code, string! reason, string? source = null, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? values = null, bool attended = false) -> Aw.Sindri.Core.Sandbox.OwnerCopy?
 Aw.Sindri.Core.Sandbox.OwnerCopy
 Aw.Sindri.Core.Sandbox.SandboxBlockerLine
 static Aw.Sindri.Core.Sandbox.SandboxBlockerLine.From(Aw.Sindri.Core.Sandbox.SandboxBlocker! blocker) -> Aw.Sindri.Core.Sandbox.SandboxBlockerLine!
@@ -21092,3 +21094,6 @@ Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks
 Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.Violations(System.Collections.Generic.IReadOnlyDictionary<Aw.Sindri.Core.Workflow.Ids.FactKey, System.ReadOnlyMemory<byte>>! outputs, System.Collections.Generic.IReadOnlySet<Aw.Sindri.Core.Workflow.Ids.FactKey>! payloads, bool scopingQuestions) -> System.Collections.Generic.IReadOnlyList<string!>!
 static Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.Instance.get -> Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks!
 Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.PayloadReportChecks() -> void
+Aw.Sindri.Core.Sandbox.Plan.ISandboxExec
+Aw.Sindri.Core.Sandbox.Plan.ISandboxExec.PlanFileOf(Aw.Sindri.Core.Workflow.Engine.LaunchId launch) -> string!
+Aw.Sindri.Core.Sandbox.Plan.ISandboxExec.Run(Aw.Sindri.Core.Sandbox.Plan.SandboxPlan! stored, System.Collections.Generic.IReadOnlyList<string!>! command, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Aw.Kernel.Result<int>!>!

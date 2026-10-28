@@ -6,4 +6,6 @@ namespace Aw.Sindri.Features.CheckSandbox;
 internal sealed class NoSandboxFixture : ISandboxFixture
 {
     public SandboxRequest? Request() => null;
+
+    public SandboxRequest? WriteScopeRequest() => null;
 }

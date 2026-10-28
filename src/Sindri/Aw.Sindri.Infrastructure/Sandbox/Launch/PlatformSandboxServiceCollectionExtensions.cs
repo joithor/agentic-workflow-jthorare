@@ -38,7 +38,7 @@ public static class PlatformSandboxServiceCollectionExtensions
             return services;
         }
 
-        _ = services.RemoveAll<ISandbox>().RemoveAll<ISandboxFixture>();   // the fixture-plan self-check replaces Features' NoSandboxFixture
+        _ = services.RemoveAll<ISandbox>().RemoveAll<ISandboxFixture>().AddSingleton<IAgentTokenSource, UnmintedAgentTokenSource>();   // the fixture-plan self-check replaces Features' NoSandboxFixture; SB-7 replaces the token stand-in with the real mint
         return services
             .AddSindriBubblewrapSandbox(environment)
             .AddSingleton<ISliceScopes>(new CgroupSliceScopes(SliceDirectory(uid)))
@@ -50,7 +50,7 @@ public static class PlatformSandboxServiceCollectionExtensions
             .AddSingleton<LaunchSandboxRegistry>()
             .AddSingleton<ISandboxLaunchStages>(sp => new SandboxLaunchStages(
                 sp.GetRequiredService<IApprovedProfile>(), sp.GetRequiredService<ILearnHistory>(), [.. sp.GetServices<IModelCredentialSource>()], sp.GetRequiredService<ISandboxLaunchInputs>(),
-                sp.GetRequiredService<LaunchSandboxRegistry>(), sp.GetRequiredService<TimeProvider>()))
+                sp.GetRequiredService<LaunchSandboxRegistry>(), sp.GetRequiredService<TimeProvider>(), sp.GetRequiredService<IAgentTokenSource>()))
             .AddSingleton<ISandboxLaunchInputs>(sp => new LinuxSandboxLaunchInputs(
                 sp.GetRequiredService<LauncherOptions>(), sp.GetRequiredService<ReloadingAgentCatalog>(), sp.GetRequiredService<ISandboxProcesses>(),
                 () => BoxHostFacts.Read(environment, sp.GetRequiredService<SindriSettings>().Home, sp.GetRequiredService<ISandboxMachine>()), ControlFor(sp),
@@ -68,8 +68,17 @@ public static class PlatformSandboxServiceCollectionExtensions
                         }
                     }),
                     sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>(), sp.GetRequiredService<ITextScrubber>(), sp.GetRequiredService<TimeProvider>())))
-            .AddSingleton<ISandboxLaunch>(sp => new SandboxLaunch(
-                sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<ISandboxLaunchStages>(), LaunchOptions(sp, environment)));
+            .AddSingleton<ISandboxExec>(sp => ExecFor(sp, environment))
+            .AddSingleton<ISandboxLaunch>(sp => new SandboxLaunch(sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<ISandboxLaunchStages>(), LaunchOptions(sp, environment)));
+    }
+
+    private static SandboxExec ExecFor(IServiceProvider sp, Func<string, string?> environment)
+    {
+        var machine = sp.GetRequiredService<ISandboxMachine>();
+        return new SandboxExec(
+            sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<EgressService>(), sp.GetRequiredService<IApprovedProfile>(),
+            new BoxFacts(machine.RamBytes, machine.Cores), environment("AW_SANDBOX_SYSTEMD_RUN") is { Length: > 0 } run ? run : "systemd-run",
+            () => sp.GetRequiredService<LauncherOptions>().LaunchDirectory);   // why: lazily, so a container without the launcher can still resolve the exec
     }
 
     private static SandboxLaunchOptions LaunchOptions(IServiceProvider sp, Func<string, string?> environment)

@@ -35,11 +35,12 @@ public static class PlatformSandboxServiceCollectionExtensions
             return services;
         }
 
-        _ = services.RemoveAll<ISandbox>();
+        _ = services.RemoveAll<ISandbox>().RemoveAll<ISandboxFixture>();   // the fixture-plan self-check replaces Features' NoSandboxFixture
         return services
             .AddSindriBubblewrapSandbox(environment)
             .AddSingleton<ISliceScopes>(new CgroupSliceScopes(SliceDirectory(uid)))
             .AddSingleton<ISessionCap>(sp => new FileSessionCap(LockFile(sp.GetRequiredService<SindriSettings>().Home), sp.GetRequiredService<ISliceScopes>()))
+            .AddSingleton<ISandboxFixture>(sp => new LinuxSandboxFixture(sp.GetRequiredService<SindriSettings>().Home, environment, sp.GetRequiredService<ISandboxProcesses>()))
             .AddSingleton<SystemEgressNetwork>()
             .AddSingleton<EgressService>(sp => new EgressService(
                 sp.GetRequiredService<SystemEgressNetwork>(), sp.GetRequiredService<SystemEgressNetwork>(), environment, EgressLogDirectory(sp.GetRequiredService<SindriSettings>().Home)))

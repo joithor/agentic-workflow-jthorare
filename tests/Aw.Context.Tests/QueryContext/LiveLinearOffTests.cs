@@ -34,8 +34,9 @@ public sealed class LiveLinearOffTests
         var (store, leg) = await Owned(IssueKey);
         var linear = new VersionCounting(new FakeContextSource(_linear, []));
 
-        _ = await Engines.Over(new FixedSourceCatalog(FakeContextSource.FixtureDocs(), linear), lexical: leg, records: store).Query(new ContextQuery("orientation"), Engines.Human(Teams), Ct);
+        var result = await Engines.Over(new FixedSourceCatalog(FakeContextSource.FixtureDocs(), linear), lexical: leg, records: store).Query(new ContextQuery("orientation"), Engines.Human(Teams), Ct);
 
+        Assert.Contains(result.Value.Cites.Values, c => c.Key.Value == IssueKey);   // the owned record is cited, so its freshness is asked
         var batch = Assert.Single(linear.Batches);
         Assert.Contains(batch, key => key == IssueKey);
     }

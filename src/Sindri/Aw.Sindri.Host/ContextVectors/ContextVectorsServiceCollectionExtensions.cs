@@ -1,6 +1,8 @@
 using Aw.Context.Core.Vectors;
 using Aw.Embeddings;
+using Aw.Sindri.Core.Doctor;
 using Aw.Sindri.Core.Profile;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Aw.Sindri.Host.ContextVectors;
 
@@ -18,5 +20,6 @@ internal static class ContextVectorsServiceCollectionExtensions
     internal static IServiceCollection AddContextVectors(this IServiceCollection services) => services
         .AddSingleton<IQueryEmbedder>(static _ => new EmbeddingsQueryEmbedder(new OllamaEmbedder(DefaultOptions), ModelKey))
         .AddSingleton<IChunkEmbedder>(static _ => new EmbeddingsChunkEmbedder(new OllamaEmbedder(DefaultOptions), ModelKey))
-        .AddSingleton<IVectorScan>(static _ => new EmbeddingsVectorScan(new ScanInProcess()));
+        .AddSingleton<IVectorScan>(static _ => new EmbeddingsVectorScan(new ScanInProcess()))
+        .Replace(ServiceDescriptor.Singleton<IRecordEmbedderProbe, OllamaRecordEmbedderProbe>());   // doctor's 'context:index-ollama' looks at the server the records embed with
 }

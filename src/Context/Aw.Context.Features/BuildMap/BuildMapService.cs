@@ -79,11 +79,11 @@ internal sealed partial class BuildMapService(
 
         found = WithStructure(found);
         // The records come after the homes are assigned: a record over the file cap rolls up to the features its files are homed in.
-        var (records, notes) = await Records(settings, extractions, found, cancellationToken).ConfigureAwait(false);
+        var (records, recordDegraded, recordNotes) = await Records(settings, extractions, found, cancellationToken).ConfigureAwait(false);
         found = found.Plus(records);
-        degraded.AddRange(notes);
+        degraded.AddRange(recordDegraded);
         // why: mappedRepos is not empty, so the loop set the primary
-        return MapHead.Check(heads) is { } invalid ? invalid : new Reading(found, degraded, primary!.Value.Name, primary.Value.Commit, heads, settings) { Dropped = dropped };
+        return MapHead.Check(heads) is { } invalid ? invalid : new Reading(found, degraded, primary!.Value.Name, primary.Value.Commit, heads, settings) { Dropped = dropped, RecordNotes = recordNotes };
     }
 
     // THE SEAM for the structure steps that need every repo's files at once (map structure spec §3): S4's FeatureRollup.Apply goes here, over the merged extraction (S3's
@@ -114,12 +114,14 @@ internal sealed partial class BuildMapService(
 
         var concepts = await namers.Concepts.Run(read.Settings, joined, [.. mappedRepos.SelectMany(r => r.Concepts)], mappedRepos, cancellationToken).ConfigureAwait(false);
         var draft = await store.SaveDraft(new MapImport(read.Name, read.Commit, concepts.Graph, undo, read.Heads) { Ruleset = ruleset, Dropped = read.Dropped, Checks = checks.Stored }, at, cancellationToken).ConfigureAwait(false);
-        return draft.IsError ? draft.Error : new MapBuildReport(draft.Value, Proposed(kept, read.Found, mappedRepos.Select(r => r.Name.Value).ToList()), [.. read.Degraded, .. checks.Notes, .. concepts.Notes], read.Heads) { Structure = replaced, Checks = measured, Notes = concepts.ReportNotes };
+        return draft.IsError ? draft.Error : new MapBuildReport(draft.Value, Proposed(kept, read.Found, mappedRepos.Select(r => r.Name.Value).ToList()), [.. read.Degraded, .. checks.Notes, .. concepts.Notes], read.Heads) { Structure = replaced, Checks = measured, Notes = [.. concepts.ReportNotes, .. read.RecordNotes] };
     }
 
     private sealed record Reading(ExtractedMap Found, IReadOnlyList<string> Degraded, ContextRepoName Name, string Commit, IReadOnlyList<MapHead> Heads, ContextSettings Settings)
     {
         public IReadOnlyList<RoleDropped> Dropped { get; init; } = [];
+
+        public IReadOnlyList<string> RecordNotes { get; init; } = [];
     }
 
     // Whether the default branch holds the commit the build read; a checkout whose default ref can't be read counts as no (the repo is then not waited on), never a failed build.

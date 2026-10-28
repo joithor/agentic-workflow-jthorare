@@ -63,8 +63,9 @@ public sealed class BuildMapRecordsTests : IDisposable
 
         Assert.NotNull(graph.Resolve(NodeKey.From("record:github:issue/acme/app/5")));
         Assert.Contains(graph.Edges, e => e is { Type: EdgeType.Mentions } && e.From.Value == "record:github:issue/acme/app/5" && e.To.Value == "code:src/keys.ts");
-        Assert.Contains(report.Degraded, d => d.StartsWith("records: as of stamp ", StringComparison.Ordinal));
-        Assert.True(Has(report, "citations: 1 resolved, 0 unresolved (0 missing, 0 ambiguous)"));
+        Assert.Contains(report.Notes, d => d.StartsWith("records: as of stamp ", StringComparison.Ordinal));
+        Assert.Contains(report.Notes, n => string.Equals(n, "citations: 1 resolved, 0 unresolved (0 missing, 0 ambiguous)", StringComparison.Ordinal));
+        Assert.DoesNotContain(report.Degraded, d => d.StartsWith("records: as of", StringComparison.Ordinal) || d.StartsWith("citations:", StringComparison.Ordinal));
         Assert.DoesNotContain(report.Proposed, p => p.Key.Kind == NodeKind.Record);
     }
 

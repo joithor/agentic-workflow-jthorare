@@ -8,7 +8,7 @@ namespace Aw.Context.Features.BuildMap;
 internal sealed partial class BuildMapService
 {
     // The record store read once for the whole build (spec 2026-10-27 §7.1). A store or a checkout that can't be read is the one degraded line 'records: unavailable (<code>)' and no record nodes: the build is about the code, and the next build reads them again.
-    private async ValueTask<(ExtractedMap Map, IReadOnlyList<string> Notes)> Records(ContextSettings settings, List<(ContextRepo Repo, RepoExtraction Read)> extractions, ExtractedMap found, CancellationToken cancellationToken)
+    private async ValueTask<(ExtractedMap Map, IReadOnlyList<string> Degraded, IReadOnlyList<string> Notes)> Records(ContextSettings settings, List<(ContextRepo Repo, RepoExtraction Read)> extractions, ExtractedMap found, CancellationToken cancellationToken)
     {
         var at = clock.GetUtcNow();
         var files = new List<MapRepoFiles>(extractions.Count);
@@ -19,7 +19,7 @@ internal sealed partial class BuildMapService
             var blobs = await inputs.Repos.BlobIds(repo, read.Commit, docs, cancellationToken).ConfigureAwait(false);
             if (blobs.IsError)
             {
-                return (ExtractedMap.Empty, [Unavailable(blobs.Error)]);
+                return (ExtractedMap.Empty, [Unavailable(blobs.Error)], []);
             }
 
             files.Add(new MapRepoFiles(repo.Name, paths, blobs.Value));
@@ -27,8 +27,8 @@ internal sealed partial class BuildMapService
 
         var reading = await inputs.Records.Read(new MapRecordInput(files, settings.DocGlobs, MapRecordSources.DirectoryNames, at), cancellationToken).ConfigureAwait(false);
         return reading.IsError
-            ? (ExtractedMap.Empty, [Unavailable(reading.Error)])
-            : (reading.Value.Map.Plus(RecordRollup.Edges(reading.Value.Overflow, found)), reading.Value.Notes);
+            ? (ExtractedMap.Empty, [Unavailable(reading.Error)], [])
+            : (reading.Value.Map.Plus(RecordRollup.Edges(reading.Value.Overflow, found)), reading.Value.Degraded, [.. reading.Value.Notes.Except(reading.Value.Degraded, StringComparer.Ordinal)]);
     }
 
     private static string Unavailable(Error error) => $"records: unavailable ({error.Code})";

@@ -63,7 +63,8 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
         var map = new ExtractedMap(
             [.. _nodes.Values.OrderBy(n => n.Key.Value, StringComparer.Ordinal)],
             [.. _edges.Values.OrderBy(e => e.From.Value, StringComparer.Ordinal).ThenBy(e => e.To.Value, StringComparer.Ordinal)]);
-        return new MapRecordReading(map, stamp, Notes(stamp)) { Overflow = [.. _overflow.OrderBy(r => r.Node.Key.Value, StringComparer.Ordinal)] };
+        var (notes, degraded) = Notes(stamp);
+        return new MapRecordReading(map, stamp, notes) { Degraded = degraded, Overflow = [.. _overflow.OrderBy(r => r.Node.Key.Value, StringComparer.Ordinal)] };
     }
 
     private async ValueTask<Error?> Docs(MapRepoFiles repo, CancellationToken cancellationToken)
@@ -266,25 +267,31 @@ internal sealed class RecordPass(IRecordStore records, ICodeSymbolSource symbols
 
     private static GraphNode Node(StoredRecord record, NodeKey key) => new(key, record.Title, Provenance.Deterministic, At: record.UpdatedAt);
 
-    private List<string> Notes(long stamp)
+    // Every line of the build report's record section; the ones that say something is missing or stale also go in the second list, which is what the report calls degraded.
+    private (List<string> All, List<string> Degraded) Notes(long stamp)
     {
-        var notes = new List<string> { Line($"records: as of stamp {stamp}") };
-        AddIf(notes, _notSynced, n => Line($"records: {n} docs not yet synced"));
-        AddIf(notes, _older, n => Line($"records: {n} docs older than HEAD"));
+        var all = new List<string> { Line($"records: as of stamp {stamp}") };
+        var degraded = new List<string>();
+        AddIf(all, degraded, _notSynced, n => Line($"records: {n} docs not yet synced"), stale: true);
+        AddIf(all, degraded, _older, n => Line($"records: {n} docs older than HEAD"), stale: true);
         var resolved = _cited.GetValueOrDefault(CitationOutcome.Resolved);
         var missing = _cited.GetValueOrDefault(CitationOutcome.Missing);
         var ambiguous = _cited.GetValueOrDefault(CitationOutcome.Ambiguous);
-        AddIf(notes, resolved + missing + ambiguous, _ => Line($"citations: {resolved} resolved, {missing + ambiguous} unresolved ({missing} missing, {ambiguous} ambiguous)"));
-        AddIf(notes, _removedTouches, n => Line($"touched files since removed: {n}"));
-        AddIf(notes, _overCap, n => Line($"records over the file cap: {n} ({_overCapPaths} paths)"));
-        return notes;
+        AddIf(all, degraded, resolved + missing + ambiguous, _ => Line($"citations: {resolved} resolved, {missing + ambiguous} unresolved ({missing} missing, {ambiguous} ambiguous)"), stale: missing + ambiguous > 0);
+        AddIf(all, degraded, _removedTouches, n => Line($"touched files since removed: {n}"), stale: true);
+        AddIf(all, degraded, _overCap, n => Line($"records over the file cap: {n} ({_overCapPaths} paths)"), stale: true);
+        return (all, degraded);
     }
 
-    private static void AddIf(List<string> notes, int count, Func<int, string> line)
+    private static void AddIf(List<string> all, List<string> degraded, int count, Func<int, string> line, bool stale)
     {
         if (count > 0)
         {
-            notes.Add(line(count));
+            all.Add(line(count));
+            if (stale)
+            {
+                degraded.Add(all[^1]);
+            }
         }
     }
 

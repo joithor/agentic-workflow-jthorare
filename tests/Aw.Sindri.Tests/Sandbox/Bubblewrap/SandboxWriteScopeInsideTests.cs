@@ -1,5 +1,6 @@
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Sandbox.Plan;
+using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Infrastructure.Sandbox;
 using Aw.Sindri.Testing.Sandbox;
 using Aw.Sindri.Tests.Launch;
@@ -110,6 +111,29 @@ public sealed class SandboxWriteScopeInsideTests
         Assert.Empty(ProcessListing.Under(box.Root));
     }
 
+    [Fact]
+    public async Task Sandbox_exec_of_the_launch_reads_the_worktree_but_can_not_write_it_and_has_no_launch_secret()
+    {
+        using var box = NewBox();
+        Assert.Equal(0, (await RunInside(box, "true")).Exit);   // the launch exec reproduces ran first: it made the host folders the exec binds read-only
+        var before = Git(box, "rev-parse", RunBranch);
+
+        var script = $"touch {Quote(Path.Combine(box.Worktree, "exec.txt"))}; echo \"worktree=$?\"\n"
+            + $"cat {Quote(Path.Combine(box.Worktree, ".git"))} > /dev/null; echo \"read=$?\"\n"
+            + "touch /tmp/scratch; echo \"scratch=$?\"\n"
+            + "env | grep -c '^AW_SINDRI_LAUNCH_SECRET=' | sed 's/^/secret=/'\n";
+        var ran = await RunInside(box, script, plan => plan.ForExec(LaunchId.From("LCH-" + new string('e', 32)), Path.Combine(box.Root, "exec-area"), Path.Combine(Path.GetDirectoryName(plan.Network.NetDir)!, "eeeeeeeeeeee")).Value);
+
+        Assert.True(ran.Exit == 0, "the exec script failed: " + ran.Output);
+        Assert.Matches("worktree=[1-9]", ran.Output);
+        Assert.Contains("read=0", ran.Output, StringComparison.Ordinal);
+        Assert.Contains("scratch=0", ran.Output, StringComparison.Ordinal);
+        Assert.Contains("secret=0", ran.Output, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(box.Worktree, "exec.txt")));
+        Assert.Equal(before, Git(box, "rev-parse", RunBranch), StringComparer.Ordinal);
+        Assert.Empty(ProcessListing.Under(box.Root));
+    }
+
     // The box's state dir is a scratch one: copy the owner's heavy wrapper into it, as the real state dir has it, so the shim path runs. False when this box has no heavy.
     private static bool LinkHeavy(SandboxBox box)
     {
@@ -127,7 +151,8 @@ public sealed class SandboxWriteScopeInsideTests
     }
 
     // Plans the box's write-scope request, starts the launch's egress forwarders and runs 'sh -c script' wrapped, on a private tmux server. Output and exit code come back through files.
-    private static async Task<Ran> RunInside(SandboxBox box, string script)
+    // 'reshape' turns the planned launch into what runs, such as 'sandbox exec''s reproduction of it.
+    private static async Task<Ran> RunInside(SandboxBox box, string script, Func<SandboxPlan, SandboxPlan>? reshape = null)
     {
         using var tmux = new PrivateTmux();
         var ct = TestContext.Current.CancellationToken;
@@ -135,12 +160,15 @@ public sealed class SandboxWriteScopeInsideTests
         var plan = sandbox.Plan(box.WriteScope());
         Assert.True(plan.IsSuccess, plan.IsError ? plan.Error.ToString() : null);
 
-        await using var egress = StartEgress(plan.Value);
-        var wrapped = sandbox.Wrap(plan.Value, ["/bin/sh", "-c", script]);
+        var running = reshape is null ? plan.Value : reshape(plan.Value);
+        await using var egress = StartEgress(running);
+        var wrapped = sandbox.Wrap(running, ["/bin/sh", "-c", script]);
         Assert.True(wrapped.IsSuccess, wrapped.IsError ? wrapped.Error.ToString() : null);
 
         var output = Path.Combine(box.Root, "inside.out");
         var code = Path.Combine(box.Root, "inside.code");
+        File.Delete(output);   // a second run in one box must not read the first one's files
+        File.Delete(code);
         var line = string.Join(' ', wrapped.Value.Select(Quote)) + $" > {Quote(output)} 2>&1; echo $? > {Quote(code)}";
         var run = Path.Combine(box.Root, "inside.sh");
         await File.WriteAllTextAsync(run, line, ct);   // why: a write-scope argv is longer than tmux's message limit (about 16 KB), so tmux runs it from a file

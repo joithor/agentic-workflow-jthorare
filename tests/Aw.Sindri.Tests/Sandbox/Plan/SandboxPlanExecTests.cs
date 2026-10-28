@@ -51,6 +51,18 @@ public sealed class SandboxPlanExecTests
     }
 
     [Fact, Trait("Lane", "unit")]
+    public void The_socket_mount_binds_the_execs_own_socket_directory()
+    {
+        var stored = SandboxPlannerTests.Build(Req.WriteScope);
+
+        var plan = Exec(stored);
+
+        Assert.Equal(ExecNet, plan.Network.NetDir);
+        Assert.Equal(ExecNet, plan.Mounts.Single(m => m.Path == "/run/sindri/net").Source);   // the stored launch's directory went with its egress
+        Assert.DoesNotContain(plan.Mounts, m => string.Equals(m.Source, stored.Network.NetDir, StringComparison.Ordinal));
+    }
+
+    [Fact, Trait("Lane", "unit")]
     public void No_launcher_supplied_variable_and_no_session_home_survive()
     {
         var stored = SandboxPlannerTests.Build(Req.WriteScope);

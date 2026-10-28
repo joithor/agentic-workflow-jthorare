@@ -34,22 +34,7 @@ internal sealed class RecordStoreSource(ILexicalLeg leg, IRecordStore store, Aud
             return ContextErrors.SourceUnavailable.With(degraded.Message);
         }
 
-        var hits = new List<SourceHit>();
-        foreach (var hit in found.Value.Hits)
-        {
-            var record = await store.Get(hit.Chunk.Record, cancellationToken).ConfigureAwait(false);
-            if (record.IsError)
-            {
-                return record.Error;
-            }
-
-            if (record.Value is { RemovedAt: null } stored && scope.Allows(stored.Audience) && Ref(stored) is { } reference)
-            {
-                hits.Add(new SourceHit(reference, stored.Title, hits.Count + 1, clock.GetUtcNow(), Leaky: false));
-            }
-        }
-
-        return hits;
+        return await RecordHits.Read(store, scope, clock, found.Value.Hits.Select(h => h.Chunk.Record), cancellationToken).ConfigureAwait(false);
     }
 
     public async ValueTask<Result<SourceRecord>> Fetch(SourceRef reference, CancellationToken cancellationToken)
@@ -101,11 +86,5 @@ internal sealed class RecordStoreSource(ILexicalLeg leg, IRecordStore store, Aud
         return stamps.IsError
             ? new SourceHealth(SourceState.Unavailable, "the record store can't be read", stamps.Error.Code)
             : new SourceHealth(SourceState.Ok, "the record store is readable", Code: null);
-    }
-
-    private static SourceRef? Ref(StoredRecord stored)
-    {
-        var link = Uri.TryCreate(stored.Url, UriKind.Absolute, out var url) && url.Scheme == Uri.UriSchemeHttps ? url : null;
-        return ExternalId.TryFrom(stored.Key.Value, out var id) ? new SourceRef(Id, id, stored.Version, link, stored.Key) : null;
     }
 }

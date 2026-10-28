@@ -357,3 +357,5 @@ static Aw.Connectors.Core.Slack.SlackTs.Day(System.DateTimeOffset at) -> string!
 static Aw.Connectors.Core.Slack.SlackTs.Later(string! a, string! b) -> string!
 Aw.Connectors.Core.Slack.SlackChannelIds
 static Aw.Connectors.Core.Slack.SlackChannelIds.IsReadable(string? channel) -> bool
+Aw.Connectors.Core.Slack.ISlackConnectorFactory
+Aw.Connectors.Core.Slack.ISlackConnectorFactory.Create(Aw.Connectors.Core.Slack.SlackSettings! settings, Aw.Connectors.Core.Slack.ISlackReader! reader, System.TimeSpan window) -> Aw.Connectors.Core.IConnector!

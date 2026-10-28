@@ -9,5 +9,5 @@ public static class AgentHomes
     /// <param name="sindriHome">Sindri's own home (AW_SINDRI_HOME).</param>
     /// <param name="target">The agent, such as claude-code or codex.</param>
     /// <returns>The path; nothing is created.</returns>
-    public static string For(string sindriHome, AgentId target) => throw new NotSupportedException();
+    public static string For(string sindriHome, AgentId target) => Path.Combine(sindriHome.TrimEnd('/'), "agent-homes", target.Value);
 }

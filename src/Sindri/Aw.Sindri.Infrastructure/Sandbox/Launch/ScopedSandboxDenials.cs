@@ -1,4 +1,5 @@
 using Aw.Kernel;
+using Aw.Sindri.Core.Events;
 using Aw.Sindri.Core.Launches;
 using Aw.Sindri.Core.Sandbox.Denials;
 using Microsoft.Extensions.DependencyInjection;

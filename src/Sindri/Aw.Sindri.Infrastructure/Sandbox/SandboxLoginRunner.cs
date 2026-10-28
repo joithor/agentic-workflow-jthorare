@@ -13,7 +13,8 @@ namespace Aw.Sindri.Infrastructure.Sandbox;
 /// </summary>
 /// <param name="sindriHome">Sindri's own home.</param>
 /// <param name="environment">Reads an environment variable.</param>
-internal sealed class SandboxLoginRunner(string sindriHome, Func<string, string?> environment) : ISandboxLogin
+/// <param name="binDirectory">Where the agent CLI is looked for instead of PATH; null (the product) uses PATH.</param>
+internal sealed class SandboxLoginRunner(string sindriHome, Func<string, string?> environment, string? binDirectory = null) : ISandboxLogin
 {
     public async Task<Result<int>> Run(AgentId target, CancellationToken cancellationToken)
     {
@@ -45,7 +46,7 @@ internal sealed class SandboxLoginRunner(string sindriHome, Func<string, string?
             return hooks.IsError ? hooks.Error : SindriErrors.LaunchLoginUnavailable.With($"{installer} exited {hooks.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}, so {home} has no hooks");
         }
 
-        var signed = await RunOnTerminal(signIn[0], signIn[1..], new Dictionary<string, string?>(StringComparer.Ordinal) { [variable] = home }, cancellationToken).ConfigureAwait(false);
+        var signed = await RunOnTerminal(binDirectory is null ? signIn[0] : Path.Combine(binDirectory, signIn[0]), signIn[1..], new Dictionary<string, string?>(StringComparer.Ordinal) { [variable] = home }, cancellationToken).ConfigureAwait(false);
         if (signed.IsSuccess && signed.Value == 0 && string.Equals(provider, "codex", StringComparison.Ordinal))
         {
             await Console.Error.WriteLineAsync($"next: open codex with CODEX_HOME={home} and run /hooks to trust the aw:* entries (once)").ConfigureAwait(false);

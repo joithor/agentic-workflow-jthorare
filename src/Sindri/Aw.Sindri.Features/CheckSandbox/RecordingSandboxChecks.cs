@@ -8,9 +8,10 @@ namespace Aw.Sindri.Features.CheckSandbox;
 /// <param name="clock">Stamps the report.</param>
 internal sealed class RecordingSandboxChecks(ISandboxChecks inner, LastSandboxCheck last, TimeProvider clock) : ISandboxChecks
 {
-    public ValueTask<SandboxCheckReport> Run(CancellationToken cancellationToken)
+    public async ValueTask<SandboxCheckReport> Run(CancellationToken cancellationToken)
     {
-        _ = (inner, last, clock);
-        throw new NotSupportedException("the report is not kept yet");
+        var report = await inner.Run(cancellationToken).ConfigureAwait(false);
+        last.Record(new SandboxCheckRecord(clock.GetUtcNow(), report));
+        return report;
     }
 }

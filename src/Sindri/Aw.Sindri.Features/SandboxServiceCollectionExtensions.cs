@@ -62,7 +62,7 @@ internal static class SandboxServiceCollectionExtensions
         return services
             .AddScoped<IValidator<CheckSandboxRequest>, AcceptAllValidator<CheckSandboxRequest>>().AddQuery<CheckSandboxRequest, CheckSandboxResponse, CheckSandboxService>()
             .AddScoped<IValidator<GetSandboxStatusRequest>, AcceptAllValidator<GetSandboxStatusRequest>>()
-            .AddQuery<GetSandboxStatusRequest, SandboxStatusResponse, GetSandboxStatusService>()
+            .AddQuery<GetSandboxStatusRequest, SandboxStatusResponse, GetSandboxStatusService>().AddSingleton<ISandboxPlatformName, OperatingSystemPlatformName>()
             .AddSingleton<LastSandboxCheck>().AddScoped<SandboxChecks>().AddScoped<SandboxResumeList>()
             .AddScoped<ISandboxChecks>(static sp => new RecordingSandboxChecks(sp.GetRequiredService<SandboxChecks>(), sp.GetRequiredService<LastSandboxCheck>(), sp.GetRequiredService<TimeProvider>()))
             .AddScoped<ISandboxFormCheck, SandboxFormCheck>().AddScoped<ISandboxLoginCheck, SandboxLoginCheck>()

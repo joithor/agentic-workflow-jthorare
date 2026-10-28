@@ -26,7 +26,6 @@ internal sealed class SandboxParkedInstances(IWorkflowInstances instances, IInst
             return [];
         }
 
-        _ = views;
         var found = new List<ParkedOnSandbox>();
         foreach (var row in listed.Value)
         {
@@ -38,11 +37,24 @@ internal sealed class SandboxParkedInstances(IWorkflowInstances instances, IInst
             var view = await reader.Get(address, cancellationToken).ConfigureAwait(false);
             if (view.IsSuccess && view.Value.Question is { Kind: SuspensionKind.Park } question && OnSandbox(question))
             {
-                found.Add(new ParkedOnSandbox(view.Value.Id, view.Value.Since));
+                var item = address.Value.Split('/', 2)[0];
+                found.Add(new ParkedOnSandbox(view.Value.Id, view.Value.Since, item, await TitleOf(item, cancellationToken).ConfigureAwait(false)));
             }
         }
 
         return found;
+    }
+
+    /// <summary>The item's title, or null when the items view is unavailable or has no such item: a park is listed either way.</summary>
+    private async ValueTask<string?> TitleOf(string item, CancellationToken cancellationToken)
+    {
+        if (views is null)
+        {
+            return null;
+        }
+
+        var row = await views.Get<ItemRow>(ViewNames.Items, item, cancellationToken).ConfigureAwait(false);
+        return row.IsSuccess ? row.Value?.Title : null;
     }
 
     /// <summary>

@@ -5933,7 +5933,6 @@ const Aw.Sindri.Core.Views.ViewNames.NeedsYou = "needs_you" -> string!
 const Aw.Sindri.Core.Views.ViewNames.Profile = "profile" -> string!
 const Aw.Sindri.Core.Views.ViewNames.Requests = "requests" -> string!
 const Aw.Sindri.Core.Views.ViewNames.Services = "services" -> string!
-const Aw.Sindri.Core.Views.ViewSchema.Version = 18 -> int
 const Aw.Sindri.Core.Workflow.Engine.Effects.OutboxEvents.Cancelled = "outbox.cancelled" -> string!
 const Aw.Sindri.Core.Workflow.Engine.Effects.OutboxEvents.Dispatched = "outbox.dispatched" -> string!
 const Aw.Sindri.Core.Workflow.Engine.Effects.OutboxEvents.Pending = "outbox.pending" -> string!
@@ -21163,3 +21162,5 @@ override Aw.Sindri.Core.Sandbox.SandboxCheckRecord.GetHashCode() -> int
 override Aw.Sindri.Core.Sandbox.SandboxCheckRecord.ToString() -> string!
 static Aw.Sindri.Core.Sandbox.SandboxCheckRecord.operator !=(Aw.Sindri.Core.Sandbox.SandboxCheckRecord? left, Aw.Sindri.Core.Sandbox.SandboxCheckRecord? right) -> bool
 static Aw.Sindri.Core.Sandbox.SandboxCheckRecord.operator ==(Aw.Sindri.Core.Sandbox.SandboxCheckRecord? left, Aw.Sindri.Core.Sandbox.SandboxCheckRecord? right) -> bool
+const Aw.Sindri.Core.Views.ViewSchema.Version = 19 -> int
+static Aw.Sindri.Core.Workflow.Engine.Runtime.StatusSandboxes.OrNull(Aw.Sindri.Core.Workflow.Engine.SandboxPark? park) -> Aw.Sindri.Core.Workflow.Views.StatusSandbox?

@@ -65,7 +65,7 @@ public static partial class InstanceViews
             since,
             words.Next(task),
             Allowed(instance, recipe, task, words.GrantTokens()),
-            instance.Suspension is { } s ? new OpenQuestion(s.Kind, s.Reason, s.Question, ParkCodes.Of(s)) : null,
+            instance.Suspension is { } s ? new OpenQuestion(s.Kind, s.Reason, s.Question, ParkCodes.Of(s)) { Sandbox = s.Sandbox } : null,
             task,
             instance.Frame.Run?.Token,
             children,

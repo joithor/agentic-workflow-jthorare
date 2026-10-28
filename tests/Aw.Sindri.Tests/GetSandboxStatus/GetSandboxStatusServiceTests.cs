@@ -21,7 +21,7 @@ public sealed class GetSandboxStatusServiceTests
     private static SandboxBlocker NoBwrap() => SandboxBlocker.Of(SandboxRefusal.For(SindriErrors.LaunchSandboxUnavailable, SandboxReasons.NoBwrap));
 
     private static GetSandboxStatusService Service(LastSandboxCheck last, SandboxSettings? settings = null, params (string Repo, LearnHistory History)[] learn) =>
-        new(last, new Approved(settings, [.. learn.Select(static l => l.Repo)]), new Machine(62 * Gib), new Learn(learn.ToDictionary(static l => l.Repo, static l => l.History, StringComparer.Ordinal)), new FakeTimeProvider(_noon));
+        new(last, new Approved(settings, [.. learn.Select(static l => l.Repo)]), new Machine(62 * Gib), new Learn(learn.ToDictionary(static l => l.Repo, static l => l.History, StringComparer.Ordinal)), new Platform(), new FakeTimeProvider(_noon));
 
     private static async Task<SandboxStatusResponse> Read(GetSandboxStatusService service) =>
         (await service.Handle(new GetSandboxStatusRequest(), Token)).Value;
@@ -61,7 +61,7 @@ public sealed class GetSandboxStatusServiceTests
 
         var status = await Read(Service(last));
 
-        Assert.Equal((true, OperatingSystem.IsMacOS() ? "seatbelt" : OperatingSystem.IsLinux() ? "bubblewrap" : "none"), (status.Ready, status.Mechanism));
+        Assert.Equal((true, "bubblewrap"), (status.Ready, status.Mechanism));
     }
 
     [Fact]
@@ -100,6 +100,11 @@ public sealed class GetSandboxStatusServiceTests
         var status = await Read(Service(new LastSandboxCheck(), settings, ("agentic-workflow", new LearnHistory(_noon.AddDays(-1), 2, EndedAt: _noon.AddHours(-1)))));
 
         Assert.Empty(status.Learn);
+    }
+
+    private sealed class Platform : ISandboxPlatformName
+    {
+        public string Mechanism => "bubblewrap";
     }
 
     private sealed class Machine(long ram) : ISandboxMachine

@@ -1,10 +1,15 @@
 using Aw.Kernel.Testing;
+using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Launch;
+using Aw.Sindri.Core.Launches;
 using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Credentials;
 using Aw.Sindri.Core.Sandbox.Plan;
+using Aw.Sindri.Infrastructure.Launch.Usage;
 using Aw.Sindri.Infrastructure.Sandbox;
+using Aw.Sindri.Infrastructure.Sessions;
+using Aw.Sindri.Tests.Launch.Usage;
 using Aw.Sindri.Testing.Sandbox;
 using Aw.Sindri.Tests.Launch;
 
@@ -12,7 +17,7 @@ namespace Aw.Sindri.Tests.Sandbox.Bubblewrap;
 
 /// <summary>
 /// SB-8 proof (sandbox spec §12 SB-8, SB18): a Step whose login comes from the separate-login source runs in the real bubblewrap sandbox with none of the owner's
-/// '~/.claude' bound, and its agent home is writable at the path the readers outside use. The same script under the owner-copy login sees the owner's home, so the
+/// '~/.claude' bound, and what it writes in its agent home (a transcript, a session record) is found from outside by the usage reader and the session collector. The same script under the owner-copy login sees the owner's home, so the
 /// difference is the profile's source and nothing else. Only existence is tested inside; nothing reads the owner's login. Heavy lane: it needs bwrap, socat and git.
 /// </summary>
 [Lane(TestLane.Heavy)]
@@ -38,13 +43,25 @@ public sealed class SandboxSeparateLoginInsideTests
         var login = await SeparateLogin(box);
         var agentHome = AgentHomes.For(box.SindriHome, AgentId.From("claude-code"));
 
-        var ran = await RunInside(box, ModelLoginSource.SeparateLogin, login, Probe());
+        var transcript = UsageFixture.Claude("m-proof", "2026-10-28T08:00:00.000Z", "claude-sonnet-4-5", 7, 0, 0, 3);
+        var record = "{ \"pid\": 4242, \"sessionId\": \"5b8e2c1a-7d34-4f0e-9a61-2c3d4e5f6a7b\", \"procStart\": \"1\", \"kind\": \"interactive\" }";
+        var writes = "mkdir -p \"$CLAUDE_CONFIG_DIR/projects/-repo\" \"$CLAUDE_CONFIG_DIR/sessions\"\n"
+            + $"printf '%s\\n' {Quote(transcript)} > \"$CLAUDE_CONFIG_DIR/projects/-repo/5b8e2c1a-7d34-4f0e-9a61-2c3d4e5f6a7b.jsonl\"\n"
+            + $"printf '%s\\n' {Quote(record)} > \"$CLAUDE_CONFIG_DIR/sessions/4242.json\"\n";
+
+        var ran = await RunInside(box, ModelLoginSource.SeparateLogin, login, writes + Probe());
 
         Assert.True(ran.Exit == 0, "the probe failed inside the sandbox: " + ran.Output);
         Assert.Contains("cfg=" + agentHome, ran.Output, StringComparison.Ordinal);
         Assert.DoesNotContain("visible=", ran.Output, StringComparison.Ordinal);
         Assert.Contains("write=0", ran.Output, StringComparison.Ordinal);
-        Assert.Equal("inside\n", await File.ReadAllTextAsync(agentHome + "/written-inside", TestContext.Current.CancellationToken));   // where the usage reader and the collector look
+        Assert.Equal("inside\n", await File.ReadAllTextAsync(agentHome + "/written-inside", TestContext.Current.CancellationToken));
+
+        // The readers as the product registers them (owner's dirs plus the agent home's) find what the Step wrote; the owner's dirs here are empty ones in the box.
+        var used = await new ClaudeCodeUsage(box.Root + "/owner-projects", [agentHome + "/projects"]).OfSession(SessionId.From("5b8e2c1a-7d34-4f0e-9a61-2c3d4e5f6a7b"), TestContext.Current.CancellationToken);
+        Assert.Equal(new ModelTokens("claude-sonnet-4-5", 7, 0, 0, 3), Assert.Single(used));
+        var records = new ClaudeSessionRecords(box.Root + "/owner-sessions", [agentHome + "/sessions"]).Read(TestContext.Current.CancellationToken);
+        Assert.Equal("5b8e2c1a-7d34-4f0e-9a61-2c3d4e5f6a7b", Assert.Single(records.Value).Session?.Value);
         Assert.Empty(ProcessListing.Under(box.Root));
     }
 

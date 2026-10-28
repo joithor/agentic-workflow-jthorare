@@ -78,7 +78,7 @@ public sealed class ConnectorFeedTests
     {
         var connector = new StubConnector(Item("acme/widgets"));
 
-        var page = (await Feed(connector).Pull(new RecordPull(Aw.Context.Core.Sources.SourceCursor.From("acme/widgets|1|2"), 10, NotBefore: null), Ct)).Value;
+        var page = (await Feed(connector).Pull(new RecordPull(Context.Core.Sources.SourceCursor.From("acme/widgets|1|2"), 10, NotBefore: null), Ct)).Value;
 
         Assert.Equal("acme/widgets|1|2", connector.SeenCursor);
         Assert.Equal("next-cursor", page.Next.Value);
@@ -135,7 +135,7 @@ public sealed class ConnectorFeedTests
 
         public ConnectorDescription Describe() => new("github", "GitHub");
 
-        public ValueTask<Result<ConnectorPage>> Pull(Aw.Connectors.Core.SourceCursor? after, int limit, CancellationToken cancellationToken)
+        public ValueTask<Result<ConnectorPage>> Pull(Connectors.Core.SourceCursor? after, int limit, CancellationToken cancellationToken)
         {
             SeenCursor = after?.Value;
             return ValueTask.FromResult<Result<ConnectorPage>>(Failure is { } failure

@@ -37,7 +37,7 @@ internal sealed class SlackConnect(
     /// <summary>Connects Slack.</summary>
     /// <param name="human">Whether the caller is a person at their own terminal; a session is refused before anything is asked.</param>
     /// <param name="cancellationToken">Cancels the asking and the checks.</param>
-    /// <returns>The pointer now in the profile and how many channels were checked; SND-AUTH-002 for a session; SND-INDEX-006 when the profile lists no Slack channel; SND-INDEX-013 for a direct message or a channel the reader refuses; SND-INDEX-001 when Slack refuses the token or the stored pointer does not resolve; SND-INDEX-002 naming the channels the token cannot read.</returns>
+    /// <returns>The pointer now in the profile and how many channels were checked; SND-AUTH-002 for a session; SND-INDEX-011 when the profile lists no Slack channel; SND-INDEX-013 for a direct message or a channel the reader refuses; SND-INDEX-009 when Slack refuses the token or the stored pointer does not resolve; SND-INDEX-010 naming the channels the token cannot read.</returns>
     internal async ValueTask<Result<SlackConnected>> Run(bool human, CancellationToken cancellationToken)
     {
         if (!human)

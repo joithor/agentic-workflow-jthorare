@@ -20190,6 +20190,8 @@ static Aw.Sindri.Core.ModelHistory.StateOrder.operator ==(Aw.Sindri.Core.ModelHi
 static Aw.Sindri.Core.Sandbox.SandboxRefusal.SourceTextOf(Aw.Kernel.Error! error) -> string?
 Aw.Sindri.Core.Sandbox.Plan.SessionHomePaths
 static Aw.Sindri.Core.Sandbox.Plan.SessionHomePaths.For(string! sindriHome, Aw.Sindri.Core.Workflow.Engine.LaunchId launch) -> string!
+static Aw.Sindri.Core.Sandbox.Plan.SessionHomePaths.GhTokenDirectory(string! sessionHome) -> string!
+static Aw.Sindri.Core.Sandbox.Plan.SessionHomePaths.GhTokenFile(string! sessionHome) -> string!
 static Aw.Sindri.Core.Sandbox.Plan.SessionHomePaths.Sessions(string! sindriHome) -> string!
 Aw.Sindri.Core.Launch.DrafterModel
 Aw.Sindri.Core.Launch.DrafterModel.<Clone>$() -> Aw.Sindri.Core.Launch.DrafterModel!

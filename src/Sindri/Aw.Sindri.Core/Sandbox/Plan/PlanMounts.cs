@@ -167,6 +167,11 @@ internal static class PlanMounts
 
         if (c.WritablePath is not { } worktree)
         {
+            if (paths.Worktree is { } readOnly)
+            {
+                m.Add(new PlanMount(readOnly, PlanMountKind.ReadOnly, Reason: "the run's worktree, read-only for a read-only Step (the agent starts in it)"));
+            }
+
             return;
         }
 

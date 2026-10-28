@@ -1,5 +1,6 @@
 using System.Text;
 using Aw.Kernel;
+using Aw.Kernel.Json;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
@@ -8,7 +9,7 @@ namespace Aw.Sindri.Infrastructure.Sandbox;
 
 /// <summary>
 /// Makes the host side of a plan exist before bubblewrap starts (a bind needs its source): the per-launch and scratch directories, the empty global git config,
-/// the refusing pre-push hook and a placeholder plan file. Later steps fill the shims (SB-3b) and the plan file (SB-5a); this only makes the stack start.
+/// the refusing pre-push hook and the plan file ('sandbox explain' reads it; SB-5a). The shims are filled later (SB-3b).
 /// </summary>
 internal static class RunAreaPreparer
 {
@@ -58,7 +59,7 @@ internal static class RunAreaPreparer
         _ = Directory.CreateDirectory(area + "/githooks");
         WriteIfAbsent(area + "/githooks/pre-push", RefusingPrePush, executable: true);
         WriteIfAbsent(area + "/gitconfig.empty", string.Empty, executable: false);
-        WriteIfAbsent(area + "/sandbox-plan.json", "{}\n", executable: false);
+        OwnerOnly.WriteAtomically(area + "/sandbox-plan.json", AwJson.Serialize(plan, SandboxFilesJson.Options));   // value-free: launcher-supplied variables carry no value; 'sandbox explain' reads this file
         return null;
     }
 

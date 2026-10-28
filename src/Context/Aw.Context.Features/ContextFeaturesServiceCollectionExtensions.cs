@@ -114,6 +114,7 @@ public static class ContextFeaturesServiceCollectionExtensions
         .AddScoped<IService<SyncSourcesRequest, SyncReport>, SyncSourcesService>()
         .AddScoped<ContextSources>()
         .AddSingleton<RecordFeedSync>()
+        .AddScoped<IIndexSync, IndexSync>()
         .AddSingleton<RepoTreeCache>()
         .AddScoped<IService<PreviewMapRequest, MapFilePreview>, PreviewMapService>()
         .AddScoped<IService<ImportMapRequest, MapImported>, ImportMapService>()

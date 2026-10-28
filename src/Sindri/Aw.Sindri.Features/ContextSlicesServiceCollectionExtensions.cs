@@ -39,6 +39,8 @@ internal static class ContextSlicesServiceCollectionExtensions
             .AddScoped<IScheduledService, ContextRebuildService>()
             .AddScoped<IScheduledService, ContextSyncService>()
             .AddScoped<IScheduledService, ContextSyncGapsService>()
+            .AddScoped<IScheduledService, IndexSyncService>()
+            .AddSingleton(IndexSyncService.BuiltIn)
             .AddSingleton(ContextSyncGapsService.BuiltIn)
             .AddScoped<IScheduledService>(RefreshService)
             .AddSingleton(ContextMapRefreshService.BuiltIn)

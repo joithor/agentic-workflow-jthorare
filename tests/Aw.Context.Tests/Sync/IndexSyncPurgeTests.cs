@@ -45,7 +45,7 @@ public sealed class IndexSyncPurgeTests
     public async Task Purge_while_a_tick_of_that_source_runs_is_SND_CONTEXT_056_and_deletes_nothing()
     {
         await Seed();
-        Aw.Kernel.Error? refusal = null;
+        Kernel.Error? refusal = null;
 
         var held = await _feeds.Locked(RecordSamples.Linear, async () =>
         {

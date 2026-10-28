@@ -27,7 +27,7 @@ internal sealed class FakeIndexSync : IIndexSync
     }
 
     public ValueTask<Result<IReadOnlyList<SourceProgress>>> Progress(ContextScope scope, CancellationToken cancellationToken) =>
-        ValueTask.FromResult<Result<IReadOnlyList<SourceProgress>>>(Results.Success(Standing));
+        ValueTask.FromResult(Results.Success(Standing));
 
     public ValueTask<Result<SourceCounts>> Counts(SourceId source, CancellationToken cancellationToken) => ValueTask.FromResult<Result<SourceCounts>>(Held);
 

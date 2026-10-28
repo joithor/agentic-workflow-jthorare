@@ -5,6 +5,7 @@ using Aw.Kernel;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Launches;
 using Aw.Sindri.Core.Workflow.Engine;
+using Aw.Sindri.Infrastructure.Sandbox.Launch;
 
 namespace Aw.Sindri.Infrastructure.Launch;
 
@@ -125,7 +126,7 @@ internal sealed partial class LaunchFileStore(LauncherOptions options) : ILaunch
     public int SweepStale(DateTimeOffset now, TimeSpan olderThan, Func<LaunchId, bool> live)
     {
         ArgumentNullException.ThrowIfNull(live);
-        var removed = McpLaunchConfig.Sweep(options.LaunchDirectory, now, olderThan, live) + SweepSecrets(now, olderThan, live);
+        var removed = McpLaunchConfig.Sweep(options.LaunchDirectory, now, olderThan, live) + SweepSecrets(now, olderThan, live) + SweepSessionHomes(live);
         if (!Directory.Exists(options.LaunchesDirectory))
         {
             return removed;
@@ -143,6 +144,12 @@ internal sealed partial class LaunchFileStore(LauncherOptions options) : ILaunch
 
         return removed;
     }
+
+    /// <summary>Removes the session homes (sandbox spec §3.1) of launches that are not live.</summary>
+    private int SweepSessionHomes(Func<LaunchId, bool> live) =>
+        options.SindriHome is { } home
+            ? SessionHome.Sweep(home, id => LaunchId.TryParse(id, provider: null, out var launch) && live(launch)).Count
+            : 0;
 
     /// <summary>Deletes secret files that no wrap read (it never ran): older than the limit and not of a live launch.</summary>
     private int SweepSecrets(DateTimeOffset now, TimeSpan olderThan, Func<LaunchId, bool> live) =>

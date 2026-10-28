@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using Aw.Kernel;
+using Aw.Sindri.Core;
 using Aw.Sindri.Core.Launch;
+using Aw.Sindri.Infrastructure.Launch;
 using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
@@ -57,16 +59,10 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
 
         var plan = planned.Value;
         _plans[plan.Launch] = plan;
-        var home = await stages.MakeHome(plan, cancellationToken).ConfigureAwait(false);
+        var home = await Stage(plan, cancellationToken).ConfigureAwait(false);
         if (home.IsError)
         {
             return home.Error;
-        }
-
-        var egress = await stages.StartEgress(plan, cancellationToken).ConfigureAwait(false);
-        if (egress.IsError)
-        {
-            return egress.Error;
         }
 
         var checkedPlan = await sandbox.SelfCheck(plan, cancellationToken).ConfigureAwait(false);
@@ -86,12 +82,54 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
         return new PreparedSandbox(plan.ToSummary(), scoped, home.Value, plan.RunDirectory);
     }
 
+    /// <summary>The host side before the self-check: the session home, the policy files in it, and the egress.</summary>
+    private async ValueTask<Result<string>> Stage(SandboxPlan plan, CancellationToken cancellationToken)
+    {
+        var home = MakeHome(plan);
+        if (home.IsError)
+        {
+            return home.Error;
+        }
+
+        var policy = await stages.WritePolicy(plan, home.Value, cancellationToken).ConfigureAwait(false);
+        if (policy.IsError)
+        {
+            return policy.Error;
+        }
+
+        var egress = await stages.StartEgress(plan, cancellationToken).ConfigureAwait(false);
+        return egress.IsError ? egress.Error : home;
+    }
+
+    /// <summary>Makes the session home with the launch's one-read secret moved in (the launcher's own file is deleted: the wrap reads the home's) and control.json as a file, which a sandbox needs.</summary>
+    private Result<string> MakeHome(SandboxPlan plan)
+    {
+        if (options.Control() is not { } control)
+        {
+            return SandboxRefusal.For(SindriErrors.LaunchSelfCheckFailed, SandboxReasons.NetForward, "the control plane's endpoint is not known");
+        }
+
+        var file = LaunchSecrets.SecretPathFor(options.LaunchSecretsDirectory, plan.Launch);
+        try
+        {
+            var home = SessionHome.Create(options.SindriHome, plan.Launch, File.ReadAllText(file), control);
+            File.Delete(file);
+            return home;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return SandboxRefusal.For(SindriErrors.LaunchSelfCheckFailed, SandboxReasons.FsWrite, "the session home could not be made: " + e.Message);
+        }
+    }
+
     private async ValueTask Undo(LaunchId launch, CancellationToken cancellationToken)
     {
         if (_plans.TryRemove(launch, out var plan))
         {
             sandbox.Discard(plan);
         }
+
+        SessionHome.Remove(SessionHomePaths.For(options.SindriHome, launch));
 
         await stages.Release(launch, cancellationToken).ConfigureAwait(false);
     }

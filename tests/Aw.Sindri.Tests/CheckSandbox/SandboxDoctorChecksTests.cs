@@ -3,7 +3,6 @@ using Aw.Sindri.Core;
 using Aw.Sindri.Core.Doctor;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
-using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Features.CheckSandbox;
 using Aw.Sindri.Testing.Sandbox;
 
@@ -78,6 +77,6 @@ public sealed class SandboxDoctorChecksTests
 
     private sealed class Report(params SandboxBlocker[] blockers) : ISandboxChecks
     {
-        public ValueTask<SandboxCheckReport> Run(CancellationToken cancellationToken) => ValueTask.FromResult(new SandboxCheckReport(blockers, Array.Empty<WorkflowInstanceId>()));
+        public ValueTask<SandboxCheckReport> Run(CancellationToken cancellationToken) => ValueTask.FromResult(new SandboxCheckReport(blockers, []));
     }
 }

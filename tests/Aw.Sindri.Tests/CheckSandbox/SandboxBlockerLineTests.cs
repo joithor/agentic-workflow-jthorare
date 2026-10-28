@@ -13,7 +13,7 @@ public sealed class SandboxBlockerLineTests
     [Fact]
     public void The_copy_table_says_exactly_what_the_golden_says()
     {
-        foreach (var entry in SandboxGoldens.Object("copy.json")["entries"]!.AsArray().Select(e => (JsonObject)e!))
+        foreach (var entry in SandboxGoldens.Object("copy.json")["entries"]!.AsArray().Cast<JsonObject>())
         {
             var reason = (string)entry["reason"]!;
             var copy = SandboxCopy.For((string)entry["code"]!, reason.Replace("<status>", "502", StringComparison.Ordinal), (string?)entry["source"]);
@@ -28,7 +28,7 @@ public sealed class SandboxBlockerLineTests
     [Fact]
     public void An_open_value_is_filled_from_the_refusal()
     {
-        var refusal = SandboxRefusal.For(SindriErrors.LaunchSandboxUnavailable, SandboxReasons.NoCgroupControllers, details: new Dictionary<string, string> { ["which"] = "memory" });
+        var refusal = SandboxRefusal.For(SindriErrors.LaunchSandboxUnavailable, SandboxReasons.NoCgroupControllers, details: new Dictionary<string, string>(StringComparer.Ordinal) { ["which"] = "memory" });
 
         var line = SandboxBlockerLine.From(SandboxBlocker.Of(refusal));
 
@@ -38,7 +38,7 @@ public sealed class SandboxBlockerLineTests
     [Fact]
     public void A_login_sentence_names_the_target_and_the_source_picks_the_wording()
     {
-        var refusal = SandboxRefusal.For(SindriErrors.LaunchLoginUnavailable, SandboxReasons.NoLogin, source: ModelLoginSource.SeparateLogin, details: new Dictionary<string, string> { ["target"] = "claude-code" });
+        var refusal = SandboxRefusal.For(SindriErrors.LaunchLoginUnavailable, SandboxReasons.NoLogin, source: ModelLoginSource.SeparateLogin, details: new Dictionary<string, string>(StringComparer.Ordinal) { ["target"] = "claude-code" });
 
         var line = SandboxBlockerLine.From(SandboxBlocker.Of(refusal));
 

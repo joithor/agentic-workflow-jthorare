@@ -12,6 +12,10 @@ internal sealed partial class TopBar
 {
     private const double ProblemsMax = 220;
 
+    // The placeholder's target width is its text plus this: an exact fit trims on font rounding, and the pill's problem
+    // text gives way instead.
+    internal const double PlaceholderSlack = 12;
+
     // What an arrange found the placeholder short by, taken off the cap for this width; reset when the width changes.
     private double _loweredCap = double.PositiveInfinity;
     private double _loweredFor = double.NaN;
@@ -33,7 +37,7 @@ internal sealed partial class TopBar
         if (_fit == Fit.Full)
         {
             SearchField.Measure(Size.Infinity);
-            search = Math.Clamp(SearchField.DesiredSize.Width, SearchMin, SearchMax);
+            search = Math.Clamp(SearchField.DesiredSize.Width + PlaceholderSlack, SearchMin, SearchMax);
         }
         else
         {
@@ -51,13 +55,14 @@ internal sealed partial class TopBar
     // the problem text is gone.
     private bool LowerCapByShortfall(double width)
     {
-        if (!SearchText.IsEffectivelyVisible || !PillProblems.IsEffectivelyVisible || PillProblems.MaxWidth <= 0 || SearchText.Text is not { Length: > 0 } text)
+        if (!SearchText.IsEffectivelyVisible || !PillProblems.IsEffectivelyVisible || PillProblems.MaxWidth <= 0 || SearchText.Text is not { Length: > 0 } text
+            || SearchColumn.ActualWidth >= SearchMax - 0.5)
         {
             return false;
         }
 
         using var layout = new TextLayout(text, new Typeface(SearchText.FontFamily, SearchText.FontStyle, SearchText.FontWeight), SearchText.FontSize, foreground: null);
-        var shortfall = layout.Width - SearchText.Bounds.Width;
+        var shortfall = layout.Width + PlaceholderSlack - SearchText.Bounds.Width;
         if (shortfall <= 0.5)
         {
             return false;

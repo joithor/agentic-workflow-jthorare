@@ -129,7 +129,7 @@ public sealed class TopBarTests : IDisposable
         using var layout = new TextLayout(placeholder.Text, new Typeface(placeholder.FontFamily, placeholder.FontStyle, placeholder.FontWeight), placeholder.FontSize, foreground: null);
         var natural = layout.Width;
         Assert.True(
-            placeholder.Bounds.Width >= natural - 0.5,
+            placeholder.Bounds.Width >= natural + TopBar.PlaceholderSlack - 0.5,
             string.Create(System.Globalization.CultureInfo.InvariantCulture, $"the placeholder got {placeholder.Bounds.Width} of its {natural}"));
         Assert.True(problems.IsEffectivelyVisible);
         Assert.Equal(shell.Pill.Text, ToolTip.GetTip(Named<Button>(window, "HealthPill")));

@@ -11,16 +11,16 @@ namespace Aw.Sindri.Infrastructure.Sandbox;
 /// AW_SANDBOX_PLAN environment entry (the plan file sits in the run area); the counter is 'denials.json' next to it. A run area the sweep has removed
 /// has no counter, so the ledger's 'sandbox.denied' events are the history and these files are the live count. An unreadable file is skipped, not an error.
 /// </summary>
-/// <param name="settings">Sindri's home.</param>
+/// <param name="launchDirectory">The launcher's directory.</param>
 /// <param name="options">The package's AwJson options.</param>
-internal sealed class DiskDenialFiles(SindriSettings settings, JsonSerializerOptions options) : IDenialFiles
+internal sealed class DiskDenialFiles(string launchDirectory, JsonSerializerOptions options) : IDenialFiles
 {
     private const string PlanSuffix = ".sandbox.json";
     private const string CounterName = "denials.json";
 
     public async ValueTask<IReadOnlyList<DenialFile>> List(LaunchId? launch, CancellationToken cancellationToken)
     {
-        var directory = Path.Combine(settings.Home, "launches");
+        var directory = Path.Combine(launchDirectory, "launches");
         string[] plans;
         try
         {

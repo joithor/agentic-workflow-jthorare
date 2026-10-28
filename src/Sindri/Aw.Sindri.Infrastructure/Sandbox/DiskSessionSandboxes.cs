@@ -10,11 +10,11 @@ namespace Aw.Sindri.Infrastructure.Sandbox;
 /// ISessionSandboxes over a launch's stored plan, '&lt;home&gt;/launches/&lt;id&gt;.sandbox.json', and its cgroup scope (sandbox spec §8): the plan gives the folder, the attended flag and the memory
 /// ceiling, the scope's memory.current the memory in use. A plan that is gone or does not read is "details unavailable", never an error; a scope that is gone has no memory in use.
 /// </summary>
-/// <param name="settings">Sindri's home.</param>
+/// <param name="launchDirectory">The launcher's directory.</param>
 /// <param name="options">The package's AwJson options.</param>
 /// <param name="stats">The cgroup reader.</param>
 /// <param name="sliceCgroupPath">The slice's cgroup path under the cgroup root, with no leading slash.</param>
-internal sealed class DiskSessionSandboxes(SindriSettings settings, JsonSerializerOptions options, ICgroupStats stats, string sliceCgroupPath) : ISessionSandboxes
+internal sealed class DiskSessionSandboxes(string launchDirectory, JsonSerializerOptions options, ICgroupStats stats, string sliceCgroupPath) : ISessionSandboxes
 {
     public async ValueTask<SessionSandbox> Read(LaunchId launch, SandboxSummary summary, CancellationToken cancellationToken)
     {
@@ -32,7 +32,7 @@ internal sealed class DiskSessionSandboxes(SindriSettings settings, JsonSerializ
     {
         try
         {
-            var bytes = await File.ReadAllBytesAsync(Path.Combine(settings.Home, "launches", launch.Value + ".sandbox.json"), cancellationToken).ConfigureAwait(false);
+            var bytes = await File.ReadAllBytesAsync(Path.Combine(launchDirectory, "launches", launch.Value + ".sandbox.json"), cancellationToken).ConfigureAwait(false);
             var parsed = AwJson.Deserialize<SandboxPlan>(bytes, options);
             return parsed.IsSuccess ? parsed.Value : null;
         }

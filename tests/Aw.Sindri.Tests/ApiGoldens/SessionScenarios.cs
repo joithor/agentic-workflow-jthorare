@@ -86,8 +86,9 @@ internal static class SessionScenarios
                 new LaunchStep(InstanceAddress.From(item + "/step/1"), "build", 2), agent: "cursor", sandbox: sandboxed ? SandboxSummary : null);
             if (sandboxed && scenario != "cursor-sandbox-unavailable")
             {
-                _ = Directory.CreateDirectory(Path.Combine(host.Home, "launches"));   // the plan file the launcher stored; the unavailable scenario leaves it out
-                await File.WriteAllBytesAsync(Path.Combine(host.Home, "launches", SessionsRig.Launch + ".sandbox.json"), AwJson.Serialize(SandboxPlan, host.App.Services.GetRequiredService<System.Text.Json.JsonSerializerOptions>()), ct);
+                var planFile = Infrastructure.Sandbox.LaunchPaths.PlanFile(Path.Combine(host.Home, "launch"), LaunchId.From(SessionsRig.Launch));   // the plan file the launcher stored; the unavailable scenario leaves it out
+                _ = Directory.CreateDirectory(Path.GetDirectoryName(planFile)!);
+                await File.WriteAllBytesAsync(planFile, AwJson.Serialize(SandboxPlan, host.App.Services.GetRequiredService<System.Text.Json.JsonSerializerOptions>()), ct);
             }
 
             await ViewScenarios.CatchUp(host, ct);

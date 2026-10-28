@@ -3,7 +3,6 @@ using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Host;
-using Aw.Sindri.Infrastructure;
 using Aw.Sindri.Infrastructure.Sandbox;
 using Aw.Sindri.Tests.Ledger;
 using Aw.Sindri.Tests.ListSessions;
@@ -30,13 +29,16 @@ public sealed class DiskSessionSandboxesTests : IDisposable
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
+    private string LaunchDirectory => Path.Combine(_home.Path, "launch");   // the launcher's directory, where the writers put the plan
+
     private DiskSessionSandboxes Reader() =>
-        new(new SindriSettings(_home.Path, Path.Combine(_home.Path, "profile.yaml")), _json, new CgroupFiles(_cgroups), Slice);
+        new(LaunchDirectory, _json, new CgroupFiles(_cgroups), Slice);
 
     private void Plan(SandboxPlan plan)
     {
-        _ = Directory.CreateDirectory(Path.Combine(_home.Path, "launches"));
-        File.WriteAllBytes(Path.Combine(_home.Path, "launches", Launch + ".sandbox.json"), AwJson.Serialize(plan, _json));
+        var file = LaunchPaths.PlanFile(LaunchDirectory, LaunchId.From(Launch));
+        _ = Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+        File.WriteAllBytes(file, AwJson.Serialize(plan, _json));
     }
 
     private void Scope(long memoryCurrent)
@@ -95,8 +97,9 @@ public sealed class DiskSessionSandboxesTests : IDisposable
     [Fact, Trait("Lane", "integration")]
     public async Task A_plan_file_that_does_not_parse_is_unavailable()
     {
-        _ = Directory.CreateDirectory(Path.Combine(_home.Path, "launches"));
-        await File.WriteAllTextAsync(Path.Combine(_home.Path, "launches", Launch + ".sandbox.json"), "{ not a plan", Token);
+        var file = LaunchPaths.PlanFile(LaunchDirectory, LaunchId.From(Launch));
+        _ = Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+        await File.WriteAllTextAsync(file, "{ not a plan", Token);
 
         var sandbox = await Reader().Read(LaunchId.From(Launch), SandboxData.Summary(), Token);
 

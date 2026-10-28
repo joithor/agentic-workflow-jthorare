@@ -11,7 +11,7 @@ using Aw.Context.Tests.Infrastructure;
 
 namespace Aw.Context.Tests.Sync;
 
-[Trait("Lane", "unit")]
+[Trait("Lane", "integration")]
 public sealed class RepoDocsFeedTests : IDisposable
 {
     private static readonly string[] _globs = ["docs/**/*.md"];

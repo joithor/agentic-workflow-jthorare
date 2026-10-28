@@ -139,8 +139,12 @@ public sealed class InstanceFramesTests : FrameHost
 
         var served = Detail("triage-desk").Current.Status.Commands;
         Expect.Sequence(served.Select(c => c.Cli), Texts(window, "CommandCli").Select(t => t.Text));
-        Assert.Equal(served.Count(c => c.Verb is not (StatusVerb.Takeover or StatusVerb.Cancel)), Texts(window, "CommandPending").Count);   // Take over and Cancel are sent by the app: their buttons stand where the pending chip was
-        Assert.Equal(served.Count(c => c.Verb == StatusVerb.Takeover), Buttons(window, "CommandTakeOver").Count);
+        static bool Protected(StatusCommand c) => string.Equals(c.Class, "protected", StringComparison.Ordinal);   // the lock button, no chip and no send button
+        Assert.Equal(served.Count(c => !Protected(c) && c.Verb is not (StatusVerb.Takeover or StatusVerb.Cancel or StatusVerb.Handback or StatusVerb.Complete)), Texts(window, "CommandPending").Count);   // the commands the frame sends (Take over, Cancel, Hand back, Complete) have their own buttons where the pending chip was
+        Assert.Equal(served.Count(c => !Protected(c) && c.Verb == StatusVerb.Takeover), Buttons(window, "CommandTakeOver").Count);
+        Assert.Equal(served.Count(c => !Protected(c) && c.Verb == StatusVerb.Complete), Buttons(window, "CommandComplete").Count);
+        Assert.Equal(served.Count(c => !Protected(c) && c.Verb == StatusVerb.Handback), Buttons(window, "CommandHandBack").Count);
+        Assert.Equal(served.Count(c => !Protected(c) && c.Verb == StatusVerb.Cancel), Buttons(window, "CommandAsk").Count);
         var command = window.GetVisualDescendants().OfType<Border>().First(b => b.Name == "CommandLabelName" && b.IsEffectivelyVisible);   // the peer's name, not the view model's (a TextBlock's peer ignores one)
         var heard = Heard.Wrapper(command);
         Assert.Equal(((ExpandedCommandViewModel)command.DataContext!).Name, heard);

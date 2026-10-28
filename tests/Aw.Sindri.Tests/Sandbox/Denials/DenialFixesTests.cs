@@ -13,7 +13,6 @@ public sealed class DenialFixesTests
 
     [Theory, Trait("Lane", "unit")]
     [InlineData(DenialKind.Network, "github.com", DenialRules.NoGroup, DenialFix.Allow)]
-    [InlineData(DenialKind.Network, "10.0.0.5", DenialRules.PrivateAddress, DenialFix.Allow)]
     [InlineData(DenialKind.Path, "/home/o/.cache/tool", DenialRules.NotBound, DenialFix.Allow)]
     [InlineData(DenialKind.Policy, "git push", DenialRules.InnerPolicy, DenialFix.OwnTerminal)]
     [InlineData(DenialKind.Policy, "pre-commit", DenialRules.HookFailOpen, DenialFix.OwnTerminal)]
@@ -41,10 +40,12 @@ public sealed class DenialFixesTests
         Assert.All(_bannedOwnerWords, w => Assert.DoesNotContain(w, decided.Reason, StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact, Trait("Lane", "unit")]
-    public void A_connection_cap_is_not_a_missing_host()
+    [Theory, Trait("Lane", "unit")]
+    [InlineData("10.0.0.5", DenialRules.PrivateAddress)]
+    [InlineData("registry.npmjs.org", DenialRules.Cap)]
+    public void A_private_address_or_a_hit_cap_is_not_a_missing_host(string host, string rule)
     {
-        var decided = DenialFixes.Decide(Entry(DenialKind.Network, "registry.npmjs.org", DenialRules.Cap));
+        var decided = DenialFixes.Decide(Entry(DenialKind.Network, host, rule));
 
         Assert.Equal(DenialFix.Never, decided.Fix);
         Assert.NotNull(decided.Reason);

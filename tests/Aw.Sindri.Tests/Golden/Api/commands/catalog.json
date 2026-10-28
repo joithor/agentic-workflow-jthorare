@@ -20,6 +20,24 @@
       "confirm": null
     },
     {
+      "action": "AllowDenial",
+      "class": "desk",
+      "allowedCallers": [
+        "human+terminal",
+        "human",
+        "session"
+      ],
+      "terminal": false,
+      "method": "POST",
+      "route": "/sindri/sandbox/allow",
+      "cli": "sindri sandbox allow <launch> <target>",
+      "ui": "ready",
+      "destructive": false,
+      "readsViews": false,
+      "shortcut": null,
+      "confirm": null
+    },
+    {
       "action": "ApplyCommand:answer-accept",
       "class": "protected",
       "allowedCallers": [

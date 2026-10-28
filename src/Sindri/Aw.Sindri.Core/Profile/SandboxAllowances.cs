@@ -13,7 +13,14 @@ public static class SandboxAllowances
     {
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(home);
-        throw new NotSupportedException();
+        var root = home.TrimEnd('/') + "/";
+        if (!path.StartsWith(root, StringComparison.Ordinal) || path.Split('/').Contains(".."))
+        {
+            return null;
+        }
+
+        var relative = path[root.Length..].TrimEnd('/');
+        return relative.Length == 0 ? null : relative;
     }
 
     /// <summary>What is wrong with <paramref name="value"/> as the profile's host or home entry, or null.</summary>
@@ -23,8 +30,13 @@ public static class SandboxAllowances
     public static string? Problem(DenialKind kind, string value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        _ = kind;
-        throw new NotSupportedException();
+        return kind switch
+        {
+            DenialKind.Network => SandboxRules.HostProblem(value),
+            DenialKind.Path => SandboxRules.HomePathProblem(value),
+            DenialKind.Policy => "only a host or a path under your home can be allowed",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "unknown denial kind"),
+        };
     }
 
     /// <summary>Whether the repo's declaration in <paramref name="profile"/> already holds the entry.</summary>
@@ -36,7 +48,17 @@ public static class SandboxAllowances
     public static bool Holds(SindriProfile profile, string repo, DenialKind kind, string entry)
     {
         ArgumentNullException.ThrowIfNull(profile);
-        _ = (repo, kind, entry);
-        throw new NotSupportedException();
+        if (profile.Sandbox?.Repos is not { } repos || !repos.TryGetValue(repo, out var declared))
+        {
+            return false;
+        }
+
+        return kind switch
+        {
+            DenialKind.Network => declared.Hosts?.Contains(entry, StringComparer.Ordinal) == true,
+            DenialKind.Path => declared.HomeAllow?.Any(h => string.Equals(h.Path, entry, StringComparison.Ordinal)) == true,
+            DenialKind.Policy => false,
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "unknown denial kind"),
+        };
     }
 }

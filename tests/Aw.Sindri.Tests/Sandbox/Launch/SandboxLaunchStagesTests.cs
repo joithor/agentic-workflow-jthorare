@@ -22,15 +22,16 @@ namespace Aw.Sindri.Tests.Sandbox.Launch;
 public sealed class SandboxLaunchStagesTests : IDisposable
 {
     private readonly FakeTimeProvider _clock = new(KnownInstants.Epoch);
+    private readonly FakeAgentTokenSource _tokens = new(Results.Success(new AgentToken("ghs_first", KnownInstants.Epoch.AddHours(1))));
     private readonly StubInputs _inputs;
     private readonly TempDirectory _temp = new();
     private readonly FakeModelCredentialSource _login = new FakeModelCredentialSource(ModelLoginSource.OwnerCopy).With(AgentId.From("claude-code"), LoginState.Ready);
 
     private SandboxLaunchStages Make(params IModelCredentialSource[] logins) =>
-        new(new NoProfile(), new EmptyLearn(), logins.Length == 0 ? [_login] : logins, _inputs, Registry(), _clock, new UnmintedAgentTokenSource());
+        new(new NoProfile(), new EmptyLearn(), logins.Length == 0 ? [_login] : logins, _inputs, Registry(), _clock, new AgentTokenRenewal(_tokens, _clock));
 
     private SandboxLaunchStages MakeWith(GithubCredentials github) =>
-        new(new GithubProfile(github), new EmptyLearn(), [_login], _inputs, Registry(), _clock, new UnmintedAgentTokenSource());
+        new(new GithubProfile(github), new EmptyLearn(), [_login], _inputs, Registry(), _clock, new AgentTokenRenewal(_tokens, _clock));
 
     public SandboxLaunchStagesTests()
     {
@@ -43,6 +44,10 @@ public sealed class SandboxLaunchStagesTests : IDisposable
 
     private LaunchSandboxRegistry Registry() =>
         new(new EgressService(new FakeEgressResolver(new Dictionary<string, System.Net.IPAddress[]>(StringComparer.Ordinal)), new FakeEgressDialer(), static _ => "/nonexistent/socat", Path.Combine(_temp.Path, "run")));
+
+    // why: the planner refuses a Step with no policy, so the tests that build a plan use one
+    private static LaunchRequest PlannedStep() =>
+        A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: new StepPolicy([], StepPermissionMode.ReadOnly, WritablePath: null), Ref: new StepRef("build", "agent"))).OnInstance(InstanceAddress.From("ITM-1/spec/1"), RunToken.For(1, 1)).Build();
 
     private static LaunchRequest Step() =>
         A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: null, Ref: new StepRef("build", "agent"))).OnInstance(InstanceAddress.From("ITM-1/spec/1"), RunToken.For(1, 1)).Build();   // a real Step: an instance address with slashes and a run token
@@ -68,12 +73,151 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     }
 
     [Fact]
-    public async Task Request_refuses_an_agent_app_Step_with_the_token_code_and_no_key_until_the_mint_ships()
+    public async Task Request_refuses_an_agent_app_Step_with_the_token_code_when_the_mint_fails()
     {
+        _tokens.Then(SandboxRefusal.For(SindriErrors.LaunchGitHubTokenFailed, SandboxReasons.NoKey));
+
         var built = await MakeWith(GithubCredentials.AgentApp).Request(Step(), chosenSession: null, CancellationToken.None);
 
         Expect.True(built.IsError && string.Equals(built.Error.Code, SindriErrors.LaunchGitHubTokenFailed.Code, StringComparison.Ordinal));
         Expect.Equal(SandboxReasons.NoKey, built.Error.Extensions!.Single(e => e.Key == "reason").Value.GetString());
+    }
+
+    [Fact]
+    public async Task WritePolicy_puts_the_agent_app_token_in_a_0600_file_in_a_0700_folder_of_the_session_home()
+    {
+        var stages = MakeWith(GithubCredentials.AgentApp);
+        var asked = (await stages.Request(PlannedStep(), chosenSession: null, CancellationToken.None)).Value;
+        var plan = SandboxPlanner.Build(SandboxMechanism.Bubblewrap, asked).Value;
+
+        var written = await stages.WritePolicy(asked, plan, Home, CancellationToken.None);
+
+        Expect.True(written.IsSuccess);
+        Expect.Equal("ghs_first\n", await File.ReadAllTextAsync(SessionHomePaths.GhTokenFile(Home), Token));
+        Expect.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, Mode(SessionHomePaths.GhTokenFile(Home)));
+        Expect.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute, Mode(SessionHomePaths.GhTokenDirectory(Home)));
+        Expect.Equal(1, Directory.GetFileSystemEntries(SessionHomePaths.GhTokenDirectory(Home)).Length);   // no temp file left behind
+        await stages.Release(plan.Launch, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task The_token_is_renewed_every_45_minutes_by_renaming_a_new_file_in()
+    {
+        var (stages, plan) = await WriteAgentAppToken();
+        _tokens.Then(Results.Success(new AgentToken("ghs_second", KnownInstants.Epoch.AddHours(2))));
+        await using var old = File.OpenRead(SessionHomePaths.GhTokenFile(Home));   // the first file's inode, kept open
+
+        _clock.Advance(TimeSpan.FromMinutes(44));
+        Expect.Equal(1, _tokens.Calls);
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        await WaitUntil(() => File.ReadAllText(SessionHomePaths.GhTokenFile(Home)) == "ghs_second\n");
+
+        using var oldText = new StreamReader(old);
+        Expect.Equal("ghs_first\n", await oldText.ReadToEndAsync(Token));   // replaced by rename, never rewritten in place
+        Expect.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, Mode(SessionHomePaths.GhTokenFile(Home)));
+        await stages.Release(plan.Launch, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task A_renewal_that_throws_is_said_and_retried_not_dropped()
+    {
+        var warnings = new List<string>();
+        var (stages, plan) = await WriteAgentAppToken(warnings.Add);
+        _tokens.ThrowNext = new InvalidOperationException("the keychain process did not start");
+        _tokens.Then(Results.Success(new AgentToken("ghs_after_throw", KnownInstants.Epoch.AddHours(2))));
+
+        _clock.Advance(TimeSpan.FromMinutes(45));
+        await WaitUntil(() => warnings.Count == 1);
+        Expect.True(warnings[0].Contains("SND-LAUNCH-018", StringComparison.Ordinal) && warnings[0].Contains(nameof(InvalidOperationException), StringComparison.Ordinal));
+        await WaitUntil(() =>
+        {
+            _clock.Advance(TimeSpan.FromMinutes(1));
+            return File.ReadAllText(SessionHomePaths.GhTokenFile(Home)) == "ghs_after_throw\n";
+        });
+        await stages.Release(plan.Launch, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task A_renewal_after_the_session_home_is_gone_writes_nothing_back()
+    {
+        var (stages, plan) = await WriteAgentAppToken();
+        _tokens.Then(Results.Success(new AgentToken("ghs_late", KnownInstants.Epoch.AddHours(2))));
+        Directory.Delete(SessionHomePaths.GhTokenDirectory(Home), recursive: true);
+
+        _clock.Advance(TimeSpan.FromMinutes(45));
+        await WaitUntil(() => _tokens.Calls == 2);
+        _clock.Advance(TimeSpan.FromMinutes(45));
+        Expect.True(!Directory.Exists(SessionHomePaths.GhTokenDirectory(Home)));
+        Expect.Equal(2, _tokens.Calls);   // a closed launch is not renewed again
+        await stages.Release(plan.Launch, CancellationToken.None);
+    }
+
+    [Fact]
+    public void A_renewal_write_finds_the_token_folder_gone_and_makes_none()
+    {
+        var gone = Path.Combine(_temp.Path, "removed-session-home");
+
+        Expect.True(!TokenFile.Replace(gone, "ghs_late", create: false));
+        Expect.True(!Directory.Exists(gone));
+    }
+
+    [Fact]
+    public async Task A_failed_renewal_keeps_the_old_token_warns_and_tries_again_in_5_minutes()
+    {
+        var warnings = new List<string>();
+        var (stages, plan) = await WriteAgentAppToken(warnings.Add);
+        _tokens.Then(SandboxRefusal.For(SindriErrors.LaunchGitHubTokenFailed, "http-401"), Results.Success(new AgentToken("ghs_retry", KnownInstants.Epoch.AddHours(2))));
+
+        _clock.Advance(TimeSpan.FromMinutes(45));
+        await WaitUntil(() => _tokens.Calls == 2);   // the first call is the Request's own mint
+        await WaitUntil(() => warnings.Count == 1);
+        Expect.Equal("ghs_first\n", await File.ReadAllTextAsync(SessionHomePaths.GhTokenFile(Home), Token));
+        Expect.True(warnings[0].Contains("SND-LAUNCH-018", StringComparison.Ordinal) && warnings[0].Contains("http-401", StringComparison.Ordinal));
+
+        var minutes = 0;   // the retry timer is set just after the warning, so step a minute at a time and count
+        await WaitUntil(() =>
+        {
+            _clock.Advance(TimeSpan.FromMinutes(1));
+            minutes++;
+            return File.ReadAllText(SessionHomePaths.GhTokenFile(Home)) == "ghs_retry\n";
+        });
+        Expect.True(minutes <= 6);
+        await stages.Release(plan.Launch, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Release_stops_the_renewals()
+    {
+        var (stages, plan) = await WriteAgentAppToken();
+
+        await stages.Release(plan.Launch, CancellationToken.None);
+        _clock.Advance(TimeSpan.FromHours(3));
+        await Task.Delay(100, Token);
+
+        Expect.Equal(1, _tokens.Calls);
+    }
+
+    private async Task<(SandboxLaunchStages Stages, SandboxPlan Plan)> WriteAgentAppToken(Action<string>? warn = null)
+    {
+        var stages = new SandboxLaunchStages(new GithubProfile(GithubCredentials.AgentApp), new EmptyLearn(), [_login], _inputs, Registry(), _clock, new AgentTokenRenewal(_tokens, _clock, warn));
+        var asked = (await stages.Request(PlannedStep(), chosenSession: null, CancellationToken.None)).Value;
+        var plan = SandboxPlanner.Build(SandboxMechanism.Bubblewrap, asked).Value;
+        Expect.True((await stages.WritePolicy(asked, plan, Home, CancellationToken.None)).IsSuccess);
+        return (stages, plan);
+    }
+
+    private static CancellationToken Token => TestContext.Current.CancellationToken;
+
+    private static UnixFileMode Mode(string path) => OperatingSystem.IsWindows() ? default : File.GetUnixFileMode(path);
+
+    private static async Task WaitUntil(Func<bool> condition)
+    {
+        for (var i = 0; i < 500 && !condition(); i++)
+        {
+            await Task.Delay(10, Token);
+        }
+
+        Expect.True(condition());
     }
 
     [Fact]

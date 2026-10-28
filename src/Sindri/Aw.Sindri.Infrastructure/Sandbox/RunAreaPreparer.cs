@@ -55,10 +55,17 @@ internal static class RunAreaPreparer
             return null;
         }
 
+        var agentApp = plan.Github == GithubCredentials.AgentApp;
         _ = Directory.CreateDirectory(area + "/shims");
         WriteShims(plan, area + "/shims");
+        if (agentApp)
+        {
+            WriteGithubShims(plan, area + "/shims");
+        }
+
         _ = Directory.CreateDirectory(area + "/githooks");
-        WriteIfAbsent(area + "/githooks/pre-push", RefusingPrePush, executable: true);
+        // why: the hook depends on the plan (agent-app allows the run branch), so a re-prepare may flip modes and must not keep the other mode's hook.
+        WriteIfDifferent(area + "/githooks/pre-push", agentApp ? SandboxShims.BranchOnlyPrePush(plan.RunNamespace) : RefusingPrePush);
         WriteIfAbsent(area + "/gitconfig.empty", string.Empty, executable: false);
         OwnerOnly.WriteAtomically(area + "/sandbox-plan.json", AwJson.Serialize(plan, SandboxFilesJson.Options));   // value-free: launcher-supplied variables carry no value; 'sandbox explain' reads this file
         return null;
@@ -69,19 +76,14 @@ internal static class RunAreaPreparer
     // the box then has no such tool, as before.
     private static void WriteShims(SandboxPlan plan, string shimsDirectory)
     {
-        var entries = (plan.Environment.FirstOrDefault(e => string.Equals(e.Name, "PATH", StringComparison.Ordinal))?.Value ?? string.Empty).Split(':', StringSplitOptions.RemoveEmptyEntries);
+        var entries = PathEntries(plan);
         var heavy = HeavyOf(entries);
         if (heavy is null)
         {
             return;
         }
 
-        var hostDirectories = entries.Where(e => !string.Equals(e, shimsDirectory, StringComparison.Ordinal) && !e.EndsWith("/bin-r1b", StringComparison.Ordinal)).ToList();
-        if (plan.Environment.FirstOrDefault(e => string.Equals(e.Name, "DOTNET_ROOT", StringComparison.Ordinal))?.Value is { Length: > 0 } dotnetRoot)
-        {
-            hostDirectories.Add(dotnetRoot);
-        }
-
+        var hostDirectories = HostDirectories(plan, shimsDirectory);
         var real = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var tool in SandboxShims.Tools)
         {
@@ -94,6 +96,33 @@ internal static class RunAreaPreparer
         SandboxShims.Write(shimsDirectory, real, heavy);
     }
 
+    // why: the token file is in the launch's session home, which the plan carries as AW_SINDRI_HOME (rev 7); without it there is no token to point at, so no shim. gh needs no heavy,
+    // and is looked up on the host PATH entries the same way the other tools are.
+    private static void WriteGithubShims(SandboxPlan plan, string shimsDirectory)
+    {
+        if (plan.Environment.FirstOrDefault(e => string.Equals(e.Name, "AW_SINDRI_HOME", StringComparison.Ordinal))?.Value is not { Length: > 0 } sessionHome)
+        {
+            return;
+        }
+
+        var realGh = HostDirectories(plan, shimsDirectory).Select(d => Path.Combine(d, "gh")).FirstOrDefault(IsExecutable);
+        SandboxShims.WriteGithub(shimsDirectory, realGh, SessionHomePaths.GhTokenFile(sessionHome));
+    }
+
+    private static string[] PathEntries(SandboxPlan plan) =>
+        (plan.Environment.FirstOrDefault(e => string.Equals(e.Name, "PATH", StringComparison.Ordinal))?.Value ?? string.Empty).Split(':', StringSplitOptions.RemoveEmptyEntries);
+
+    private static List<string> HostDirectories(SandboxPlan plan, string shimsDirectory)
+    {
+        var hostDirectories = PathEntries(plan).Where(e => !string.Equals(e, shimsDirectory, StringComparison.Ordinal) && !e.EndsWith("/bin-r1b", StringComparison.Ordinal)).ToList();
+        if (plan.Environment.FirstOrDefault(e => string.Equals(e.Name, "DOTNET_ROOT", StringComparison.Ordinal))?.Value is { Length: > 0 } dotnetRoot)
+        {
+            hostDirectories.Add(dotnetRoot);
+        }
+
+        return hostDirectories;
+    }
+
     // The planner's own bin-r1b entry, which the plan binds; a host PATH may carry another bin-r1b the box can't see.
     private static string? HeavyOf(string[] entries) =>
         entries.Length > 1 && entries[1].EndsWith("/bin-r1b", StringComparison.Ordinal) && IsExecutable(entries[1] + "/heavy") ? entries[1] + "/heavy" : null;
@@ -104,6 +133,21 @@ internal static class RunAreaPreparer
     // The plan file sits in the run area, and AW_SANDBOX_PLAN names it.
     private static string? RunArea(SandboxPlan plan) =>
         plan.Environment.FirstOrDefault(e => string.Equals(e.Name, "AW_SANDBOX_PLAN", StringComparison.Ordinal))?.Value is { } file ? Path.GetDirectoryName(file) : null;
+
+    private static void WriteIfDifferent(string path, string content)
+    {
+        if (File.Exists(path) && string.Equals(File.ReadAllText(path), content, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+
+        WriteIfAbsent(path, content, executable: true);
+    }
 
     private static void WriteIfAbsent(string path, string content, bool executable)
     {

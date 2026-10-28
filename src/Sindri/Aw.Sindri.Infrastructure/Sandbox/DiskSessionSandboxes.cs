@@ -7,7 +7,7 @@ using Aw.Sindri.Core.Workflow.Engine;
 namespace Aw.Sindri.Infrastructure.Sandbox;
 
 /// <summary>
-/// ISessionSandboxes over a launch's stored plan, '&lt;home&gt;/launches/&lt;id&gt;.sandbox.json', and its cgroup scope (sandbox spec §8): the plan gives the folder, the attended flag and the memory
+/// ISessionSandboxes over a launch's stored plan, '&lt;launch dir&gt;/areas/&lt;id&gt;/sandbox-plan.json', and its cgroup scope (sandbox spec §8): the plan gives the folder, the attended flag and the memory
 /// ceiling, the scope's memory.current the memory in use. A plan that is gone or does not read is "details unavailable", never an error; a scope that is gone has no memory in use.
 /// </summary>
 /// <param name="launchDirectory">The launcher's directory.</param>
@@ -32,7 +32,7 @@ internal sealed class DiskSessionSandboxes(string launchDirectory, JsonSerialize
     {
         try
         {
-            var bytes = await File.ReadAllBytesAsync(Path.Combine(launchDirectory, "launches", launch.Value + ".sandbox.json"), cancellationToken).ConfigureAwait(false);
+            var bytes = await File.ReadAllBytesAsync(LaunchPaths.PlanFile(launchDirectory, launch), cancellationToken).ConfigureAwait(false);
             var parsed = AwJson.Deserialize<SandboxPlan>(bytes, options);
             return parsed.IsSuccess ? parsed.Value : null;
         }

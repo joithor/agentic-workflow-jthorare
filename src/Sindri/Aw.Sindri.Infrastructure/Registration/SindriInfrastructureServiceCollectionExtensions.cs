@@ -90,7 +90,7 @@ public static class SindriInfrastructureServiceCollectionExtensions
     /// <summary>SB-3a: what 'session wrap --limits' watches a session's systemd scope through (systemctl --user and the cgroup files).</summary>
     private static IServiceCollection AddScopeWatch(this IServiceCollection services) =>
         services.AddSingleton<IScopeControl>(static _ => new SystemctlScopeControl(new SandboxProcesses())).AddSingleton<ICgroupStats, CgroupFiles>().AddSingleton<IHeavyLockSweep>(static sp => new HeavyLockSweep(sp.GetRequiredService<TimeProvider>()))
-            .AddSingleton<IDenialFiles>(static sp => new DiskDenialFiles(sp.GetRequiredService<LauncherOptions>().LaunchDirectory, sp.GetRequiredService<JsonSerializerOptions>()))   // SB-4b: the run areas' denials.json
+            .AddSingleton<IDenialFiles>(static sp => new DiskDenialFiles(sp.GetRequiredService<LauncherOptions>().LaunchDirectory, sp.GetRequiredService<JsonSerializerOptions>()))   // SB-4b: the launcher's denials folder
             .AddSingleton<ISessionSandboxes>(static sp => new DiskSessionSandboxes(
                 sp.GetRequiredService<LauncherOptions>().LaunchDirectory, sp.GetRequiredService<JsonSerializerOptions>(), sp.GetRequiredService<ICgroupStats>(), Sandbox.Launch.PlatformSandboxServiceCollectionExtensions.SliceRelativePath(OwnUid.Read())));   // SB-6a: a session row's sandbox
 

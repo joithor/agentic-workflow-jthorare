@@ -109,6 +109,7 @@ internal sealed class DenialCounter(LaunchId launch, string path, JsonSerializer
                 return;
             }
 
+            OwnerOnly.EnsureDirectory(Path.GetDirectoryName(path)!);   // why: the 'denials' folder is created by the first flush, not by the launcher
             var temp = path + ".tmp";
             File.WriteAllBytes(temp, AwJson.Serialize(Build(), json));
             File.Move(temp, path, overwrite: true);

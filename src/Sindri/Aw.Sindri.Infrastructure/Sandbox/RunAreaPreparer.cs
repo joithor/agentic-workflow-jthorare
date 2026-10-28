@@ -67,7 +67,7 @@ internal static class RunAreaPreparer
         // why: the hook depends on the plan (agent-app allows the run branch), so a re-prepare may flip modes and must not keep the other mode's hook.
         WriteIfDifferent(area + "/githooks/pre-push", agentApp ? SandboxShims.BranchOnlyPrePush(plan.RunNamespace) : _refusingPrePush);
         WriteIfAbsent(area + "/gitconfig.empty", string.Empty, executable: false);
-        OwnerOnly.WriteAtomically(area + "/sandbox-plan.json", AwJson.Serialize(plan, SandboxFilesJson.Options));   // value-free: launcher-supplied variables carry no value; 'sandbox explain' reads this file
+        OwnerOnly.WriteAtomically(Path.Combine(area, LaunchPaths.PlanName), AwJson.Serialize(plan, SandboxFilesJson.Options));   // value-free: launcher-supplied variables carry no value; 'sandbox explain' reads this file
         return null;
     }
 

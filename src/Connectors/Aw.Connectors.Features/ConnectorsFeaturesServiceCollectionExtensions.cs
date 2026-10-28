@@ -1,4 +1,5 @@
 using Aw.Connectors.Core;
+using Aw.Connectors.Core.GitHub;
 using Aw.Connectors.Core.Slack;
 using Aw.Connectors.Features.PullGitHub;
 using Aw.Connectors.Features.PullSlack;
@@ -16,20 +17,25 @@ public static class ConnectorsFeaturesServiceCollectionExtensions
     public static IServiceCollection AddConnectorsFeatures(this IServiceCollection services)
     {
         _ = services
-            .AddScoped<PullGitHubService>()
             .AddScoped<IValidator<PullGitHubRequest>, PullGitHubValidator>()
             .AddScoped<IService<PullGitHubRequest, PullGitHubResponse>>(static sp =>
                 new ValidatingService<PullGitHubRequest, PullGitHubResponse>(
-                    sp.GetRequiredService<PullGitHubService>(),
+                    new PullGitHubService(sp.GetRequiredService<IGitHubReader>()),   // a factory registration: the reader is the caller's to add, so a host that builds readers per token registers none
                     sp.GetRequiredService<IValidator<PullGitHubRequest>>()))
-            .AddScoped<PullSlackService>()
             .AddScoped<IValidator<PullSlackRequest>, PullSlackValidator>()
             .AddScoped<IService<PullSlackRequest, PullSlackResponse>>(static sp =>
                 new ValidatingService<PullSlackRequest, PullSlackResponse>(
-                    sp.GetRequiredService<PullSlackService>(),
-                    sp.GetRequiredService<IValidator<PullSlackRequest>>()));
+                    new PullSlackService(sp.GetRequiredService<ISlackReader>()),   // a factory registration, as PullGitHub's: a host without Slack adds no reader and still validates
+                    sp.GetRequiredService<IValidator<PullSlackRequest>>()))
+            .AddSingleton<IGitHubConnectorFactory>(static sp => new GitHubConnectorFactory(sp.GetService<TimeProvider>() ?? TimeProvider.System));
         return services;
     }
+
+    /// <summary>Adds only the GitHub connector factory: for a host that builds a reader per token and so registers no <see cref="IGitHubReader"/> (Sindri's Host), where the PullGitHub and PullSlack slices would not resolve.</summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same collection.</returns>
+    public static IServiceCollection AddGitHubConnectorFactory(this IServiceCollection services) =>
+        services.AddSingleton<IGitHubConnectorFactory>(static sp => new GitHubConnectorFactory(sp.GetService<TimeProvider>() ?? TimeProvider.System));
 
     /// <summary>Adds the Slack connector as an <see cref="IConnector"/> over the registered <see cref="ISlackReader"/> (add the reader with AddSlackReader) and the PullSlack slice.</summary>
     /// <param name="services">The service collection.</param>

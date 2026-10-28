@@ -29,6 +29,7 @@ override Aw.Connectors.Features.PullGitHub.PullGitHubResponse.Equals(object? obj
 override Aw.Connectors.Features.PullGitHub.PullGitHubResponse.GetHashCode() -> int
 override Aw.Connectors.Features.PullGitHub.PullGitHubResponse.ToString() -> string!
 static Aw.Connectors.Features.ConnectorsFeaturesServiceCollectionExtensions.AddConnectorsFeatures(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Aw.Connectors.Features.ConnectorsFeaturesServiceCollectionExtensions.AddGitHubConnectorFactory(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static Aw.Connectors.Features.PullGitHub.PullGitHubRequest.operator !=(Aw.Connectors.Features.PullGitHub.PullGitHubRequest? left, Aw.Connectors.Features.PullGitHub.PullGitHubRequest? right) -> bool
 static Aw.Connectors.Features.PullGitHub.PullGitHubRequest.operator ==(Aw.Connectors.Features.PullGitHub.PullGitHubRequest? left, Aw.Connectors.Features.PullGitHub.PullGitHubRequest? right) -> bool
 static Aw.Connectors.Features.PullGitHub.PullGitHubResponse.operator !=(Aw.Connectors.Features.PullGitHub.PullGitHubResponse? left, Aw.Connectors.Features.PullGitHub.PullGitHubResponse? right) -> bool

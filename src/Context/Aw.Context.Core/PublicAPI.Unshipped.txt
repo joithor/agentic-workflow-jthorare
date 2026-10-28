@@ -8819,13 +8819,15 @@ Aw.Context.Core.Sync.RecordPull
 Aw.Context.Core.Sync.RecordPull.<Clone>$() -> Aw.Context.Core.Sync.RecordPull!
 Aw.Context.Core.Sync.RecordPull.After.get -> Aw.Context.Core.Sources.SourceCursor?
 Aw.Context.Core.Sync.RecordPull.After.init -> void
-Aw.Context.Core.Sync.RecordPull.Deconstruct(out Aw.Context.Core.Sources.SourceCursor? After, out int Limit, out System.DateTimeOffset? NotBefore) -> void
+Aw.Context.Core.Sync.RecordPull.Before.get -> System.DateTimeOffset?
+Aw.Context.Core.Sync.RecordPull.Before.init -> void
+Aw.Context.Core.Sync.RecordPull.Deconstruct(out Aw.Context.Core.Sources.SourceCursor? After, out int Limit, out System.DateTimeOffset? NotBefore, out System.DateTimeOffset? Before) -> void
 Aw.Context.Core.Sync.RecordPull.Equals(Aw.Context.Core.Sync.RecordPull? other) -> bool
 Aw.Context.Core.Sync.RecordPull.Limit.get -> int
 Aw.Context.Core.Sync.RecordPull.Limit.init -> void
 Aw.Context.Core.Sync.RecordPull.NotBefore.get -> System.DateTimeOffset?
 Aw.Context.Core.Sync.RecordPull.NotBefore.init -> void
-Aw.Context.Core.Sync.RecordPull.RecordPull(Aw.Context.Core.Sources.SourceCursor? After, int Limit, System.DateTimeOffset? NotBefore) -> void
+Aw.Context.Core.Sync.RecordPull.RecordPull(Aw.Context.Core.Sources.SourceCursor? After, int Limit, System.DateTimeOffset? NotBefore, System.DateTimeOffset? Before = null) -> void
 Aw.Context.Core.Vectors.IQueryEmbedder
 Aw.Context.Core.Vectors.IQueryEmbedder.Embed(string! text, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Vectors.QueryEmbedding!>!>
 Aw.Context.Core.Vectors.IVectorScan

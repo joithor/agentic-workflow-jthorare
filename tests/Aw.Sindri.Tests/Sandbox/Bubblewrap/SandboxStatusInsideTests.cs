@@ -31,6 +31,7 @@ public sealed class SandboxStatusInsideTests
         using var tmux = new PrivateTmux();
         var ct = TestContext.Current.CancellationToken;
 
+        LinkTemporal(box);
         using var serve = StartServe(sindri, box);
         try
         {
@@ -52,7 +53,7 @@ public sealed class SandboxStatusInsideTests
             await WaitForFile(code, ct);
 
             var printed = await File.ReadAllTextAsync(output, ct);
-            Assert.Equal("0", (await File.ReadAllTextAsync(code, ct)).Trim());
+            Assert.True((await File.ReadAllTextAsync(code, ct)).Trim() == "0", "sindri status inside the sandbox: " + printed);
             Assert.Contains("apiVersion", printed, StringComparison.Ordinal);   // `sindri status --json` carries it (aot-smoke expected.txt)
         }
         finally
@@ -72,6 +73,27 @@ public sealed class SandboxStatusInsideTests
         return started.Value;
     }
 
+    // The box's state dir is a scratch one, so serve would look for the pinned temporal CLI there: point it at the box's real copy.
+    private static string PinnedTemporal()
+    {
+        var state = Environment.GetEnvironmentVariable("AW_STATE_DIR") is { Length: > 0 } dir
+            ? dir
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".agentic-workflow");
+        var cache = Path.Combine(state, "cache", "bin");
+        return Directory.Exists(cache)
+            ? Directory.GetDirectories(cache, "temporal-*").FirstOrDefault(d => !Path.GetFileName(d).StartsWith("temporal-test-server", StringComparison.Ordinal)) ?? Path.Combine(cache, "temporal-missing")
+            : Path.Combine(cache, "temporal-missing");
+    }
+
+    private static void LinkTemporal(SandboxBox box)
+    {
+        var temporal = PinnedTemporal();
+        Assert.SkipUnless(Directory.Exists(temporal), "the pinned temporal CLI isn't installed: scripts/binaries-lock.sh fetch temporal");
+        var cache = Path.Combine(box.State, "cache", "bin");
+        _ = Directory.CreateDirectory(cache);
+        _ = Directory.CreateSymbolicLink(Path.Combine(cache, Path.GetFileName(temporal)), temporal);
+    }
+
     private static Process StartServe(string sindri, SandboxBox box)
     {
         var info = new ProcessStartInfo(sindri, ["serve"]) { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
@@ -86,7 +108,11 @@ public sealed class SandboxStatusInsideTests
     {
         for (var waited = 0; waited < 120; waited++)
         {
-            Assert.False(serve.HasExited, "sindri serve exited early with code " + serve.ExitCode.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            if (serve.HasExited)
+            {
+                Assert.Fail("sindri serve exited early with code " + serve.ExitCode.ToString(System.Globalization.CultureInfo.InvariantCulture) + ": " + await serve.StandardError.ReadToEndAsync(ct));   // ExitCode throws while it still runs
+            }
+
             if (File.Exists(path) && AwJson.Deserialize<ControlEndpoint>(await File.ReadAllBytesAsync(path, ct), SandboxFilesJson.Options) is { IsSuccess: true } read)
             {
                 return read.Value;

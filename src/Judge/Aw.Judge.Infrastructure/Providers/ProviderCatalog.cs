@@ -32,11 +32,14 @@ internal sealed class ProviderCatalog(Func<string, string?> environment, IExecut
         }
 
         var named = chain.Classes.Values.SelectMany(names => names).ToHashSet();
-        return new ProviderLineup([.. providers.Where(p => named.Contains(p.Name)).Select(p => new FailOpenModelProvider(p)), rules], chain);
+        return new ProviderLineup([.. providers.Where(p => named.Contains(p.Name)).Select(p => new FailOpenModelProvider(WithConfiguredCap(p, config))), rules], chain);
     }
 
     /// <inheritdoc />
-    public Result<IModelProvider> Provider(ProviderName name, IReadOnlyCollection<ProviderName>? allowed)
+    public Result<IModelProvider> Provider(ProviderName name, IReadOnlyCollection<ProviderName>? allowed) => Provider(name, allowed, config: null);
+
+    /// <inheritdoc />
+    public Result<IModelProvider> Provider(ProviderName name, IReadOnlyCollection<ProviderName>? allowed, ProvidersConfig? config)
     {
         if (allowed is not null && !allowed.Contains(name))
         {
@@ -47,7 +50,7 @@ internal sealed class ProviderCatalog(Func<string, string?> environment, IExecut
         var installed = AgentCliNames.FromProvider(name) is not { } cli || locator.IsOnPath(AgentCliNames.Binary(cli));
         return provider is null || !installed
             ? JudgeErrors.ProviderUnavailable.With($"{ProviderNames.Name(name)} is not available")
-            : Results.Success<IModelProvider>(new FailOpenModelProvider(provider));
+            : Results.Success<IModelProvider>(new FailOpenModelProvider(WithConfiguredCap(provider, config)));
     }
 
     /// <inheritdoc />
@@ -62,6 +65,9 @@ internal sealed class ProviderCatalog(Func<string, string?> environment, IExecut
             ? JudgeErrors.ProviderUnavailable.With($"{ProviderNames.Name(ProviderName.ClaudeCli)} is not available")
             : Results.Success<IModelProvider>(new FailOpenModelProvider(adjudicator));
     }
+
+    private static IModelProvider WithConfiguredCap(IModelProvider provider, ProvidersConfig? config) =>
+        provider.Name == ProviderName.Jev && config?.InputCapChars is { } cap ? new JevInputCapProvider(provider, cap) : provider;
 
     // config.json's names are checked on read (JudgeConfigParser), so an unknown one can't reach here; skip it if it does.
     private static List<AgentCliName>? Configured(IReadOnlyList<string>? names) =>

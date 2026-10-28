@@ -47,6 +47,47 @@ internal sealed class LinuxSandboxFixture(string sindriHome, Func<string, string
         return Build(repo, worktree, runDirectory, runArea, netDir);
     }
 
+    /// <inheritdoc/>
+    public SandboxRequest? WriteScopeRequest()
+    {
+        var root = Path.Combine(sindriHome, "sandbox", "fixture-write");
+        var repo = Path.Combine(root, "repo");
+        var worktree = Path.Combine(repo, ".claude", "worktrees", "sindri-fixture-2");
+        var runDirectory = Path.Combine(root, "run");
+        var runArea = Path.Combine(root, "area");
+        var netDir = Path.Combine(NetParent(environment), "fixture-write");
+        try
+        {
+            foreach (var directory in new[] { repo, runDirectory, runArea, netDir })
+            {
+                _ = Directory.CreateDirectory(directory);
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+
+        // why: the git canary commits and moves refs, so the fixture's worktree is a real one on the run branch (the ReadOnly fixture's is an empty directory).
+        if (!Directory.Exists(worktree) && !MakeWorktree(repo, worktree))
+        {
+            return null;
+        }
+
+        return Build(repo, worktree, runDirectory, runArea, netDir) with { Policy = new StepPolicy([], StepPermissionMode.Default, worktree) };
+    }
+
+    private bool MakeWorktree(string repo, string worktree)
+    {
+        string[][] steps =
+        [
+            ["init", "-q", "-b", "main"],
+            ["-c", "user.name=sindri", "-c", "user.email=sindri@localhost", "commit", "-q", "--allow-empty", "-m", "fixture"],
+            ["worktree", "add", "-q", worktree, "-b", "sindri/fixture/1/work"],
+        ];
+        return steps.All(args => processes.Run("git", ["-C", repo, "-c", "commit.gpgsign=false", .. args], _gitTimeout).Succeeded);
+    }
+
     private SandboxRequest Build(string repo, string worktree, string runDirectory, string runArea, string netDir) =>
         new(
             LaunchId.From("LCH-" + new string('f', 32)),

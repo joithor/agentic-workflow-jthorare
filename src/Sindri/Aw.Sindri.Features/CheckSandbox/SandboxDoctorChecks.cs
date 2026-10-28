@@ -26,7 +26,7 @@ internal sealed class SandboxDoctorChecks(ISandboxChecks checks, ISandbox sandbo
         if (report.Ready)
         {
             var probe = sandbox.Probe();
-            var what = probe.IsSuccess ? probe.Value.Detail ?? SandboxWire.Name(probe.Value.Mechanism) : "available";
+            var what = probe.IsSuccess ? probe.Value.Detail ?? "available" : "available";
             var ms = (long)clock.GetElapsedTime(started).TotalMilliseconds;
             return [new DoctorCheck("sandbox", CheckState.Ok, string.Create(CultureInfo.InvariantCulture, $"sandbox ready: {what}, {Groups} checks passed in {ms} ms"), Fix: null)];
         }
@@ -36,7 +36,7 @@ internal sealed class SandboxDoctorChecks(ISandboxChecks checks, ISandbox sandbo
 
     private static DoctorCheck Row(SandboxBlockerLine line) => new(
         string.Equals(line.Code, LoginCode, StringComparison.Ordinal) ? "sandbox:login" : "sandbox",
-        line.State is "gray" or "wait" ? CheckState.Ok : CheckState.Fail,
+        line.Quiet ? CheckState.Ok : CheckState.Fail,
         line.Text,
-        line.State is "gray" or "wait" ? null : line.Command);
+        line.Quiet ? null : line.Command);
 }

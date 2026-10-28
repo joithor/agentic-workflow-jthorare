@@ -21029,3 +21029,4 @@ Aw.Sindri.Core.Sandbox.OwnerCopy.Command.get -> string?
 Aw.Sindri.Core.Sandbox.OwnerCopy.Command.init -> void
 Aw.Sindri.Core.Sandbox.OwnerCopy.State.get -> string?
 Aw.Sindri.Core.Sandbox.OwnerCopy.State.init -> void
+Aw.Sindri.Core.Sandbox.SandboxBlockerLine.Quiet.get -> bool

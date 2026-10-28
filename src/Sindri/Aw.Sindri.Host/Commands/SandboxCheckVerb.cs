@@ -43,7 +43,7 @@ internal sealed class SandboxCheckVerb(ControlPlaneClient client, Output output)
         var text = new StringBuilder();
         foreach (var blocker in response.Blockers)
         {
-            _ = text.Append(blocker.State is "gray" or "wait" ? "note     " : "blocked  ").AppendLine(blocker.Text);
+            _ = text.Append(blocker.Quiet ? "note     " : "blocked  ").AppendLine(blocker.Text);
             _ = blocker.Command is { } command ? text.Append("         ").AppendLine(command) : text;
         }
 

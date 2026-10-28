@@ -12,7 +12,7 @@ namespace Aw.Sindri.Features.CheckSandbox;
 /// <param name="catalog">The entries' policy forms.</param>
 internal sealed class SandboxFormCheck(ILaunchSetup setup, IAgentCatalog catalog) : ISandboxFormCheck
 {
-    private static readonly SandboxCode Unconfinable = SandboxCodes.All.First(static c => ReferenceEquals(c.Error, SindriErrors.LaunchUnconfinable));
+    private static readonly SandboxCode _unconfinable = SandboxCodes.All.First(static c => ReferenceEquals(c.Error, SindriErrors.LaunchUnconfinable));
 
     public async ValueTask<IReadOnlyList<SandboxBlocker>> Check(CancellationToken cancellationToken)
     {
@@ -29,11 +29,12 @@ internal sealed class SandboxFormCheck(ILaunchSetup setup, IAgentCatalog catalog
             {
                 PolicyForm.None => SandboxReasons.FormNone,
                 PolicyForm.CursorConfig => SandboxReasons.FormReserved,
+                PolicyForm.ClaudeSettingsFile or PolicyForm.CodexOverrides or null => null,
                 _ => null,
             };
             if (reason is not null)
             {
-                blockers.Add(new SandboxBlocker(Unconfinable, reason, Source: null, new Dictionary<string, string>(StringComparer.Ordinal) { ["target"] = target.Id.Value }));
+                blockers.Add(new SandboxBlocker(_unconfinable, reason, Source: null, new Dictionary<string, string>(StringComparer.Ordinal) { ["target"] = target.Id.Value }));
             }
         }
 

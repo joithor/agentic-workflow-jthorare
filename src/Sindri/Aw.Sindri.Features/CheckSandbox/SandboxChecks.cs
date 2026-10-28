@@ -1,6 +1,5 @@
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
-using Aw.Sindri.Core.Workflow.Engine;
 
 namespace Aw.Sindri.Features.CheckSandbox;
 
@@ -31,8 +30,9 @@ internal sealed class SandboxChecks(ISandbox sandbox, ISandboxFormCheck forms, I
             blockers.Add(failed);
         }
 
-        IReadOnlyList<WorkflowInstanceId> ready = blockers.Count == 0 ? await resume.Next(cancellationToken).ConfigureAwait(false) : [];
-        return new SandboxCheckReport(blockers, ready);
+        return blockers.Count > 0
+            ? new SandboxCheckReport(blockers, [])
+            : new SandboxCheckReport(blockers, await resume.Next(cancellationToken).ConfigureAwait(false));
     }
 
     /// <summary>Plans the fixture and proves the plan inside the sandbox; the first failure is the blocker. No fixture on this box skips it.</summary>

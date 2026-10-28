@@ -9,6 +9,9 @@ namespace Aw.Sindri.Core.Sandbox;
 /// <param name="State">'gray' or 'wait' when the card is never red; null otherwise.</param>
 public sealed record SandboxBlockerLine(string Code, string Reason, string? Source, string Text, string? Command, string? State)
 {
+    /// <summary>True when the card is never red: a gray 'not yet supported' or a waiting state, which doctor shows as information and prints no fix for.</summary>
+    public bool Quiet => string.Equals(State, "gray", StringComparison.Ordinal) || string.Equals(State, "wait", StringComparison.Ordinal);
+
     /// <summary>Words a blocker.</summary>
     /// <param name="blocker">The blocker.</param>
     /// <returns>Its line; a pair with no sentence says its code and reason, so nothing is hidden.</returns>

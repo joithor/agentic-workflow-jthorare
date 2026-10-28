@@ -1,3 +1,4 @@
+using Aw.Kernel;
 using Aw.Sindri.Core.Workflow.Engine;
 
 namespace Aw.Sindri.Core.Sandbox.Plan;
@@ -61,4 +62,15 @@ public sealed record SandboxPlan(
         new SandboxCredentialsSummary(Github),
         Login,
         Attended);
+
+    /// <summary>
+    /// The plan 'sindri sandbox exec' runs (sandbox spec §3.6): this launch's plan with the worktree, the run's ref directories and the run directory read-only (the live agent may still be using them),
+    /// a fresh run area (so a fresh empty scratch, spool and login directory), no session home, no launcher-supplied variable (the launch secret, a model key) and no GitHub token, under its own launch id and socket directory.
+    /// Pure: the caller makes the directories and starts the egress.
+    /// </summary>
+    /// <param name="execLaunch">The exec's own launch id (its scope and its denial counter).</param>
+    /// <param name="execArea">The exec's own run area, replacing this plan's.</param>
+    /// <param name="execNetDir">The exec's own short socket directory.</param>
+    /// <returns>The plan, or SND-CLI-003 when this plan names no run area (no AW_SANDBOX_PLAN variable).</returns>
+    public Result<SandboxPlan> ForExec(LaunchId execLaunch, string execArea, string execNetDir) => throw new NotSupportedException();
 }

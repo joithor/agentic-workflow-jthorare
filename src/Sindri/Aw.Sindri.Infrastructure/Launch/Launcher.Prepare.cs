@@ -40,10 +40,7 @@ internal sealed partial class Launcher
             }
 
             WriteCaptureRule(request.Launch, entry);
-            var secret = LaunchSecrets.Mint();
-            var hashFile = LaunchSecrets.PathFor(parts.Options.SecretsDirectory, request.Launch);
-            var prior = File.Exists(hashFile) ? await File.ReadAllBytesAsync(hashFile, cancellationToken).ConfigureAwait(false) : null;   // a live session of this launch may own it
-            LaunchSecrets.Write(parts.Options.SecretsDirectory, request.Launch, secret);
+            var prior = await MintSecret(request.Launch, cancellationToken).ConfigureAwait(false);
             var confined = await Confine(request, composed.Value.Argv, Environment(request, workDir), cancellationToken).ConfigureAwait(false);
             if (confined.IsError)
             {
@@ -56,6 +53,16 @@ internal sealed partial class Launcher
         {
             return KernelErrors.Unavailable.With($"the launch's files could not be written: {e.Message}");
         }
+    }
+
+    /// <summary>Mints the launch's secret and writes its hash; returns the hash file as it was before (a live session of this launch may own it), or null when there was none.</summary>
+    private async ValueTask<byte[]?> MintSecret(LaunchId launch, CancellationToken cancellationToken)
+    {
+        var secret = LaunchSecrets.Mint();
+        var hashFile = LaunchSecrets.PathFor(parts.Options.SecretsDirectory, launch);
+        var prior = File.Exists(hashFile) ? await File.ReadAllBytesAsync(hashFile, cancellationToken).ConfigureAwait(false) : null;
+        LaunchSecrets.Write(parts.Options.SecretsDirectory, launch, secret);
+        return prior;
     }
 
     /// <summary>A Step's worktree gets the pre-push guard and, for claude-code, its trust mark before anything else is written; an error when either is refused.</summary>

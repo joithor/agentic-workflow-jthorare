@@ -16,7 +16,7 @@ internal sealed partial class Launcher
     {
         if (request.Attended || parts.Sandbox is not { } sandbox)
         {
-            return new Confined(argv, env, null);
+            return new Confined(argv, env, Summary: null);
         }
 
         var prepared = await sandbox.Prepare(request, argv, cancellationToken).ConfigureAwait(false);

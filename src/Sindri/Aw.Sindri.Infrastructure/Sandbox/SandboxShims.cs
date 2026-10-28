@@ -97,11 +97,11 @@ internal static class SandboxShims
         + "if [ -z \"$token\" ]; then echo \"gh: the GitHub token is not available in this Step ($token_file is missing or empty). " + SandboxStatusLine.Refusal + "\" >&2; exit 1; fi\n"
         + "GH_TOKEN=$token\nexport GH_TOKEN\nexec \"$real\" \"$@\"\n";
 
-    /// <summary>The git credential helper: answers `get` for https://github.com only; `store` and `erase` do nothing.</summary>
+    /// <summary>The git credential helper: answers `get` for https://github.com only; `store` and `erase` read their input and do nothing.</summary>
     internal static string CredentialHelperScript(string tokenFile) =>
         "#!/bin/sh\n# Sindri sandbox git credential helper: the agent GitHub App token for github.com over https, read at each call.\n"
         + "token_file=" + Quote(tokenFile) + "\n"
-        + "[ \"${1:-}\" = get ] || exit 0\n"
+        + "[ \"${1:-}\" = get ] || { cat >/dev/null; exit 0; }\n"
         + "proto=; host=\nwhile IFS= read -r line || [ -n \"$line\" ]; do\n  case \"$line\" in\n    protocol=*) proto=${line#protocol=} ;;\n    host=*) host=${line#host=} ;;\n  esac\ndone\n"
         + "[ \"$proto\" = https ] && [ \"$host\" = github.com ] || exit 0\n"
         + "token=$(cat \"$token_file\" 2>/dev/null) || token=\n"

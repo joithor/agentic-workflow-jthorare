@@ -8762,6 +8762,8 @@ Aw.Context.Core.Records.VectorWrite.Vec.get -> System.ReadOnlyMemory<float>
 Aw.Context.Core.Records.VectorWrite.Vec.init -> void
 Aw.Context.Core.Records.VectorWrite.VectorWrite(Aw.Context.Core.Records.VectorSpace Space, string! Key, string! Model, string! TextHash, System.ReadOnlyMemory<float> Vec) -> void
 Aw.Context.Core.Sources.RecordKind.Pr = 6 -> Aw.Context.Core.Sources.RecordKind
+Aw.Context.Core.Sync.IRecordFeedCatalog
+Aw.Context.Core.Sync.IRecordFeedCatalog.For(Aw.Context.Core.Engine.ContextSettings! settings, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Engine.ContextRepo!>! repos, Aw.Context.Core.Trust.Scrubbers! scrubbers) -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Sync.RecordFeed!>!
 Aw.Context.Core.Sync.RecordFeed
 Aw.Context.Core.Sync.RecordFeed.RecordFeed(Aw.Context.Core.Sources.SourceId source) -> void
 Aw.Context.Core.Sync.RecordFeed.Source.get -> Aw.Context.Core.Sources.SourceId
@@ -9032,3 +9034,5 @@ override Aw.Context.Core.Concepts.PinRollupResult.ToString() -> string!
 static Aw.Context.Core.Concepts.PinRollupResult.operator !=(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
 static Aw.Context.Core.Concepts.PinRollupResult.operator ==(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
 Aw.Context.Core.Extract.IRepoReader.BlobIds(Aw.Context.Core.Engine.ContextRepo! repo, string! commit, System.Collections.Generic.IReadOnlyList<string!>! paths, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyDictionary<string!, string!>!>!>
+Aw.Context.Core.Sync.RecordBatches
+static Aw.Context.Core.Sync.RecordBatches.From(Aw.Context.Core.Sources.SourceId source, Aw.Context.Core.Sync.RecordPage! page, Aw.Context.Core.Records.SyncPhase phase, Aw.Context.Core.Trust.Scrubbers! scrubbers, System.DateTimeOffset at) -> Aw.Context.Core.Records.RecordBatch!

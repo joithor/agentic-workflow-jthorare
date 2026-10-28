@@ -46,7 +46,7 @@ internal sealed class ModelPicker(IModelPickSettings settings, IModelCatalog cat
         var config = enabled ? await settings.For(agent, state, cancellationToken).ConfigureAwait(false) : ModelPickSettings.Off;
         if (!config.PickOn)
         {
-            return await Record(work, Picked(work, model: null, ModelPickedBy.Default, [], "pick-off"), cancellationToken).ConfigureAwait(false);
+            return await Record(work, await PickOff(work, cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
         }
 
         var models = config.Models ?? await catalog.ModelsOf(agent, cancellationToken).ConfigureAwait(false);
@@ -69,6 +69,20 @@ internal sealed class ModelPicker(IModelPickSettings settings, IModelCatalog cat
         }
 
         return await Choose(work, config, left, cancellationToken).ConfigureAwait(false);
+    }
+
+    // With the pick off the agent runs its own default, except that a step's floor still holds (model-pick M-9): a step with a floor runs on the cheapest model at or above it, so an install that never
+    // turned the pick on does not draft below strong. The agent's own default is unknown here (the profile's list is read only when the pick is on), so the floor model is passed, not compared.
+    private async Task<ModelPicked> PickOff(ModelPickWork work, CancellationToken cancellationToken)
+    {
+        var floor = Floor(work.Run.Floor);
+        if (floor != ModelTier.None && await catalog.ModelsOf(work.Target.Agent, cancellationToken).ConfigureAwait(false) is { Count: > 0 } models
+            && ModelCandidates.For(ModelBands.Rank(models), new ModelConstraints(floor)).Candidates is [{ } cheapest, ..])
+        {
+            return Picked(work, cheapest.Model.Slug, ModelPickedBy.Constraint, [cheapest.Model.Slug], "floor");
+        }
+
+        return Picked(work, model: null, ModelPickedBy.Default, [], "pick-off");
     }
 
     // Whether the one retry may follow a failure of the picked model (spec 7.1): a model above it is still allowed inside the pin, the cap and the floor. A Step that names its model, one that reads

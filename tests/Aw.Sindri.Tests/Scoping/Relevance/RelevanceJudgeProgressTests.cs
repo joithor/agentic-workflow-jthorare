@@ -31,6 +31,8 @@ public sealed class RelevanceJudgeProgressTests
             .ToArray();
         var lenses = Lenses();
         lenses["code"] = Lens(["surface:screen/invite-dialog"], EntryCount, nodes, [], []);
+        lenses["product"] = Lens(["surface:screen/invite-dialog"], 0, [], [], []);
+        lenses["history"] = Lens(["surface:screen/invite-dialog"], 0, [], [], []);
         return new ScopingFacts { ["brief"] = Brief().ToJsonString(), ["lenses"] = lenses.ToJsonString() };
     }
 

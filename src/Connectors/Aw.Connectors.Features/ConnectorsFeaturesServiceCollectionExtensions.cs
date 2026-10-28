@@ -38,6 +38,12 @@ public static class ConnectorsFeaturesServiceCollectionExtensions
     public static IServiceCollection AddGitHubConnectorFactory(this IServiceCollection services) =>
         services.AddSingleton<IGitHubConnectorFactory>(static sp => new GitHubConnectorFactory(sp.GetService<TimeProvider>() ?? TimeProvider.System));
 
+    /// <summary>Adds only the Slack connector factory: for a host that builds a reader per token and so registers no <see cref="ISlackReader"/> (Sindri's Host).</summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same collection.</returns>
+    public static IServiceCollection AddSlackConnectorFactory(this IServiceCollection services) =>
+        services.AddSingleton<ISlackConnectorFactory>(static sp => new SlackConnectorFactory(sp.GetService<TimeProvider>() ?? TimeProvider.System));
+
     /// <summary>Adds the Slack connector as an <see cref="IConnector"/> over the registered <see cref="ISlackReader"/> (add the reader with AddSlackReader) and the PullSlack slice.</summary>
     /// <param name="services">The service collection.</param>
     /// <param name="settings">The checked 'context.sources.slack' entry.</param>

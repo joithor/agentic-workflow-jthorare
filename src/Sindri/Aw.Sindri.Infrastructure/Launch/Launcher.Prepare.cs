@@ -14,6 +14,7 @@ internal sealed partial class Launcher
 {
     private async ValueTask<Result<Prepared>> Prepare(LaunchRequest request, AgentEntry entry, CancellationToken cancellationToken)
     {
+        var created = request.Worktree is { } expected && !Directory.Exists(expected);
         var located = await WorkDirectory(request, cancellationToken).ConfigureAwait(false);
         if (located.IsError)
         {
@@ -24,6 +25,11 @@ internal sealed partial class Launcher
         if (await Guard(request, entry, workDir, cancellationToken).ConfigureAwait(false) is { } refusedStart)
         {
             return refusedStart;
+        }
+
+        if (await PrepareWorkspace(request, workDir, created, cancellationToken).ConfigureAwait(false) is { } prepareFailed)
+        {
+            return prepareFailed;   // SND-LAUNCH-021: a step failure, nothing started
         }
 
         try
@@ -53,6 +59,23 @@ internal sealed partial class Launcher
         {
             return KernelErrors.Unavailable.With($"the launch's files could not be written: {e.Message}");
         }
+    }
+
+    /// <summary>
+    /// The host-side prepare (sandbox spec §3.8, SB-11) of a Step's own worktree: after the guard and before the sandbox, outside the session cap (it queues on the heavy lock). An attended open, a Step with no
+    /// worktree (it works in the owner's checkout) and the evaluator are never prepared. A launch with no known base commit reaches the prepare with none, and the prepare then skips it: the worktree's lockfile is never read.
+    /// </summary>
+    private async ValueTask<Error?> PrepareWorkspace(LaunchRequest request, string workDir, bool created, CancellationToken cancellationToken)
+    {
+        if (parts.Prepare is not { } prepare || request.Attended || request.Step is null || request.Worktree is null || request.Evaluator is not null)
+        {
+            return null;
+        }
+
+        var baseCommit = await RunBaseCommits.Resolve(request, Path.Combine(parts.Options.LaunchDirectory, "bases"), workDir, created, cancellationToken).ConfigureAwait(false);
+        // why: a null base (the worktree pre-dated the run's first launch and the engine named no commit) makes the prepare skip silently: HEAD or the worktree's lockfile may hold an agent's edit, and the launcher has no logger
+        var prepared = await prepare.Prepare(request with { BaseCommit = baseCommit }, workDir, progress: null, cancellationToken).ConfigureAwait(false);   // progress: no launch progress channel exists yet
+        return prepared.IsError ? prepared.Error : null;
     }
 
     /// <summary>Mints the launch's secret and writes its hash; returns the hash file as it was before (a live session of this launch may own it), or null when there was none.</summary>

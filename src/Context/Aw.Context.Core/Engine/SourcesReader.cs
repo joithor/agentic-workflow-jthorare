@@ -17,7 +17,7 @@ internal static partial class SourcesReader
     private static readonly string[] _onyx = ["url", "token", "version", "managed"];
     private static readonly string[] _linear = ["teams", "url", "token"];
     private static readonly string[] _github = ["repos", "host", "allowPrivateHost", "token"];
-    private static readonly string[] _slack = ["channels", "retainDays", "token"];
+    private static readonly string[] _slack = ["channels", "retainDays", "token", "workspace"];
 
     /// <summary>The first problem with the shape of <paramref name="context"/>'s 'sources' map, or null.</summary>
     /// <param name="context">The whole 'context:' section (a map).</param>

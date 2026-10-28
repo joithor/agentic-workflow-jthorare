@@ -43,6 +43,6 @@ internal sealed partial class QueryPipeline
             allowed.UnionWith(scope.Value.Allowed);
         }
 
-        return ([.. catalogSources, new RecordStoreSource(lexical.Leg, new AudienceScope(allowed))], degraded);
+        return ([.. catalogSources, new RecordStoreSource(lexical.Leg, lexical.Store, new AudienceScope(allowed), clock)], degraded);
     }
 }

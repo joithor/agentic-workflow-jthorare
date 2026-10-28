@@ -1,6 +1,5 @@
 using Aw.Kernel;
 using Aw.Sindri.Core;
-using Aw.Sindri.Core.Onyx;
 using Aw.Sindri.Core.Secrets;
 
 namespace Aw.Sindri.Testing;

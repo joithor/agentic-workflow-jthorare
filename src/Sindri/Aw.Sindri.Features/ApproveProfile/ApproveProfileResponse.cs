@@ -23,4 +23,8 @@ public sealed record ApproveProfileResponse(ProfileHash Hash, IReadOnlyList<stri
     /// <summary>For each changed 'index.roles.&lt;role&gt;' or 'index.demote.&lt;role&gt;' key, how many files on the repo's HEAD it matches ('repos.web.index.roles.test: 412 files on HEAD (was 0)') or that the count is unavailable; null, and left out of the JSON, when none changed (#1148).</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<string>? RoleCounts { get; init; }
+
+    /// <summary>The notice the owner approves along with the profile when model choice is on (model-pick spec 8); null, and left out of the JSON, otherwise.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? Notice { get; init; }
 }

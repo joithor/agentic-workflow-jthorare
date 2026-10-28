@@ -195,7 +195,7 @@ are null until set.
 
 `JudgeConfig` (`config.json`, written indented): `questions` (required: name → `{enabled, threshold?, providers?}`,
 `threshold` 0–1, absent for the question's own, `providers` from `rules`, `jev`, `claude-cli`, `codex-cli`, `cursor-cli`), `providers?`
-(`agentClis?`: agent CLI names in priority order, `jev?`: false drops Jev), `promptSort?` (`enabled?`, `budgetMs?`
+(`agentClis?`: agent CLI names in priority order, `jev?`: false drops Jev, `inputCapChars?`: the cap on what Jev is sent and on `choose`'s prompt facts, 1000–256000, default 160000), `promptSort?` (`enabled?`, `budgetMs?`
 200–1050, `cooldownPrompts?` a whole number ≥ 0, `scaffolds?`: `brief`, `bugfix`, `ui-evidence`, `plan-first` → on).
 Unknown keys are ignored; a wrong type, a missing required field, an unknown name or a value out of range makes the
 whole file invalid (AW-JUDGE-007): readers use the defaults (wake-gate enabled at 0.7) and log one warning, and
@@ -248,7 +248,7 @@ decides or escalates, and before its envelope is written, the judge prunes old d
 - **Fixed chain.** Jev, then a rules provider that answers `m1`, the cheapest key, whenever the chain reaches it (`FallbackRules` would not do: it only runs after a model answered below its threshold, not when Jev has no key or times out). The agent CLIs never see this prompt: `config.json`'s `model-pick` entry and `--providers` can only narrow the chain (to `rules` alone, say), never add to it. The rules answer's reason is why Jev did not decide: the judge's reason codes (`no-api-key`, `network-error`, `below-threshold`, `http-NNN`) plus `unknown-key` (an answer that is not a candidate) and `jev-input-rejected` (a 4xx, or a timeout; the pick is not re-cut and retried), or `rules` when Jev was not in the chain. The envelope reports the decision `id` like `choose`.
 - **Pack filters, before the cap** (`ModelPickPack`): a file or fact whose path matches `denyPaths` is dropped as `denied`; one whose name matches `.env*`, `*.pem`, `*.key`, `*.p12`, `id_rsa*`, `secrets*`, `credentials*` or `*.tfvars`, or whose text the secret scan flags (`IInputRedactor` changes it), is dropped whole as `secret`; a secret in the brief is masked at its span and the rest is sent. The prompt says only how many files were dropped and why ("3 files not shown: 2 secret, 1 denied"): their names stay local, in the stored form.
 - **Cap.** The brief and the files' text together are cut to `ModelPickQuestion.PackCap` = 100,000 characters (phase M-0 replaces it with the measured cap), by whole files with `src/` first (`UntrustedText.CappedFiles`, beside `CappedDiff`, which shares its order and its omitted-files note); a single file over the cap is cut at a line and named as cut. The prompt names the files by path and size and never repeats their text, which rides once, in the request's state.
-- **Jev's input cap is per question** (`QuestionDefinition.InputCapChars`, `QuestionRef.InputCapChars`): `model-pick` sets `JevInputCap` (the pack's cap plus 30,000 for the candidates, history and JSON escaping); every other question keeps the 16,000 of `InputCap.MaxChars`.
+- **Jev's input cap is per question** (`QuestionDefinition.InputCapChars`, `QuestionRef.InputCapChars`): `model-pick` sets `JevInputCap` (the pack's cap plus 30,000 for the candidates, history and JSON escaping); every other question gets `providers.inputCapChars` (default 160,000).
 - **Stored form.** The decision row keeps the brief's SHA-256, the candidates, the files with their sizes, and what was dropped, omitted or cut (`StoredForm`), never any file or brief text, not even for a call that escalated as `invalid-input`. `adjudicate` has nothing to re-ask for it.
 
 The input names of `wake-gate`, `brief-scope` and `ask-check` are hook contract; the other seven (`choose` and `model-pick` included) are the C# judge's own
@@ -331,15 +331,18 @@ undeclared fields dropped.
 
 ### Jev
 
-`POST https://api.typesafe.ai/v1/systemone` with `{state: <input, redacted and capped like the stored input>, model: "jev-1.13.0", questions: {decision:
+`POST https://api.typesafe.ai/v1/systemone` with `{state: <input, redacted and capped at Jev's cap>, model: "jev-1.13.0", questions: {decision:
 {type: "choice", instructions: <prompt, redacted and capped>, criteria: {<output>: <criterion or the output>}}}}` and
 `Authorization: Bearer <key>`; text classes only. The key comes from `ISecretSource` (`TYPESAFE_API_KEY`, else the
 keychain), read inside the question's budget: a keychain that sits on its unlock prompt ends as `timeout`, not as
 latency added in front of the call. Jev is the one provider that sends the input to a third party on the judge's own key, so `JevProvider`
-redacts (then caps at `InputCap.MaxChars`, or at the question's own `InputCapChars`: `model-pick` sends a whole pack) both the state and the prompt, which embeds input fields word for word
+redacts (then caps at the question's own `InputCapChars` (`model-pick` sends a whole pack), else at `providers.inputCapChars`, else at 160,000 characters) both the state and the prompt, which embeds input fields word for word
 (ask-check's transcript tail, a rule-check hunk, a brief's proof command). claude and codex get the prompt as built,
 on standard input: they run on the user's own model logins, the same place the agent's session already sends that
 text. cursor-agent gets it redacted, because its prompt is an argument (The agent CLIs above).
+What Jev receives for one call, state and instructions (and the criteria) together, fits that cap: the instructions take at most half of it, the state the rest. `choose` sends its facts once, in the state (`QuestionRef.PromptWithoutInput` is its prompt without the facts section); the agent CLIs get the full prompt with the facts.
+The 160,000 default is Jev's 64k-token window at about 3 characters a token for JSON and code, less ~10k tokens for the instructions, the criteria and the answer. The cap is applied the same way to the stored input (`InputCap.MaxChars`, 16,000) and to Jev's: a value that fits goes whole; over the cap the longest strings are cut first, all to one length L with a `[truncated N chars]` marker, L being the largest length at which the whole JSON fits (a short field is never touched while a long one is); if even L = 0 doesn't fit, the value becomes `{"truncated": "<prefix>"}`. The batched call (`JevBatchClassifier`) takes the same cap.
+`choose` reads the same `providers.inputCapChars` for its prompt, which every provider gets (the agent CLIs too): the facts in `state` share it as one budget, cut longest-first to one length L with the same marker (a 60 KB brief reaches the prompt whole; before, every fact was cut to 8,000 and facts past 16,000 in total were dropped). Every other question keeps `UntrustedText.BriefCap` (8,000) for its brief.
 The answer's `choice`, `confidence` (1.0 when absent, except for `choose`, where a missing or out-of-range one is errored `unparseable-answer`) and `probabilities` become the decision.
 
 ### Rules

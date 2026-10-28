@@ -22,4 +22,11 @@ public sealed record WorkflowAgentSettings(
 
     /// <summary>No pick is made and nothing is sent to Jev: the privacy switch and the old behaviour.</summary>
     public const string Off = "off";
+
+    /// <summary>The line the approval shows when the pick is on: what is sent to Jev (model-pick spec 8).</summary>
+    public const string Notice = "Model choice is on: each agent step's brief and input files (up to 100,000 characters, secrets and denied paths removed), and for the concept scan its map summary, are sent to Jev to pick a model.";
+
+    /// <summary>True when the profile asks for the pick (<see cref="Pick"/> is 'on'); the one place that reads the word.</summary>
+    [JsonIgnore]
+    public bool PickIsOn => string.Equals(Pick, On, StringComparison.Ordinal);
 }

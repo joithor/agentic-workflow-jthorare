@@ -114,7 +114,7 @@ internal static class Engines
             new PreviewReviewFileService(new FakeReviewFileStore()), new ApplyReviewFileService(store, new FakeReviewFileStore(), new FakeCurrentUser(), clock), new PromoteMapService(store, clock));
         return new ContextMap(admin, review, new MapProposals(Build(clock, store), new ProposeFromScopeService(store, store, clock), new GetProposalsService(store, store, scrubbers)), Publishing(store), new CleanMapService(store, scrubbers, new FakeModelPort(), new FakeCurrentUser(), clock),
             new Features.ScanConcepts.ScanConceptsService(store, scrubbers, new FakeModelPort(), new NoConceptSearch(), new FakeConceptHintStore(), clock),
-            new Features.BuildMap.CheckStructureService(store, Build(clock, store), new Aw.Context.Testing.Locks.FakeHeavyJobLock()));
+            new CheckStructureService(store, Build(clock, store), new Testing.Locks.FakeHeavyJobLock()));
     }
 
     /// <summary>A scan search that finds nothing: the query tests never scan.</summary>
@@ -129,7 +129,7 @@ internal static class Engines
 
     /// <summary>The build slice over empty fakes (the query tests never build).</summary>
     private static BuildMapService Build(TimeProvider clock, FakeGraphStore store) =>
-        new(new FakeRepoReader(Repos[0], "0a1b2c3d4e5f60718293a4b5c6d7e8f901234567", new Dictionary<string, string>(StringComparer.Ordinal)), new FakeClusterSource(), new MapNamers(new FakeLabeler(), new ConceptPass(new DisabledConceptNamer(), new DisabledSymbolVectors(), new FakeConceptHintStore(), store)), new MapBuildGate(), new FakeDefaultBranch(), store, clock);
+        new(new MapInputs(new FakeRepoReader(Repos[0], "0a1b2c3d4e5f60718293a4b5c6d7e8f901234567", new Dictionary<string, string>(StringComparer.Ordinal)), new MapRecordSources(new FakeRecordStore(), new NoCodeSymbolSource())), new FakeClusterSource(), new MapNamers(new FakeLabeler(), new ConceptPass(new DisabledConceptNamer(), new DisabledSymbolVectors(), new FakeConceptHintStore(), store)), new MapBuildGate(), new FakeDefaultBranch(), store, clock);
 
     internal static IContextEngine Over(params IContextSource[] sources) => Over(new FixedSourceCatalog(sources));
 

@@ -23,9 +23,11 @@ internal sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <param name="motion">The OS reduce-motion setting.</param>
     /// <param name="apply">Applies the appearance to the theme (on the UI thread).</param>
     /// <param name="setup">The setup checklist, Settings' first section; null where the page has none (a host that shows only the local preferences).</param>
-    internal SettingsViewModel(Preferences preferences, IMotionPreference motion, Action<AppearanceSettings> apply, SetupViewModel? setup = null)
+    /// <param name="modelChoice">The read-only model-choice line (model-pick spec 8); null where the page has none.</param>
+    internal SettingsViewModel(Preferences preferences, IMotionPreference motion, Action<AppearanceSettings> apply, SetupViewModel? setup = null, ModelChoiceViewModel? modelChoice = null)
     {
         Setup = setup;
+        ModelChoice = modelChoice;
         _preferences = preferences;
         _motion = motion;
         _apply = apply;
@@ -38,6 +40,12 @@ internal sealed class SettingsViewModel : ObservableObject, IDisposable
 
     /// <summary>The setup checklist, the page's first section; null when this host has none.</summary>
     public SetupViewModel? Setup { get; }
+
+    /// <summary>The model-choice line, below the checklist; null when this host has none.</summary>
+    public ModelChoiceViewModel? ModelChoice { get; }
+
+    /// <summary>True when the page has the model-choice line.</summary>
+    public bool HasModelChoice => ModelChoice is not null;
 
     /// <summary>True when the page has the setup checklist.</summary>
     public bool HasSetup => Setup is not null;

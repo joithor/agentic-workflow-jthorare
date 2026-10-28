@@ -21,6 +21,9 @@ public sealed record QuestionDefinition<TInput>
     /// <summary>Builds the model prompt for an input.</summary>
     public required Func<TInput, string> Prompt { get; init; }
 
+    /// <summary>Builds the prompt without the input's text (see <see cref="QuestionRef.PromptWithoutInput"/>); null for a question that has none.</summary>
+    public Func<TInput, string>? PromptWithoutInput { get; init; }
+
     /// <summary>The default confidence threshold (config may override it).</summary>
     public required double Threshold { get; init; }
 
@@ -92,6 +95,7 @@ public sealed record QuestionDefinition<TInput>
         Name = Name,
         Outputs = Outputs,
         Prompt = Prompt(input),
+        PromptWithoutInput = PromptWithoutInput?.Invoke(input),
         ContentClass = ContentClass,
         ExtraProperties = ExtraProperties,
         Criteria = Criteria,

@@ -9,6 +9,7 @@ using Aw.Sindri.Features.Scoping;
 using Aw.Sindri.Testing;
 using Aw.Sindri.Testing.Scoping;
 using Aw.Sindri.Tests.Scoping.Steps;
+using Microsoft.Extensions.Logging.Abstractions;
 using static Aw.Sindri.Tests.Scoping.Relevance.RelevanceFixtures;
 
 namespace Aw.Sindri.Tests.Scoping.Relevance;
@@ -52,7 +53,7 @@ public sealed class RelevanceJudgeStepTests
         return arguments;
     }
 
-    private static RelevanceJudgeStep Step(ScriptedJudge judge) => new(judge, new PassThroughScrubber());
+    private static RelevanceJudgeStep Step(ScriptedJudge judge) => new(judge, new PassThroughScrubber(), TimeProvider.System, NullLogger<RelevanceJudgeStep>.Instance);
 
     private static JsonNode Rulings(BlockStepResult result) =>
         JsonNode.Parse(result.Result!.Outputs[FactKey.From("fact:relevanceRulings")].GetRawText())!;

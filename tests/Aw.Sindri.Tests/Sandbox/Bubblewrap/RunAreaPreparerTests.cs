@@ -1,6 +1,8 @@
+using Aw.Kernel.Json;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
+using Aw.Sindri.Host;
 using Aw.Sindri.Infrastructure.Sandbox;
 using Aw.Sindri.Tests.Sandbox.Plan;
 using Req = Aw.Sindri.Testing.Sandbox.SandboxRequests;
@@ -60,20 +62,37 @@ public sealed class RunAreaPreparerTests
     }
 
     [Fact]
-    public async Task The_run_area_gets_a_refusing_pre_push_an_empty_global_config_and_a_placeholder_plan_that_a_real_one_replaces_for_good()
+    public async Task The_run_area_gets_a_refusing_pre_push_an_empty_global_config_and_the_plan_file_that_a_second_prepare_rewrites_the_same()
     {
         using var area = new TempRunArea();
 
         Assert.Null(RunAreaPreparer.Prepare(area.Plan));
-        await File.WriteAllTextAsync(area.Root + "/area/sandbox-plan.json", "{\"real\":true}", TestContext.Current.CancellationToken);
+        var first = await File.ReadAllTextAsync(area.Root + "/area/sandbox-plan.json", TestContext.Current.CancellationToken);
         Assert.Null(RunAreaPreparer.Prepare(area.Plan));
 
         var hook = await File.ReadAllTextAsync(area.Root + "/area/githooks/pre-push", TestContext.Current.CancellationToken);
         Assert.Contains("exit 1", hook, StringComparison.Ordinal);
         Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute, OperatingSystem.IsWindows() ? default : File.GetUnixFileMode(area.Root + "/area/githooks/pre-push"));
         Assert.Equal(string.Empty, await File.ReadAllTextAsync(area.Root + "/area/gitconfig.empty", TestContext.Current.CancellationToken));
-        Assert.Equal("{\"real\":true}", await File.ReadAllTextAsync(area.Root + "/area/sandbox-plan.json", TestContext.Current.CancellationToken));
+        Assert.Equal(first, await File.ReadAllTextAsync(area.Root + "/area/sandbox-plan.json", TestContext.Current.CancellationToken));
         Assert.True(Directory.Exists(area.Root + "/area/shims"));
+    }
+
+    [Fact]
+    public async Task The_plan_file_is_the_real_plan_that_sandbox_explain_reads_back()
+    {
+        using var area = new TempRunArea("AW_SINDRI_LAUNCH_SECRET");
+
+        Assert.Null(RunAreaPreparer.Prepare(area.Plan));
+
+        var bytes = await File.ReadAllBytesAsync(area.Root + "/area/sandbox-plan.json", TestContext.Current.CancellationToken);
+        var read = AwJson.Deserialize<SandboxPlan>(bytes, AwJson.CreateOptions(SindriJsonContext.Default));
+        Assert.True(read.IsSuccess);
+        Assert.Equal(area.Plan.PlanHash, read.Value.PlanHash);
+        Assert.Equal(area.Plan.Launch, read.Value.Launch);
+        Assert.Equal(area.Plan.Mounts.Count, read.Value.Mounts.Count);
+        Assert.Null(read.Value.Environment.First(e => e.Name == "AW_SINDRI_LAUNCH_SECRET").Value);
+        Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, OperatingSystem.IsWindows() ? default : File.GetUnixFileMode(area.Root + "/area/sandbox-plan.json"));
     }
 
     [Fact]

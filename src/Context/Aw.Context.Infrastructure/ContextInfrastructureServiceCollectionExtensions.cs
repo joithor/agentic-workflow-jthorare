@@ -13,6 +13,7 @@ using Aw.Context.Core.Records;
 using Aw.Context.Core.Review;
 using Aw.Context.Core.ScopeGraph;
 using Aw.Context.Core.Search;
+using Aw.Context.Core.Sync;
 using Aw.Context.Core.Trust;
 using Aw.Context.Infrastructure.ConceptScan;
 using Aw.Context.Infrastructure.Docs;
@@ -67,6 +68,7 @@ public static class ContextInfrastructureServiceCollectionExtensions
             .AddSingleton<IIntentStore, SqliteIntentStore>()
             .AddSingleton<IRecordStore, SqliteRecordStore>()
             .AddSingleton<ILexicalLeg, SqliteLexicalLeg>()
+            .AddSingleton<IRecordFeedCatalog, ContextRecordFeedCatalog>()
             .AddSingleton<IScopeRunStore, SqliteScopeRunStore>()
             .AddSingleton<IMapFileReader, MapFileReader>()
             .AddSingleton<IMapSearchIndexFactory, SqliteMapSearchIndexFactory>()

@@ -132,6 +132,18 @@ public sealed class GapJudgeStepTests
     }
 
     [Fact]
+    public async Task Without_a_parallel_argument_eight_calls_run_at_once()
+    {
+        var judge = new ScriptedJudge(static _ => Decided("real-gap"), delay: TimeSpan.FromMilliseconds(30));
+        var items = Enumerable.Range(1, 20).Select(static i => Candidate("C" + i.ToString(CultureInfo.InvariantCulture), "Job " + i.ToString(CultureInfo.InvariantCulture))).ToArray();
+
+        var result = await new GapJudgeStep(judge, new PassThroughScrubber()).Run(Context(Candidates(items)), Token);
+
+        Assert.Equal("ruled", result.Result!.Outcome.Value);
+        Assert.Equal(8, judge.MostAtOnce);
+    }
+
+    [Fact]
     public async Task An_escalated_answer_is_an_uncertain_ruling_with_its_reason()
     {
         var judge = new ScriptedJudge(static _ => new ChooseAnswer(ChooseStatus.Escalated, Choice: null, "below-threshold", DecisionRef: "JD-3"));

@@ -7,4 +7,5 @@ namespace Aw.Sindri.Ui.Api;
 /// <param name="Problem">Why the live file doesn't load, if it doesn't.</param>
 /// <param name="Source">The live profile file, when it loads.</param>
 /// <param name="NeedsApproval">Sindri's verdict that the profile needs the owner's approval (the app never derives it).</param>
-internal sealed record ProfileView(string? Approved, string? Live, bool ChangedSinceApproval, string? Problem, string? Source, bool NeedsApproval);
+/// <param name="ModelPick">Sindri's verdict on model choice: 'on' or 'off' (the app never derives it); 'off' from a Sindri that doesn't serve it.</param>
+internal sealed record ProfileView(string? Approved, string? Live, bool ChangedSinceApproval, string? Problem, string? Source, bool NeedsApproval, string ModelPick = "off");

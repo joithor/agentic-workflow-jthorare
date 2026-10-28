@@ -94,6 +94,8 @@ public static class ContextFeaturesServiceCollectionExtensions
         services.TryAddSingleton<IConceptNamer, DisabledConceptNamer>();   // a host that sets up labeling (AddContextLabeling) replaces it
         services.TryAddSingleton<ISymbolVectors, DisabledSymbolVectors>();   // the host that wires the code index (Sindri's Host adapter) replaces it
         services.TryAddScoped<ConceptPass>();
+        services.TryAddScoped<MapRecordSources>();   // scoped: it reads the code index, which is read in the call's scope
+        services.TryAddScoped<MapInputs>();
         services.TryAddScoped<MapNamers>();   // scoped: the concept step reads the code index, which is read in the call's scope
         services.TryAddSingleton<IHeavyJobLock, UnconfiguredHeavyJobLock>();   // a host that wires the box-wide lock replaces it
         services.TryAddSingleton<UnconfiguredBacktest>();   // hosts that wire the backtest ports (Infrastructure) replace these
@@ -113,7 +115,7 @@ public static class ContextFeaturesServiceCollectionExtensions
         .AddScoped<IService<RefreshDocsRequest, RefreshReport>, RefreshDocsService>()
         .AddScoped<IService<SyncSourcesRequest, SyncReport>, SyncSourcesService>()
         .AddScoped<ContextSources>()
-        .AddSingleton<SyncLocks>()
+        .AddSingleton<RecordFeedSync>()
         .AddSingleton<RepoTreeCache>()
         .AddScoped<IService<PreviewMapRequest, MapFilePreview>, PreviewMapService>()
         .AddScoped<IService<ImportMapRequest, MapImported>, ImportMapService>()

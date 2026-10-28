@@ -153,7 +153,7 @@ public sealed partial class SindriApp : Application, IDisposable
         {
             theme(appearance);
             shell.ApplyAppearance(appearance); // the lists' caps follow the text scale (screens §4.1)
-        }, shell.Setup);
+        }, shell.Setup, shell.Health.ModelChoice);
         try
         {
             await settings.Load(CancellationToken.None).ConfigureAwait(true);

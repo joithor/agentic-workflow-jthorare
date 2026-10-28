@@ -19,7 +19,7 @@ internal static class LinearIssueItem
         return new RecordItem(
             RecordKey.From(Prefix + issue.Id), RecordKind.Issue, issue.Title, LinearText.Of(issue), issue.Creator?.Name, issue.Url, State(issue.State?.Type), issue.State?.Name,
             issue.CreatedAt, issue.UpdatedAt, issue.CompletedAt ?? issue.CanceledAt, SourceVersion.From(issue.UpdatedAt.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)),
-            Links(issue), Repo: null, issue.Team is { } team && AudienceKey.TryFrom("linear:" + team.Id, out var audience) ? audience : null);
+            Links(issue), Repo: null, issue.Team is { } team && AudienceKey.TryFrom("linear:" + team.Key, out var audience) ? audience : null);
     }
 
     private static RecordState? State(string? type) => type switch

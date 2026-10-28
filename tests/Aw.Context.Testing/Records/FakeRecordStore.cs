@@ -176,7 +176,8 @@ public sealed class FakeRecordStore : IRecordStore
         var unchanged = 0;
         foreach (var write in writes)
         {
-            if (_records.TryGetValue(write.Record.Key, out var existing) && existing.RemovedAt is null && existing.Version == write.Record.Version && existing.TextHash == write.Record.TextHash)
+            if (_records.TryGetValue(write.Record.Key, out var existing) && existing.RemovedAt is null && existing.Version == write.Record.Version && existing.TextHash == write.Record.TextHash
+                && existing.Ruleset == write.Record.Ruleset && existing.Blocked == write.Record.Blocked)
             {
                 unchanged++;
                 continue;

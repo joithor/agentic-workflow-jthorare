@@ -3,8 +3,8 @@ namespace Aw.Context.Infrastructure.Records;
 /// <summary>The record store's SQL (context.db, migration 0018_s4_record_store). Values are always bound, never formatted in.</summary>
 internal static class RecordSql
 {
-    /// <summary>A source's one place in its feed lives in source_cursor under this repo.</summary>
-    internal const string CursorRepo = "*";
+    /// <summary>A source's one place in its record feed lives in source_cursor under this repo, apart from the intent sync's own row at '*' (IntentSql.Synced merges its cursor with COALESCE; this row is replaced whole), so neither clobbers the other.</summary>
+    internal const string CursorRepo = "records";
 
     /// <summary>The page commit's transaction is a write session, so the freed pages of every delete are zeroed (spec §4.5).</summary>
     internal const string SecureDelete = "PRAGMA secure_delete = ON";
@@ -51,7 +51,7 @@ internal static class RecordSql
     internal const string DeleteChunks = "DELETE FROM chunk WHERE record = @key";
 
     internal const string SavePosition =
-        "INSERT INTO source_cursor (source, repo, cursor, last_sync, last_error, phase, backfill_cursor) VALUES (@source, '*', @cursor, @at, NULL, @phase, @backfill) " +
+        "INSERT INTO source_cursor (source, repo, cursor, last_sync, last_error, phase, backfill_cursor) VALUES (@source, 'records', @cursor, @at, NULL, @phase, @backfill) " +
         "ON CONFLICT (source, repo) DO UPDATE SET cursor = excluded.cursor, last_sync = excluded.last_sync, last_error = NULL, phase = excluded.phase, backfill_cursor = excluded.backfill_cursor";
 
     internal const string BumpRecordStamp = "UPDATE store_epoch SET record_stamp = record_stamp + 1 WHERE id = 1";
@@ -73,7 +73,7 @@ internal static class RecordSql
         "SELECT " + Columns + " FROM source_record WHERE (@source IS NULL OR source = @source) AND (@repo IS NULL OR repo = @repo) AND (@kind IS NULL OR kind = @kind) " +
         "AND (@removed = 1 OR removed_at IS NULL) AND (@after IS NULL OR key > @after) ORDER BY key LIMIT @limit";
 
-    internal const string ReadPosition = "SELECT cursor, phase, backfill_cursor FROM source_cursor WHERE source = @source AND repo = '*'";
+    internal const string ReadPosition = "SELECT cursor, phase, backfill_cursor FROM source_cursor WHERE source = @source AND repo = 'records'";
 
     internal const string ReadStamps = "SELECT record_stamp, delete_epoch FROM store_epoch WHERE id = 1";
 

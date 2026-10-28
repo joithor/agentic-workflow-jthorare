@@ -7,7 +7,10 @@ using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Credentials;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
+using Aw.Sindri.Infrastructure.Launch;
+using Aw.Sindri.Infrastructure.Sandbox;
 using Aw.Sindri.Infrastructure.Sandbox.Launch;
+using Aw.Sindri.Tests.Sandbox.Egress;
 using Aw.Sindri.Testing;
 using Aw.Sindri.Testing.Sandbox;
 using Microsoft.Extensions.Time.Testing;
@@ -16,15 +19,22 @@ namespace Aw.Sindri.Tests.Sandbox.Launch;
 
 /// <summary>The sandbox step's launch parts: the plan request from the launch, the login and the learn history; the egress and its release.</summary>
 [Lane(TestLane.Unit)]
-public sealed class SandboxLaunchStagesTests
+public sealed class SandboxLaunchStagesTests : IDisposable
 {
     private readonly FakeTimeProvider _clock = new(KnownInstants.Epoch);
-    private readonly StubInputs _inputs = new();
-    private readonly StubEgress _egress = new();
+    private readonly StubInputs _inputs;
+    private readonly TempDirectory _temp = new();
     private readonly FakeModelCredentialSource _login = new FakeModelCredentialSource(ModelLoginSource.OwnerCopy).With(AgentId.From("claude-code"), LoginState.Ready);
 
     private SandboxLaunchStages Make(params IModelCredentialSource[] logins) =>
-        new(new NoProfile(), new EmptyLearn(), logins.Length == 0 ? [_login] : logins, _inputs, _egress, _clock);
+        new(new NoProfile(), new EmptyLearn(), logins.Length == 0 ? [_login] : logins, _inputs, Registry(), _clock);
+
+    public SandboxLaunchStagesTests() => _inputs = new StubInputs(_temp.Path);
+
+    public void Dispose() => _temp.Dispose();
+
+    private LaunchSandboxRegistry Registry() =>
+        new(new EgressService(new FakeEgressResolver(new Dictionary<string, System.Net.IPAddress[]>(StringComparer.Ordinal)), new FakeEgressDialer(), static _ => "/nonexistent/socat", Path.Combine(_temp.Path, "run")));
 
     private static LaunchRequest Step() =>
         A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: null, Ref: new StepRef("build", "agent"))).Build();
@@ -56,18 +66,48 @@ public sealed class SandboxLaunchStagesTests
     }
 
     [Fact]
-    public async Task StartEgress_hands_the_plan_network_to_the_egress_and_Release_stops_it()
+    public async Task StartEgress_without_socat_refuses_with_the_unavailable_code_and_Release_is_a_no_op()
     {
-        var plan = SandboxPlanner.Build(SandboxMechanism.Bubblewrap, (await Make().Request(Step(), CancellationToken.None)).Value).Value;
         var stages = Make();
+        var plan = await PlanFor(new StepPolicy([], StepPermissionMode.Default, WritablePath: null));
 
         var started = await stages.StartEgress(plan, CancellationToken.None);
         await stages.Release(plan.Launch, CancellationToken.None);
 
-        Expect.True(started.IsSuccess);
-        Expect.True(ReferenceEquals(plan.Network, _egress.Started[plan.Launch]));
-        Expect.True(_egress.Released.Contains(plan.Launch));
+        Expect.True(started.IsError && string.Equals(started.Error.Code, SindriErrors.LaunchSandboxUnavailable.Code, StringComparison.Ordinal));
     }
+
+    [Fact]
+    public async Task A_claude_Step_gets_its_policy_file_rewritten_with_the_plan_and_no_extra_arguments()
+    {
+        var policy = new StepPolicy([], StepPermissionMode.Default, WritablePath: null);
+        var plan = await PlanFor(policy);
+        _inputs.Form = PolicyForm.ClaudeSettingsFile;
+
+        var args = await Make().WritePolicy(Asked(policy), plan, CancellationToken.None);
+
+        Expect.True(args.IsSuccess && args.Value.Count == 0);
+        Expect.True(File.Exists(StepPolicyFile.PathFor(_inputs.PolicyDirectory(), plan.Launch)));
+    }
+
+    [Fact]
+    public async Task A_codex_Step_gets_the_override_arguments_and_no_file()
+    {
+        var policy = new StepPolicy([], StepPermissionMode.Default, WritablePath: null);
+        var plan = await PlanFor(policy);
+        _inputs.Form = PolicyForm.CodexOverrides;
+
+        var args = await Make().WritePolicy(Asked(policy), plan, CancellationToken.None);
+
+        Expect.True(args.IsSuccess && args.Value.Count > 0);
+        Expect.True(!File.Exists(StepPolicyFile.PathFor(_inputs.PolicyDirectory(), plan.Launch)));
+    }
+
+    private static LaunchRequest Asked(StepPolicy policy) =>
+        A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: policy, Ref: new StepRef("build", "agent"))).Build();
+
+    private async Task<SandboxPlan> PlanFor(StepPolicy policy) =>
+        SandboxPlanner.Build(SandboxMechanism.Bubblewrap, (await Make().Request(Asked(policy), CancellationToken.None)).Value).Value;
 
     private sealed class NoProfile : IApprovedProfile
     {
@@ -79,8 +119,18 @@ public sealed class SandboxLaunchStagesTests
         public ValueTask<LearnHistory> Read(string repo, CancellationToken cancellationToken) => ValueTask.FromResult(new LearnHistory(FirstLearnRun: null, LearnRuns: 0, EndedAt: null));
     }
 
-    private sealed class StubInputs : ISandboxLaunchInputs
+    private sealed class StubInputs(string directory) : ISandboxLaunchInputs
     {
+        public PolicyForm Form { get; set; }
+
+        public string PolicyDirectory() => directory;
+
+        public PolicyForm PolicyFormOf(AgentId agent) => Form;
+
+        public DenialCounter? DenialCounterFor(LaunchId launch) => null;
+
+        public (string? Transcript, TranscriptKind Kind, string? FailOpenLog) DenialFiles(LaunchId launch) => (null, TranscriptKind.Claude, null);
+
         public SandboxHostFacts Host() => SandboxRequests.Host;
 
         public ValueTask<string> GitCommonDir(string repoPath, CancellationToken cancellationToken) => ValueTask.FromResult(repoPath + "/.git");
@@ -92,24 +142,5 @@ public sealed class SandboxLaunchStagesTests
         public int SindriPort() => 7480;
 
         public int ProxyPort() => 3128;
-    }
-
-    private sealed class StubEgress : ILaunchEgress
-    {
-        public Dictionary<LaunchId, PlanNetwork> Started { get; } = [];
-
-        public List<LaunchId> Released { get; } = [];
-
-        public ValueTask<Result<Unit>> Start(LaunchId launch, PlanNetwork network, CancellationToken cancellationToken)
-        {
-            Started[launch] = network;
-            return ValueTask.FromResult<Result<Unit>>(Unit.Value);
-        }
-
-        public ValueTask Release(LaunchId launch)
-        {
-            Released.Add(launch);
-            return ValueTask.CompletedTask;
-        }
     }
 }

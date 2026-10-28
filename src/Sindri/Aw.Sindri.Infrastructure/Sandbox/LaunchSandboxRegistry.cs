@@ -5,7 +5,6 @@ using Aw.Sindri.Core.Workflow.Engine;
 
 namespace Aw.Sindri.Infrastructure.Sandbox;
 
-#pragma warning disable MA0182 // until the launcher's sandbox step (SB-5a flow) uses it
 #pragma warning disable CA2000 // the registry owns every egress it holds and disposes it in Release and DisposeAsync
 /// <summary>
 /// The running egress of every launch in flight (sandbox spec §3.2, SB-5a): the launcher starts it before the self-check, the session's end disposes it

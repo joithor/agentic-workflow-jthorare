@@ -22,7 +22,7 @@ public sealed class RecordDecisionsTests
 
     private static RecordItem Issue(DateTimeOffset now) => new(
         _issue, RecordKind.Issue, "Pane resize limits", $"Pane resize: we agreed {Quote}, anything narrower is clamped.", Author: null, Url: null, RecordState.Open, StateRaw: null,
-        CreatedAt: null, now.AddDays(-1), ClosedAt: null, SourceVersion.From("v1"), Links: [], Repo: null, Audience: AudienceKey.From("github:acme/shop"));
+        CreatedAt: null, now.AddDays(-1), ClosedAt: null, SourceVersion.From("v1"), Links: [], Repo: null, Audience: AudienceKey.From("repo:acme/shop"));
 
     private static string Section(bool labeling) => "{\"labeling\":{\"enabled\":" + (labeling ? "true" : "false") + "}}";
 

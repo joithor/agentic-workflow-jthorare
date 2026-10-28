@@ -15,6 +15,7 @@ using Aw.Context.Core.ScopeGraph;
 using Aw.Context.Core.Search;
 using Aw.Context.Core.Sync;
 using Aw.Context.Core.Trust;
+using Aw.Context.Core.Vectors;
 using Aw.Context.Infrastructure.ConceptScan;
 using Aw.Context.Infrastructure.Docs;
 using Aw.Context.Infrastructure.Eval;
@@ -33,6 +34,7 @@ using Aw.Context.Infrastructure.Scrubbing;
 using Aw.Context.Infrastructure.Search;
 using Aw.Context.Infrastructure.Sources;
 using Aw.Context.Infrastructure.Store;
+using Aw.Context.Infrastructure.Vectors;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -69,6 +71,7 @@ public static class ContextInfrastructureServiceCollectionExtensions
             .AddSingleton<IRecordStore, SqliteRecordStore>()
             .AddSingleton<ILexicalLeg, SqliteLexicalLeg>()
             .AddSingleton<IRecordFeedCatalog, ContextRecordFeedCatalog>()
+            .AddSingleton<IVectorMatrixCache, VectorMatrixCache>()
             .AddSingleton<IScopeRunStore, SqliteScopeRunStore>()
             .AddSingleton<IMapFileReader, MapFileReader>()
             .AddSingleton<IMapSearchIndexFactory, SqliteMapSearchIndexFactory>()

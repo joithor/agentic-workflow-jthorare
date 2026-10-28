@@ -9095,6 +9095,74 @@ static Aw.Context.Core.Records.RecordHit.operator ==(Aw.Context.Core.Records.Rec
 Aw.Context.Core.Extract.IRepoReader.BlobIds(Aw.Context.Core.Engine.ContextRepo! repo, string! commit, System.Collections.Generic.IReadOnlyList<string!>! paths, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyDictionary<string!, string!>!>!>
 Aw.Context.Core.Sync.RecordBatches
 static Aw.Context.Core.Sync.RecordBatches.From(Aw.Context.Core.Sources.SourceId source, Aw.Context.Core.Sync.RecordPage! page, Aw.Context.Core.Records.SyncPhase phase, Aw.Context.Core.Trust.Scrubbers! scrubbers, System.DateTimeOffset at) -> Aw.Context.Core.Records.RecordBatch!
+Aw.Context.Core.Records.ChunkToEmbed
+Aw.Context.Core.Records.ChunkToEmbed.<Clone>$() -> Aw.Context.Core.Records.ChunkToEmbed!
+Aw.Context.Core.Records.ChunkToEmbed.ChunkToEmbed(string! Key, string! Text, string! TextHash) -> void
+Aw.Context.Core.Records.ChunkToEmbed.Deconstruct(out string! Key, out string! Text, out string! TextHash) -> void
+Aw.Context.Core.Records.ChunkToEmbed.Equals(Aw.Context.Core.Records.ChunkToEmbed? other) -> bool
+Aw.Context.Core.Records.ChunkToEmbed.Key.get -> string!
+Aw.Context.Core.Records.ChunkToEmbed.Key.init -> void
+Aw.Context.Core.Records.ChunkToEmbed.Text.get -> string!
+Aw.Context.Core.Records.ChunkToEmbed.Text.init -> void
+Aw.Context.Core.Records.ChunkToEmbed.TextHash.get -> string!
+Aw.Context.Core.Records.ChunkToEmbed.TextHash.init -> void
+Aw.Context.Core.Records.IRecordStore.ChunksToEmbed(string! model, int limit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Records.ChunkToEmbed!>!>!>
+Aw.Context.Core.Vectors.ChunkEmbeddings
+Aw.Context.Core.Vectors.ChunkEmbeddings.<Clone>$() -> Aw.Context.Core.Vectors.ChunkEmbeddings!
+Aw.Context.Core.Vectors.ChunkEmbeddings.ChunkEmbeddings(string! Model, System.Collections.Generic.IReadOnlyList<System.ReadOnlyMemory<float>>! Vectors) -> void
+Aw.Context.Core.Vectors.ChunkEmbeddings.Deconstruct(out string! Model, out System.Collections.Generic.IReadOnlyList<System.ReadOnlyMemory<float>>! Vectors) -> void
+Aw.Context.Core.Vectors.ChunkEmbeddings.Equals(Aw.Context.Core.Vectors.ChunkEmbeddings? other) -> bool
+Aw.Context.Core.Vectors.ChunkEmbeddings.Model.get -> string!
+Aw.Context.Core.Vectors.ChunkEmbeddings.Model.init -> void
+Aw.Context.Core.Vectors.ChunkEmbeddings.Vectors.get -> System.Collections.Generic.IReadOnlyList<System.ReadOnlyMemory<float>>!
+Aw.Context.Core.Vectors.ChunkEmbeddings.Vectors.init -> void
+Aw.Context.Core.Vectors.IChunkEmbedder
+Aw.Context.Core.Vectors.IChunkEmbedder.Embed(System.Collections.Generic.IReadOnlyList<string!>! texts, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Vectors.ChunkEmbeddings!>!>
+Aw.Context.Core.Vectors.IChunkEmbedder.Model.get -> string!
+Aw.Context.Core.Vectors.IVectorMatrixCache
+Aw.Context.Core.Vectors.IVectorMatrixCache.Current(string! model, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Vectors.VectorMatrix!>!>
+override Aw.Context.Core.Records.ChunkToEmbed.Equals(object? obj) -> bool
+override Aw.Context.Core.Records.ChunkToEmbed.GetHashCode() -> int
+override Aw.Context.Core.Records.ChunkToEmbed.ToString() -> string!
+override Aw.Context.Core.Vectors.ChunkEmbeddings.Equals(object? obj) -> bool
+override Aw.Context.Core.Vectors.ChunkEmbeddings.GetHashCode() -> int
+override Aw.Context.Core.Vectors.ChunkEmbeddings.ToString() -> string!
+static Aw.Context.Core.Records.ChunkToEmbed.operator !=(Aw.Context.Core.Records.ChunkToEmbed? left, Aw.Context.Core.Records.ChunkToEmbed? right) -> bool
+static Aw.Context.Core.Records.ChunkToEmbed.operator ==(Aw.Context.Core.Records.ChunkToEmbed? left, Aw.Context.Core.Records.ChunkToEmbed? right) -> bool
+static Aw.Context.Core.Vectors.ChunkEmbeddings.operator !=(Aw.Context.Core.Vectors.ChunkEmbeddings? left, Aw.Context.Core.Vectors.ChunkEmbeddings? right) -> bool
+static Aw.Context.Core.Vectors.ChunkEmbeddings.operator ==(Aw.Context.Core.Vectors.ChunkEmbeddings? left, Aw.Context.Core.Vectors.ChunkEmbeddings? right) -> bool
+Aw.Context.Core.Vectors.EmbedRecordsReport
+Aw.Context.Core.Vectors.EmbedRecordsReport.<Clone>$() -> Aw.Context.Core.Vectors.EmbedRecordsReport!
+Aw.Context.Core.Vectors.EmbedRecordsReport.Deconstruct(out int Embedded, out int Stored, out bool Done) -> void
+Aw.Context.Core.Vectors.EmbedRecordsReport.Done.get -> bool
+Aw.Context.Core.Vectors.EmbedRecordsReport.Done.init -> void
+Aw.Context.Core.Vectors.EmbedRecordsReport.EmbedRecordsReport(int Embedded, int Stored, bool Done) -> void
+Aw.Context.Core.Vectors.EmbedRecordsReport.Embedded.get -> int
+Aw.Context.Core.Vectors.EmbedRecordsReport.Embedded.init -> void
+Aw.Context.Core.Vectors.EmbedRecordsReport.Equals(Aw.Context.Core.Vectors.EmbedRecordsReport? other) -> bool
+Aw.Context.Core.Vectors.EmbedRecordsReport.Stored.get -> int
+Aw.Context.Core.Vectors.EmbedRecordsReport.Stored.init -> void
+Aw.Context.Core.Vectors.EmbedRecordsRequest
+Aw.Context.Core.Vectors.EmbedRecordsRequest.<Clone>$() -> Aw.Context.Core.Vectors.EmbedRecordsRequest!
+Aw.Context.Core.Vectors.EmbedRecordsRequest.BatchSize.get -> int
+Aw.Context.Core.Vectors.EmbedRecordsRequest.BatchSize.init -> void
+Aw.Context.Core.Vectors.EmbedRecordsRequest.Deconstruct(out int MaxChunks, out int BatchSize) -> void
+Aw.Context.Core.Vectors.EmbedRecordsRequest.EmbedRecordsRequest(int MaxChunks = 4096, int BatchSize = 32) -> void
+Aw.Context.Core.Vectors.EmbedRecordsRequest.Equals(Aw.Context.Core.Vectors.EmbedRecordsRequest? other) -> bool
+Aw.Context.Core.Vectors.EmbedRecordsRequest.MaxChunks.get -> int
+Aw.Context.Core.Vectors.EmbedRecordsRequest.MaxChunks.init -> void
+override Aw.Context.Core.Vectors.EmbedRecordsReport.Equals(object? obj) -> bool
+override Aw.Context.Core.Vectors.EmbedRecordsReport.GetHashCode() -> int
+override Aw.Context.Core.Vectors.EmbedRecordsReport.ToString() -> string!
+override Aw.Context.Core.Vectors.EmbedRecordsRequest.Equals(object? obj) -> bool
+override Aw.Context.Core.Vectors.EmbedRecordsRequest.GetHashCode() -> int
+override Aw.Context.Core.Vectors.EmbedRecordsRequest.ToString() -> string!
+static Aw.Context.Core.Vectors.EmbedRecordsReport.operator !=(Aw.Context.Core.Vectors.EmbedRecordsReport? left, Aw.Context.Core.Vectors.EmbedRecordsReport? right) -> bool
+static Aw.Context.Core.Vectors.EmbedRecordsReport.operator ==(Aw.Context.Core.Vectors.EmbedRecordsReport? left, Aw.Context.Core.Vectors.EmbedRecordsReport? right) -> bool
+static Aw.Context.Core.Vectors.EmbedRecordsRequest.operator !=(Aw.Context.Core.Vectors.EmbedRecordsRequest? left, Aw.Context.Core.Vectors.EmbedRecordsRequest? right) -> bool
+static Aw.Context.Core.Vectors.EmbedRecordsRequest.operator ==(Aw.Context.Core.Vectors.EmbedRecordsRequest? left, Aw.Context.Core.Vectors.EmbedRecordsRequest? right) -> bool
+Aw.Context.Core.Facade.IContextEmbed
+Aw.Context.Core.Facade.IContextEmbed.Embed(Aw.Context.Core.Vectors.EmbedRecordsRequest! request, Aw.Context.Core.Engine.ContextScope! scope, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Vectors.EmbedRecordsReport!>!>
 Aw.Context.Core.Engine.ContextSettings.DocDirectoryNames.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Aw.Context.Core.Engine.ContextSettings.DocDirectoryNames.init -> void
 Aw.Context.Core.Engine.ContextSettings.IndexedDocGlobs.get -> System.Collections.Generic.IReadOnlyList<string!>!

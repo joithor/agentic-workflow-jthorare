@@ -32,6 +32,8 @@ internal static class Usage
         "       sindri services [--json] [--no-start]   each background service: cadence, paused, last run and next slot, and a running job; exit 1 while the views rebuild or stall; starts the control plane unless --no-start",
         "       sindri services run <name> [--detach] [--json] [--no-start]   run a service now as a job and follow it (Ctrl-C cancels the job, a second Ctrl-C leaves); --detach prints the job id and returns; exit 0 succeeded, 1 failed, cancelled or Sindri stopped, 2 refused or invalid",
         "       sindri services pause|resume <name> [--no-start]   stop or restart a service's scheduled runs",
+        "       sindri index embed [--detach] [--json] [--no-start]   embed the indexed records that have no meaning vector yet, now, as 'services run index-embed' does and follows it the same way",
+        "       sindri index embed pause|resume [--no-start]   stop or restart the index-embed service's scheduled runs (the same as 'services pause|resume index-embed')",
         "       sindri jobs [--state <s>] [--kind <k>] [--json] [--no-start]   the jobs, newest first (states: running, succeeded, failed, cancelled); exit 1 while the views rebuild or stall",
         "       sindri jobs show <jobId> [--json] [--no-start]   one job: who started it, its last 200 lines, how it ended and the command that cancels it",
         "       sindri jobs cancel <jobId> [--no-start]   cancel a running job (SND-JOB-409 when it already ended)",

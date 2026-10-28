@@ -19,7 +19,6 @@ internal sealed class GetSessionService(ISessionSnapshot snapshot, IAgentCatalog
     public async ValueTask<Result<SessionView>> Handle(GetSessionRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        _ = sandboxes;   // red: the row carries its sandbox with the next commit
         if (callers.Current is null)
         {
             return SindriErrors.AuthRefused.With("a session needs a caller");
@@ -45,7 +44,9 @@ internal sealed class GetSessionService(ISessionSnapshot snapshot, IAgentCatalog
     private async ValueTask<SessionRow> Row(ObservedSession session, string? path, CancellationToken cancellationToken)
     {
         var steps = await LaunchSteps.Of(launches, session.LaunchId is { } id ? [id] : [], cancellationToken).ConfigureAwait(false);
-        return SessionRows.Of(session, catalog.Resolve(session.Ref.Provider), path, session.LaunchId is { } launch ? steps.GetValueOrDefault(launch) : null);
+        var sandboxed = await LaunchSandboxes.Of(launches, sandboxes, session.LaunchId is { } sandboxId ? [sandboxId] : [], cancellationToken).ConfigureAwait(false);
+        return SessionRows.Of(session, catalog.Resolve(session.Ref.Provider), path, session.LaunchId is { } launch ? steps.GetValueOrDefault(launch) : null,
+            session.LaunchId is { } sandboxLaunch ? sandboxed.GetValueOrDefault(sandboxLaunch) : null);
     }
 
     private async ValueTask<string?> RepoPath(ObservedSession session, CancellationToken cancellationToken)

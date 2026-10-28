@@ -41,7 +41,12 @@ internal static class SessionScenarios
     /// <summary>What the fake cgroup answers for the sandboxed launch's scope: 2.1 GiB in use.</summary>
     internal const long MemoryInUse = 2_254_857_830;
 
-    /// <summary>The sandbox the sandboxed scenarios launch with: the fixture Step's plan, 12 GiB of memory.</summary>
+    /// <summary>What 'launch.started' records for the sandboxed scenarios' Step: writes to the fixture worktree, 12 GiB of memory.</summary>
+    internal static SandboxSummary SandboxSummary { get; } = new(
+        SandboxMechanism.Bubblewrap, "9f2c0a41d8e6", [Req.Worktree], ["model", "packages"], NetworkMode.Enforce, InnerState.On, new SandboxLimitsSummary("12GiB", "400%", 2048, "70m"),
+        new SandboxCredentialsSummary(GithubCredentials.None), ModelLoginSource.OwnerCopy);
+
+    /// <summary>The plan file the launcher stored for it: the fixture Step's plan with 12 GiB of memory.</summary>
     internal static SandboxPlan SandboxPlan { get; } = SandboxPlannerTests.Build(Req.WriteScope) with { Limits = SandboxPlannerTests.Build(Req.WriteScope).Limits with { MemoryMaxBytes = 12L * 1024 * 1024 * 1024 } };
 
     private static readonly Dictionary<string, UnavailableReason> _reasons = new(StringComparer.Ordinal)
@@ -78,7 +83,7 @@ internal static class SessionScenarios
             var item = "ITM-00000000000000000000000000000001";
             var sandboxed = _sandboxed.Contains(scenario, StringComparer.Ordinal);
             await LaunchScenarios.Started(host, LaunchId.From(SessionsRig.Launch), item, ViewerOutcomeKind.Skipped, ct, LaunchScenarios.ViewerOf("none", "none", ViewerOutcomeKind.Skipped),
-                new LaunchStep(InstanceAddress.From(item + "/step/1"), "build", 2), agent: "cursor", sandbox: sandboxed ? SandboxPlan.ToSummary() : null);
+                new LaunchStep(InstanceAddress.From(item + "/step/1"), "build", 2), agent: "cursor", sandbox: sandboxed ? SandboxSummary : null);
             if (sandboxed && scenario != "cursor-sandbox-unavailable")
             {
                 _ = Directory.CreateDirectory(Path.Combine(host.Home, "launches"));   // the plan file the launcher stored; the unavailable scenario leaves it out

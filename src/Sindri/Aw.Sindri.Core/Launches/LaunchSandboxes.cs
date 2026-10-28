@@ -12,6 +12,22 @@ public static class LaunchSandboxes
     /// <param name="ids">The launches the sessions about to be served name.</param>
     /// <param name="cancellationToken">Cancels the reads.</param>
     /// <returns>The sandboxes by launch id.</returns>
-    public static ValueTask<IReadOnlyDictionary<LaunchId, SessionSandbox>> Of(ILaunchViews launches, ISessionSandboxes reader, IEnumerable<LaunchId> ids, CancellationToken cancellationToken) =>
-        throw new NotSupportedException();
+    public static async ValueTask<IReadOnlyDictionary<LaunchId, SessionSandbox>> Of(ILaunchViews launches, ISessionSandboxes reader, IEnumerable<LaunchId> ids, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(launches);
+        ArgumentNullException.ThrowIfNull(reader);
+        ArgumentNullException.ThrowIfNull(ids);
+        var found = new Dictionary<LaunchId, SessionSandbox>();
+        foreach (var id in ids.Distinct())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var row = await launches.Get(id, cancellationToken).ConfigureAwait(false);
+            if (row.IsSuccess && row.Value is { Sandbox: { } summary })
+            {
+                found[id] = await reader.Read(id, summary, cancellationToken).ConfigureAwait(false);   // a launch the view can't read leaves its session without a sandbox: it is decoration on a row the collector made
+            }
+        }
+
+        return found;
+    }
 }

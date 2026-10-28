@@ -218,7 +218,7 @@ internal static class LaunchScenarios
 
     private static Task SeedEngine(GoldenHost host, LaunchId launch, string item, string scenario, CancellationToken ct) =>
         scenario == "sandboxed-engine"
-            ? Started(host, launch, item, ViewerOutcomeKind.Skipped, ct, ViewerOf("none", "none", ViewerOutcomeKind.Skipped), EngineStep(item), sandbox: SessionScenarios.SandboxPlan.ToSummary())
+            ? Started(host, launch, item, ViewerOutcomeKind.Skipped, ct, ViewerOf("none", "none", ViewerOutcomeKind.Skipped), EngineStep(item), sandbox: SessionScenarios.SandboxSummary)
             : scenario == "started-engine"
             ? Started(host, launch, item, ViewerOutcomeKind.Skipped, ct, ViewerOf("none", "none", ViewerOutcomeKind.Skipped), EngineStep(item))
             : Failed(host, launch, item, "SND-LAUNCH-009", "The launch timed out (fix: run `sindri doctor`)", LaunchStage.Host, ct, EngineStep(item));

@@ -678,7 +678,7 @@ edges:
   - from: Sindri
     to: Embeddings
     kind: project
-    status: planned
+    status: current
     note: "Host only: binds Context's vector ports (IQueryEmbedder, IVectorScan) to Aw.Embeddings with its own registrations (a compose edge into tier 0 is illegal, DEPS-COMPOSE-001), as it binds ISymbolVectors"
   - from: Sindri
     to: Connectors

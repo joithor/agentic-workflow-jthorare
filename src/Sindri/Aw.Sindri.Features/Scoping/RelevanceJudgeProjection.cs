@@ -23,25 +23,42 @@ internal static class RelevanceJudgeProjection
         new("noise", "the entry should never count toward scope, such as a shared shell, a primitive, an icon, a router, a cron, a test, a demo, or a cluster whose label does not match its members"),
     ];
 
-    /// <summary>The judge request for one entry, scrubbed and capped.</summary>
+    /// <summary>The judge request for one entry: the entry's JSON is scrubbed and capped here, the brief and the anchors arrive already prepared.</summary>
     /// <param name="entry">The entry.</param>
-    /// <param name="briefText">The brief's text.</param>
-    /// <param name="anchors">The anchors of the entry's lens.</param>
+    /// <param name="briefText">The brief's text, already scrubbed and capped by <see cref="Prepare"/>, so a run does that once and every request shares the one string.</param>
+    /// <param name="anchors">The anchors of the entry's lens as JSON, already scrubbed and capped by <see cref="Prepare"/>.</param>
     /// <param name="settings">The threshold and providers of the call.</param>
     /// <param name="scrubber">Redacts the text before it leaves.</param>
     /// <returns>The request.</returns>
-    internal static ChooseRequest Request(RelevanceEntry entry, string briefText, IReadOnlyList<string> anchors, JudgeSettings settings, ITextScrubber scrubber)
+    internal static ChooseRequest Request(RelevanceEntry entry, string briefText, string anchors, JudgeSettings settings, ITextScrubber scrubber)
     {
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentNullException.ThrowIfNull(scrubber);
         var facts = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["brief"] = Cap(scrubber.Scrub(briefText)),
+            ["brief"] = briefText,
             ["entry"] = Cap(scrubber.Scrub(ScopeJson.Write(Entry(entry)))),
-            ["anchors"] = Cap(scrubber.Scrub(ScopeJson.Write(ScopeJson.ToArray(anchors)))),
+            ["anchors"] = anchors,
         };
         return new ChooseRequest(Prompt, Choices, facts, settings.Threshold, settings.Providers);
     }
+
+    /// <summary>A text the way every request holds it: scrubbed, then capped.</summary>
+    /// <param name="text">The text.</param>
+    /// <param name="scrubber">Redacts the text before it leaves.</param>
+    /// <returns>The prepared text.</returns>
+    internal static string Prepare(string text, ITextScrubber scrubber)
+    {
+        ArgumentNullException.ThrowIfNull(scrubber);
+        return Cap(scrubber.Scrub(text));
+    }
+
+    /// <summary>A lens's anchors the way every request of that lens holds them: as JSON, scrubbed, then capped.</summary>
+    /// <param name="anchors">The anchors.</param>
+    /// <param name="scrubber">Redacts the text before it leaves.</param>
+    /// <returns>The prepared anchors.</returns>
+    internal static string PrepareAnchors(IReadOnlyList<string> anchors, ITextScrubber scrubber) =>
+        Prepare(ScopeJson.Write(ScopeJson.ToArray(anchors)), scrubber);
 
     private static JsonObject Entry(RelevanceEntry entry)
     {

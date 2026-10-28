@@ -48,6 +48,8 @@ public sealed class SlackIndexEndToEndTests : IDisposable
             .AddSingleton<IIdGenerator>(new SequentialIdGenerator())
             .AddSingleton<IModelPort>(new FakeModelPort())
             .AddSingleton<Context.Core.Vectors.IChunkEmbedder>(new FakeChunkEmbedder())
+            .AddSingleton<Context.Core.Vectors.IQueryEmbedder>(new FakeQueryEmbedder())
+            .AddSingleton<Context.Core.Vectors.IVectorScan>(new FakeVectorScan())
             .AddContextCore()
             .AddContextFeatures()
             .AddContextInfrastructure(name => name == "AW_SINDRI_HOME" ? _home : null)

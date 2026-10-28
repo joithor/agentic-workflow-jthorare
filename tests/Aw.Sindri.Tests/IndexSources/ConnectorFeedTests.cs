@@ -135,7 +135,7 @@ public sealed class ConnectorFeedTests
 
         public ConnectorDescription Describe() => new("github", "GitHub");
 
-        public ValueTask<Result<ConnectorPage>> Pull(Connectors.Core.SourceCursor? after, int limit, CancellationToken cancellationToken)
+        public ValueTask<Result<ConnectorPage>> Pull(Connectors.Core.SourceCursor? after, int limit, DateTimeOffset? before, CancellationToken cancellationToken)
         {
             SeenCursor = after?.Value;
             return ValueTask.FromResult<Result<ConnectorPage>>(Failure is { } failure

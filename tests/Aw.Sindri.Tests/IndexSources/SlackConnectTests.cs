@@ -191,7 +191,7 @@ public sealed class SlackConnectTests
             return ValueTask.FromResult(Failures.TryGetValue(channel, out var failure) ? Results.Failure<DateTimeOffset?>(failure) : Results.Success(LimitedUntil));
         }
 
-        public ValueTask<Result<SlackMessagePage>> History(string channel, string? oldest, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public ValueTask<Result<SlackMessagePage>> History(string channel, string? oldest, string? latest, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public ValueTask<Result<SlackMessagePage>> Replies(string channel, string threadTs, CancellationToken cancellationToken) => throw new NotSupportedException();
     }

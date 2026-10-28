@@ -117,7 +117,7 @@ internal sealed class GitHubConnect(
         var unreadable = new List<string>();
         foreach (var repo in github.Repos)
         {
-            var read = await reader.Issues(repo, GitHubCursor.From(clock.GetUtcNow()), 1, cancellationToken).ConfigureAwait(false);
+            var read = await reader.Issues(repo, GitHubCursor.From(clock.GetUtcNow()), 1, before: null, cancellationToken).ConfigureAwait(false);
             if (read.IsSuccess)
             {
                 continue;

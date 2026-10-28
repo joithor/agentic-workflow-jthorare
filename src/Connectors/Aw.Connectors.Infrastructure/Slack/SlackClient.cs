@@ -38,7 +38,7 @@ internal sealed partial class SlackClient : ISlackReader
     }
 
     /// <inheritdoc />
-    public async ValueTask<Result<SlackMessagePage>> History(string channel, string? oldest, CancellationToken cancellationToken)
+    public async ValueTask<Result<SlackMessagePage>> History(string channel, string? oldest, string? latest, CancellationToken cancellationToken)
     {
         if (Prepare(channel) is { } refused)
         {
@@ -50,7 +50,12 @@ internal sealed partial class SlackClient : ISlackReader
             return ConnectorsErrors.Invalid.With("oldest must be a Slack ts.");
         }
 
-        var window = oldest is null ? string.Empty : $"&inclusive=true&oldest={oldest}";
+        if (latest is not null && !SlackTs.TryParse(latest, out _))
+        {
+            return ConnectorsErrors.Invalid.With("latest must be a Slack ts.");
+        }
+
+        var window = (oldest is null ? string.Empty : $"&inclusive=true&oldest={oldest}") + (latest is null ? string.Empty : $"&latest={latest}");
         return await ReadPages(cursor => Url($"conversations.history?channel={channel}&limit={PageSize.ToString(CultureInfo.InvariantCulture)}{window}", cursor), MaxHistoryPages, cancellationToken).ConfigureAwait(false);
     }
 

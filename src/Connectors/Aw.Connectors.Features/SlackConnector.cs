@@ -21,11 +21,11 @@ internal sealed partial class SlackConnector(
 {
     public ConnectorDescription Describe() => new("slack", "Slack");
 
-    public async ValueTask<Result<ConnectorPage>> Pull(SourceCursor? after, int limit, CancellationToken cancellationToken)
+    public async ValueTask<Result<ConnectorPage>> Pull(SourceCursor? after, int limit, DateTimeOffset? before, CancellationToken cancellationToken)
     {
         var parsed = SlackCursor.Parse(after?.Value);
         var cursor = parsed ?? SlackCursor.Empty;
-        var result = await pull.Handle(new PullSlackRequest(settings.Channels, settings.Workspace, cursor, limit) { WindowStart = window is { } back ? (clock ?? TimeProvider.System).GetUtcNow() - back : null }, cancellationToken).ConfigureAwait(false);
+        var result = await pull.Handle(new PullSlackRequest(settings.Channels, settings.Workspace, cursor, limit) { WindowStart = window is { } back ? (clock ?? TimeProvider.System).GetUtcNow() - back : null, Before = before }, cancellationToken).ConfigureAwait(false);
         if (result.IsError)
         {
             return result.Error;
@@ -105,7 +105,7 @@ internal sealed partial class SlackConnector(
             return Results.Success<string?>(value: null);
         }
 
-        var history = await reader.History(channel.Channel, SlackTs.Format(start), cancellationToken).ConfigureAwait(false);
+        var history = await reader.History(channel.Channel, SlackTs.Format(start), latest: null, cancellationToken).ConfigureAwait(false);
         if (history.IsError)
         {
             return history.Error;

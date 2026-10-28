@@ -104,7 +104,7 @@ public sealed class FakeSlackServer(params string[] allowedChannels) : HttpMessa
         }
 
         return Task.FromResult(uri.AbsolutePath.EndsWith("history", StringComparison.Ordinal)
-            ? Paged(query, _store.Top(channel, query.TryGetValue("oldest", out var oldest) ? oldest : null))
+            ? Paged(query, _store.Top(channel, query.TryGetValue("oldest", out var oldest) ? oldest : null, query.TryGetValue("latest", out var latest) ? latest : null))
             : Paged(query, _store.Thread(channel, query.GetValueOrDefault("ts", string.Empty))));
     }
 

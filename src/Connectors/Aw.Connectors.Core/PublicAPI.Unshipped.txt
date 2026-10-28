@@ -127,11 +127,11 @@ Aw.Connectors.Core.GitHub.GitHubSettings.Host.get -> string?
 Aw.Connectors.Core.GitHub.GitHubSettings.Repos.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Aw.Connectors.Core.GitHub.GitHubSettings.Token.get -> string?
 Aw.Connectors.Core.GitHub.IGitHubReader
-Aw.Connectors.Core.GitHub.IGitHubReader.Issues(string! repo, Aw.Connectors.Core.GitHub.GitHubCursor! after, int limit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.GitHub.GitHubPullPage!>!>
+Aw.Connectors.Core.GitHub.IGitHubReader.Issues(string! repo, Aw.Connectors.Core.GitHub.GitHubCursor! after, int limit, System.DateTimeOffset? before, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.GitHub.GitHubPullPage!>!>
 Aw.Connectors.Core.IConnector
 Aw.Connectors.Core.IConnector.Describe() -> Aw.Connectors.Core.ConnectorDescription!
 Aw.Connectors.Core.IConnector.Probe(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>
-Aw.Connectors.Core.IConnector.Pull(Aw.Connectors.Core.SourceCursor? after, int limit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.ConnectorPage!>!>
+Aw.Connectors.Core.IConnector.Pull(Aw.Connectors.Core.SourceCursor? after, int limit, System.DateTimeOffset? before, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.ConnectorPage!>!>
 Aw.Connectors.Core.IConnector.Versions(System.Collections.Generic.IReadOnlyList<string!>! keys, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyDictionary<string!, string!>!>!>
 Aw.Connectors.Core.SourceCursor
 Aw.Connectors.Core.SourceCursor.<Clone>$() -> Aw.Connectors.Core.SourceCursor!
@@ -337,7 +337,7 @@ static Aw.Connectors.Core.Slack.SlackSettings.Create(System.Collections.Generic.
 static Aw.Connectors.Core.Slack.SlackSettings.operator !=(Aw.Connectors.Core.Slack.SlackSettings? left, Aw.Connectors.Core.Slack.SlackSettings? right) -> bool
 static Aw.Connectors.Core.Slack.SlackSettings.operator ==(Aw.Connectors.Core.Slack.SlackSettings? left, Aw.Connectors.Core.Slack.SlackSettings? right) -> bool
 Aw.Connectors.Core.Slack.ISlackReader
-Aw.Connectors.Core.Slack.ISlackReader.History(string! channel, string? oldest, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.Slack.SlackMessagePage!>!>
+Aw.Connectors.Core.Slack.ISlackReader.History(string! channel, string? oldest, string? latest, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.Slack.SlackMessagePage!>!>
 Aw.Connectors.Core.Slack.ISlackReader.Replies(string! channel, string! threadTs, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.Slack.SlackMessagePage!>!>
 Aw.Connectors.Core.Slack.ISlackReader.Probe(string! channel, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.DateTimeOffset?>!>
 static readonly Aw.Connectors.Core.ConnectorsErrors.ChannelNotAllowed -> Aw.Kernel.ErrorDefinition!

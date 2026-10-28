@@ -52,7 +52,7 @@ public sealed class FakeSlackReader(params string[] allowedChannels) : ISlackRea
     }
 
     /// <inheritdoc />
-    public ValueTask<Result<SlackMessagePage>> History(string channel, string? oldest, CancellationToken cancellationToken)
+    public ValueTask<Result<SlackMessagePage>> History(string channel, string? oldest, string? latest, CancellationToken cancellationToken)
     {
         if (Refused(channel) is { } refused)
         {
@@ -60,7 +60,7 @@ public sealed class FakeSlackReader(params string[] allowedChannels) : ISlackRea
         }
 
         _reads.Add($"history {channel} {oldest}");
-        return ValueTask.FromResult(Page(LimitOf(_historyLimits, channel), () => _store.Top(channel, oldest)));
+        return ValueTask.FromResult(Page(LimitOf(_historyLimits, channel), () => _store.Top(channel, oldest, latest)));
     }
 
     /// <inheritdoc />

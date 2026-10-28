@@ -31,7 +31,7 @@ public abstract class SlackReaderContract
             A.SlackMessage(At(2)).WithText("second"),
             A.SlackMessage(At(4)).InThread(At(1)).WithText("a reply"));
 
-        var page = (await reader.History(General, oldest: null, Ct)).Value;
+        var page = (await reader.History(General, oldest: null, latest: null, Ct)).Value;
 
         Assert.Equal(["third", "second", "first"], page.Items.Select(static m => m.Text), StringComparer.Ordinal);
         Assert.Null(page.RateLimitedUntil);
@@ -42,9 +42,19 @@ public abstract class SlackReaderContract
     {
         var reader = Reader(A.SlackMessage(At(1)), A.SlackMessage(At(2)), A.SlackMessage(At(3)));
 
-        var page = (await reader.History(General, At(2), Ct)).Value;
+        var page = (await reader.History(General, At(2), latest: null, Ct)).Value;
 
         Assert.Equal([At(3), At(2)], page.Items.Select(static m => m.Ts), StringComparer.Ordinal);
+    }
+
+    [Fact, Trait("Lane", "unit")]
+    public async Task History_stops_before_latest_exclusive()
+    {
+        var reader = Reader(A.SlackMessage(At(1)), A.SlackMessage(At(2)), A.SlackMessage(At(3)));
+
+        var page = (await reader.History(General, oldest: null, At(3), Ct)).Value;
+
+        Assert.Equal([At(2), At(1)], page.Items.Select(static m => m.Ts), StringComparer.Ordinal);
     }
 
     [Fact, Trait("Lane", "unit")]
@@ -52,7 +62,7 @@ public abstract class SlackReaderContract
     {
         var reader = Reader(A.SlackMessage(At(1)).WithText("root"), A.SlackMessage(At(2)).InThread(At(1)), A.SlackMessage(At(3)).InThread(At(1)));
 
-        var root = Assert.Single((await reader.History(General, oldest: null, Ct)).Value.Items);
+        var root = Assert.Single((await reader.History(General, oldest: null, latest: null, Ct)).Value.Items);
 
         Assert.Equal(2, root.ReplyCount);
         Assert.Equal(At(1), root.ThreadTs);
@@ -78,7 +88,7 @@ public abstract class SlackReaderContract
     {
         var reader = Reader(A.SlackMessage(At(2)).By("Bo"), A.SlackMessage(At(1)).By(author: null));
 
-        var items = (await reader.History(General, oldest: null, Ct)).Value.Items;
+        var items = (await reader.History(General, oldest: null, latest: null, Ct)).Value.Items;
 
         Assert.Equal(["Bo", null], items.Select(static m => m.Author), StringComparer.Ordinal);
     }
@@ -88,7 +98,7 @@ public abstract class SlackReaderContract
     {
         var reader = Reader([General], [(General, A.SlackMessage(At(1))), (Other, A.SlackMessage(At(2)))]);
 
-        Assert.Equal(ConnectorsErrors.ChannelNotAllowed.Code, (await reader.History(Other, oldest: null, Ct)).Error.Code);
+        Assert.Equal(ConnectorsErrors.ChannelNotAllowed.Code, (await reader.History(Other, oldest: null, latest: null, Ct)).Error.Code);
         Assert.Equal(ConnectorsErrors.ChannelNotAllowed.Code, (await reader.Replies(Other, At(2), Ct)).Error.Code);
         Assert.Equal(ConnectorsErrors.ChannelNotAllowed.Code, (await reader.Probe(Other, Ct)).Error.Code);
     }
@@ -98,7 +108,7 @@ public abstract class SlackReaderContract
     {
         var reader = Reader([General, DirectMessage], [(General, A.SlackMessage(At(1)))]);
 
-        Assert.Equal(ConnectorsErrors.ChannelNotAllowed.Code, (await reader.History(DirectMessage, oldest: null, Ct)).Error.Code);
+        Assert.Equal(ConnectorsErrors.ChannelNotAllowed.Code, (await reader.History(DirectMessage, oldest: null, latest: null, Ct)).Error.Code);
     }
 
     [Fact, Trait("Lane", "unit")]

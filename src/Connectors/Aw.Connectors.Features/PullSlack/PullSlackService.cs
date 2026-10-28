@@ -46,9 +46,13 @@ internal sealed class PullSlackService(ISlackReader reader) : IService<PullSlack
             ? SlackTs.DayStart(watermark)
             : request.WindowStart is { } window ? SlackTs.Format(window) : null;
 
+    // why: a bounded read starts at the watermark's day, so it gets that day again; with no root newer than the watermark the channel was already read whole up to the bound, and Backfill must see an empty page.
+    private static bool ReadWholeUpToBound(PullSlackRequest request, SlackChannelRef channel, string? newest)
+        => request.Before is not null && request.After.Newest(channel.Channel) is { } mark && (newest is null || SlackTs.Later(mark, newest) == mark);
+
     private async ValueTask<Result<ChannelRead>> ReadChannel(PullSlackRequest request, SlackChannelRef channel, CancellationToken cancellationToken)
     {
-        var history = await reader.History(channel.Channel, Oldest(request, channel), cancellationToken).ConfigureAwait(false);
+        var history = await reader.History(channel.Channel, Oldest(request, channel), Latest(request), cancellationToken).ConfigureAwait(false);
         if (history.IsError)
         {
             return history.Error;
@@ -61,6 +65,18 @@ internal sealed class PullSlackService(ISlackReader reader) : IService<PullSlack
 
         var roots = history.Value.Items;
         var newest = roots.Select(static m => m.Ts).Aggregate((string?)null, static (a, b) => a is null ? b : SlackTs.Later(a, b));
+        if (ReadWholeUpToBound(request, channel, newest))
+        {
+            return new ChannelRead([], Newest: null, RateLimitedUntil: null);
+        }
+
+        return await ReadThreads(request, channel, roots, newest, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static string? Latest(PullSlackRequest request) => request.Before is { } end ? SlackTs.Format(end) : null;
+
+    private async ValueTask<Result<ChannelRead>> ReadThreads(PullSlackRequest request, SlackChannelRef channel, IReadOnlyList<SlackMessage> roots, string? newest, CancellationToken cancellationToken)
+    {
         List<ConnectorItem> items = [];
         foreach (var root in roots.Where(static m => !SlackRecords.IsNoise(m) && SlackRecords.IsThreadRoot(m)))
         {

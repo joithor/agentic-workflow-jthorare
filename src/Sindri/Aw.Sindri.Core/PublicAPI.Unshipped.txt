@@ -20790,8 +20790,6 @@ Aw.Sindri.Core.Sandbox.Denials.DenialEntry
 Aw.Sindri.Core.Sandbox.Denials.DenialEntry.<Clone>$() -> Aw.Sindri.Core.Sandbox.Denials.DenialEntry!
 Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Count.get -> int
 Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Count.init -> void
-Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Deconstruct(out Aw.Sindri.Core.Events.DenialKind Kind, out string! Target, out string! Rule, out int Count, out System.DateTimeOffset First, out System.DateTimeOffset Last) -> void
-Aw.Sindri.Core.Sandbox.Denials.DenialEntry.DenialEntry(Aw.Sindri.Core.Events.DenialKind Kind, string! Target, string! Rule, int Count, System.DateTimeOffset First, System.DateTimeOffset Last) -> void
 Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Equals(Aw.Sindri.Core.Sandbox.Denials.DenialEntry? other) -> bool
 Aw.Sindri.Core.Sandbox.Denials.DenialEntry.First.get -> System.DateTimeOffset
 Aw.Sindri.Core.Sandbox.Denials.DenialEntry.First.init -> void
@@ -20805,8 +20803,6 @@ Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Target.get -> string!
 Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Target.init -> void
 Aw.Sindri.Core.Sandbox.Denials.DenialFile
 Aw.Sindri.Core.Sandbox.Denials.DenialFile.<Clone>$() -> Aw.Sindri.Core.Sandbox.Denials.DenialFile!
-Aw.Sindri.Core.Sandbox.Denials.DenialFile.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.LaunchId LaunchId, out System.DateTimeOffset UpdatedAt, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialEntry!>! Entries, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialOverflow!>! Overflow) -> void
-Aw.Sindri.Core.Sandbox.Denials.DenialFile.DenialFile(Aw.Sindri.Core.Workflow.Engine.LaunchId LaunchId, System.DateTimeOffset UpdatedAt, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialEntry!>! Entries, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialOverflow!>! Overflow) -> void
 Aw.Sindri.Core.Sandbox.Denials.DenialFile.Entries.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialEntry!>!
 Aw.Sindri.Core.Sandbox.Denials.DenialFile.Entries.init -> void
 Aw.Sindri.Core.Sandbox.Denials.DenialFile.Equals(Aw.Sindri.Core.Sandbox.Denials.DenialFile? other) -> bool
@@ -21160,3 +21156,58 @@ static Aw.Sindri.Core.Sandbox.SessionMemory.operator !=(Aw.Sindri.Core.Sandbox.S
 static Aw.Sindri.Core.Sandbox.SessionMemory.operator ==(Aw.Sindri.Core.Sandbox.SessionMemory? left, Aw.Sindri.Core.Sandbox.SessionMemory? right) -> bool
 static Aw.Sindri.Core.Sandbox.SessionSandbox.operator !=(Aw.Sindri.Core.Sandbox.SessionSandbox? left, Aw.Sindri.Core.Sandbox.SessionSandbox? right) -> bool
 static Aw.Sindri.Core.Sandbox.SessionSandbox.operator ==(Aw.Sindri.Core.Sandbox.SessionSandbox? left, Aw.Sindri.Core.Sandbox.SessionSandbox? right) -> bool
+Aw.Sindri.Core.Profile.SandboxAllowances
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Deconstruct(out Aw.Sindri.Core.Events.DenialKind Kind, out string! Target, out string! Rule, out int Count, out System.DateTimeOffset First, out System.DateTimeOffset Last, out Aw.Sindri.Core.Sandbox.Denials.DenialFix? Fix, out string? Reason) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.DenialEntry(Aw.Sindri.Core.Events.DenialKind Kind, string! Target, string! Rule, int Count, System.DateTimeOffset First, System.DateTimeOffset Last, Aw.Sindri.Core.Sandbox.Denials.DenialFix? Fix = null, string? Reason = null) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Fix.get -> Aw.Sindri.Core.Sandbox.Denials.DenialFix?
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Fix.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Reason.get -> string?
+Aw.Sindri.Core.Sandbox.Denials.DenialEntry.Reason.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.LaunchId LaunchId, out System.DateTimeOffset UpdatedAt, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialEntry!>! Entries, out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialOverflow!>! Overflow, out Aw.Sindri.Core.Ids.RepoName? Repo, out Aw.Sindri.Core.Ids.ItemId? Item) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.DenialFile(Aw.Sindri.Core.Workflow.Engine.LaunchId LaunchId, System.DateTimeOffset UpdatedAt, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialEntry!>! Entries, System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialOverflow!>! Overflow, Aw.Sindri.Core.Ids.RepoName? Repo = null, Aw.Sindri.Core.Ids.ItemId? Item = null) -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Item.get -> Aw.Sindri.Core.Ids.ItemId?
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Item.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Repo.get -> Aw.Sindri.Core.Ids.RepoName?
+Aw.Sindri.Core.Sandbox.Denials.DenialFile.Repo.init -> void
+Aw.Sindri.Core.Sandbox.Denials.DenialFix
+Aw.Sindri.Core.Sandbox.Denials.DenialFix.Allow = 0 -> Aw.Sindri.Core.Sandbox.Denials.DenialFix
+Aw.Sindri.Core.Sandbox.Denials.DenialFix.Never = 1 -> Aw.Sindri.Core.Sandbox.Denials.DenialFix
+Aw.Sindri.Core.Sandbox.Denials.DenialFix.OwnTerminal = 2 -> Aw.Sindri.Core.Sandbox.Denials.DenialFix
+Aw.Sindri.Core.Sandbox.Denials.DenialFixes
+Aw.Sindri.Core.Sandbox.Denials.ILaunchOwners
+Aw.Sindri.Core.Sandbox.Denials.ILaunchOwners.Read(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyDictionary<Aw.Sindri.Core.Workflow.Engine.LaunchId, Aw.Sindri.Core.Sandbox.Denials.LaunchOwner!>!>
+Aw.Sindri.Core.Sandbox.Denials.LaunchOwner
+Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.<Clone>$() -> Aw.Sindri.Core.Sandbox.Denials.LaunchOwner!
+Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.Deconstruct(out Aw.Sindri.Core.Ids.ItemId Item, out Aw.Sindri.Core.Ids.RepoName? Repo) -> void
+Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.Equals(Aw.Sindri.Core.Sandbox.Denials.LaunchOwner? other) -> bool
+Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.Item.get -> Aw.Sindri.Core.Ids.ItemId
+Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.Item.init -> void
+Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.LaunchOwner(Aw.Sindri.Core.Ids.ItemId Item, Aw.Sindri.Core.Ids.RepoName? Repo) -> void
+Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.Repo.get -> Aw.Sindri.Core.Ids.RepoName?
+Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.Repo.init -> void
+Aw.Sindri.Core.Setup.IProfileSandboxWriter
+Aw.Sindri.Core.Setup.IProfileSandboxWriter.Allow(string! repo, Aw.Sindri.Core.Events.DenialKind kind, string! target, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Sindri.Core.Setup.SandboxAllowed!>!>
+Aw.Sindri.Core.Setup.SandboxAllowed
+Aw.Sindri.Core.Setup.SandboxAllowed.<Clone>$() -> Aw.Sindri.Core.Setup.SandboxAllowed!
+Aw.Sindri.Core.Setup.SandboxAllowed.Added.get -> bool
+Aw.Sindri.Core.Setup.SandboxAllowed.Added.init -> void
+Aw.Sindri.Core.Setup.SandboxAllowed.Deconstruct(out string! Entry, out bool Added) -> void
+Aw.Sindri.Core.Setup.SandboxAllowed.Entry.get -> string!
+Aw.Sindri.Core.Setup.SandboxAllowed.Entry.init -> void
+Aw.Sindri.Core.Setup.SandboxAllowed.Equals(Aw.Sindri.Core.Setup.SandboxAllowed? other) -> bool
+Aw.Sindri.Core.Setup.SandboxAllowed.SandboxAllowed(string! Entry, bool Added) -> void
+override Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.GetHashCode() -> int
+override Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.ToString() -> string!
+override Aw.Sindri.Core.Setup.SandboxAllowed.Equals(object? obj) -> bool
+override Aw.Sindri.Core.Setup.SandboxAllowed.GetHashCode() -> int
+override Aw.Sindri.Core.Setup.SandboxAllowed.ToString() -> string!
+static Aw.Sindri.Core.Profile.SandboxAllowances.Holds(Aw.Sindri.Core.Profile.SindriProfile! profile, string! repo, Aw.Sindri.Core.Events.DenialKind kind, string! entry) -> bool
+static Aw.Sindri.Core.Profile.SandboxAllowances.HomeRelative(string! path, string! home) -> string?
+static Aw.Sindri.Core.Profile.SandboxAllowances.Problem(Aw.Sindri.Core.Events.DenialKind kind, string! value) -> string?
+static Aw.Sindri.Core.Sandbox.Denials.DenialFixes.Decide(Aw.Sindri.Core.Sandbox.Denials.DenialEntry! entry) -> Aw.Sindri.Core.Sandbox.Denials.DenialEntry!
+static Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.operator !=(Aw.Sindri.Core.Sandbox.Denials.LaunchOwner? left, Aw.Sindri.Core.Sandbox.Denials.LaunchOwner? right) -> bool
+static Aw.Sindri.Core.Sandbox.Denials.LaunchOwner.operator ==(Aw.Sindri.Core.Sandbox.Denials.LaunchOwner? left, Aw.Sindri.Core.Sandbox.Denials.LaunchOwner? right) -> bool
+static Aw.Sindri.Core.Setup.SandboxAllowed.operator !=(Aw.Sindri.Core.Setup.SandboxAllowed? left, Aw.Sindri.Core.Setup.SandboxAllowed? right) -> bool
+static Aw.Sindri.Core.Setup.SandboxAllowed.operator ==(Aw.Sindri.Core.Setup.SandboxAllowed? left, Aw.Sindri.Core.Setup.SandboxAllowed? right) -> bool
+static readonly Aw.Sindri.Core.SindriErrors.SandboxAllowRefused -> Aw.Kernel.ErrorDefinition!

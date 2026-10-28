@@ -47,6 +47,7 @@ using Aw.Sindri.Core.Workflow.Shipped;
 using Aw.Sindri.Core.Workflow.Stats;
 using Aw.Sindri.Core.Workflow.Views;
 using Aw.Sindri.Features.AddRepo;
+using Aw.Sindri.Features.AllowDenial;
 using Aw.Sindri.Features.ApplyCommand;
 using Aw.Sindri.Features.ApproveAllRecipes;
 using Aw.Sindri.Features.ApproveProfile;
@@ -245,6 +246,7 @@ namespace Aw.Sindri.Host;
 [JsonSerializable(typeof(EndLearnModeRequest)), JsonSerializable(typeof(RecordLimitHitRequest)), JsonSerializable(typeof(RecordLimitHitResponse)), JsonSerializable(typeof(LimitHitBody))]
 [JsonSerializable(typeof(GetRunSuspensionRequest)), JsonSerializable(typeof(RunSuspensionView))]
 [JsonSerializable(typeof(ListDenialsRequest)), JsonSerializable(typeof(ListDenialsResponse)), JsonSerializable(typeof(Core.Sandbox.Denials.DenialFile)), JsonSerializable(typeof(Core.Sandbox.Plan.SandboxPlan))]   // SB-4b: the denials read and the plan file `sandbox explain` reads
+[JsonSerializable(typeof(AllowDenialRequest)), JsonSerializable(typeof(AllowDenialResponse))]   // SB-6a: the Allow button
 [JsonSerializable(typeof(CheckSandboxRequest)), JsonSerializable(typeof(CheckSandboxResponse)), JsonSerializable(typeof(SandboxBlockerLine))]   // SB-5a: Check again
 [JsonSerializable(typeof(SessionHeartbeatBody)), JsonSerializable(typeof(SessionHeartbeatResponse)), JsonSerializable(typeof(SessionExitBody)), JsonSerializable(typeof(SessionExitResponse)), JsonSerializable(typeof(CaptureRule))]   // API P10a (U10)
 // Two LaunchId types meet here: the collector's looser one (Core.Launch) and the engine's 'LCH-…' one the launch events carry (SYSLIB1031).

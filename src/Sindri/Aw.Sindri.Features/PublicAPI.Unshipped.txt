@@ -5204,11 +5204,9 @@ static Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.operator !=(Aw.Sindri
 static Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest.operator ==(Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest? left, Aw.Sindri.Features.EndLearnMode.EndLearnModeRequest? right) -> bool
 Aw.Sindri.Features.ListDenials.ListDenialsRequest
 Aw.Sindri.Features.ListDenials.ListDenialsRequest.<Clone>$() -> Aw.Sindri.Features.ListDenials.ListDenialsRequest!
-Aw.Sindri.Features.ListDenials.ListDenialsRequest.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.LaunchId? Launch, out System.DateTimeOffset? Since) -> void
 Aw.Sindri.Features.ListDenials.ListDenialsRequest.Equals(Aw.Sindri.Features.ListDenials.ListDenialsRequest? other) -> bool
 Aw.Sindri.Features.ListDenials.ListDenialsRequest.Launch.get -> Aw.Sindri.Core.Workflow.Engine.LaunchId?
 Aw.Sindri.Features.ListDenials.ListDenialsRequest.Launch.init -> void
-Aw.Sindri.Features.ListDenials.ListDenialsRequest.ListDenialsRequest(Aw.Sindri.Core.Workflow.Engine.LaunchId? Launch = null, System.DateTimeOffset? Since = null) -> void
 Aw.Sindri.Features.ListDenials.ListDenialsRequest.Since.get -> System.DateTimeOffset?
 Aw.Sindri.Features.ListDenials.ListDenialsRequest.Since.init -> void
 Aw.Sindri.Features.ListDenials.ListDenialsResponse
@@ -5332,3 +5330,42 @@ Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Blockers.get -> System.Coll
 Aw.Sindri.Features.CheckSandbox.CheckSandboxResponse.Blockers.init -> void
 Aw.Sindri.Features.GetLaunch.LaunchView.Sandbox.get -> Aw.Sindri.Core.Sandbox.SandboxSummary?
 Aw.Sindri.Features.GetLaunch.LaunchView.Sandbox.init -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest.<Clone>$() -> Aw.Sindri.Features.AllowDenial.AllowDenialRequest!
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest.AllowDenialRequest(Aw.Sindri.Core.Workflow.Engine.LaunchId Launch, Aw.Sindri.Core.Events.DenialKind Kind, string! Target) -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.LaunchId Launch, out Aw.Sindri.Core.Events.DenialKind Kind, out string! Target) -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest.Equals(Aw.Sindri.Features.AllowDenial.AllowDenialRequest? other) -> bool
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest.Kind.get -> Aw.Sindri.Core.Events.DenialKind
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest.Kind.init -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest.Launch.get -> Aw.Sindri.Core.Workflow.Engine.LaunchId
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest.Launch.init -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest.Target.get -> string!
+Aw.Sindri.Features.AllowDenial.AllowDenialRequest.Target.init -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse.<Clone>$() -> Aw.Sindri.Features.AllowDenial.AllowDenialResponse!
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse.AllowDenialResponse(Aw.Sindri.Features.AllowDenial.AllowDenialState State, string! Repo, string! Entry) -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse.Deconstruct(out Aw.Sindri.Features.AllowDenial.AllowDenialState State, out string! Repo, out string! Entry) -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse.Entry.get -> string!
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse.Entry.init -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse.Equals(Aw.Sindri.Features.AllowDenial.AllowDenialResponse? other) -> bool
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse.Repo.get -> string!
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse.Repo.init -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse.State.get -> Aw.Sindri.Features.AllowDenial.AllowDenialState
+Aw.Sindri.Features.AllowDenial.AllowDenialResponse.State.init -> void
+Aw.Sindri.Features.AllowDenial.AllowDenialState
+Aw.Sindri.Features.AllowDenial.AllowDenialState.Allowed = 1 -> Aw.Sindri.Features.AllowDenial.AllowDenialState
+Aw.Sindri.Features.AllowDenial.AllowDenialState.NeedsApproval = 0 -> Aw.Sindri.Features.AllowDenial.AllowDenialState
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.Deconstruct(out Aw.Sindri.Core.Workflow.Engine.LaunchId? Launch, out System.DateTimeOffset? Since, out Aw.Sindri.Core.Ids.ItemId? Item) -> void
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.Item.get -> Aw.Sindri.Core.Ids.ItemId?
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.Item.init -> void
+Aw.Sindri.Features.ListDenials.ListDenialsRequest.ListDenialsRequest(Aw.Sindri.Core.Workflow.Engine.LaunchId? Launch = null, System.DateTimeOffset? Since = null, Aw.Sindri.Core.Ids.ItemId? Item = null) -> void
+override Aw.Sindri.Features.AllowDenial.AllowDenialRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.AllowDenial.AllowDenialRequest.GetHashCode() -> int
+override Aw.Sindri.Features.AllowDenial.AllowDenialRequest.ToString() -> string!
+override Aw.Sindri.Features.AllowDenial.AllowDenialResponse.Equals(object? obj) -> bool
+override Aw.Sindri.Features.AllowDenial.AllowDenialResponse.GetHashCode() -> int
+override Aw.Sindri.Features.AllowDenial.AllowDenialResponse.ToString() -> string!
+static Aw.Sindri.Features.AllowDenial.AllowDenialRequest.operator !=(Aw.Sindri.Features.AllowDenial.AllowDenialRequest? left, Aw.Sindri.Features.AllowDenial.AllowDenialRequest? right) -> bool
+static Aw.Sindri.Features.AllowDenial.AllowDenialRequest.operator ==(Aw.Sindri.Features.AllowDenial.AllowDenialRequest? left, Aw.Sindri.Features.AllowDenial.AllowDenialRequest? right) -> bool
+static Aw.Sindri.Features.AllowDenial.AllowDenialResponse.operator !=(Aw.Sindri.Features.AllowDenial.AllowDenialResponse? left, Aw.Sindri.Features.AllowDenial.AllowDenialResponse? right) -> bool
+static Aw.Sindri.Features.AllowDenial.AllowDenialResponse.operator ==(Aw.Sindri.Features.AllowDenial.AllowDenialResponse? left, Aw.Sindri.Features.AllowDenial.AllowDenialResponse? right) -> bool

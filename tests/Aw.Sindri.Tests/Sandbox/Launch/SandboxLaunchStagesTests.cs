@@ -29,7 +29,10 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     private SandboxLaunchStages Make(params IModelCredentialSource[] logins) =>
         new(new NoProfile(), new EmptyLearn(), logins.Length == 0 ? [_login] : logins, _inputs, Registry(), _clock);
 
-    public SandboxLaunchStagesTests() => _inputs = new StubInputs(_temp.Path);
+    public SandboxLaunchStagesTests()
+    {
+        _inputs = new StubInputs(_temp.Path);
+    }
 
     public void Dispose() => _temp.Dispose();
 
@@ -69,7 +72,7 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     public async Task StartEgress_without_socat_refuses_with_the_unavailable_code_and_Release_is_a_no_op()
     {
         var stages = Make();
-        var plan = await PlanFor(new StepPolicy([], StepPermissionMode.Default, WritablePath: null));
+        var (_, plan) = await PlanFor(new StepPolicy([], StepPermissionMode.Default, WritablePath: null));
 
         var started = await stages.StartEgress(plan, CancellationToken.None);
         await stages.Release(plan.Launch, CancellationToken.None);
@@ -81,10 +84,10 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     public async Task A_claude_Step_gets_its_policy_file_rewritten_with_the_plan_and_no_extra_arguments()
     {
         var policy = new StepPolicy([], StepPermissionMode.Default, WritablePath: null);
-        var plan = await PlanFor(policy);
+        var (asked, plan) = await PlanFor(policy);
         _inputs.Form = PolicyForm.ClaudeSettingsFile;
 
-        var args = await Make().WritePolicy(Asked(policy), plan, CancellationToken.None);
+        var args = await Make().WritePolicy(asked, plan, CancellationToken.None);
 
         Expect.True(args.IsSuccess && args.Value.Count == 0);
         Expect.True(File.Exists(StepPolicyFile.PathFor(_inputs.PolicyDirectory(), plan.Launch)));
@@ -94,10 +97,10 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     public async Task A_codex_Step_gets_the_override_arguments_and_no_file()
     {
         var policy = new StepPolicy([], StepPermissionMode.Default, WritablePath: null);
-        var plan = await PlanFor(policy);
+        var (asked, plan) = await PlanFor(policy);
         _inputs.Form = PolicyForm.CodexOverrides;
 
-        var args = await Make().WritePolicy(Asked(policy), plan, CancellationToken.None);
+        var args = await Make().WritePolicy(asked, plan, CancellationToken.None);
 
         Expect.True(args.IsSuccess && args.Value.Count > 0);
         Expect.True(!File.Exists(StepPolicyFile.PathFor(_inputs.PolicyDirectory(), plan.Launch)));
@@ -106,8 +109,11 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     private static LaunchRequest Asked(StepPolicy policy) =>
         A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: policy, Ref: new StepRef("build", "agent"))).Build();
 
-    private async Task<SandboxPlan> PlanFor(StepPolicy policy) =>
-        SandboxPlanner.Build(SandboxMechanism.Bubblewrap, (await Make().Request(Asked(policy), CancellationToken.None)).Value).Value;
+    private async Task<(SandboxRequest Request, SandboxPlan Plan)> PlanFor(StepPolicy policy)
+    {
+        var asked = (await Make().Request(Asked(policy), CancellationToken.None)).Value;
+        return (asked, SandboxPlanner.Build(SandboxMechanism.Bubblewrap, asked).Value);
+    }
 
     private sealed class NoProfile : IApprovedProfile
     {

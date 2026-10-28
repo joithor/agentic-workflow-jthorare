@@ -1,6 +1,4 @@
-using Aw.Sindri.Core.Sandbox.Plan;
-
-namespace Aw.Sindri.Core.Sandbox;
+namespace Aw.Sindri.Core.Sandbox.Plan;
 
 /// <summary>The throw-away request Check again plans and self-checks (sandbox spec §8): a fixture, never a real launch.</summary>
 public interface ISandboxFixture

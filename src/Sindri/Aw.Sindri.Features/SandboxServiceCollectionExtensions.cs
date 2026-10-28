@@ -2,6 +2,7 @@ using Aw.Kernel.Services;
 using Aw.Sindri.Core.Commands;
 using Aw.Sindri.Core.Doctor;
 using Aw.Sindri.Core.Sandbox;
+using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Features.CheckSandbox;
 using Aw.Sindri.Features.Commands;
 using Aw.Sindri.Features.EndLearnMode;

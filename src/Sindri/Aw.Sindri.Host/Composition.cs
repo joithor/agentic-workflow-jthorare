@@ -15,7 +15,7 @@ using Aw.Sindri.Host.Models;
 using Aw.Sindri.Host.Registration;
 using Aw.Sindri.Infrastructure.Processes;
 using Aw.Sindri.Infrastructure.Registration;
-using Aw.Sindri.Infrastructure.Sandbox;
+using Aw.Sindri.Infrastructure.Sandbox.Launch;
 using Aw.Sindri.Infrastructure.Workflows;
 
 namespace Aw.Sindri.Host;

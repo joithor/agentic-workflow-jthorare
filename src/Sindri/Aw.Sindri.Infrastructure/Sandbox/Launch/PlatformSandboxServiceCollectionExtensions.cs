@@ -1,17 +1,17 @@
 using Aw.Sindri.Core.Control;
 using Aw.Sindri.Core.Launch;
+using Aw.Sindri.Core.Launches;
 using Aw.Sindri.Core.Profile;
-using Aw.Sindri.Core.Text;
-using Aw.Sindri.Core.Sandbox.Credentials;
 using Aw.Sindri.Core.Sandbox;
+using Aw.Sindri.Core.Sandbox.Credentials;
 using Aw.Sindri.Core.Sandbox.Plan;
+using Aw.Sindri.Core.Text;
 using Aw.Sindri.Infrastructure.Launch;
-using Aw.Sindri.Infrastructure.Sandbox.Launch;
 using Aw.Sindri.Infrastructure.Sessions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Aw.Sindri.Infrastructure.Sandbox;
+namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 
 /// <summary>
 /// The one switch that turns the sandbox on (sandbox spec §12 SB-5a, SB12): on Linux the bubblewrap sandbox, its owner-copy login source and the concurrent-session cap
@@ -45,7 +45,7 @@ public static class PlatformSandboxServiceCollectionExtensions
             .AddSingleton<ISessionCap>(sp => new FileSessionCap(LockFile(sp.GetRequiredService<SindriSettings>().Home), sp.GetRequiredService<ISliceScopes>()))
             .AddSingleton<ISandboxFixture>(sp => new LinuxSandboxFixture(sp.GetRequiredService<SindriSettings>().Home, environment, sp.GetRequiredService<ISandboxProcesses>(), sp.GetRequiredService<ISandboxMachine>()))
             .AddSingleton<SystemEgressNetwork>()
-            .AddSingleton<EgressService>(sp => new EgressService(
+            .AddSingleton(sp => new EgressService(
                 sp.GetRequiredService<SystemEgressNetwork>(), sp.GetRequiredService<SystemEgressNetwork>(), environment, EgressLogDirectory(sp.GetRequiredService<SindriSettings>().Home)))
             .AddSingleton<LaunchSandboxRegistry>()
             .AddSingleton<ISandboxLaunchStages>(sp => new SandboxLaunchStages(
@@ -54,7 +54,20 @@ public static class PlatformSandboxServiceCollectionExtensions
             .AddSingleton<ISandboxLaunchInputs>(sp => new LinuxSandboxLaunchInputs(
                 sp.GetRequiredService<LauncherOptions>(), sp.GetRequiredService<ReloadingAgentCatalog>(), sp.GetRequiredService<ISandboxProcesses>(),
                 () => BoxHostFacts.Read(environment, sp.GetRequiredService<SindriSettings>().Home, sp.GetRequiredService<ISandboxMachine>()), ControlFor(sp),
-                new DenialCounterParts(new ScopedSandboxDenials(sp.GetRequiredService<IServiceScopeFactory>()), sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>(), sp.GetRequiredService<ITextScrubber>(), sp.GetRequiredService<TimeProvider>())))
+                new DenialCounterParts(
+                    new ScopedSandboxDenials(async (denied, cancellationToken) =>
+                    {
+                        var scope = sp.CreateAsyncScope();   // LaunchSessionEvents is scoped (it holds the lease), as the launcher's EndLive
+                        try
+                        {
+                            return await scope.ServiceProvider.GetRequiredService<LaunchSessionEvents>().Append(denied, cancellationToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            await scope.DisposeAsync().ConfigureAwait(false);
+                        }
+                    }),
+                    sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>(), sp.GetRequiredService<ITextScrubber>(), sp.GetRequiredService<TimeProvider>())))
             .AddSingleton<ISandboxLaunch>(sp => new SandboxLaunch(
                 sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<ISandboxLaunchStages>(), LaunchOptions(sp, environment)));
     }
@@ -84,7 +97,7 @@ public static class PlatformSandboxServiceCollectionExtensions
     {
         try
         {
-            var read = Aw.Kernel.Json.AwJson.Deserialize<ControlEndpoint>(File.ReadAllBytes(path), json);
+            var read = Kernel.Json.AwJson.Deserialize<ControlEndpoint>(File.ReadAllBytes(path), json);
             return read.IsError ? null : read.Value;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

@@ -1,22 +1,16 @@
 using Aw.Kernel;
 using Aw.Sindri.Core.Events;
-using Aw.Sindri.Core.Launches;
 using Aw.Sindri.Core.Sandbox.Denials;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 
-/// <summary>ISandboxDenials for the singleton launcher side: <see cref="LaunchSessionEvents"/> is scoped (it holds the lease), so each append runs in its own scope, as the launcher's EndLive does.</summary>
-/// <param name="scopes">Makes the scope.</param>
-internal sealed class ScopedSandboxDenials(IServiceScopeFactory scopes) : ISandboxDenials
+/// <summary>
+/// ISandboxDenials for the singleton launcher side: LaunchSessionEvents is scoped (it holds the lease), so the registration hands in an append that runs
+/// each event in its own scope, as the launcher's EndLive does.
+/// </summary>
+/// <param name="append">Appends one event in a fresh scope.</param>
+internal sealed class ScopedSandboxDenials(Func<SandboxDenied, CancellationToken, ValueTask<Result<Unit>>> append) : ISandboxDenials
 {
     /// <inheritdoc/>
-    public async ValueTask<Result<Unit>> Append(SandboxDenied denied, CancellationToken cancellationToken)
-    {
-        var scope = scopes.CreateAsyncScope();
-        await using (scope.ConfigureAwait(false))
-        {
-            return await scope.ServiceProvider.GetRequiredService<LaunchSessionEvents>().Append(denied, cancellationToken).ConfigureAwait(false);
-        }
-    }
+    public ValueTask<Result<Unit>> Append(SandboxDenied denied, CancellationToken cancellationToken) => append(denied, cancellationToken);
 }

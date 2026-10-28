@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
+namespace Aw.Sindri.Infrastructure.Sandbox;
 
 /// <summary>The source-generated context behind <see cref="SandboxFilesJson"/>.</summary>
 [JsonSerializable(typeof(Core.Sandbox.Plan.SandboxPlan))]

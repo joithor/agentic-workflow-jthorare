@@ -1,8 +1,9 @@
 using Aw.Sindri.Core.Control;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
+using Aw.Sindri.Infrastructure.Sandbox;
 
-namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
+namespace Aw.Sindri.Infrastructure.Launch;
 
 /// <summary>
 /// A launch's session home (sandbox spec §3.1, rev 7): <c lang="text">&lt;real home&gt;-sessions/&lt;launch&gt;/</c>, 0700, beside the real home. It holds the links the CLI and the hooks follow
@@ -69,7 +70,7 @@ internal static class SessionHome
     public static void WriteControl(string sessionHome, ControlEndpoint control)
     {
         ArgumentNullException.ThrowIfNull(control);
-        OwnerOnly.WriteAtomically($"{sessionHome}/control.json", Aw.Kernel.Json.AwJson.Serialize(control, SandboxFilesJson.Options));
+        OwnerOnly.WriteAtomically($"{sessionHome}/control.json", Kernel.Json.AwJson.Serialize(control, SandboxFilesJson.Options));
     }
 
     /// <summary>Removes a session home. The links go, never what they point at; a missing home is fine.</summary>

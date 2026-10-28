@@ -3,9 +3,8 @@ using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
-using Aw.Sindri.Infrastructure.Sandbox.Launch;
 
-namespace Aw.Sindri.Infrastructure.Sandbox;
+namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 
 /// <summary>
 /// The throw-away request Check again plans and self-checks (sandbox spec §8): a ReadOnly Step on a small git repository under '&lt;home&gt;/sandbox/fixture', with the box's

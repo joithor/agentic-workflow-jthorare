@@ -4,7 +4,7 @@ using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Control;
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Host;
-using Aw.Sindri.Infrastructure.Sandbox.Launch;
+using Aw.Sindri.Infrastructure.Launch;
 
 namespace Aw.Sindri.Tests.Sandbox.Launch;
 

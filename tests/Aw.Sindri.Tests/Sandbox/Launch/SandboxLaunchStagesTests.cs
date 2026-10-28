@@ -27,10 +27,10 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     private readonly FakeModelCredentialSource _login = new FakeModelCredentialSource(ModelLoginSource.OwnerCopy).With(AgentId.From("claude-code"), LoginState.Ready);
 
     private SandboxLaunchStages Make(params IModelCredentialSource[] logins) =>
-        new(new NoProfile(), new EmptyLearn(), logins.Length == 0 ? [_login] : logins, _inputs, Registry(), _clock);
+        new(new NoProfile(), new EmptyLearn(), logins.Length == 0 ? [_login] : logins, _inputs, Registry(), _clock, new UnmintedAgentTokenSource());
 
     private SandboxLaunchStages MakeWith(GithubCredentials github) =>
-        new(new GithubProfile(github), new EmptyLearn(), [_login], _inputs, Registry(), _clock);
+        new(new GithubProfile(github), new EmptyLearn(), [_login], _inputs, Registry(), _clock, new UnmintedAgentTokenSource());
 
     public SandboxLaunchStagesTests()
     {

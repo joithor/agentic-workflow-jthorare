@@ -37,11 +37,11 @@ public sealed class SandboxPolicyFilesTests
     }
 
     [Fact]
-    public void Bypass_permissions_is_disabled_at_the_top_level_and_under_permissions()
+    public void Bypass_permissions_is_disabled_under_permissions_only()
     {
         var settings = Render(_readOnly, _refuse);
 
-        Assert.Equal("disable", settings.GetProperty("disableBypassPermissionsMode").GetString());
+        Assert.False(settings.TryGetProperty("disableBypassPermissionsMode", out _));
         Assert.Equal("disable", settings.GetProperty("permissions").GetProperty("disableBypassPermissionsMode").GetString());
     }
 

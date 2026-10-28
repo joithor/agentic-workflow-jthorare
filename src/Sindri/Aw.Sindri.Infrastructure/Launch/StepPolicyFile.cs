@@ -54,7 +54,6 @@ internal static class StepPolicyFile
         ? new ClaudeSettingsDocument(permissions, TurnHooks())
         : new ClaudeSettingsDocument(SandboxPolicyFiles.Merge(permissions, policy.Mode, sandbox), TurnHooks())
         {
-            DisableBypassPermissionsMode = "disable",
             Sandbox = new ClaudeSandbox(sandbox.InnerSandboxOn),
         };
 

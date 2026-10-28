@@ -7,11 +7,6 @@ namespace Aw.Sindri.Infrastructure.Launch;
 /// <param name="Hooks">The turn hooks.</param>
 internal sealed record ClaudeSettingsDocument(ClaudePermissions Permissions, ClaudeHooks Hooks)
 {
-    /// <summary>'disable' for a sandboxed Step (the repo's own settings file spells the key at the top level), or absent.</summary>
-    [JsonPropertyName("disableBypassPermissionsMode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? DisableBypassPermissionsMode { get; init; }
-
     /// <summary>The CLI's own sandbox switch for a sandboxed Step, or absent.</summary>
     [JsonPropertyName("sandbox")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

@@ -36,7 +36,7 @@ public sealed class LauncherSandboxTests : IDisposable
     [Fact]
     public async Task Without_a_sandbox_the_argv_runs_unchanged_and_no_summary_is_set()
     {
-        var result = await Make(null).Launch(Step(), CancellationToken.None);
+        var result = await Make(sandbox: null).Launch(Step(), CancellationToken.None);
 
         Expect.True(result is StartedLaunch { Sandbox: null });
         Expect.True(!_host.Started[0].Argv.Contains("fake-sandbox", StringComparer.Ordinal));
@@ -53,7 +53,7 @@ public sealed class LauncherSandboxTests : IDisposable
         Expect.True(at > 0 && session.Argv[at + 1] == "--");   // 'sindri session wrap -- fake-sandbox -- <agent argv>'
         Expect.Equal("/sessions/home", session.Env["AW_SINDRI_HOME"]);
         Expect.Equal(1, _sandbox.Prepared.Count);
-        Expect.True(_sandbox.Prepared[0].Argv.SequenceEqual(session.Argv.Skip(at + 2)));
+        Expect.True(_sandbox.Prepared[0].Argv.SequenceEqual(session.Argv.Skip(at + 2), StringComparer.Ordinal));
     }
 
     [Fact]

@@ -127,6 +127,24 @@ public sealed class SandboxDoctorChecksTests
         Assert.Equal("on", on.Detail);
     }
 
+    [Fact]
+    public async Task A_ready_box_says_sessions_the_human_opens_are_sandboxed_too()
+    {
+        var row = Row(await Run(new Report()), "sandbox:attended");
+
+        Assert.Equal(CheckState.Ok, row.State);
+        Assert.Null(row.Fix);
+        Assert.Equal(Golden("attended").Replace("sessions you open: ", string.Empty, StringComparison.Ordinal), row.Detail);
+    }
+
+    [Fact]
+    public async Task A_blocked_box_has_no_attended_row_because_nothing_is_sandboxed_there()
+    {
+        var rows = await Run(new Report(Blocker(new(SindriErrors.LaunchSandboxUnavailable, SandboxReasons.NoUserManager))));
+
+        Assert.DoesNotContain(rows, r => string.Equals(r.Name, "sandbox:attended", StringComparison.Ordinal));
+    }
+
     private sealed class Machine(long ram) : ISandboxMachine
     {
         public long RamBytes => ram;

@@ -1,4 +1,3 @@
-using Aw.Context.Tests.Sync;
 using Aw.Context.Core.Code;
 using Aw.Context.Core.ConceptScan;
 using Aw.Context.Core.Docs;
@@ -34,6 +33,7 @@ using Aw.Context.Testing.Records;
 using Aw.Context.Testing.Review;
 using Aw.Context.Testing.ScopeGraph;
 using Aw.Context.Tests.EvalProbes;
+using Aw.Context.Tests.Sync;
 using Aw.Kernel.Ids;
 using Aw.Kernel.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -91,10 +91,10 @@ internal sealed class MapWorld : IDisposable
             .AddSingleton<IProbeFileReader>(new NoProbes())
             .AddSingleton<IProbeReportStore>(new NoProbes())
             .AddSingleton(repoReader ?? new FakeRepoReader(Repos[0], Head, BuildFiles))
-            .AddSingleton<IDefaultBranch>(DefaultBranch).AddSingleton<IRecordStore>(records ?? Records)
+            .AddSingleton<IDefaultBranch>(DefaultBranch)
             .AddSingleton(codeSearch ?? new FakeCodeSearch(Repos[0], Head, BuildFiles))
             .AddSingleton(symbols ?? new NoCodeSymbolSource())
-            .AddSingleton<IIntentStore>(Intents).AddRecordFakes()
+            .AddSingleton<IIntentStore>(Intents).AddRecordFakes().AddSingleton(records ?? Records)
             .AddSingleton(history ?? new FakeFileHistory(Repos[0], new HistoryWorld(Head, [])))
             .AddSingleton<IModelPort>(Model)
             .AddSingleton<IClusterSource>(Clusters)

@@ -114,7 +114,7 @@ internal static class Engines
             new PreviewReviewFileService(new FakeReviewFileStore()), new ApplyReviewFileService(store, new FakeReviewFileStore(), new FakeCurrentUser(), clock), new PromoteMapService(store, clock));
         return new ContextMap(admin, review, new MapProposals(Build(clock, store), new ProposeFromScopeService(store, store, clock), new GetProposalsService(store, store, scrubbers)), Publishing(store), new CleanMapService(store, scrubbers, new FakeModelPort(), new FakeCurrentUser(), clock),
             new Features.ScanConcepts.ScanConceptsService(store, scrubbers, new FakeModelPort(), new NoConceptSearch(), new FakeConceptHintStore(), clock),
-            new Features.BuildMap.CheckStructureService(store, Build(clock, store), new Aw.Context.Testing.Locks.FakeHeavyJobLock()));
+            new CheckStructureService(store, Build(clock, store), new Testing.Locks.FakeHeavyJobLock()));
     }
 
     /// <summary>A scan search that finds nothing: the query tests never scan.</summary>

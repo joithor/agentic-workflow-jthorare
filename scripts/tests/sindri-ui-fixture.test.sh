@@ -660,7 +660,10 @@ seed='Sindri Step brief. Report with: sindri workflow complete ITM-0f/wf/1 --run
 env AW_SINDRI_HOME="$R/home" AW_SINDRI_LAUNCH=LCH-1 AW_SINDRI_INSTANCE=ITM-0f/wf/1 AW_SINDRI_RUN_DIR="$R/run1" CLAUDE_CONFIG_DIR="$R/claude1" \
   timeout 5 "$PD/stub-bin-pick/claude" --model claude-haiku-4-5 --session-id 11111111-2222-4333-8444-555555555555 "$seed" >/dev/null 2>&1
 check "the stub on the model it refuses reports twice (the second bad report ends its session)" "$(grep -c '^workflow complete ITM-0f/wf/1 --run RUN-abc --outcome done --output fact:resolution=' "$STUB_LOG")" "2"
-check "the stub's refused report is not JSON" "$(jq -e . "$R/run1/.sindri-out/resolution" >/dev/null 2>&1 && echo json || echo not-json)" "not-json"
+check "the stub's refused report is not JSON" "$(jq -e . "$R/run1/bad-report" >/dev/null 2>&1 && echo json || echo not-json)" "not-json"
+check "the refused stub leaves no file in .sindri-out (recovery would prove the outcome from one)" "$(ls -A "$R/run1/.sindri-out" | wc -l | tr -d ' ')" "0"
+contains "the stub logs each workflow complete call in stub.log" "$(cat "$R/run1/stub.log")" "--- workflow complete $R/run1/bad-report"
+check "stub.log has one entry per call" "$(grep -c '^exit ' "$R/run1/stub.log")" "2"
 check "the stub writes the session's transcript under the session id, naming the model it ran on" "$(jq -r '[.type, .message.model] | join(",")' "$R/claude1/projects/fixture/11111111-2222-4333-8444-555555555555.jsonl")" "assistant,claude-haiku-4-5"
 : > "$STUB_LOG"
 env AW_SINDRI_HOME="$R/home" AW_SINDRI_LAUNCH=LCH-2 AW_SINDRI_INSTANCE=ITM-0f/wf/1 AW_SINDRI_RUN_DIR="$R/run2" CLAUDE_CONFIG_DIR="$R/claude2" \

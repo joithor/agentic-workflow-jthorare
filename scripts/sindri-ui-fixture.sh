@@ -1014,11 +1014,13 @@ mkdir -p "$projects" && printf '{"type":"assistant","timestamp":"%s","message":{
 run=$(printf '%s' "$seed" | sed -n 's/.*workflow complete [^ ]* --run \([^ ]*\) .*/\1/p')
 folder="$AW_SINDRI_RUN_DIR/.sindri-out"
 mkdir -p "$folder"
-report() { $SINDRI_BIN workflow complete "$AW_SINDRI_INSTANCE" --run "$run" --outcome done --output "fact:resolution=$folder/resolution"; }
+# Every call's output goes to stub.log in the run folder, so a proof can show what serve answered.
+report() { echo "--- workflow complete $1" >> "$AW_SINDRI_RUN_DIR/stub.log"; $SINDRI_BIN workflow complete "$AW_SINDRI_INSTANCE" --run "$run" --outcome done --output "fact:resolution=$1" >> "$AW_SINDRI_RUN_DIR/stub.log" 2>&1; echo "exit $?" >> "$AW_SINDRI_RUN_DIR/stub.log"; }
 if [ -n "$REFUSE" ] && [ "$model" = "$REFUSE" ]; then
-  printf 'not json\n' > "$folder/resolution"; report; report
+  # The bad report lives outside .sindri-out: a file there would let the engine's recovery prove the outcome when the session ends, and the refusal would never count.
+  printf 'not json\n' > "$AW_SINDRI_RUN_DIR/bad-report"; report "$AW_SINDRI_RUN_DIR/bad-report"; report "$AW_SINDRI_RUN_DIR/bad-report"
 else
-  printf '{"summary":"Fixture report"}\n' > "$folder/resolution"; report
+  printf '{"summary":"Fixture report"}\n' > "$folder/resolution"; report "$folder/resolution"
 fi
 exec sleep 86400
 EOF

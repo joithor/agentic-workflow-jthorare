@@ -1,8 +1,6 @@
-using Aw.Kernel;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Launch;
-using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Infrastructure.Launch;
 using Aw.Sindri.Testing;
 using Aw.Sindri.Testing.Launch;
@@ -30,7 +28,7 @@ public sealed class LauncherSandboxTests : IDisposable
     private LauncherOptions Options => new(_home) { SindriHome = "/real/sindri-home" };
 
     private LaunchRequest Step() =>
-        A.LaunchRequest().InDirectory(_work).Unattended(new StepArgs(Model: null, Policy: null, new StepRef("build", "agent"))).Build();
+        A.LaunchRequest().InDirectory(_work).Unattended(new StepArgs(Model: null, Policy: null, Ref: new StepRef("build", "agent"))).Build();
 
     private Launcher Make(ISandboxLaunch? sandbox) =>
         new(new LauncherParts(new AgentCatalog([AgentEntries.ClaudeCode]), _ => _host, new FakeTerminalViewer(), Options, _clock) { Sandbox = sandbox, ResolveBin = static (_, _) => ValueTask.FromResult<string?>(null) });
@@ -41,7 +39,7 @@ public sealed class LauncherSandboxTests : IDisposable
         var result = await Make(null).Launch(Step(), CancellationToken.None);
 
         Expect.True(result is StartedLaunch { Sandbox: null });
-        Expect.True(!_host.Started[0].Argv.Contains("fake-sandbox"));
+        Expect.True(!_host.Started[0].Argv.Contains("fake-sandbox", StringComparer.Ordinal));
     }
 
     [Fact]
@@ -51,7 +49,7 @@ public sealed class LauncherSandboxTests : IDisposable
 
         Expect.True(result is StartedLaunch started && ReferenceEquals(started.Sandbox, _sandbox.Summary));
         var session = _host.Started[0];
-        var at = session.Argv.ToList().IndexOf("fake-sandbox");
+        var at = session.Argv.ToList().FindIndex(a => string.Equals(a, "fake-sandbox", StringComparison.Ordinal));
         Expect.True(at > 0 && session.Argv[at + 1] == "--");   // 'sindri session wrap -- fake-sandbox -- <agent argv>'
         Expect.Equal("/sessions/home", session.Env["AW_SINDRI_HOME"]);
         Expect.Equal(1, _sandbox.Prepared.Count);
@@ -65,7 +63,7 @@ public sealed class LauncherSandboxTests : IDisposable
 
         var result = await Make(_sandbox).Launch(Step(), CancellationToken.None);
 
-        Expect.True(result is FailedLaunch { Error.Code: "SND-LAUNCH-015" });
+        Expect.True(result is FailedLaunch { Error.Code: var code } && string.Equals(code, "SND-LAUNCH-015", StringComparison.Ordinal));
         Expect.Equal(0, _host.Started.Count);
         Expect.Equal(1, _sandbox.Released.Count);   // what a half-prepared sandbox left is released
     }

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using ConfigReading = Aw.Judge.Core.Config.ConfigReading;
 using Aw.Judge.Core.Errors;
 using Aw.Judge.Core.Evaluation;
 using Aw.Judge.Core.Labels;
@@ -17,7 +18,7 @@ namespace Aw.Judge.Features.EvaluateQuestion;
 /// writes (the record, the .json and .md reports) is redacted, values and keys, before it is written.
 /// </summary>
 internal sealed class EvaluateQuestionService(
-    IEvalStore store, IProviderCatalog catalog, IEvalFiles files, IInputRedactor redactor, TimeProvider clock, JsonSerializerOptions json)
+    IEvalStore store, IJudgeConfigStore configs, IProviderCatalog catalog, IEvalFiles files, IInputRedactor redactor, TimeProvider clock, JsonSerializerOptions json)
     : IService<EvaluateQuestionRequest, EvaluateQuestionResponse>
 {
     public async ValueTask<Result<EvaluateQuestionResponse>> Handle(EvaluateQuestionRequest request, CancellationToken cancellationToken)
@@ -117,7 +118,8 @@ internal sealed class EvaluateQuestionService(
     private async ValueTask<Result<IReadOnlyList<EvalResult>>> Asked(
         EvaluateQuestionRequest request, ScoringQuestion question, Func<JsonNode?, JsonNode?> variant, IReadOnlyList<LabeledItem> items, CancellationToken cancellationToken)
     {
-        var found = catalog.Provider(request.Provider, request.Providers);
+        var reading = ConfigReading.From(await configs.Load(cancellationToken).ConfigureAwait(false));
+        var found = catalog.Provider(request.Provider, request.Providers, reading.IsSuccess ? reading.Value.Config.Providers : null);
         if (found.IsError)
         {
             return Results.Failure<IReadOnlyList<EvalResult>>(found.Error);

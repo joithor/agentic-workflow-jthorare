@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Aw.Judge.Core.Questions;
 
 namespace Aw.Judge.Core.Evaluation;
 
@@ -30,25 +31,10 @@ public static class InputCap
             return text;
         }
 
-        // The largest per-string length that fits: the size only grows with the length, so bisect on it.
-        string? best = null;
-        int low = 0, high = LongestString(value);
-        while (low <= high)
-        {
-            var mid = low + ((high - low) / 2);
-            var cut = InputJson.Write(CutStrings(value, mid), options);
-            if (cut.Length <= maxChars)
-            {
-                best = cut;
-                low = mid + 1;
-            }
-            else
-            {
-                high = mid - 1;
-            }
-        }
-
-        return best ?? Stub(text, maxChars, options);
+        // The longest strings are cut first (FairCut); no length fits (even every string reduced to its marker is too big) -> the stub.
+        var limit = FairCut.Limit(LongestString(value), l => InputJson.Write(CutStrings(value, l), options).Length <= maxChars);
+        var cut = InputJson.Write(CutStrings(value, limit), options);
+        return cut.Length <= maxChars ? cut : Stub(text, maxChars, options);
     }
 
     /// <summary>The text cut to <paramref name="maxChars"/> with a "[truncated N chars]" marker, or unchanged when it fits.</summary>

@@ -1999,3 +1999,6 @@ const Aw.Judge.Core.Questions.ModelPickPack.Secret = "secret" -> string!
 const Aw.Judge.Core.Questions.ModelPickQuestion.JevInputCap = 130000 -> int
 static Aw.Judge.Core.Questions.ModelPickQuestion.Kinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
 static readonly Aw.Judge.Core.Errors.JudgeErrors.ModelPickInput -> Aw.Kernel.ErrorDefinition!
+Aw.Judge.Core.Ports.IProviderCatalog.Provider(Aw.Judge.Core.Providers.ProviderName name, System.Collections.Generic.IReadOnlyCollection<Aw.Judge.Core.Providers.ProviderName>? allowed, Aw.Judge.Core.Config.ProvidersConfig? config) -> Aw.Kernel.Result<Aw.Judge.Core.Ports.IModelProvider!>!
+Aw.Judge.Core.Questions.FairCut
+static Aw.Judge.Core.Questions.FairCut.Limit(int longest, System.Func<int, bool>! fits) -> int

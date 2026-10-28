@@ -94,14 +94,9 @@ internal sealed partial class JevProvider(HttpClient http, ISecretSource secrets
 
     // Jev is a third party: it gets what decision_details would store, the redacted input capped the same way, unless the
     // question sets a cap of its own (model-pick sends a whole pack).
-    private JsonNode? State(JsonNode? input) => CappedState(input, InputCap.MaxChars);
-
     private JsonNode? CappedState(JsonNode? input, int cap) => JsonNode.Parse(InputCap.Write(redactor.Redact(input), cap, WireJson.Options));
 
     // The prompt carries the input's text too (ask-check's transcript tail, a rule-check hunk): redacted, then capped.
-    private string Instructions(string prompt) => CappedInstructions(prompt, InputCap.MaxChars);
-
-    // why: not an overload of Instructions, so the batch path's Select(Instructions) can't bind the cap to the element index
     private string CappedInstructions(string prompt, int cap) =>
         InputCap.Truncate(redactor.Redact(JsonValue.Create(prompt))?.GetValue<string>() ?? "", cap);
 

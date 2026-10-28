@@ -150,28 +150,9 @@ public static class ChooseQuestion
         return string.Join('\n', lines);
     }
 
-    // The facts share the budget: every fact is cut to the same length L (the longest first, a short one never), and L is the
-    // largest length at which all the facts together fit. The size only grows with L, so bisect on it.
-    private static int FactLimit(IReadOnlyList<string> texts, int budget)
-    {
-        int low = 0, high = texts.Select(t => t.Length).DefaultIfEmpty().Max();
-        var best = 0;
-        while (low <= high)
-        {
-            var mid = low + ((high - low) / 2);
-            if (texts.Sum(t => UntrustedText.Capped(t, mid).Length) <= budget)
-            {
-                best = mid;
-                low = mid + 1;
-            }
-            else
-            {
-                high = mid - 1;
-            }
-        }
-
-        return best;
-    }
+    // The facts share the budget, the longest cut first (FairCut, as InputCap does for the wire input).
+    private static int FactLimit(IReadOnlyList<string> texts, int budget) =>
+        FairCut.Limit(texts.Select(t => t.Length).DefaultIfEmpty().Max(), limit => texts.Sum(t => UntrustedText.Capped(t, limit).Length) <= budget);
 
     private static string Text(JsonElement value) => value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : value.GetRawText();
 }

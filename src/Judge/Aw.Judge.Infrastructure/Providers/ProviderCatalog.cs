@@ -36,7 +36,10 @@ internal sealed class ProviderCatalog(Func<string, string?> environment, IExecut
     }
 
     /// <inheritdoc />
-    public Result<IModelProvider> Provider(ProviderName name, IReadOnlyCollection<ProviderName>? allowed)
+    public Result<IModelProvider> Provider(ProviderName name, IReadOnlyCollection<ProviderName>? allowed) => Provider(name, allowed, config: null);
+
+    /// <inheritdoc />
+    public Result<IModelProvider> Provider(ProviderName name, IReadOnlyCollection<ProviderName>? allowed, ProvidersConfig? config)
     {
         if (allowed is not null && !allowed.Contains(name))
         {
@@ -47,7 +50,7 @@ internal sealed class ProviderCatalog(Func<string, string?> environment, IExecut
         var installed = AgentCliNames.FromProvider(name) is not { } cli || locator.IsOnPath(AgentCliNames.Binary(cli));
         return provider is null || !installed
             ? JudgeErrors.ProviderUnavailable.With($"{ProviderNames.Name(name)} is not available")
-            : Results.Success<IModelProvider>(new FailOpenModelProvider(provider));
+            : Results.Success<IModelProvider>(new FailOpenModelProvider(WithConfiguredCap(provider, config)));
     }
 
     /// <inheritdoc />

@@ -47,14 +47,29 @@ public static class PlatformSandboxServiceCollectionExtensions
 
     private static SandboxLaunchOptions LaunchOptions(IServiceProvider sp, Func<string, string?> environment)
     {
-        var endpoints = sp.GetRequiredService<IEndpointFile>();
+        var settings = sp.GetRequiredService<SindriSettings>();
+        var json = sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>();
         return new SandboxLaunchOptions(
             environment("AW_SANDBOX_SYSTEMD_RUN") is { Length: > 0 } run ? run : "systemd-run",
             ReadBox(),
             TimeSpan.FromHours(2),   // workflow.steps.longMax's default; the launch reads no profile here yet
-            sp.GetRequiredService<SindriSettings>().Home,
+            settings.Home,
             sp.GetRequiredService<LauncherOptions>().SecretsDirectory,
-            () => endpoints.Read(CancellationToken.None).AsTask().GetAwaiter().GetResult() is { IsSuccess: true } read ? read.Value : null);   // control.json is a tiny local file
+            () => ReadEndpoint(settings.EndpointPath, json));
+    }
+
+    /// <summary>Reads control.json (a tiny local file) as FileEndpoint does; a missing or damaged record is none.</summary>
+    private static ControlEndpoint? ReadEndpoint(string path, System.Text.Json.JsonSerializerOptions json)
+    {
+        try
+        {
+            var read = Aw.Kernel.Json.AwJson.Deserialize<ControlEndpoint>(File.ReadAllBytes(path), json);
+            return read.IsError ? null : read.Value;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 
     /// <summary>Reads the box's RAM (MemTotal in /proc/meminfo, in kB) and logical cores.</summary>

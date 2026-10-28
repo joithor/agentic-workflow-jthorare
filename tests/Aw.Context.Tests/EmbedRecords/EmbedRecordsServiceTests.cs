@@ -89,9 +89,8 @@ public sealed class EmbedRecordsServiceTests
     public async Task A_batch_that_stores_nothing_ends_the_run_instead_of_looping()
     {
         await Seed(("linear:issue/1", 0, ["old text"]));
-        _embedder.OnEmbedded = () => _ = _store.Commit(RecordSamples.Batch(RecordSamples.Linear, 2, RecordSamples.Write(RecordSamples.Record("linear:issue/1", "v2"), "other text")), Ct).AsTask().GetAwaiter().GetResult();
 
-        var report = (await Service().Handle(new EmbedRecordsRequest(), Ct)).Value;
+        var report = (await new EmbedRecordsService(new VectorRefusingStore(_store), _embedder).Handle(new EmbedRecordsRequest(), Ct)).Value;
 
         Assert.Equal(new EmbedRecordsReport(1, 0, Done: false), report);
     }

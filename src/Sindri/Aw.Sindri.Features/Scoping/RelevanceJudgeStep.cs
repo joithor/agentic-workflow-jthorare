@@ -7,6 +7,7 @@ using Aw.Sindri.Core.Profile;
 using Aw.Sindri.Core.Text;
 using Aw.Sindri.Core.Workflow.Blocks;
 using Aw.Sindri.Core.Workflow.Ids;
+using Microsoft.Extensions.Logging;
 
 namespace Aw.Sindri.Features.Scoping;
 
@@ -17,7 +18,9 @@ namespace Aw.Sindri.Features.Scoping;
 /// </summary>
 /// <param name="judge">The judge's choose question.</param>
 /// <param name="scrubber">Redacts the projection's text before it leaves for the judge.</param>
-internal sealed class RelevanceJudgeStep(IJudgeChoice judge, ITextScrubber scrubber) : IBlockStep, IBlockStepId
+/// <param name="clock">Times the run and its calls.</param>
+/// <param name="logger">Where the progress lines go.</param>
+internal sealed class RelevanceJudgeStep(IJudgeChoice judge, ITextScrubber scrubber, TimeProvider clock, ILogger<RelevanceJudgeStep> logger) : IBlockStep, IBlockStepId
 {
     internal const double DefaultThreshold = 0.6;
 
@@ -37,6 +40,8 @@ internal sealed class RelevanceJudgeStep(IJudgeChoice judge, ITextScrubber scrub
     {
         ArgumentNullException.ThrowIfNull(context);
         cancellationToken.ThrowIfCancellationRequested();
+        ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(logger);
         if (StepFacts.Missing(context, "fact:brief", "fact:lenses") is { Count: > 0 } missing)
         {
             return BlockStepResult.Failed($"{Name} needs {string.Join(", ", missing)}, which the instance does not hold");

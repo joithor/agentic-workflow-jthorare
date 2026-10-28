@@ -70,7 +70,7 @@ public sealed class SlackIndexEndToEndTests : IDisposable
     }
 
     [Fact]
-    public async Task A_tick_stores_the_channels_thread_with_its_slack_permalink_and_channel_audience()
+    public async Task A_tick_stores_the_channels_thread_and_a_human_query_finds_it_by_its_text_with_the_slack_permalink()
     {
         var ct = TestContext.Current.CancellationToken;
         await using var services = _provider.CreateAsyncScope();
@@ -79,17 +79,21 @@ public sealed class SlackIndexEndToEndTests : IDisposable
 
         var ticked = await engine.Tick(scope, ct);
         var stored = await services.ServiceProvider.GetRequiredService<IRecordStore>().Get(RecordKey.From($"slack:C0001GEN/{_rootTs}"), ct);
+        var answer = await engine.Query(new ContextQuery("webhook signing secret"), scope, ct);
 
         Assert.True(ticked.IsSuccess, ticked.IsError ? ticked.Error.Message : "");
         var source = Assert.Single(ticked.Value.Sources, s => s.Source.Value == "slack");
         Assert.Null(source.Code);
-        // Stored, not queried: a query can't return a Slack record until #1497 (the record-store mask applies the session audience rule to human callers too).
         var record = Assert.IsType<StoredRecord>(stored.Value);
         Assert.Equal("slack:C0001GEN", record.Audience?.Value);
         Assert.Null(record.Repo);
         Assert.Equal(RecordKind.Message, record.Kind);
         Assert.Equal($"https://example.slack.com/archives/C0001GEN/p{_rootTs.Replace(".", string.Empty, StringComparison.Ordinal)}", record.Url);
         Assert.Equal(2, (await services.ServiceProvider.GetRequiredService<IRecordStore>().Count(SourceId.From("slack"), ct)).Value.Records);   // the thread and the day record of the unthreaded message
+        Assert.True(answer.IsSuccess, answer.IsError ? answer.Error.Message : "");
+        var hit = Assert.Single(answer.Value.Cites.Values, c => c.Key.Value.StartsWith("slack:", StringComparison.Ordinal) && c.Key.Value.Contains("/" + _rootTs, StringComparison.Ordinal));
+        Assert.Equal($"slack:C0001GEN/{_rootTs}", hit.Key.Value);
+        Assert.Equal($"https://example.slack.com/archives/C0001GEN/p{_rootTs.Replace(".", string.Empty, StringComparison.Ordinal)}", hit.Permalink?.ToString());
     }
 
     private sealed class CannedSlack(string rootTs, string replyTs, string laterTs) : ISlackReader

@@ -29,6 +29,12 @@ public static class ConnectorsErrors
     /// <summary>AW-CONNECTORS-008.</summary>
     public static readonly ErrorDefinition NotFound = new("AW-CONNECTORS-008", ErrorKind.NotFound, "The repo does not exist, or the token cannot see it");
 
+    /// <summary>AW-CONNECTORS-009.</summary>
+    public static readonly ErrorDefinition RateLimited = new("AW-CONNECTORS-009", ErrorKind.RateLimited, "The source is rate limited; the next pull resumes from the cursor");
+
+    /// <summary>SND-INDEX-006 (owned index spec §12.3): a Slack channel that is not in the profile, or a direct message. No request was sent.</summary>
+    public static readonly ErrorDefinition ChannelNotAllowed = new("SND-INDEX-006", ErrorKind.Forbidden, "A channel is not in the profile, or is a direct message; no request was sent");
+
     /// <summary>Every Connectors error, for ErrorCatalogue.Validate.</summary>
-    public static IReadOnlyList<ErrorDefinition> All { get; } = [Invalid, Unauthorized, HostRefused, RedirectRefused, Unreachable, BadReply, AccessDenied, NotFound];
+    public static IReadOnlyList<ErrorDefinition> All { get; } = [Invalid, Unauthorized, HostRefused, RedirectRefused, Unreachable, BadReply, AccessDenied, NotFound, RateLimited, ChannelNotAllowed];
 }

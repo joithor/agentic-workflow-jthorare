@@ -121,14 +121,7 @@ public sealed class NeedsYouHomeActionsSendTests : IDisposable
     [Fact]
     public Task Complete_on_a_desk_row_sends_one_CompleteStep_for_its_instance() => OnUi(async () =>
     {
-        // the golden's desk requires a file (fact:output), which Home's Complete can't give (it opens the sheet instead, #1170): this row's step asks for none
-        var served = System.Text.Json.Nodes.JsonNode.Parse(GoldenFiles.Api("workflow-instance", "dev-desk-round-trip"))!;
-        foreach (var output in served["current"]!["desk"]!["outputs"]!.AsArray())
-        {
-            output!["required"] = false;
-        }
-
-        _server.InstanceBody = _ => new RouteAnswer(System.Net.HttpStatusCode.OK, served.ToJsonString());
+        _server.ServeDeskWithoutRequiredOutput();   // the golden's desk requires a file, which Home's Complete opens the sheet for (#1170): this row's step asks for none
         var (window, _) = await WithFeed(new NeedsYouFeed([NeedsYouRows.Desk()], ""));
 
         ActionButton(Rows(window).Single(), "CompleteStep").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

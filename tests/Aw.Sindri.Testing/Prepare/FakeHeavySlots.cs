@@ -18,13 +18,15 @@ public sealed class FakeHeavySlots : IHeavySlots
     /// <summary>Whether every slot is busy: Take then answers with no lease.</summary>
     public bool Busy { get; set; }
 
+    private readonly List<string> _holders = [];
+
     /// <summary>The holder names given to Take.</summary>
-    public List<string> Holders { get; } = [];
+    public IReadOnlyList<string> Holders => _holders;
 
     /// <inheritdoc/>
     public ValueTask<Result<HeavySlotTaken>> Take(string holder, TimeSpan timeout, IProgress<string>? waiting, CancellationToken cancellationToken)
     {
-        Holders.Add(holder);
+        _holders.Add(holder);
         if (Busy)
         {
             return ValueTask.FromResult<Result<HeavySlotTaken>>(new HeavySlotTaken(Lease: null, Busy: "slot 1/1 held by someone"));

@@ -79,6 +79,18 @@
       "description": "Records that Sindri is alive."
     },
     {
+      "name": "index-embed",
+      "every": "1m",
+      "paused": false,
+      "lastRun": null,
+      "nextSlot": null,
+      "job": null,
+      "actions": [
+        "run"
+      ],
+      "description": "Gives the indexed records their meaning vectors."
+    },
+    {
       "name": "pr-watch",
       "every": "5s",
       "paused": false,

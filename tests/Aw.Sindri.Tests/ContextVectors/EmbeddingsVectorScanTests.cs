@@ -10,11 +10,12 @@ namespace Aw.Sindri.Tests.ContextVectors;
 
 /// <summary>The adapter behind Context's vector scan (owned-index spec §4.4): the in-process scan with chunk keys and Context's error code.</summary>
 [Lane(TestLane.Unit)]
-public sealed class EmbeddingsVectorScanTests : VectorScanContract<EmbeddingsVectorScan>
+public sealed class EmbeddingsVectorScanTests : VectorScanContract<IVectorScan>
 {
+    private static readonly bool[] _firstMasked = [false, true, true];
     private static readonly VectorMatrix _matrix = new(2, new float[] { 1, 0, 0.6f, 0.8f, 0, 1 }, ["a", "b", "c"]);
 
-    protected override EmbeddingsVectorScan Create() => new(new ScanInProcess());
+    protected override IVectorScan Create() => new EmbeddingsVectorScan(new ScanInProcess());
 
     [Fact]
     public void Hits_carry_the_key_of_their_row()
@@ -29,7 +30,7 @@ public sealed class EmbeddingsVectorScanTests : VectorScanContract<EmbeddingsVec
     [Fact]
     public void The_mask_is_passed_to_the_scan()
     {
-        var hits = Create().Top(_matrix, new float[] { 1, 0 }, new[] { false, true, true }, 1);
+        var hits = Create().Top(_matrix, new float[] { 1, 0 }, _firstMasked, 1);
 
         Assert.Equal("b", Assert.Single(hits.Value).Key);
     }

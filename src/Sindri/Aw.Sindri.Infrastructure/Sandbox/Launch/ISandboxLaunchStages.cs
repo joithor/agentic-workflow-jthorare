@@ -17,12 +17,13 @@ internal interface ISandboxLaunchStages
     /// <returns>The request, or the SND-LAUNCH-015/017 refusal.</returns>
     public ValueTask<Result<SandboxRequest>> Request(LaunchRequest request, CancellationToken cancellationToken);
 
-    /// <summary>Writes the Step's policy file with the plan's rules merged in (a claude-settings-file Step), and gives the extra arguments the Step's form takes under a sandbox (a Codex Step's '-c' overrides).</summary>
+    /// <summary>Writes the Step's policy file into the session home with the plan's rules merged in (a claude-settings-file Step; the sandbox can't see the launcher's own directory), and gives the extra arguments the Step's form takes under a sandbox (a Codex Step's '-c' overrides).</summary>
     /// <param name="request">The request the plan was built from.</param>
     /// <param name="plan">The plan.</param>
+    /// <param name="sessionHome">The launch's session home.</param>
     /// <param name="cancellationToken">Cancels the work.</param>
-    /// <returns>The arguments to add after the launcher's argv (empty for most forms), or a refusal.</returns>
-    public ValueTask<Result<IReadOnlyList<string>>> WritePolicy(SandboxRequest request, SandboxPlan plan, CancellationToken cancellationToken);
+    /// <returns>The extra arguments and the file's move, or a refusal.</returns>
+    public ValueTask<Result<PolicyFiles>> WritePolicy(SandboxRequest request, SandboxPlan plan, string sessionHome, CancellationToken cancellationToken);
 
     /// <summary>Starts the launch's egress (registered per launch in the LaunchSandboxRegistry) before the self-check.</summary>
     /// <param name="plan">The plan.</param>

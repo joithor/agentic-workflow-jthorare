@@ -48,7 +48,7 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
         return new SandboxRequest(
             request.Launch, request.Item, request.Agent, repo, request.Instance,
             new SandboxPaths(request.RepoPath, common, request.Worktree, run, inputs.RunAreaFor(request.Launch)),
-            request.Instance is { } instance && request.Run is { } token ? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"sindri/{WorkflowInstanceId.Of(instance).Value}/{token.Number}") : string.Empty,
+            request.Attended ? AttendedOpen.RunNamespace(request.Launch) : request.Instance is { } instance && request.Run is { } token ? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"sindri/{WorkflowInstanceId.Of(instance).Value}/{token.Number}") : string.Empty,
             request.Step?.Policy, request.Attended,
             StepTimeout: null, LongMax: LongMax(loaded), SlotHeld: false,   // not on the launch request: the Step's own timeout and the heavy-slot fact
             new SandboxNetFacts(inputs.NetDirFor(request.Launch), inputs.SindriPort(), inputs.ProxyPort()),

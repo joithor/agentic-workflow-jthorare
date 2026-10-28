@@ -39,12 +39,24 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
 
         var limit = asked.Value.Settings?.Limits?.Sessions ?? SandboxDefaults.Sessions;
         var prepared = await cap.Start(limit, ct => Confine(asked.Value, argv, ct), cancellationToken).ConfigureAwait(false);
+        if (prepared.IsError && request.Attended && string.Equals(prepared.Error.Code, SindriErrors.LaunchSessionWait.Code, StringComparison.Ordinal))
+        {
+            prepared = AttendedFull(prepared.Error);   // a person can close a session: said at once, not a wait
+        }
+
         if (prepared.IsError)
         {
             await Undo(request.Launch, CancellationToken.None).ConfigureAwait(false);
         }
 
         return prepared;
+    }
+
+    private static Error AttendedFull(Error full)
+    {
+        var values = SandboxBlocker.Of(full).Values;
+        var text = SandboxCopy.For(full.Code, SandboxReasons.Sessions, source: null, values, attended: true)?.Text ?? full.Message;
+        return SandboxRefusal.For(SindriErrors.LaunchSessionWait, SandboxReasons.Sessions, text, details: values);
     }
 
     /// <inheritdoc/>

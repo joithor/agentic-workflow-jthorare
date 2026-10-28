@@ -24,7 +24,10 @@ internal sealed class FileSessionCap(string lockFile, ISliceScopes scopes) : ISe
         var live = await scopes.Live(cancellationToken).ConfigureAwait(false);
         if (live.Count >= cap)
         {
-            return SindriErrors.LaunchSessionWait.With(string.Create(CultureInfo.InvariantCulture, $"{live.Count} of {cap} sessions are running (fix: wait for one to end, or raise sandbox.limits.sessions)"));
+            return SandboxRefusal.For(
+                SindriErrors.LaunchSessionWait, SandboxReasons.Sessions,
+                string.Create(CultureInfo.InvariantCulture, $"{live.Count} of {cap} sessions are running (fix: wait for one to end, or raise sandbox.limits.sessions)"),
+                details: new Dictionary<string, string>(StringComparer.Ordinal) { ["running"] = live.Count.ToString(CultureInfo.InvariantCulture), ["cap"] = cap.ToString(CultureInfo.InvariantCulture) });
         }
 
         return await start(cancellationToken).ConfigureAwait(false);

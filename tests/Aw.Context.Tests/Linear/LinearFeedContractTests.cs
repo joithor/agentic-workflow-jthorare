@@ -12,6 +12,7 @@ namespace Aw.Context.Tests.Linear;
 [Trait("Lane", "unit")]
 public sealed class LinearFeedContractTests : RecordFeedContract<RecordFeed>
 {
+    // why: the contract hands the feed arbitrary items (any keys and times), which FakeLinearServer's fixed recordings can't be seeded with; the query itself is run against the fake server in LinearFeedFakeServerTests
     protected override RecordFeed Create(IReadOnlyList<RecordItem> items) =>
         FeedOf([.. items.Select(i => FakeLinearIssues.Node(i.Key.Value["linear:issue/".Length..], i.UpdatedAt!.Value))]).Feed;
 

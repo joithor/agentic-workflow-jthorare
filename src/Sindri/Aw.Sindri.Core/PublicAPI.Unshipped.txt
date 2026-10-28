@@ -21164,3 +21164,5 @@ static Aw.Sindri.Core.Sandbox.SandboxCheckRecord.operator !=(Aw.Sindri.Core.Sand
 static Aw.Sindri.Core.Sandbox.SandboxCheckRecord.operator ==(Aw.Sindri.Core.Sandbox.SandboxCheckRecord? left, Aw.Sindri.Core.Sandbox.SandboxCheckRecord? right) -> bool
 const Aw.Sindri.Core.Views.ViewSchema.Version = 19 -> int
 static Aw.Sindri.Core.Workflow.Engine.Runtime.StatusSandboxes.OrNull(Aw.Sindri.Core.Workflow.Engine.SandboxPark? park) -> Aw.Sindri.Core.Workflow.Views.StatusSandbox?
+Aw.Sindri.Core.Workflow.Engine.Runtime.IRunBranches
+Aw.Sindri.Core.Workflow.Engine.Runtime.IRunBranches.HasCommits(string! repository, string! branch, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>

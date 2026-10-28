@@ -5401,3 +5401,23 @@ static Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.operator !=(Aw.Sindr
 static Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine.operator ==(Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine? left, Aw.Sindri.Features.GetSandboxStatus.SandboxLearnLine? right) -> bool
 static Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.operator !=(Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse? left, Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse? right) -> bool
 static Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse.operator ==(Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse? left, Aw.Sindri.Features.GetSandboxStatus.SandboxStatusResponse? right) -> bool
+Aw.Sindri.Features.GetInstanceEvents.InstanceEventFields.Limit.get -> Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding?
+Aw.Sindri.Features.GetInstanceEvents.InstanceEventFields.Limit.init -> void
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.<Clone>$() -> Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding!
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Branch.get -> string?
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Branch.init -> void
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Deconstruct(out string! Kind, out string! Limit, out string! Elapsed, out string? Branch) -> void
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Elapsed.get -> string!
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Elapsed.init -> void
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Equals(Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding? other) -> bool
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.InstanceLimitEnding(string! Kind, string! Limit, string! Elapsed, string? Branch) -> void
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Kind.get -> string!
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Kind.init -> void
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Limit.get -> string!
+Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Limit.init -> void
+override Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.Equals(object? obj) -> bool
+override Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.GetHashCode() -> int
+override Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.ToString() -> string!
+static Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.operator !=(Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding? left, Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding? right) -> bool
+static Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding.operator ==(Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding? left, Aw.Sindri.Features.GetInstanceEvents.InstanceLimitEnding? right) -> bool

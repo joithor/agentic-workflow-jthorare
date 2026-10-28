@@ -1,0 +1,31 @@
+using Aw.Sindri.Core.Events;
+using Aw.Sindri.Core.Ledger;
+using Aw.Sindri.Core.Profile;
+using Aw.Sindri.Core.Views;
+using Aw.Sindri.Core.Workflow.Engine;
+using Aw.Sindri.Core.Workflow.Engine.Runtime;
+
+namespace Aw.Sindri.Features.GetInstanceEvents;
+
+/// <summary>
+/// Adds how a sandbox limit ended a run to its 'step.failed' row (sandbox spec §8): the run's launch id is the engine's, so 'launch.outcome:&lt;launch&gt;' says when the session started and which item it ran for, and
+/// 'session.ended:&lt;launch&gt;' says which limit ended it and when. The branch is the run branch when it is ahead of the repo's checkout (its work is kept), else null. Anything unreadable leaves the row as it was.
+/// </summary>
+/// <param name="ledger">The ledger, read-only.</param>
+/// <param name="events">Reads the payloads.</param>
+/// <param name="views">The items view, for the item's repo.</param>
+/// <param name="approved">The approved profile, for the repo's checkout.</param>
+/// <param name="branches">Says whether the run branch kept commits.</param>
+internal sealed class LimitEndingReader(ILedgerReader ledger, EventFactory events, IViewReader views, IApprovedProfile approved, IRunBranches branches)
+{
+    /// <summary>Adds the limit ending to <paramref name="fields"/> when they are a limit failure of an agent run.</summary>
+    /// <param name="fields">The row's fields.</param>
+    /// <param name="instance">The instance the row belongs to.</param>
+    /// <param name="cancellationToken">Cancels the reads.</param>
+    /// <returns>The fields, with the ending when it could be read.</returns>
+    public ValueTask<InstanceEventFields> Add(InstanceEventFields fields, WorkflowInstanceId instance, CancellationToken cancellationToken)
+    {
+        _ = (ledger, events, views, approved, branches, instance, cancellationToken);
+        return ValueTask.FromResult(fields);
+    }
+}

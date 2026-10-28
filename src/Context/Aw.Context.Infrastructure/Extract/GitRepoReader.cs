@@ -44,6 +44,8 @@ internal sealed class GitRepoReader(GitCli git) : IRepoReader
         return text.IsError ? Unreadable(repo, commit, path) : text;
     }
 
+    public ValueTask<Result<IReadOnlyDictionary<string, string>>> BlobIds(ContextRepo repo, string commit, IReadOnlyList<string> paths, CancellationToken cancellationToken) => throw new NotSupportedException();
+
     public async ValueTask<Result<RepoChanges>> Changes(ContextRepo repo, DiffRange range, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(repo);

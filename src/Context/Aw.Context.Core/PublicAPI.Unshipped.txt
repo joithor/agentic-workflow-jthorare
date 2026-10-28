@@ -9031,3 +9031,4 @@ override Aw.Context.Core.Concepts.PinRollupResult.GetHashCode() -> int
 override Aw.Context.Core.Concepts.PinRollupResult.ToString() -> string!
 static Aw.Context.Core.Concepts.PinRollupResult.operator !=(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
 static Aw.Context.Core.Concepts.PinRollupResult.operator ==(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
+Aw.Context.Core.Extract.IRepoReader.BlobIds(Aw.Context.Core.Engine.ContextRepo! repo, string! commit, System.Collections.Generic.IReadOnlyList<string!>! paths, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyDictionary<string!, string!>!>!>

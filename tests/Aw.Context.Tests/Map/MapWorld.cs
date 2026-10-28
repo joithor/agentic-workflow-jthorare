@@ -11,6 +11,7 @@ using Aw.Context.Core.Locks;
 using Aw.Context.Core.Map;
 using Aw.Context.Core.Models;
 using Aw.Context.Core.Proposals;
+using Aw.Context.Core.Records;
 using Aw.Context.Core.Review;
 using Aw.Context.Core.ScopeGraph;
 using Aw.Context.Core.Search;
@@ -28,6 +29,7 @@ using Aw.Context.Testing.History;
 using Aw.Context.Testing.Linking;
 using Aw.Context.Testing.Locks;
 using Aw.Context.Testing.Map;
+using Aw.Context.Testing.Records;
 using Aw.Context.Testing.Review;
 using Aw.Context.Testing.ScopeGraph;
 using Aw.Context.Tests.EvalProbes;
@@ -69,7 +71,7 @@ internal sealed class MapWorld : IDisposable
         ["README.md"] = "# Split panes",
     };
 
-    public MapWorld(IRepoReader? repoReader = null, IContextSource? intent = null, ICodeSearch? codeSearch = null, IFileHistory? history = null, ICodeSymbolSource? symbols = null, WholeMapRules? wholeMapRules = null, WalkOptions? walk = null)
+    public MapWorld(IRepoReader? repoReader = null, IContextSource? intent = null, ICodeSearch? codeSearch = null, IFileHistory? history = null, ICodeSymbolSource? symbols = null, WholeMapRules? wholeMapRules = null, WalkOptions? walk = null, IRecordStore? records = null)
     {
         Sources = new FixedSourceCatalog(intent is null ? [Docs] : [Docs, intent]);
         Exports = new FakeExportStore(Clock);
@@ -88,7 +90,7 @@ internal sealed class MapWorld : IDisposable
             .AddSingleton<IProbeFileReader>(new NoProbes())
             .AddSingleton<IProbeReportStore>(new NoProbes())
             .AddSingleton(repoReader ?? new FakeRepoReader(Repos[0], Head, BuildFiles))
-            .AddSingleton<IDefaultBranch>(DefaultBranch)
+            .AddSingleton<IDefaultBranch>(DefaultBranch).AddSingleton<IRecordStore>(records ?? Records)
             .AddSingleton(codeSearch ?? new FakeCodeSearch(Repos[0], Head, BuildFiles))
             .AddSingleton(symbols ?? new NoCodeSymbolSource())
             .AddSingleton<IIntentStore>(Intents)
@@ -119,6 +121,9 @@ internal sealed class MapWorld : IDisposable
     public FakeConceptHintStore Hints { get; } = new();
 
     public FakeDefaultBranch DefaultBranch { get; } = new();
+
+    /// <summary>The record store the build reads, unless the world was given another.</summary>
+    public FakeRecordStore Records { get; } = new();
 
     public FakeIntentStore Intents { get; } = new();
 

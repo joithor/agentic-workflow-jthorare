@@ -30,6 +30,14 @@ public sealed class FakeRepoReader(ContextRepo known, string head, IReadOnlyDict
         return ValueTask.FromResult<Result<string>>(Knows(repo) && commit == head && !repo.Denies(path) && files.TryGetValue(path, out var text) ? text : Unreadable);
     }
 
+    /// <summary>The blob id git gives a file of this text: the SHA-1 of "blob &lt;length&gt;\0" and the UTF-8 bytes, lower-case hex.</summary>
+    /// <param name="text">The file's text.</param>
+    /// <returns>The blob id.</returns>
+    public static string BlobId(string text) => throw new NotSupportedException();
+
+    /// <inheritdoc/>
+    public ValueTask<Result<IReadOnlyDictionary<string, string>>> BlobIds(ContextRepo repo, string commit, IReadOnlyList<string> paths, CancellationToken cancellationToken) => throw new NotSupportedException();
+
     /// <summary>Tells the fake which commits exist and the answers its <see cref="Changes"/> gives (any other pair of known commits has no merge base).</summary>
     /// <param name="commits">The full shas of the commits it holds.</param>
     /// <param name="answers">One answer per range, keyed by its full base and head.</param>

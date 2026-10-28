@@ -37,6 +37,12 @@ internal static partial class CommandTable
             return await SandboxExplainVerb.Run(explain, environment, Console.Out, Console.Error, CancellationToken.None).ConfigureAwait(false);
         }
 
+        if (args is ["sandbox", "show", .. var show])
+        {
+            // before Compose, like explain: show reads only the plan file
+            return await SandboxShowVerb.Run(show, environment, Console.Out, Console.Error, CancellationToken.None).ConfigureAwait(false);
+        }
+
         var services = Composition.Compose(new ServiceCollection(), environment, clock);
         configure?.Invoke(services);   // tests only: a test replaces a port with its fake; Program passes nothing
         var provider = services.BuildServiceProvider();
@@ -104,7 +110,7 @@ internal static partial class CommandTable
             ["agents" or "setup" or "code-index", ..] => await ReadVerbs(args, client, output, ct).ConfigureAwait(false),
             ["repo", ..] => await Repo(args, client, output, services, (ct, interrupt.Again)).ConfigureAwait(false),
             ["ledger", .. var rest] => await new LedgerVerbs(client, output, (launch, c) => start.EnsureRunning(launch, c)).Run(rest, ct).ConfigureAwait(false),
-            ["services" or "jobs", ..] => await JobCommands.Run(args, (client, output), start.EnsureRunning, services.GetRequiredService<TimeProvider>(), (ct, interrupt.Again)).ConfigureAwait(false),
+            ["services" or "jobs", ..] or ["index", "embed", ..] => await JobCommands.Run(args, (client, output), start.EnsureRunning, services.GetRequiredService<TimeProvider>(), (ct, interrupt.Again)).ConfigureAwait(false),
             ["launch" or "session", ..] => await LaunchOrSession(args, client, (output, environment), services, (ct, interrupt.Again)).ConfigureAwait(false),
             ["doctor", ..] => await Doctor(args, verbs, new ProbeCommands(services.GetRequiredService<IProcessAncestry>(), services.GetRequiredService<IHarnessVersions>(), environment, Interactive()), output, ct).ConfigureAwait(false),
             ["onyx", .. var rest] => await Onyx(rest, verbs, new OnyxVerbs(services, output, (hash, to, c) => new Verbs(client, probe, to, services, e => start.EnsureRunning(launch: true, e)).Approve(hash, c)), output, ct).ConfigureAwait(false),
@@ -118,10 +124,11 @@ internal static partial class CommandTable
         };
     }
 
-    /// <summary>'sindri sandbox learn off|denials …'; any other sandbox verb is an unknown verb.</summary>
+    /// <summary>'sindri sandbox learn off|denials|check …'; any other sandbox verb is an unknown verb.</summary>
     private static async Task<int> Sandbox(string[] args, ControlPlaneClient client, Output output, IServiceProvider services, CancellationToken ct) => args switch
     {
         ["sandbox", "learn", "off", .. var rest] => await new SandboxLearnVerbs(client, output).Run(rest, ct).ConfigureAwait(false),
+        ["sandbox", "check", .. var rest] => await new SandboxCheckVerb(client, output).Run(rest, ct).ConfigureAwait(false),
         ["sandbox", "denials", .. var rest] => await new SandboxDenialsVerb(client, output, services.GetRequiredService<TimeProvider>()).Run(rest, ct).ConfigureAwait(false),
         _ => await UnknownVerb(args, output).ConfigureAwait(false),
     };

@@ -46,7 +46,7 @@ public sealed class FakeRecordStore : IRecordStore
     {
         lock (_gate)
         {
-            return Ok<StoredRecord?>(_records.TryGetValue(key, out var row) ? Resolve(row) : null);
+            return Ok(_records.TryGetValue(key, out var row) ? Resolve(row) : null);
         }
     }
 
@@ -128,6 +128,34 @@ public sealed class FakeRecordStore : IRecordStore
         lock (_gate)
         {
             return Ok<IReadOnlyList<VectorRow>>([.. _vectors.Where(v => v.Vector.Space == space && v.Seq > afterSeq).OrderBy(v => v.Seq).Take(limit)]);
+        }
+    }
+
+    /// <inheritdoc />
+    public ValueTask<Result<IReadOnlyList<ChunkToEmbed>>> ChunksToEmbed(string model, int limit, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(model);
+        if (limit is < 1 or > 10_000)
+        {
+            return Fail<IReadOnlyList<ChunkToEmbed>>(ContextErrors.QueryInvalid.With("a work list returns 1 to 10,000 chunks"));
+        }
+
+        lock (_gate)
+        {
+            var embedded = _vectors
+                .Where(v => v.Vector.Space == VectorSpace.Chunk && v.Vector.Model == model)
+                .Select(v => (v.Vector.Key, v.Vector.TextHash))
+                .ToHashSet();
+            var work = _records.Values
+                .Where(r => !r.Blocked && r.RemovedAt is null)
+                .OrderBy(r => r.UpdatedAt is null)
+                .ThenByDescending(r => r.UpdatedAt)
+                .ThenBy(r => r.Key.Value, StringComparer.Ordinal)
+                .SelectMany(r => (_chunks.GetValueOrDefault(r.Key) ?? []).OrderBy(c => c.Seq).Select(c => new ChunkToEmbed(new ChunkKey(r.Key, c.Seq).ToString(), c.Text, c.TextHash)))
+                .Where(c => !embedded.Contains((c.Key, c.TextHash)))
+                .Take(limit)
+                .ToList();
+            return Ok<IReadOnlyList<ChunkToEmbed>>(work);
         }
     }
 

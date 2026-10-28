@@ -43,6 +43,9 @@ public sealed class FakeLauncher : ILauncher
     /// <summary>The session id every new launch reports as chosen before it started, or null (an agent whose id is reported later).</summary>
     public Core.Ids.SessionId? PreChosenSession { get; set; }
 
+    /// <summary>The run directory every new launch reports on its Started, or null (a human open).</summary>
+    public string? RunDirectory { get; set; }
+
     /// <summary>When set, 'Launch' waits for it (and its caller's cancellation) before answering: a launch that is still running.</summary>
     public Task? Hold { get; set; }
 
@@ -85,6 +88,7 @@ public sealed class FakeLauncher : ILauncher
             ["tmux", "-L", "sindri-launch", "attach", "-t", "=" + host.Name], CatalogSource.Builtin, "fake-argv-hash")
         {
             ChosenSession = PreChosenSession?.Value,
+            RunDirectory = RunDirectory,
         };
         _live[request.Launch] = started;
         return started;

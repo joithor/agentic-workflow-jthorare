@@ -23,9 +23,10 @@ namespace Aw.Context.Features.QueryContext;
 /// items fetched and cleaned once at the ingest boundary, one batched version check per source, then packing,
 /// citations and per-field egress scrubbing (<see cref="ResultAssembly"/>). Ingest and egress both use this call's
 /// scrubbers, built from the approved profile's extra patterns, and so does the map's text. A text question asked with no
-/// map (or by a session whose repo implements none of it) is answered from the sources alone. No model is called unless 'context.ranker.rerank' is on (Phase 8: <see cref="RankerStage"/>).
+/// map (or by a session whose repo implements none of it) is answered from the sources alone. A live query also searches the record store's lexical leg as one more source (<see cref="RecordStoreSource"/>). No model is called unless 'context.ranker.rerank' is on (Phase 8: <see cref="RankerStage"/>).
 /// </summary>
-internal sealed partial class QueryPipeline(IScrubberFactory scrubberFactory, IIdGenerator ids, TimeProvider clock, IIntentStore intents, IModelPort model)
+internal sealed partial class QueryPipeline(IScrubberFactory scrubberFactory, IIdGenerator ids, TimeProvider clock, IIntentStore intents, IModelPort model,
+    RecordSearch lexical)
 {
     private readonly RankerStage _ranker = new(model, clock);
 
@@ -55,15 +56,15 @@ internal sealed partial class QueryPipeline(IScrubberFactory scrubberFactory, II
 
         var (graph, terms, miss) = anchored.Value;
         var deadline = clock.GetUtcNow() + settings.Value.Deadline;
-        var sources = terms.Count == 0 ? [] : catalog.For(settings.Value, repos.Value, scrubbers.Value).ToList();
+        var catalogSources = terms.Count == 0 ? [] : catalog.For(settings.Value, repos.Value, scrubbers.Value).ToList();
+        var (sources, degraded) = await WithRecordStore(catalogSources, (settings.Value, repos.Value), (inputs.AsOf, terms), cancellationToken).ConfigureAwait(false);
         var searched = await Search(sources, terms, (deadline, inputs.AsOf), cancellationToken).ConfigureAwait(false);
-        if (sources.Count > 0 && searched.Answers.Count == 0 && graph.Anchors.Count == 0)
+        if (catalogSources.Count > 0 && NothingAnswered(searched) && graph.Anchors.Count == 0)
         {
-            return ContextErrors.AllSourcesUnavailable.With(
-                $"no source answered ({string.Join(", ", searched.Degraded.Select(d => d.Source.Value))}); fix: sindri context sources status");
+            return NoSourceAnswered(degraded.Concat(searched.Degraded));
         }
 
-        var degraded = searched.Degraded.ToList();
+        degraded.AddRange(searched.Degraded);
         var fused = await Ranked(searched, (graph, RankerPlan.For(settings.Value.Ranker, inputs.Ranker)), scrubbers.Value.Egress, degraded, cancellationToken).ConfigureAwait(false);
         var fetched = await Fetch(fused, (sources, scrubbers.Value.Ingest), deadline, degraded, cancellationToken).ConfigureAwait(false);
         if (miss is not null && !Answers(fetched, miss.Item.Trim()))

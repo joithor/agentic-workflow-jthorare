@@ -68,9 +68,14 @@ public static class PlatformSandboxServiceCollectionExtensions
                         }
                     }),
                     sp.GetRequiredService<System.Text.Json.JsonSerializerOptions>(), sp.GetRequiredService<ITextScrubber>(), sp.GetRequiredService<TimeProvider>())))
-            .AddSingleton<ISandboxExec>(sp => ExecFor(sp, environment))
+            .AddSandboxVerbs(environment)
             .AddSingleton<ISandboxLaunch>(sp => new SandboxLaunch(sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<ISandboxLaunchStages>(), LaunchOptions(sp, environment)));
     }
+
+    // The human-only verbs' ports: 'sandbox exec' and 'sandbox login'.
+    private static IServiceCollection AddSandboxVerbs(this IServiceCollection services, Func<string, string?> environment) => services
+        .AddSingleton<ISandboxExec>(sp => ExecFor(sp, environment))
+        .AddSingleton<ISandboxLogin>(sp => new SandboxLoginRunner(sp.GetRequiredService<SindriSettings>().Home, environment));
 
     private static SandboxExec ExecFor(IServiceProvider sp, Func<string, string?> environment)
     {

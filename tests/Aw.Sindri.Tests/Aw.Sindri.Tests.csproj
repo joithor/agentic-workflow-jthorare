@@ -23,6 +23,7 @@
     <!-- Forge/: ForgePullRequests over the forge package's file-backed adapter -->
     <ProjectReference Include="../../src/Forge/Aw.Forge.Core/Aw.Forge.Core.csproj" />
     <ProjectReference Include="../Aw.Sindri.Testing/Aw.Sindri.Testing.csproj" />
+    <ProjectReference Include="../Aw.Embeddings.Testing/Aw.Embeddings.Testing.csproj" />
     <ProjectReference Include="../Aw.Context.Testing/Aw.Context.Testing.csproj" />
     <ProjectReference Include="../Aw.CodeIndex.Testing/Aw.CodeIndex.Testing.csproj" />
     <ProjectReference Include="../Aw.Kernel.Telemetry.Testing/Aw.Kernel.Telemetry.Testing.csproj" />

@@ -182,5 +182,25 @@ internal sealed partial class InstanceFrameViewModel
         }
     }
 
+    // The picks are the instance's own: a failed read or an older server keeps what is shown, and the same words keep the same object so an open flyout stays open.
+    private async Task ReadPicks(Uri url, string address, int generation, CancellationToken cancellationToken)
+    {
+        var picks = await api.LaunchPicks(url, item: null, address, cancellationToken).ConfigureAwait(true);
+        if (generation != _generation || picks.IsError)
+        {
+            return;
+        }
+
+        var table = ModelPicksViewModel.Of(picks.Value, NameOf, clipboard, clock);
+        if (!table.HasRows)
+        {
+            ModelPicks = null;
+        }
+        else if (ModelPicks is null || !string.Equals(ModelPicks.Signature, table.Signature, StringComparison.Ordinal))
+        {
+            ModelPicks = table;
+        }
+    }
+
     private void ClearPanels() => (Facts, Children, Tabs) = (null, null, null);
 }

@@ -119,7 +119,7 @@ public sealed class SandboxToolchainDetectorTests
     [Fact, Trait("Lane", "unit")]
     public void The_snippet_is_a_sandbox_section_with_only_this_repos_entry()
     {
-        var offer = Detect("package.json", "scripts/package-lock.json", "pyproject.toml");
+        var offer = Detect("package.json", "scripts/package.json", "scripts/package-lock.json", "pyproject.toml");
 
         var yaml = SandboxOfferYaml.Render("demo", offer.Settings!).ReplaceLineEndings("\n");
 

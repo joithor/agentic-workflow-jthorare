@@ -9084,6 +9084,7 @@ override Aw.Context.Core.Records.LexicalDegraded.ToString() -> string!
 override Aw.Context.Core.Records.RecordHit.Equals(object? obj) -> bool
 override Aw.Context.Core.Records.RecordHit.GetHashCode() -> int
 override Aw.Context.Core.Records.RecordHit.ToString() -> string!
+static Aw.Context.Core.Audience.ProfileAudiencePolicy.HumanExtras(Aw.Context.Core.Engine.ContextSettings! settings) -> System.Collections.Generic.IEnumerable<Aw.Context.Core.Records.AudienceKey>!
 static Aw.Context.Core.Audience.ProfileAudiencePolicy.OwnRepo(Aw.Context.Core.Engine.ContextRepoName repo, System.Collections.Generic.IReadOnlyList<string!>! githubRepos) -> Aw.Context.Core.Records.AudienceKey?
 static Aw.Context.Core.Records.LexicalAnswer.operator !=(Aw.Context.Core.Records.LexicalAnswer? left, Aw.Context.Core.Records.LexicalAnswer? right) -> bool
 static Aw.Context.Core.Records.LexicalAnswer.operator ==(Aw.Context.Core.Records.LexicalAnswer? left, Aw.Context.Core.Records.LexicalAnswer? right) -> bool
@@ -9195,6 +9196,8 @@ static Aw.Context.Core.Sync.SourceProgress.operator ==(Aw.Context.Core.Sync.Sour
 Aw.Context.Core.Sync.IIndexSync.Progress(Aw.Context.Core.Engine.ContextScope! scope, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Sync.SourceProgress!>!>!>
 Aw.Context.Core.Sync.IExternalRecordFeeds
 Aw.Context.Core.Sync.IExternalRecordFeeds.For(Aw.Context.Core.Engine.ContextSettings! settings, System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Engine.ContextRepo!>! repos, Aw.Context.Core.Trust.Scrubbers! scrubbers) -> System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Sync.RecordFeed!>!
+Aw.Context.Core.Engine.SlackSource.Workspace.get -> string?
+Aw.Context.Core.Engine.SlackSource.Workspace.init -> void
 Aw.Context.Core.Records.IRecordStore.Count(Aw.Context.Core.Sources.SourceId source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Records.SourceCounts!>!>
 Aw.Context.Core.Records.SourceCounts
 Aw.Context.Core.Records.SourceCounts.<Clone>$() -> Aw.Context.Core.Records.SourceCounts!

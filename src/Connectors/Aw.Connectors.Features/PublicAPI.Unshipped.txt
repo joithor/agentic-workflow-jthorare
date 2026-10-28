@@ -37,3 +37,4 @@ static Aw.Connectors.Features.PullGitHub.PullGitHubResponse.operator ==(Aw.Conne
 Aw.Connectors.Features.PullGitHub.PullGitHubRequest.CommentCap.get -> int
 Aw.Connectors.Features.PullGitHub.PullGitHubRequest.CommentCap.init -> void
 static Aw.Connectors.Features.ConnectorsFeaturesServiceCollectionExtensions.AddSlackConnector(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Aw.Connectors.Core.Slack.SlackSettings! settings) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Aw.Connectors.Features.ConnectorsFeaturesServiceCollectionExtensions.AddSlackConnectorFactory(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

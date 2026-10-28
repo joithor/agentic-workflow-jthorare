@@ -28,6 +28,7 @@ internal sealed partial class WholeMapView : UserControl
     {
         InitializeComponent();
         WholeCanvas.FitBottomInset = MiniMapBand;
+        WholeItems.AddHandler(KeyDownEvent, OnItemsKey, RoutingStrategies.Tunnel);   // a bubbling handler never sees Enter: the focused row has handled it by then
         AutomationProperties.SetName(WholeZoomOut, Labels.ContextMapZoomOut);
         AutomationProperties.SetName(WholeZoomIn, Labels.ContextMapZoomIn);
         AutomationProperties.SetName(WholeZoomFit, Labels.ContextMapZoomFit);
@@ -232,7 +233,8 @@ internal sealed partial class WholeMapView : UserControl
     // Enter on an item is a click on the map's node or feature.
     private void OnItemsKey(object? sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter && WholeItems.SelectedItem is MapItemViewModel item)
+        var item = (e.Source as Control)?.DataContext as MapItemViewModel ?? WholeItems.SelectedItem as MapItemViewModel;   // the focused row first: the selection can lag it
+        if (e.Key == Key.Enter && item is not null)
         {
             _map?.ChooseItem(item);
             e.Handled = true;

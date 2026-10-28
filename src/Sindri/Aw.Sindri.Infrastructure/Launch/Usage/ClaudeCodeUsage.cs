@@ -12,6 +12,14 @@ internal sealed class ClaudeCodeUsage(string root) : IUsageReader
 {
     private const string Marker = "\"usage\"";
 
+    /// <summary>Also reads the projects directories of the separate agent homes (a separate-login launch writes there).</summary>
+    /// <param name="root">The owner's projects directory.</param>
+    /// <param name="alsoUnder">The projects directories of the agent homes.</param>
+    internal ClaudeCodeUsage(string root, IReadOnlyList<string> alsoUnder) : this(root)
+    {
+        throw new NotSupportedException();
+    }
+
     /// <inheritdoc/>
     public string Name => "claude-code";
 

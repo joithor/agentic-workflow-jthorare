@@ -11,6 +11,14 @@ namespace Aw.Sindri.Infrastructure.Sessions;
 internal sealed class ClaudeSessionRecords(string directory) : IClaudeSessionRecords
 {
     internal const int MaxFiles = 256;
+
+    /// <summary>Also reads the 'sessions' directories of the separate agent homes.</summary>
+    /// <param name="directory">The owner's sessions directory.</param>
+    /// <param name="alsoIn">The sessions directories of the agent homes.</param>
+    internal ClaudeSessionRecords(string directory, IReadOnlyList<string> alsoIn) : this(directory)
+    {
+        throw new NotSupportedException();
+    }
     internal const long MaxBytes = 64 * 1024;
 
     private static readonly System.Text.Json.JsonSerializerOptions _json = AwJson.CreateOptions(SessionsJsonContext.Default);

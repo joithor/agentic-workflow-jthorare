@@ -15,6 +15,14 @@ internal sealed class CodexUsage(string root) : IUsageReader
     private const string Counts = "\"token_count\"";
     private const string Unknown = "unknown";
 
+    /// <summary>Also reads the sessions directories of the separate agent homes (a separate-login launch writes there).</summary>
+    /// <param name="root">The owner's sessions directory.</param>
+    /// <param name="alsoUnder">The sessions directories of the agent homes.</param>
+    internal CodexUsage(string root, IReadOnlyList<string> alsoUnder) : this(root)
+    {
+        throw new NotSupportedException();
+    }
+
     /// <inheritdoc/>
     public string Name => "codex";
 

@@ -13,6 +13,14 @@ internal sealed class TranscriptFiles(string home) : ITranscripts
 {
     private const int MaxMatches = 32;
 
+    /// <summary>Also follows the separate agent homes: a glob under '~/.claude' or '~/.codex' is tried under the home mapped to that prefix too.</summary>
+    /// <param name="home">What '~' means in a catalog glob.</param>
+    /// <param name="agentHomes">'~/.claude' or '~/.codex' to the agent home that stands in for it.</param>
+    internal TranscriptFiles(string home, IReadOnlyDictionary<string, string> agentHomes) : this(home)
+    {
+        throw new NotSupportedException();
+    }
+
     public DateTimeOffset? LastWrite(AgentEntry agent, SessionId? session, string? hinted)
     {
         ArgumentNullException.ThrowIfNull(agent);

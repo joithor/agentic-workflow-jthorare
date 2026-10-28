@@ -111,5 +111,11 @@ internal static class RecordSql
         "DELETE FROM source_cursor WHERE source = @source",
     ];
 
+    /// <summary>What a purge would delete: the source's records, their chunks and the chunk vectors of those chunks.</summary>
+    internal const string CountSource =
+        "SELECT (SELECT COUNT(*) FROM source_record WHERE source = @source), " +
+        "(SELECT COUNT(*) FROM chunk WHERE record IN (SELECT key FROM source_record WHERE source = @source)), " +
+        "(SELECT COUNT(*) FROM embedding WHERE space = 'chunk' AND key IN (SELECT key FROM chunk WHERE record IN (SELECT key FROM source_record WHERE source = @source)))";
+
     internal const string DeleteRecords = "DELETE FROM source_record WHERE source = @source";
 }

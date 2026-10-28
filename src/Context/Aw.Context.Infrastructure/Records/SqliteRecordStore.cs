@@ -107,7 +107,20 @@ internal sealed partial class SqliteRecordStore(ContextDatabase database) : IRec
         }
     }
 
-    public ValueTask<Result<SourceCounts>> Count(SourceId source, CancellationToken cancellationToken) => throw new NotSupportedException("red");
+    public async ValueTask<Result<SourceCounts>> Count(SourceId source, CancellationToken cancellationToken)
+    {
+        var read = await BeginRead(cancellationToken).ConfigureAwait(false);
+        if (read.IsError || read.Value is not { } session)
+        {
+            return read.IsError ? read.Error : new SourceCounts(0, 0, 0);
+        }
+
+        await using (session.ConfigureAwait(false))
+        {
+            var rows = await SqliteQueries.List(session, new SqlStatement(RecordSql.CountSource, c => c.Bind("@source", source.Value)), RecordMappers.Counts, cancellationToken).ConfigureAwait(false);
+            return rows.IsError ? ContextDatabase.Translate(rows.Error) : rows.Value[0];
+        }
+    }
 
     public async ValueTask<Result<int>> Purge(SourceId source, CancellationToken cancellationToken)
     {

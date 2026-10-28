@@ -153,7 +153,15 @@ public sealed class FakeRecordStore : IRecordStore
     }
 
     /// <inheritdoc />
-    public ValueTask<Result<SourceCounts>> Count(SourceId source, CancellationToken cancellationToken) => throw new NotSupportedException("red");
+    public ValueTask<Result<SourceCounts>> Count(SourceId source, CancellationToken cancellationToken)
+    {
+        lock (_gate)
+        {
+            var keys = _records.Values.Where(r => r.Source == source).Select(r => r.Key).ToList();
+            var chunks = keys.SelectMany(k => (_chunks.GetValueOrDefault(k) ?? []).Select(c => new ChunkKey(k, c.Seq).ToString())).ToHashSet(StringComparer.Ordinal);
+            return Ok(new SourceCounts(keys.Count, chunks.Count, _vectors.Count(v => v.Vector.Space == VectorSpace.Chunk && chunks.Contains(v.Vector.Key))));
+        }
+    }
 
     /// <inheritdoc />
     public ValueTask<Result<int>> Purge(SourceId source, CancellationToken cancellationToken)

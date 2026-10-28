@@ -64,9 +64,9 @@ internal sealed class IndexSync(RecordFeedSync feeds, IRecordStore store, IScrub
         return rows;
     }
 
-    public ValueTask<Result<SourceCounts>> Counts(SourceId source, CancellationToken cancellationToken) => throw new NotSupportedException("red");
+    public ValueTask<Result<SourceCounts>> Counts(SourceId source, CancellationToken cancellationToken) => store.Count(source, cancellationToken);
 
-    public ValueTask<Result<int>> Purge(SourceId source, CancellationToken cancellationToken) => throw new NotSupportedException("red");
+    public ValueTask<Result<int>> Purge(SourceId source, CancellationToken cancellationToken) => feeds.Exclusive(source, () => store.Purge(source, cancellationToken));
 
     private Result<(ContextSettings Settings, Scrubbers Scrubbers, IReadOnlyList<RecordFeed> Feeds)> Resolve(ContextScope scope)
     {

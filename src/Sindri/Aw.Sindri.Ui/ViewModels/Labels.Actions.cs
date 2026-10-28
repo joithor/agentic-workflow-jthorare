@@ -62,6 +62,7 @@ internal static partial class Labels
         ["ProbeLaunchTargets"] = "Check launch targets again",
         ["PromoteContextMap"] = "Promote map",
         ["CheckContextMapStructure"] = "Check map structure",
+        ["PurgeIndexSource"] = "Purge index source",
         ["ProposeContextMap"] = "Propose map from scope",
         ["BuildCodeIndex"] = "Build code index",
         ["RebuildViews"] = "Rebuild views",

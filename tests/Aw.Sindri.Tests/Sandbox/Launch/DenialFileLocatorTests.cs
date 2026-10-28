@@ -31,18 +31,18 @@ public sealed class DenialFileLocatorTests : IDisposable
         File.SetLastWriteTimeUtc(Path.Combine(dir, "old.jsonl"), new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
         File.WriteAllText(Path.Combine(dir, "new.jsonl"), "{}");
 
-        var found = DenialFileLocator.For(PlanWith(new PlanEnvVar("CLAUDE_CONFIG_DIR", _temp.Path, "login")));
+        var (transcript, kind, _) = DenialFileLocator.For(PlanWith(new PlanEnvVar("CLAUDE_CONFIG_DIR", _temp.Path, "login")));
 
-        Expect.Equal(TranscriptKind.Claude, found.Kind);
-        Expect.Equal(Path.Combine(dir, "new.jsonl"), found.Transcript);
+        Expect.Equal(TranscriptKind.Claude, kind);
+        Expect.Equal(Path.Combine(dir, "new.jsonl"), transcript);
     }
 
     [Fact]
     public void A_codex_launch_reads_under_its_sessions()
     {
-        var found = DenialFileLocator.For(PlanWith(new PlanEnvVar("CODEX_HOME", _temp.Path, "login")));
+        var (transcript, kind, _) = DenialFileLocator.For(PlanWith(new PlanEnvVar("CODEX_HOME", _temp.Path, "login")));
 
-        Expect.Equal(TranscriptKind.Codex, found.Kind);
-        Expect.True(found.Transcript is null);   // no sessions folder yet
+        Expect.Equal(TranscriptKind.Codex, kind);
+        Expect.True(transcript is null);   // no sessions folder yet
     }
 }

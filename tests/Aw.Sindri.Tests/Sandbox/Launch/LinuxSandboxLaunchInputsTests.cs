@@ -62,7 +62,7 @@ public sealed class LinuxSandboxLaunchInputsTests : IDisposable
     [Fact]
     public async Task The_git_common_directory_is_what_git_prints_made_absolute_or_dot_git_when_git_fails()
     {
-        _ = _processes.When((_, a) => a.Contains("--git-common-dir"), FakeProcesses.Ok("../.git\n"));
+        _ = _processes.When((_, a) => a.Contains("--git-common-dir", StringComparer.Ordinal), FakeProcesses.Ok("../.git\n"));
 
         Expect.Equal("/work/.git", await Make().GitCommonDir("/work/web", CancellationToken.None));
         Expect.Equal("/other/.git", await new LinuxSandboxLaunchInputs(new LauncherOptions(_temp.Path), new AgentCatalog([]), new Machine(), new FakeProcesses(), () => new Dictionary<string, string>(StringComparer.Ordinal), () => null).GitCommonDir("/other", CancellationToken.None));
@@ -91,10 +91,8 @@ public sealed class LinuxSandboxLaunchInputsTests : IDisposable
     }
 
     [Fact]
-    public void The_run_area_is_per_launch_under_the_launcher_directory()
-    {
+    public void The_run_area_is_per_launch_under_the_launcher_directory() =>
         Expect.Equal(Path.Combine(_temp.Path, "launch", "areas", _launch.Value), Make().RunAreaFor(_launch));
-    }
 
     private sealed class Machine : ISandboxMachine
     {

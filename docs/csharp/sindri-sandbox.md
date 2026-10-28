@@ -100,8 +100,7 @@ else. The summary's `inner` is the resolved `on` or `off` (`InnerState`), never 
   "limits": { "memoryMax": "12GiB", "cpuQuota": "400%", "tasksMax": 2048, "wall": "70m" },
   "credentials": { "github": "none" },
   "login": { "source": "owner-copy" },
-  "inner": "on",
-  "denials": { "counterFile": "denials.json", "egressLog": "egress.log" }
+  "inner": "on"
 }
 ```
 
@@ -318,10 +317,10 @@ init waits for it, stops both forwarders and exits with the agent's status. The 
 
 `DenialCounter` (Infrastructure `Sandbox/`) is one run's count of what was denied. The launcher (SB-5a) creates one per launch, passes it to `EgressService.Start` (the proxy counts into it and `RunningEgress`'s one-second flush loop writes and publishes it, then once more on stop), sets its `Sink` to the ledger (`LaunchSessionEvents` implements the Core port `ISandboxDenials`) and, at session end, feeds it the transcript and `failopen.log` denials with `Record`. Until then nothing creates one.
 
-- **`denials.json`** in the run area (temp file and rename, written only when a count changed): `{launchId, updatedAt, entries: [{kind, target, rule, count, first, last}], overflow: [{kind, count}]}`, entries sorted by kind, target, rule. The API and the app read the true counts here, not from the events.
+- **`denials/<launch>.json`** in the launch directory (`LaunchPaths.Denials`; the directory is 0700; temp file and rename, written only when a count changed): `{launchId, updatedAt, entries: [{kind, target, rule, count, first, last}], overflow: [{kind, count}]}`, entries sorted by kind, target, rule. The API and the app read the true counts here, not from the events.
 - **Targets** are a host, a path or a tool name, never a whole command line. Each is scrubbed with `ITextScrubber` first and then cut to 200 characters (a cut can split a token the scrubber would still know), and control characters become `_`.
 - **The 200 cap**: at most 200 distinct (kind, target) in a run, counted across kinds. Past it a new target adds to its kind's `overflow` row instead; a target already counted keeps counting.
-- **Cadence**: the 1st, 10th and 100th count of each (kind, target, rule) queues a `sandbox.denied`; the first overflow of each kind queues one with `overflow: true`, an empty target, rule `overflow` and count 1 (the running total is in `denials.json`). `Publish` sends the queue; one the ledger refused stays queued for the next tick, and the key makes a resend safe.
+- **Cadence**: the 1st, 10th and 100th count of each (kind, target, rule) queues a `sandbox.denied`; the first overflow of each kind queues one with `overflow: true`, an empty target, rule `overflow` and count 1 (the running total is in the counter file). `Publish` sends the queue; one the ledger refused stays queued for the next tick, and the key makes a resend safe.
 - **Key**: `sandbox.denied:<launch>:<kind>:<targetHash>:<count>`, the hash being the first 12 hex characters of the target's SHA-256. A repeat appends nothing.
 - **Rule ids from the proxy**: `no-group` (verdict `denied`: no group lists the host, or the port is not 80 or 443), `private-address` (verdict `refused`: the host resolves to a loopback, link-local or private address), `cap` (a connection or byte cap; target `(cap)`). A learned host and a failed dial are not denials.
 - Transcript and `failopen.log` denials (`inner-policy`, `deny-list`, `not-bound`, `hook-fail-open`) use the same counter through `Record`; their readers are SB-4b's other part.

@@ -5,7 +5,7 @@ using Aw.Sindri.Core.Workflow.Engine;
 namespace Aw.Sindri.Core.Sandbox.Denials;
 
 /// <summary>
-/// The run's denial counter, 'denials.json' in the run area (sandbox spec §3.6): the true counts the API and the app read at render.
+/// The run's denial counter, 'denials/{launch id}.json' in the launch directory (sandbox spec §3.6): the true counts the API and the app read at render.
 /// At most 200 distinct (kind, target) entries; the rest are counted per kind in <see cref="Overflow"/>.
 /// </summary>
 /// <param name="LaunchId">The launch.</param>

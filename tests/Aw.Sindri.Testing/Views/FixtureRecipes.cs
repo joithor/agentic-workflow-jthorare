@@ -102,7 +102,7 @@ public static class FixtureRecipes
             Out("fact:lensRounds", "Lens rounds", FactType.Payload, "evidence"), Out("fact:escalation", "Questions for you", FactType.Payload, "lens-log")]);
 
     /// <summary>
-    /// workflow.scoping v15 (recipes/sindri/workflow.scoping.yaml; fixture-only, not in <see cref="All"/>, so the file-equality checks skip it): the states and the full file hash, with the interview's three facts
+    /// workflow.scoping v20 (recipes/sindri/workflow.scoping.yaml; fixture-only, not in <see cref="All"/>, so the file-equality checks skip it): the states and the full file hash, with the interview's three facts
     /// ('fact:questions' from 'questions', 'fact:answers' from the 'interview' desk, 'fact:answerLog' from 'record') declared beside the six outputs the file lists, so the facts list shows them.
     /// The recipe golden is the real recipe's view (WorkflowViewGoldenTests), so the hash here is the file's.
     /// </summary>

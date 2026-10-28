@@ -6,6 +6,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Aw.Kernel.Testing;
+using Aw.Sindri.Ui.Api;
 using Aw.Sindri.Ui.Testing;
 using Aw.Sindri.Ui.ViewModels;
 using Aw.Sindri.Ui.ViewModels.Settings;
@@ -85,7 +86,7 @@ public sealed class SettingsViewTests
     {
         var clipboard = new FakeClipboard();
         var line = new ModelChoiceViewModel(clipboard, TimeProvider.System);
-        line.Show(new Aw.Sindri.Ui.Api.ProfileView("a", "a", ChangedSinceApproval: false, Problem: null, "/home/thor/profile.yaml", NeedsApproval: false, ModelPick: "on"));
+        line.Show(new ProfileView("a", "a", ChangedSinceApproval: false, Problem: null, "/home/thor/profile.yaml", NeedsApproval: false, ModelPick: "on"));
         using var settings = new SettingsViewModel(_preferences, _os, SettingsTheme.For(Resources), setup: null, modelChoice: line);
         var window = new Window { Width = 900, Height = 600, Content = new SettingsView { DataContext = settings } };
         _windows.Add(window);

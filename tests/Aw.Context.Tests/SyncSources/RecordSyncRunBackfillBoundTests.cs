@@ -82,6 +82,36 @@ public sealed class RecordSyncRunBackfillBoundTests
         Assert.All(backfill, p => Assert.Equal(_recentStart, p.Before));
     }
 
+    [Fact]
+    public async Task Recent_starts_thirty_days_before_one_clock_reading()
+    {
+        var clock = new SteppingClock(RecordSamples.Now);
+        var feed = new SpyFeed(new FakeRecordFeed(_source, [Item("a", 10)])) { Clock = clock };
+
+        _ = await new RecordSyncRun(feed, _store, (new FakeScrubberFactory().For([]).Value, new ContextIndexSettings()), clock, RecordSyncRun.PageSize).Execute(Ct);
+
+        // The readings before the first pull are the run's start, the cap check, the window's start and RecentStart's own: one, so the pull's bound is the last of them.
+        // Two readings (the old Max of two) would make four before the pull and bound the Recent pull one step later than the window's start reading plus one.
+        Assert.Equal(4, feed.ReadingsAtPull[0]);
+        Assert.Equal(clock.Readings[3] - RecordSyncRun.RecentWindow, feed.Pulls[0].NotBefore);
+    }
+
+    /// <summary>A clock that moves forward one second on every reading, so two readings never agree.</summary>
+    private sealed class SteppingClock(DateTimeOffset start) : TimeProvider
+    {
+        private DateTimeOffset _next = start;
+
+        public List<DateTimeOffset> Readings { get; } = [];
+
+        public override DateTimeOffset GetUtcNow()
+        {
+            var now = _next;
+            Readings.Add(now);
+            _next = now.AddSeconds(1);
+            return now;
+        }
+    }
+
     /// <summary>Wraps a feed: records every pull and answers a SND-CONTEXT-010 error from pull number <see cref="FailFrom"/> on.</summary>
     private sealed class SpyFeed(RecordFeed inner) : RecordFeed(inner.Source)
     {
@@ -92,9 +122,15 @@ public sealed class RecordSyncRunBackfillBoundTests
 
         public int FailFrom { get; init; } = int.MaxValue;
 
+        public SteppingClock? Clock { get; init; }
+
+        /// <summary>How many clock readings had been taken when each pull arrived (needs <see cref="Clock"/>).</summary>
+        public List<int> ReadingsAtPull { get; } = [];
+
         public override async ValueTask<Result<RecordPage>> Pull(RecordPull pull, CancellationToken cancellationToken)
         {
             Pulls.Add(pull);
+            ReadingsAtPull.Add(Clock?.Readings.Count ?? 0);
             if (Pulls.Count - 1 >= FailFrom)
             {
                 Returned.Add(0);

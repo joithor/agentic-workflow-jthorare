@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Globalization;
 using System.Text;
 using Aw.Context.Core;
@@ -29,8 +30,14 @@ internal static class IndexText
         return text.ToString();
     }
 
+    private static readonly FrozenDictionary<string, string> _reasons =
+        ContextErrors.All.ToFrozenDictionary(static e => e.Code, static e => e.Title, StringComparer.Ordinal);
+
+    private static string Failed(string code) =>
+        _reasons.TryGetValue(code, out var reason) ? $"last sync failed: {code} ({reason})" : "last sync failed: " + code;
+
     private static string State(IndexSourceRow row) =>
-        row.LastCode is { } code && code != ContextErrors.SyncCapped.Code ? "last sync failed: " + code
+        row.LastCode is { } code && code != ContextErrors.SyncCapped.Code ? Failed(code)
         : row.Complete ? "complete"
         : row.Usable ? "usable, filling older history"
         : row.Phase is null ? "not started"

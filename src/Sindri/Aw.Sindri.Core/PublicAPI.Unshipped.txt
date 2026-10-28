@@ -21097,3 +21097,6 @@ Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.PayloadReportChecks()
 Aw.Sindri.Core.Sandbox.Plan.ISandboxExec
 Aw.Sindri.Core.Sandbox.Plan.ISandboxExec.PlanFileOf(Aw.Sindri.Core.Workflow.Engine.LaunchId launch) -> string!
 Aw.Sindri.Core.Sandbox.Plan.ISandboxExec.Run(Aw.Sindri.Core.Sandbox.Plan.SandboxPlan! stored, System.Collections.Generic.IReadOnlyList<string!>! command, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Aw.Kernel.Result<int>!>!
+Aw.Sindri.Core.Doctor.IRecordEmbedderProbe
+Aw.Sindri.Core.Doctor.IRecordEmbedderProbe.Model.get -> string!
+Aw.Sindri.Core.Doctor.IRecordEmbedderProbe.Probe(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>

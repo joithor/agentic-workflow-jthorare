@@ -9,11 +9,13 @@ namespace Aw.Sindri.Features.ListDenials;
 /// nothing is dropped, and the overflow rows of a file stay only when the file itself was updated since.
 /// </summary>
 /// <param name="files">Where the counters are.</param>
-internal sealed class ListDenialsService(IDenialFiles files) : IService<ListDenialsRequest, ListDenialsResponse>
+/// <param name="owners">The item and repo of each launch.</param>
+internal sealed class ListDenialsService(IDenialFiles files, ILaunchOwners owners) : IService<ListDenialsRequest, ListDenialsResponse>
 {
     public async ValueTask<Result<ListDenialsResponse>> Handle(ListDenialsRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        _ = owners;
         var all = await files.List(request.Launch, cancellationToken).ConfigureAwait(false);
         if (request.Since is not { } since)
         {

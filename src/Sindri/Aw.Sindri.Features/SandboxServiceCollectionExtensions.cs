@@ -3,6 +3,7 @@ using Aw.Sindri.Core.Commands;
 using Aw.Sindri.Core.Doctor;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
+using Aw.Sindri.Features.AllowDenial;
 using Aw.Sindri.Features.CheckSandbox;
 using Aw.Sindri.Features.Commands;
 using Aw.Sindri.Features.EndLearnMode;
@@ -41,6 +42,15 @@ internal static class SandboxServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         return services.AddScoped<IValidator<EndLearnModeRequest>, AcceptAllValidator<EndLearnModeRequest>>().AddCommand<EndLearnModeRequest, CommandAccepted, EndLearnModeService>();
+    }
+
+    /// <summary>Adds AllowDenial, the desk command behind the Allow button on a blocked host or home path.</summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same collection.</returns>
+    internal static IServiceCollection AddAllowDenial(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        return services.AddScoped<IValidator<AllowDenialRequest>, AcceptAllValidator<AllowDenialRequest>>().AddCommand<AllowDenialRequest, AllowDenialResponse, AllowDenialService>();
     }
 
     /// <summary>Adds ListDenials, the query behind 'sindri sandbox denials'.</summary>

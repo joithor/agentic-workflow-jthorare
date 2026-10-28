@@ -44,7 +44,11 @@ internal sealed class LinuxSandboxFixture(string sindriHome, Func<string, string
             return null;
         }
 
-        return new SandboxRequest(
+        return Build(repo, worktree, runDirectory, runArea, netDir);
+    }
+
+    private SandboxRequest Build(string repo, string worktree, string runDirectory, string runArea, string netDir) =>
+        new(
             LaunchId.From("LCH-" + new string('f', 32)),
             ItemId.From("ITM-" + new string('f', 32)),
             AgentId.From("claude-code"),
@@ -61,7 +65,6 @@ internal sealed class LinuxSandboxFixture(string sindriHome, Func<string, string
             BoxHostFacts.Read(environment, sindriHome),
             Settings: null,
             Login: null);
-    }
 
     /// <summary>Gets the short directory for unix sockets: $XDG_RUNTIME_DIR/sindri, else /tmp/sindri-(uid) (a socket path is limited to 104 bytes).</summary>
     /// <param name="environment">Reads an environment variable.</param>

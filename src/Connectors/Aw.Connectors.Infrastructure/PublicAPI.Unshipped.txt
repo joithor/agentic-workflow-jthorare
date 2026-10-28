@@ -1,3 +1,22 @@
 #nullable enable
 Aw.Connectors.Infrastructure.ConnectorsInfrastructureServiceCollectionExtensions
+Aw.Connectors.Infrastructure.GitHub.GitHubClient
+Aw.Connectors.Infrastructure.GitHub.GitHubClient.GitHubClient(System.Net.Http.HttpClient! http, Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings! settings, Aw.Connectors.Infrastructure.GitHub.IHostResolver! resolver, System.TimeProvider! clock) -> void
+Aw.Connectors.Infrastructure.GitHub.GitHubClient.Issues(string! repo, Aw.Connectors.Core.GitHub.GitHubCursor! after, int limit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.GitHub.GitHubPullPage!>!>
+Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings
+Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings.AllowPrivateHost.get -> bool
+Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings.AllowPrivateHost.init -> void
+Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings.GitHubClientSettings() -> void
+Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings.Host.get -> string?
+Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings.Host.init -> void
+Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings.Token.get -> string?
+Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings.Token.init -> void
+Aw.Connectors.Infrastructure.GitHub.GitHubHttp
+Aw.Connectors.Infrastructure.GitHub.IHostResolver
+Aw.Connectors.Infrastructure.GitHub.IHostResolver.Resolve(string! host, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<System.Net.IPAddress!>!>
+Aw.Connectors.Infrastructure.GitHub.SystemHostResolver
+Aw.Connectors.Infrastructure.GitHub.SystemHostResolver.Resolve(string! host, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<System.Net.IPAddress!>!>
+Aw.Connectors.Infrastructure.GitHub.SystemHostResolver.SystemHostResolver() -> void
+override Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings.ToString() -> string!
 static Aw.Connectors.Infrastructure.ConnectorsInfrastructureServiceCollectionExtensions.AddConnectorsInfrastructure(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Func<string!, string?>! environment) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Aw.Connectors.Infrastructure.GitHub.GitHubHttp.CreateHandler(Aw.Connectors.Infrastructure.GitHub.GitHubClientSettings! settings, Aw.Connectors.Infrastructure.GitHub.IHostResolver! resolver) -> System.Net.Http.HttpMessageHandler!

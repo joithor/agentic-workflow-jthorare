@@ -195,6 +195,10 @@ own transitions don't read the `Motion.*` tokens: `SettingsTheme.Follow(window, 
 `reduce-motion` class in step with `IsMotionReduced`, and `Theme/FluentOverrides.axaml` turns those transitions off
 under it (today the ToggleSwitch knob); another stock control with its own transitions gets its line there.
 
+### Model choice in Settings (model-pick spec 8)
+
+Below the checklist, `SettingsView` has one read-only section over `ViewModels/Settings/ModelChoiceViewModel` (`SettingsViewModel.ModelChoice`, the shell's `Health.ModelChoice`, fed by every status): the line "Model choice: on", "Model choice: off. Steps use the agent's default, with no Jev call.", or, whenever `profile.needsApproval` is set, "The profile has a change waiting for your approval"; the sentence "Jev reads each step's brief and files to pick the cheapest model that works. Change it in the profile; it takes effect once you approve. Retention is the provider's."; and a Copy button for three lines: the profile file's path (`profile.source`, left out when not known), `sindri profile validate` and `sindri profile approve`. The app derives nothing: on or off is `profile.modelPick`, which Sindri computes from the approved profile's `workflow.agent.pick`, and there is no edit verb.
+
 ### The setup checklist in Settings (setup spec §2.4, F3 slice 2)
 
 The first section of `SettingsView` is the six-step checklist over `ViewModels/Setup/SetupViewModel` (`Views/Setup/SetupChecklist`); the local preferences sit below it under "This app".

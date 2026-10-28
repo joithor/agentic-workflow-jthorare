@@ -4,7 +4,7 @@ namespace Aw.Connectors.Infrastructure.GitHub;
 /// What the GitHub client needs from the profile's 'context.sources.github': the Enterprise host, whether a private host is intended and the
 /// already resolved token. The Host resolves the secret pointer and passes the token; <see cref="ToString"/> withholds it.
 /// </summary>
-public sealed class GitHubClientSettings
+internal sealed class GitHubClientSettings
 {
     /// <summary>An Enterprise API host (a host name, optionally with a port; reached over https at '/api/v3'), or null for api.github.com.</summary>
     public string? Host { get; init; }

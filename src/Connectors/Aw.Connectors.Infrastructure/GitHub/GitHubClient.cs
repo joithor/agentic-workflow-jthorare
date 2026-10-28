@@ -15,7 +15,7 @@ namespace Aw.Connectors.Infrastructure.GitHub;
 /// cursor's instant (inclusive), a page at a time by the Link header. A rate limit stops the run and comes back as a value with the reset time (never a sleep). The host rules
 /// are checked before the first request; a redirect is refused; the token goes only in the Authorization header and in no error.
 /// </summary>
-public sealed partial class GitHubClient : IGitHubReader
+internal sealed partial class GitHubClient : IGitHubReader
 {
     private const string DefaultRoot = "https://api.github.com";
     private const int DefaultWaitSeconds = 60;

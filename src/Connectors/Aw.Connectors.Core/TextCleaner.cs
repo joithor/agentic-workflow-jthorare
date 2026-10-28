@@ -79,6 +79,7 @@ public static partial class TextCleaner
     {
         // A run holding a soft break (from a block tag) is one line break, or a blank line when the source had two literal ones.
         text = SoftRun.Replace(text, m => m.Value.AsSpan().Count('\n') >= 2 ? "\n\n" : "\n");
+        text = UnicodeSpaces.Replace(text, " ");
         text = HorizontalSpace.Replace(text, " ");
         var lines = text.Split('\n').Select(static l => l.Trim());
         text = string.Join('\n', lines);
@@ -195,6 +196,10 @@ public static partial class TextCleaner
 
     [GeneratedRegex("[ \\t\\n\\u0001]*\\u0001[ \\t\\n\\u0001]*", Flags, TimeoutMs)]
     private static partial Regex SoftRun { get; }
+
+    // U+00A0 (from &nbsp; or pasted text) and the other Unicode space separators count as a plain space.
+    [GeneratedRegex("[\\u00A0\\u1680\\u2000-\\u200A\\u202F\\u205F\\u3000]", Flags, TimeoutMs)]
+    private static partial Regex UnicodeSpaces { get; }
 
     [GeneratedRegex("[ \\t]+", Flags, TimeoutMs)]
     private static partial Regex HorizontalSpace { get; }

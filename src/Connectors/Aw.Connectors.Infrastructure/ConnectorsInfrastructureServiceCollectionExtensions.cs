@@ -1,3 +1,5 @@
+using Aw.Connectors.Core.GitHub;
+using Aw.Connectors.Infrastructure.GitHub;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aw.Connectors.Infrastructure;
@@ -11,4 +13,20 @@ public static class ConnectorsInfrastructureServiceCollectionExtensions
     /// <returns>The same collection.</returns>
     public static IServiceCollection AddConnectorsInfrastructure(this IServiceCollection services, Func<string, string?> environment)
         => services.AddSingleton(SettingsFromEnvironment.Read(environment));
+
+    /// <summary>Adds the GitHub reader: the client behind <see cref="IGitHubReader"/>, on a handler that follows no redirect and refuses private hosts unless the profile marks one as intended.</summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="host">An Enterprise API host, or null for api.github.com.</param>
+    /// <param name="allowPrivateHost">True when the profile marks a private, loopback or link-local host as intended.</param>
+    /// <param name="token">The already resolved read-only token, or null to call unauthenticated.</param>
+    /// <returns>The same collection.</returns>
+    public static IServiceCollection AddGitHubReader(this IServiceCollection services, string? host, bool allowPrivateHost, string? token)
+    {
+        var settings = new GitHubClientSettings { Host = host, AllowPrivateHost = allowPrivateHost, Token = token };
+        return services.AddSingleton<IGitHubReader>(_ => new GitHubClient(
+            new HttpClient(GitHubHttp.CreateHandler(settings, new SystemHostResolver()), disposeHandler: true),
+            settings,
+            new SystemHostResolver(),
+            TimeProvider.System));
+    }
 }

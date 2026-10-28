@@ -5,7 +5,7 @@ using Aw.Connectors.Core;
 namespace Aw.Connectors.Infrastructure.GitHub;
 
 /// <summary>Builds the handler the GitHub client runs on.</summary>
-public static class GitHubHttp
+internal static class GitHubHttp
 {
     /// <summary>
     /// A handler that follows no redirect and checks the addresses of the host against the host rules when it connects, then connects to those

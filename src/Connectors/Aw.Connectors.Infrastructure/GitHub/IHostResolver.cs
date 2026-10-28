@@ -3,7 +3,7 @@ using System.Net;
 namespace Aw.Connectors.Infrastructure.GitHub;
 
 /// <summary>Resolves a host name to its addresses; the seam the host rules (and their tests) use instead of DNS.</summary>
-public interface IHostResolver
+internal interface IHostResolver
 {
     /// <summary>Resolves <paramref name="host"/>.</summary>
     /// <param name="host">A DNS name (never an IP literal).</param>

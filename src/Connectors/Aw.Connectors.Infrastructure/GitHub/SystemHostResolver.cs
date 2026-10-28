@@ -3,7 +3,7 @@ using System.Net;
 namespace Aw.Connectors.Infrastructure.GitHub;
 
 /// <summary>The system's DNS.</summary>
-public sealed class SystemHostResolver : IHostResolver
+internal sealed class SystemHostResolver : IHostResolver
 {
     /// <inheritdoc />
     public async ValueTask<IReadOnlyList<IPAddress>> Resolve(string host, CancellationToken cancellationToken)

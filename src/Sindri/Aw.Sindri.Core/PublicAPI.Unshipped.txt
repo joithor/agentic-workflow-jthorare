@@ -19391,6 +19391,7 @@ Aw.Sindri.Core.Sandbox.Plan.GitSetting.Key.init -> void
 Aw.Sindri.Core.Sandbox.Plan.GitSetting.Value.get -> string!
 Aw.Sindri.Core.Sandbox.Plan.GitSetting.Value.init -> void
 Aw.Sindri.Core.Sandbox.Plan.GitSettings
+const Aw.Sindri.Core.Sandbox.Plan.GitSettings.CredentialHelperName = "git-credential-sindri" -> string!
 Aw.Sindri.Core.Sandbox.Plan.GroupsInput
 Aw.Sindri.Core.Sandbox.Plan.GroupsInput.<Clone>$() -> Aw.Sindri.Core.Sandbox.Plan.GroupsInput!
 Aw.Sindri.Core.Sandbox.Plan.GroupsInput.Attended.get -> bool
@@ -19803,7 +19804,7 @@ static Aw.Sindri.Core.Sandbox.Plan.EnvironmentAllowlist.Names.get -> System.Coll
 static Aw.Sindri.Core.Sandbox.Plan.EnvironmentAllowlist.Violations(System.Collections.Generic.IEnumerable<string!>! names) -> System.Collections.Generic.IReadOnlyList<string!>!
 static Aw.Sindri.Core.Sandbox.Plan.GitSetting.operator !=(Aw.Sindri.Core.Sandbox.Plan.GitSetting? left, Aw.Sindri.Core.Sandbox.Plan.GitSetting? right) -> bool
 static Aw.Sindri.Core.Sandbox.Plan.GitSetting.operator ==(Aw.Sindri.Core.Sandbox.Plan.GitSetting? left, Aw.Sindri.Core.Sandbox.Plan.GitSetting? right) -> bool
-static Aw.Sindri.Core.Sandbox.Plan.GitSettings.For(string? worktree, string! hooksDir) -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.GitSetting!>!
+static Aw.Sindri.Core.Sandbox.Plan.GitSettings.For(string? worktree, string! hooksDir, string? credentialHelper = null) -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.GitSetting!>!
 static Aw.Sindri.Core.Sandbox.Plan.GitSettings.ToEnvironment(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.GitSetting!>! settings, string! emptyGlobalFile) -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.PlanEnvVar!>!
 static Aw.Sindri.Core.Sandbox.Plan.GroupsInput.operator !=(Aw.Sindri.Core.Sandbox.Plan.GroupsInput? left, Aw.Sindri.Core.Sandbox.Plan.GroupsInput? right) -> bool
 static Aw.Sindri.Core.Sandbox.Plan.GroupsInput.operator ==(Aw.Sindri.Core.Sandbox.Plan.GroupsInput? left, Aw.Sindri.Core.Sandbox.Plan.GroupsInput? right) -> bool

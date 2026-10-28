@@ -41,7 +41,7 @@ internal sealed partial class Launcher
 
             WriteCaptureRule(request.Launch, entry);
             var prior = await MintSecret(request.Launch, cancellationToken).ConfigureAwait(false);
-            var confined = await Confine(request, composed.Value.Argv, Environment(request, workDir), cancellationToken).ConfigureAwait(false);
+            var confined = await Confine(request, composed.Value.Argv, Environment(request, workDir), composed.Value.Session, cancellationToken).ConfigureAwait(false);
             if (confined.IsError)
             {
                 return confined.Error;   // a refusal carries its SND-LAUNCH-014..017 or -020 code; Start cleans up (and releases) after it

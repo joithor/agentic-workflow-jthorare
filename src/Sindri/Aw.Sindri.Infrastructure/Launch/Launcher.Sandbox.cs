@@ -1,4 +1,5 @@
 using Aw.Kernel;
+using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Workflow.Engine;
@@ -13,14 +14,14 @@ internal sealed partial class Launcher
     private sealed record Confined(IReadOnlyList<string> Argv, Dictionary<string, string> Env, SandboxSummary? Summary);
 
     /// <summary>An unattended launch with a sandbox runs its wrapped argv and sees the session home as AW_SINDRI_HOME, never the real one; anything else runs as built.</summary>
-    private async ValueTask<Result<Confined>> Confine(LaunchRequest request, IReadOnlyList<string> argv, Dictionary<string, string> env, CancellationToken cancellationToken)
+    private async ValueTask<Result<Confined>> Confine(LaunchRequest request, IReadOnlyList<string> argv, Dictionary<string, string> env, SessionId? session, CancellationToken cancellationToken)
     {
         if (request.Attended || parts.Sandbox is not { } sandbox)
         {
             return new Confined(argv, env, Summary: null);
         }
 
-        var prepared = await sandbox.Prepare(request, argv, cancellationToken).ConfigureAwait(false);
+        var prepared = await sandbox.Prepare(request, argv, session, cancellationToken).ConfigureAwait(false);
         if (prepared.IsError)
         {
             return prepared.Error;

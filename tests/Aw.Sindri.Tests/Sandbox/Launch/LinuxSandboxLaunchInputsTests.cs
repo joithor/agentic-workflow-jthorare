@@ -70,4 +70,15 @@ public sealed class LinuxSandboxLaunchInputsTests : IDisposable
     [Fact]
     public void The_run_area_is_per_launch_under_the_launcher_directory() =>
         Expect.Equal(Path.Combine(_temp.Path, "launch", "areas", _launch.Value), Make().RunAreaFor(_launch));
+
+    [Fact]
+    public void The_reported_session_is_the_first_line_of_the_launch_s_session_id_file()
+    {
+        var launches = Path.Combine(_temp.Path, "launches");
+        _ = Directory.CreateDirectory(launches);
+        File.WriteAllText(Path.Combine(launches, _launch.Value + ".session-id"), "abc\n");
+
+        Expect.Equal("abc", Make().ReportedSession(_launch));
+        Expect.True(Make().ReportedSession(LaunchId.From("LCH-ffffffffffffffffffffffffffffffff")) is null);
+    }
 }

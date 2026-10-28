@@ -7,6 +7,16 @@ internal static class DenialFileLocator
 {
     private const string FailOpenName = "failopen.log";
 
+    /// <summary>The launch's session id: the one the launcher chose (a pre-chosen entry like claude-code, or a resume), else the one the agent reported through 'session-id-report' (codex, cursor).</summary>
+    /// <param name="chosen">The id the launcher chose, or null.</param>
+    /// <param name="reported">Reads the reported id; only asked when nothing was chosen.</param>
+    /// <returns>The id, or null when there is none.</returns>
+    internal static string? SessionFor(Aw.Sindri.Core.Ids.SessionId? chosen, Func<string?> reported)
+    {
+        ArgumentNullException.ThrowIfNull(reported);
+        return chosen?.Value ?? reported();
+    }
+
     /// <summary>Locates the files; a file that is not there (or a session that was never reported) is null.</summary>
     /// <param name="plan">The launch's plan.</param>
     /// <param name="glob">The catalog entry's transcript glob with '{sessionId}', or null.</param>

@@ -7,3 +7,11 @@ static Aw.Sindri.Infrastructure.Sandbox.BubblewrapServiceCollectionExtensions.Ad
 Aw.Sindri.Infrastructure.Registration.SindriProveInfrastructureServiceCollectionExtensions
 static Aw.Sindri.Infrastructure.Registration.SindriProveInfrastructureServiceCollectionExtensions.AddSindriProveInfrastructure(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Func<string!, string?>! environment) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static Aw.Sindri.Infrastructure.Registration.SindriProveInfrastructureServiceCollectionExtensions.ProveBlocksAllowed(System.Func<string!, string?>! environment) -> bool
+Aw.Sindri.Infrastructure.Sandbox.Launch.SessionHome
+const Aw.Sindri.Infrastructure.Sandbox.Launch.SessionHome.GhConfigName = "gh-config" -> string!
+const Aw.Sindri.Infrastructure.Sandbox.Launch.SessionHome.SecretName = "launch.secret" -> string!
+static Aw.Sindri.Infrastructure.Sandbox.Launch.SessionHome.Create(string! sindriHome, Aw.Sindri.Core.Workflow.Engine.LaunchId launch, string! secret, Aw.Sindri.Core.Control.ControlEndpoint? control) -> string!
+static Aw.Sindri.Infrastructure.Sandbox.Launch.SessionHome.Remove(string! sessionHome) -> void
+static Aw.Sindri.Infrastructure.Sandbox.Launch.SessionHome.SecretFile(string! sessionHome) -> string!
+static Aw.Sindri.Infrastructure.Sandbox.Launch.SessionHome.Sweep(string! sindriHome, System.Func<string!, bool>! isLive) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Aw.Sindri.Infrastructure.Sandbox.Launch.SessionHome.WriteControl(string! sessionHome, Aw.Sindri.Core.Control.ControlEndpoint! control) -> void

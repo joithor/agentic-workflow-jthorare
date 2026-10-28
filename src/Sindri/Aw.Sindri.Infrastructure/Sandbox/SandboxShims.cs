@@ -1,4 +1,5 @@
 using System.Text;
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 
 namespace Aw.Sindri.Infrastructure.Sandbox;
@@ -93,7 +94,7 @@ internal static class SandboxShims
         "#!/bin/sh\n# Sindri sandbox shim for gh: the agent GitHub App token goes into gh's own environment, never the agent's (docs/csharp/sindri-sandbox.md).\n"
         + "real=" + Quote(realGh) + "\ntoken_file=" + Quote(tokenFile) + "\n"
         + "token=$(cat \"$token_file\" 2>/dev/null) || token=\n"
-        + "if [ -z \"$token\" ]; then echo \"gh: the GitHub token is not available in this Step ($token_file is missing or empty)\" >&2; exit 1; fi\n"
+        + "if [ -z \"$token\" ]; then echo \"gh: the GitHub token is not available in this Step ($token_file is missing or empty). " + SandboxStatusLine.Refusal + "\" >&2; exit 1; fi\n"
         + "GH_TOKEN=$token\nexport GH_TOKEN\nexec \"$real\" \"$@\"\n";
 
     /// <summary>The git credential helper: answers `get` for https://github.com only; `store` and `erase` do nothing.</summary>
@@ -110,7 +111,7 @@ internal static class SandboxShims
     /// <summary>The agent-app pre-push hook: allows a push only to the run branch or under it, and never a delete.</summary>
     internal static string BranchOnlyPrePush(string runNamespace) =>
         "#!/bin/sh\n# Sindri sandbox pre-push: only the run branch can be pushed.\nns=" + Quote(runNamespace) + "\n"
-        + "refuse() { echo \"git push to $1 is not allowed in this Step: only the run branch refs/heads/$ns can be pushed.\" >&2; exit 1; }\n"
+        + "refuse() { echo \"git push to $1 is not allowed in this Step: only the run branch refs/heads/$ns can be pushed. " + SandboxStatusLine.Refusal + "\" >&2; exit 1; }\n"
         + "while read -r lref lsha rref rsha || [ -n \"$rref\" ]; do\n"
         + "  [ -n \"$ns\" ] || refuse \"$rref\"\n"
         + "  case \"$rref\" in \"refs/heads/$ns\"|\"refs/heads/$ns/\"*) ;; *) refuse \"$rref\" ;; esac\n"

@@ -9033,6 +9033,7 @@ override Aw.Context.Core.Concepts.PinRollupResult.GetHashCode() -> int
 override Aw.Context.Core.Concepts.PinRollupResult.ToString() -> string!
 static Aw.Context.Core.Concepts.PinRollupResult.operator !=(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
 static Aw.Context.Core.Concepts.PinRollupResult.operator ==(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
+Aw.Context.Core.Extract.IRepoReader.BlobIds(Aw.Context.Core.Engine.ContextRepo! repo, string! commit, System.Collections.Generic.IReadOnlyList<string!>! paths, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyDictionary<string!, string!>!>!>
 Aw.Context.Core.Sync.RecordBatches
 static Aw.Context.Core.Sync.RecordBatches.From(Aw.Context.Core.Sources.SourceId source, Aw.Context.Core.Sync.RecordPage! page, Aw.Context.Core.Records.SyncPhase phase, Aw.Context.Core.Trust.Scrubbers! scrubbers, System.DateTimeOffset at) -> Aw.Context.Core.Records.RecordBatch!
 Aw.Context.Core.Sync.IIndexSync

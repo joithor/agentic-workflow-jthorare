@@ -27,16 +27,16 @@ internal sealed class PullGitHubService(IGitHubReader reader) : IService<PullGit
             return grouped.Error;
         }
 
-        if (grouped.Value is null)
+        if (grouped.Value.Limited is { } limited)
         {
-            return new PullGitHubResponse([], request.After, page.Value.RateLimitedUntil);
+            return new PullGitHubResponse([], request.After, limited);
         }
 
         List<GitHubIssue> done = [];
         List<ConnectorItem> items = [];
         foreach (var issue in issues)
         {
-            var one = await Enrich(request, issue, grouped.Value, cancellationToken).ConfigureAwait(false);
+            var one = await Enrich(request, issue, grouped.Value.Grouped, cancellationToken).ConfigureAwait(false);
             if (one.IsError)
             {
                 return one.Error;
@@ -54,12 +54,12 @@ internal sealed class PullGitHubService(IGitHubReader reader) : IService<PullGit
         return new PullGitHubResponse(items, page.Value.Next, page.Value.RateLimitedUntil);
     }
 
-    /// <summary>The repo-wide comments grouped by entry number; empty when none are wanted; null when the rate limit stopped the read.</summary>
-    private async ValueTask<Result<Dictionary<int, List<GitHubComment>>?>> RepoComments(PullGitHubRequest request, IReadOnlyList<GitHubIssue> issues, CancellationToken cancellationToken)
+    /// <summary>The repo-wide comments grouped by entry number (empty when none are wanted), or the reset time when the rate limit stopped the read.</summary>
+    private async ValueTask<Result<RepoCommentRead>> RepoComments(PullGitHubRequest request, IReadOnlyList<GitHubIssue> issues, CancellationToken cancellationToken)
     {
         if (request.CommentCap == 0 || !issues.Any(static i => i.Comments > 0))
         {
-            return new Dictionary<int, List<GitHubComment>>();
+            return new RepoCommentRead([], Limited: null);
         }
 
         var read = await reader.Comments(request.Repo, request.After.UpdatedAt, issues.Max(static i => i.UpdatedAt), cancellationToken).ConfigureAwait(false);
@@ -68,10 +68,13 @@ internal sealed class PullGitHubService(IGitHubReader reader) : IService<PullGit
             return read.Error;
         }
 
-        return read.Value.RateLimitedUntil is not null
-            ? null
-            : read.Value.Items.GroupBy(static c => c.IssueNumber).ToDictionary(static g => g.Key, static g => g.ToList());
+        return read.Value.RateLimitedUntil is { } limited
+            ? new RepoCommentRead([], limited)
+            : new RepoCommentRead(read.Value.Items.GroupBy(static c => c.IssueNumber).ToDictionary(static g => g.Key, static g => g.ToList()), Limited: null);
     }
+
+    /// <summary>The repo-wide comment read: the comments by entry number, or when the rate limit stopped it, its reset time.</summary>
+    private sealed record RepoCommentRead(Dictionary<int, List<GitHubComment>> Grouped, DateTimeOffset? Limited);
 
     private async ValueTask<Result<Enriched>> Enrich(PullGitHubRequest request, GitHubIssue issue, Dictionary<int, List<GitHubComment>> grouped, CancellationToken cancellationToken)
     {

@@ -3,14 +3,14 @@ using System.Net;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.VisualTree;
+using Aw.Kernel.Testing;
+using Aw.Sindri.Ui.Navigation;
+using Aw.Sindri.Ui.Testing;
 using Aw.Sindri.Ui.Tests.Views;
+using Aw.Sindri.Ui.ViewModels;
 using Aw.Sindri.Ui.ViewModels.Settings;
 using Aw.Sindri.Ui.Views;
 using Aw.Sindri.Ui.Views.Setup;
-using Aw.Kernel.Testing;
-using Aw.Sindri.Ui.Navigation;
-using Aw.Sindri.Ui.ViewModels;
-using Aw.Sindri.Ui.Testing;
 
 namespace Aw.Sindri.Ui.Tests.Setup;
 

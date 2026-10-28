@@ -118,6 +118,6 @@ public sealed class IndexSyncServiceTests
         }
 
         public ValueTask<Result<IReadOnlyList<SourceProgress>>> Progress(ContextScope scope, CancellationToken cancellationToken) =>
-            ValueTask.FromResult<Result<IReadOnlyList<SourceProgress>>>(Results.Success<IReadOnlyList<SourceProgress>>([]));
+            ValueTask.FromResult(Results.Success<IReadOnlyList<SourceProgress>>([]));
     }
 }

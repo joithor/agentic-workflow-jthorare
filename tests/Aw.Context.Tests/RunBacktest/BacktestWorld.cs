@@ -1,4 +1,3 @@
-using Aw.Context.Tests.Sync;
 using Aw.Context.Core.Docs;
 using Aw.Context.Core.Engine;
 using Aw.Context.Core.Eval;
@@ -32,6 +31,7 @@ using Aw.Context.Testing.ScopeGraph;
 using Aw.Context.Tests.EvalProbes;
 using Aw.Context.Tests.Map;
 using Aw.Context.Tests.Onyx;
+using Aw.Context.Tests.Sync;
 using Aw.Kernel.Ids;
 using Aw.Kernel.Testing;
 using Microsoft.Extensions.DependencyInjection;

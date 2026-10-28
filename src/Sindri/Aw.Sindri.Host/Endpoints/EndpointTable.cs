@@ -97,7 +97,7 @@ internal static class EndpointTable
 
     private static RouteGroupBuilder MapContextQueries(RouteGroupBuilder queries)
     {
-        _ = queries.MapExportContextMap();
+        _ = queries.MapExportContextMap().MapGetIndexStatus();
         _ = queries.MapGetContextConcepts();
         _ = queries.MapGetContextConceptMembers();
         _ = queries.MapGetContextConceptGlossary();
@@ -143,7 +143,7 @@ internal static class EndpointTable
         _ = commands.MapFileRequest();
         _ = commands.MapRebuildViews();
         _ = commands.MapImportContextMap();
-        _ = commands.MapPromoteContextMap().MapCheckContextMapStructure();
+        _ = commands.MapPromoteContextMap().MapCheckContextMapStructure().MapPurgeIndexSource();
         _ = commands.MapProposeContextMap();
         _ = commands.MapReviewContextMap();
         _ = commands.MapShowLineHoldout();

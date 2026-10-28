@@ -137,30 +137,32 @@ public sealed class VectorMatrixCacheTests : IDisposable
 
         public List<long> VectorReads { get; } = [];
 
-        public ValueTask<Aw.Kernel.Result<CommitReport>> Commit(RecordBatch batch, CancellationToken cancellationToken) => _inner.Commit(batch, cancellationToken);
+        public ValueTask<Kernel.Result<CommitReport>> Commit(RecordBatch batch, CancellationToken cancellationToken) => _inner.Commit(batch, cancellationToken);
 
-        public ValueTask<Aw.Kernel.Result<StoredRecord?>> Get(RecordKey key, CancellationToken cancellationToken) => _inner.Get(key, cancellationToken);
+        public ValueTask<Kernel.Result<StoredRecord?>> Get(RecordKey key, CancellationToken cancellationToken) => _inner.Get(key, cancellationToken);
 
-        public ValueTask<Aw.Kernel.Result<IReadOnlyList<RecordChunk>>> Chunks(RecordKey key, CancellationToken cancellationToken) => _inner.Chunks(key, cancellationToken);
+        public ValueTask<Kernel.Result<IReadOnlyList<RecordChunk>>> Chunks(RecordKey key, CancellationToken cancellationToken) => _inner.Chunks(key, cancellationToken);
 
-        public ValueTask<Aw.Kernel.Result<IReadOnlyList<StoredRecord>>> List(RecordFilter filter, RecordKey? after, int limit, CancellationToken cancellationToken) => _inner.List(filter, after, limit, cancellationToken);
+        public ValueTask<Kernel.Result<IReadOnlyList<StoredRecord>>> List(RecordFilter filter, RecordKey? after, int limit, CancellationToken cancellationToken) => _inner.List(filter, after, limit, cancellationToken);
 
-        public ValueTask<Aw.Kernel.Result<SyncPosition>> Position(SourceId source, CancellationToken cancellationToken) => _inner.Position(source, cancellationToken);
+        public ValueTask<Kernel.Result<SyncPosition>> Position(SourceId source, CancellationToken cancellationToken) => _inner.Position(source, cancellationToken);
 
-        public ValueTask<Aw.Kernel.Result<int>> PutVectors(IReadOnlyList<VectorWrite> vectors, CancellationToken cancellationToken) => _inner.PutVectors(vectors, cancellationToken);
+        public ValueTask<Kernel.Result<int>> PutVectors(IReadOnlyList<VectorWrite> vectors, CancellationToken cancellationToken) => _inner.PutVectors(vectors, cancellationToken);
 
-        public ValueTask<Aw.Kernel.Result<IReadOnlyList<VectorRow>>> Vectors(VectorSpace space, long afterSeq, int limit, CancellationToken cancellationToken)
+        public ValueTask<Kernel.Result<IReadOnlyList<VectorRow>>> Vectors(VectorSpace space, long afterSeq, int limit, CancellationToken cancellationToken)
         {
             VectorReads.Add(afterSeq);
             return _inner.Vectors(space, afterSeq, limit, cancellationToken);
         }
 
-        public ValueTask<Aw.Kernel.Result<IReadOnlyList<ChunkToEmbed>>> ChunksToEmbed(string model, int limit, CancellationToken cancellationToken) => _inner.ChunksToEmbed(model, limit, cancellationToken);
+        public ValueTask<Kernel.Result<IReadOnlyList<ChunkToEmbed>>> ChunksToEmbed(string model, int limit, CancellationToken cancellationToken) => _inner.ChunksToEmbed(model, limit, cancellationToken);
 
-        public ValueTask<Aw.Kernel.Result<int>> DeleteVectors(VectorSpace space, IReadOnlyList<string> keys, CancellationToken cancellationToken) => _inner.DeleteVectors(space, keys, cancellationToken);
+        public ValueTask<Kernel.Result<int>> DeleteVectors(VectorSpace space, IReadOnlyList<string> keys, CancellationToken cancellationToken) => _inner.DeleteVectors(space, keys, cancellationToken);
 
-        public ValueTask<Aw.Kernel.Result<StoreStamps>> Stamps(CancellationToken cancellationToken) => _inner.Stamps(cancellationToken);
+        public ValueTask<Kernel.Result<StoreStamps>> Stamps(CancellationToken cancellationToken) => _inner.Stamps(cancellationToken);
 
-        public ValueTask<Aw.Kernel.Result<int>> Purge(SourceId source, CancellationToken cancellationToken) => _inner.Purge(source, cancellationToken);
+        public ValueTask<Kernel.Result<int>> Purge(SourceId source, CancellationToken cancellationToken) => _inner.Purge(source, cancellationToken);
+
+        public ValueTask<Kernel.Result<SourceCounts>> Count(SourceId source, CancellationToken cancellationToken) => _inner.Count(source, cancellationToken);
     }
 }

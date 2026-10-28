@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Aw.Context.Core.Records;
-using Aw.Context.Core.Sync;
 using Aw.Context.Core.Sources;
+using Aw.Context.Core.Sync;
 
 namespace Aw.Context.Tests.Linear;
 

@@ -22,10 +22,23 @@ internal sealed class InstanceJoins(ILaunchViews launches, IFactContents content
     /// <param name="view">The instance's view.</param>
     /// <param name="cancellationToken">Cancels the read.</param>
     /// <returns>How many sessions run and the cap; null when the run does not wait, has no agent run, or the ledger can't be read.</returns>
-    public ValueTask<StatusWaiting?> Waiting(InstanceView view, CancellationToken cancellationToken)
+    public async ValueTask<StatusWaiting?> Waiting(InstanceView view, CancellationToken cancellationToken)
     {
-        _ = (view, ledger, events, cancellationToken);
-        return ValueTask.FromResult<StatusWaiting?>(null);
+        ArgumentNullException.ThrowIfNull(view);
+        if (ledger is null || events is null || view.AgentRun?.Launch is not { } launch)
+        {
+            return null;
+        }
+
+        var outcome = await ledger.ByKey("launch.outcome:" + launch, cancellationToken).ConfigureAwait(false);
+        if (outcome is not { IsSuccess: true, Value: null })
+        {
+            return null;   // the launch has an outcome, or the ledger can't say
+        }
+
+        var waited = await ledger.ByKey("launch.waiting:" + launch, cancellationToken).ConfigureAwait(false);
+        var payload = waited is { IsSuccess: true, Value: { } row } ? events.Payload<LaunchWaiting>(row) : default;
+        return payload is { IsSuccess: true } ? new StatusWaiting(payload.Value.Running, payload.Value.Cap) : null;
     }
 
     /// <summary>The session of <paramref name="view"/>'s open agent run.</summary>

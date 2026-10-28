@@ -144,7 +144,7 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
             sandbox.Discard(plan);
         }
 
-        SessionHome.Remove(SessionHomePaths.For(options.SindriHome, launch));
+        SessionHome.Remove(SessionHomePaths.For(options.SindriHome, launch));   // a token renewal racing this writes nothing: TokenFile.Replace(create: false) never makes a folder
 
         await stages.Release(launch, cancellationToken).ConfigureAwait(false);
     }

@@ -19,7 +19,10 @@ internal sealed partial class TmuxSessionHost
 
         var prefix = await Run(["show-options", "-gv", "prefix"], deadline).ConfigureAwait(false);
         var line = template.Replace(SandboxStatusLine.PrefixToken, SandboxStatusLine.PrefixLabel(prefix.ExitCode == 0 && prefix.Output.Length > 0 ? prefix.Output : "C-b"), StringComparison.Ordinal);
-        _ = await Run(["set-option", "-t", Target(name), "status-right-length", Math.Max(line.Length + 1, 40).ToString(CultureInfo.InvariantCulture)], deadline).ConfigureAwait(false);   // why: tmux cuts the right side at 40 characters by default
-        _ = await Run(["set-option", "-t", Target(name), "status-right", line], deadline).ConfigureAwait(false);
+        _ = await Run(["set-option", "-t", OptionTarget(name), "status-right-length", Math.Max(line.Length + 1, 40).ToString(CultureInfo.InvariantCulture)], deadline).ConfigureAwait(false);   // why: tmux cuts the right side at 40 characters by default
+        _ = await Run(["set-option", "-t", OptionTarget(name), "status-right", line], deadline).ConfigureAwait(false);
     }
+
+    // why: tmux 3.4 reads an option's -t as a pane, so a bare '=name' is "no such session"; '=name:' is that exact session's current window.
+    private static string OptionTarget(HostRef host) => Target(host) + ":";
 }

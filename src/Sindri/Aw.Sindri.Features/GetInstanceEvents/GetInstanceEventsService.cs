@@ -23,7 +23,6 @@ namespace Aw.Sindri.Features.GetInstanceEvents;
 internal sealed class GetInstanceEventsService(ILedgerReader ledger, EventFactory events, IInstanceDirectory directory, IInstanceReader runtime, LimitEndingReader? limits = null) : IService<GetInstanceEventsRequest, GetInstanceEventsResponse>
 {
     private const int Page = 500;
-    private const string LimitReason = "limit";   // the reason a Step a sandbox limit ended fails with (Core's Unavailables.LimitReason)
 
     public async ValueTask<Result<GetInstanceEventsResponse>> Handle(GetInstanceEventsRequest request, CancellationToken cancellationToken)
     {
@@ -75,7 +74,7 @@ internal sealed class GetInstanceEventsService(ILedgerReader ledger, EventFactor
 
         for (var i = 0; i < found.Count; i++)
         {
-            if (string.Equals(found[i].Transition.Trigger, TriggerNames.StepFailed, StringComparison.Ordinal) && string.Equals(found[i].Transition.Reason, LimitReason, StringComparison.Ordinal))
+            if (string.Equals(found[i].Transition.Trigger, TriggerNames.StepFailed, StringComparison.Ordinal))
             {
                 found[i] = found[i] with { Transition = await limits.Add(found[i].Transition, owner, cancellationToken).ConfigureAwait(false) };
             }

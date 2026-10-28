@@ -83,5 +83,5 @@ public sealed record LaunchRow(
 
     /// <summary>The sandbox summary from 'launch.started' (sandbox spec §8); null when the launch was not sandboxed and for launches recorded before the field.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
-    public Aw.Sindri.Core.Sandbox.SandboxSummary? Sandbox { get; init; }
+    public Sandbox.SandboxSummary? Sandbox { get; init; }
 }

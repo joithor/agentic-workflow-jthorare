@@ -21,7 +21,9 @@ namespace Aw.Sindri.Features.GetInstanceEvents;
 /// <param name="branches">Says whether the run branch kept commits.</param>
 internal sealed class LimitEndingReader(ILedgerReader ledger, EventFactory events, IViewReader views, IApprovedProfile approved, IRunBranches branches)
 {
-    /// <summary>Adds the limit ending to <paramref name="fields"/> when they are a limit failure of an agent run.</summary>
+    private const string LimitReason = "limit";   // the reason a Step a sandbox limit ended fails with (Core's Unavailables.LimitReason)
+
+    /// <summary>Adds the limit ending to <paramref name="fields"/> when they are a limit failure (reason 'limit') of an agent run.</summary>
     /// <param name="fields">The row's fields.</param>
     /// <param name="instance">The instance the row belongs to.</param>
     /// <param name="cancellationToken">Cancels the reads.</param>
@@ -29,7 +31,7 @@ internal sealed class LimitEndingReader(ILedgerReader ledger, EventFactory event
     public async ValueTask<InstanceEventFields> Add(InstanceEventFields fields, WorkflowInstanceId instance, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(fields);
-        if (fields.Run is not { } text || !RunToken.TryFrom(text, out var run))
+        if (!string.Equals(fields.Reason, LimitReason, StringComparison.Ordinal) || fields.Run is not { } text || !RunToken.TryFrom(text, out var run))
         {
             return fields;
         }

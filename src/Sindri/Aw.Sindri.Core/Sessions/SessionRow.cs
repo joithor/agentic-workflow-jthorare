@@ -40,5 +40,5 @@ public sealed record SessionRow(
 
     /// <summary>What the sandbox says about the session (sandbox spec §8); null, and left out, for a session whose launch was not sandboxed or that has no launch of Sindri's.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
-    public Aw.Sindri.Core.Sandbox.SessionSandbox? Sandbox { get; init; }
+    public Sandbox.SessionSandbox? Sandbox { get; init; }
 }

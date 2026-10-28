@@ -19,7 +19,7 @@ public sealed class TmuxSessionHostStatusLineTests : IDisposable
     private HostSession Session(string name, string? statusRight) =>
         new(name, _tmux.Scratch, ["sleep", "60"], new Dictionary<string, string>(StringComparer.Ordinal)) { StatusRight = statusRight };
 
-    private string? StatusRight(string session) => _tmux.Run("show-options", "-t", "=" + session, "-v", "status-right")?.Trim();
+    private string? StatusRight(string session) => _tmux.Run("show-options", "-t", "=" + session + ":", "-v", "status-right")?.Trim();
 
     [Fact]
     public async Task A_sandboxed_step_gets_the_golden_with_the_default_prefix()
@@ -54,7 +54,7 @@ public sealed class TmuxSessionHostStatusLineTests : IDisposable
     {
         _ = await new TmuxSessionHost(_tmux.Options).Start(Session("snd-wide", SandboxStatusLine.Template(attended: true)), _deadline, CancellationToken.None);
 
-        var length = int.Parse(_tmux.Run("show-options", "-t", "=snd-wide", "-v", "status-right-length")!.Trim(), System.Globalization.CultureInfo.InvariantCulture);
+        var length = int.Parse(_tmux.Run("show-options", "-t", "=snd-wide:", "-v", "status-right-length")!.Trim(), System.Globalization.CultureInfo.InvariantCulture);
         Expect.True(length >= SandboxStatusLine.Render(attended: true, "C-b").Length);
     }
 

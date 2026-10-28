@@ -43,7 +43,7 @@ public sealed class LaunchesProjectionTests
 
         var row = (await Row())!;
 
-        Expect.Equal(SandboxData.Summary(), row.Sandbox);
+        SandboxData.AssertIsSummary(row.Sandbox);
     }
 
     [Fact]

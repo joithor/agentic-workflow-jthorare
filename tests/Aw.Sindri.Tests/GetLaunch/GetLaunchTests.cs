@@ -78,7 +78,7 @@ public sealed class GetLaunchTests
 
         var view = (await Service().Handle(A.GetLaunchRequest().Build(), Token)).Value;
 
-        Expect.Equal(SandboxData.Summary(), view.Sandbox);
+        SandboxData.AssertIsSummary(view.Sandbox);
     }
 
     [Fact]

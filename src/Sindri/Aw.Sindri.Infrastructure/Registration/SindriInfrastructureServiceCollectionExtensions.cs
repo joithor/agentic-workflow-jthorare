@@ -92,7 +92,7 @@ public static class SindriInfrastructureServiceCollectionExtensions
         services.AddSingleton<IScopeControl>(static _ => new SystemctlScopeControl(new SandboxProcesses())).AddSingleton<ICgroupStats, CgroupFiles>().AddSingleton<IHeavyLockSweep>(static sp => new HeavyLockSweep(sp.GetRequiredService<TimeProvider>()))
             .AddSingleton<IDenialFiles>(static sp => new DiskDenialFiles(sp.GetRequiredService<SindriSettings>(), sp.GetRequiredService<JsonSerializerOptions>()))   // SB-4b: the run areas' denials.json
             .AddSingleton<ISessionSandboxes>(static sp => new DiskSessionSandboxes(
-                sp.GetRequiredService<SindriSettings>(), sp.GetRequiredService<JsonSerializerOptions>(), sp.GetRequiredService<ICgroupStats>(), Sandbox.Launch.PlatformSandboxServiceCollectionExtensions.SliceRelativePath(Sessions.OwnUid.Read())));   // SB-6a: a session row's sandbox
+                sp.GetRequiredService<SindriSettings>(), sp.GetRequiredService<JsonSerializerOptions>(), sp.GetRequiredService<ICgroupStats>(), Sandbox.Launch.PlatformSandboxServiceCollectionExtensions.SliceRelativePath(OwnUid.Read())));   // SB-6a: a session row's sandbox
 
     /// <summary>Engine P8: the diff signal of an agent run (git) and an agent session's end and spend (the ledger).</summary>
     private static IServiceCollection AddAgentRuntimeAdapters(this IServiceCollection services, Func<string, string?> environment) =>

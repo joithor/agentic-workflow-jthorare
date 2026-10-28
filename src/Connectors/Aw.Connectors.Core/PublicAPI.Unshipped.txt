@@ -200,3 +200,74 @@ static readonly Aw.Connectors.Core.ConnectorsErrors.NotFound -> Aw.Kernel.ErrorD
 static readonly Aw.Connectors.Core.ConnectorsErrors.RedirectRefused -> Aw.Kernel.ErrorDefinition!
 static readonly Aw.Connectors.Core.ConnectorsErrors.Unauthorized -> Aw.Kernel.ErrorDefinition!
 static readonly Aw.Connectors.Core.ConnectorsErrors.Unreachable -> Aw.Kernel.ErrorDefinition!
+Aw.Connectors.Core.GitHub.GitHubComment
+Aw.Connectors.Core.GitHub.GitHubComment.<Clone>$() -> Aw.Connectors.Core.GitHub.GitHubComment!
+Aw.Connectors.Core.GitHub.GitHubComment.Deconstruct(out long Id, out int IssueNumber, out string? Author, out string! Body, out System.DateTimeOffset CreatedAt, out System.DateTimeOffset UpdatedAt) -> void
+Aw.Connectors.Core.GitHub.GitHubComment.Equals(Aw.Connectors.Core.GitHub.GitHubComment? other) -> bool
+Aw.Connectors.Core.GitHub.GitHubComment.GitHubComment(long Id, int IssueNumber, string? Author, string! Body, System.DateTimeOffset CreatedAt, System.DateTimeOffset UpdatedAt) -> void
+Aw.Connectors.Core.GitHub.GitHubComment.Id.get -> long
+Aw.Connectors.Core.GitHub.GitHubComment.Id.init -> void
+Aw.Connectors.Core.GitHub.GitHubComment.IssueNumber.get -> int
+Aw.Connectors.Core.GitHub.GitHubComment.IssueNumber.init -> void
+Aw.Connectors.Core.GitHub.GitHubComment.Author.get -> string?
+Aw.Connectors.Core.GitHub.GitHubComment.Author.init -> void
+Aw.Connectors.Core.GitHub.GitHubComment.Body.get -> string!
+Aw.Connectors.Core.GitHub.GitHubComment.Body.init -> void
+Aw.Connectors.Core.GitHub.GitHubComment.CreatedAt.get -> System.DateTimeOffset
+Aw.Connectors.Core.GitHub.GitHubComment.CreatedAt.init -> void
+Aw.Connectors.Core.GitHub.GitHubComment.UpdatedAt.get -> System.DateTimeOffset
+Aw.Connectors.Core.GitHub.GitHubComment.UpdatedAt.init -> void
+override Aw.Connectors.Core.GitHub.GitHubComment.Equals(object? obj) -> bool
+override Aw.Connectors.Core.GitHub.GitHubComment.GetHashCode() -> int
+override Aw.Connectors.Core.GitHub.GitHubComment.ToString() -> string!
+Aw.Connectors.Core.GitHub.GitHubCommentPage
+Aw.Connectors.Core.GitHub.GitHubCommentPage.<Clone>$() -> Aw.Connectors.Core.GitHub.GitHubCommentPage!
+Aw.Connectors.Core.GitHub.GitHubCommentPage.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Connectors.Core.GitHub.GitHubComment!>! Items, out System.DateTimeOffset? RateLimitedUntil) -> void
+Aw.Connectors.Core.GitHub.GitHubCommentPage.Equals(Aw.Connectors.Core.GitHub.GitHubCommentPage? other) -> bool
+Aw.Connectors.Core.GitHub.GitHubCommentPage.GitHubCommentPage(System.Collections.Generic.IReadOnlyList<Aw.Connectors.Core.GitHub.GitHubComment!>! Items, System.DateTimeOffset? RateLimitedUntil) -> void
+Aw.Connectors.Core.GitHub.GitHubCommentPage.Items.get -> System.Collections.Generic.IReadOnlyList<Aw.Connectors.Core.GitHub.GitHubComment!>!
+Aw.Connectors.Core.GitHub.GitHubCommentPage.Items.init -> void
+Aw.Connectors.Core.GitHub.GitHubCommentPage.RateLimitedUntil.get -> System.DateTimeOffset?
+Aw.Connectors.Core.GitHub.GitHubCommentPage.RateLimitedUntil.init -> void
+override Aw.Connectors.Core.GitHub.GitHubCommentPage.Equals(object? obj) -> bool
+override Aw.Connectors.Core.GitHub.GitHubCommentPage.GetHashCode() -> int
+override Aw.Connectors.Core.GitHub.GitHubCommentPage.ToString() -> string!
+Aw.Connectors.Core.GitHub.GitHubPullDetail
+Aw.Connectors.Core.GitHub.GitHubPullDetail.<Clone>$() -> Aw.Connectors.Core.GitHub.GitHubPullDetail!
+Aw.Connectors.Core.GitHub.GitHubPullDetail.Deconstruct(out bool Merged, out bool Draft, out System.DateTimeOffset? MergedAt, out System.Collections.Generic.IReadOnlyList<string!>! Paths) -> void
+Aw.Connectors.Core.GitHub.GitHubPullDetail.Equals(Aw.Connectors.Core.GitHub.GitHubPullDetail? other) -> bool
+Aw.Connectors.Core.GitHub.GitHubPullDetail.GitHubPullDetail(bool Merged, bool Draft, System.DateTimeOffset? MergedAt, System.Collections.Generic.IReadOnlyList<string!>! Paths) -> void
+Aw.Connectors.Core.GitHub.GitHubPullDetail.Merged.get -> bool
+Aw.Connectors.Core.GitHub.GitHubPullDetail.Merged.init -> void
+Aw.Connectors.Core.GitHub.GitHubPullDetail.Draft.get -> bool
+Aw.Connectors.Core.GitHub.GitHubPullDetail.Draft.init -> void
+Aw.Connectors.Core.GitHub.GitHubPullDetail.MergedAt.get -> System.DateTimeOffset?
+Aw.Connectors.Core.GitHub.GitHubPullDetail.MergedAt.init -> void
+Aw.Connectors.Core.GitHub.GitHubPullDetail.Paths.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Connectors.Core.GitHub.GitHubPullDetail.Paths.init -> void
+override Aw.Connectors.Core.GitHub.GitHubPullDetail.Equals(object? obj) -> bool
+override Aw.Connectors.Core.GitHub.GitHubPullDetail.GetHashCode() -> int
+override Aw.Connectors.Core.GitHub.GitHubPullDetail.ToString() -> string!
+Aw.Connectors.Core.GitHub.GitHubPullDetailRead
+Aw.Connectors.Core.GitHub.GitHubPullDetailRead.<Clone>$() -> Aw.Connectors.Core.GitHub.GitHubPullDetailRead!
+Aw.Connectors.Core.GitHub.GitHubPullDetailRead.Deconstruct(out Aw.Connectors.Core.GitHub.GitHubPullDetail? Detail, out System.DateTimeOffset? RateLimitedUntil) -> void
+Aw.Connectors.Core.GitHub.GitHubPullDetailRead.Equals(Aw.Connectors.Core.GitHub.GitHubPullDetailRead? other) -> bool
+Aw.Connectors.Core.GitHub.GitHubPullDetailRead.GitHubPullDetailRead(Aw.Connectors.Core.GitHub.GitHubPullDetail? Detail, System.DateTimeOffset? RateLimitedUntil) -> void
+Aw.Connectors.Core.GitHub.GitHubPullDetailRead.Detail.get -> Aw.Connectors.Core.GitHub.GitHubPullDetail?
+Aw.Connectors.Core.GitHub.GitHubPullDetailRead.Detail.init -> void
+Aw.Connectors.Core.GitHub.GitHubPullDetailRead.RateLimitedUntil.get -> System.DateTimeOffset?
+Aw.Connectors.Core.GitHub.GitHubPullDetailRead.RateLimitedUntil.init -> void
+override Aw.Connectors.Core.GitHub.GitHubPullDetailRead.Equals(object? obj) -> bool
+override Aw.Connectors.Core.GitHub.GitHubPullDetailRead.GetHashCode() -> int
+override Aw.Connectors.Core.GitHub.GitHubPullDetailRead.ToString() -> string!
+Aw.Connectors.Core.GitHub.IGitHubReader.Comments(string! repo, System.DateTimeOffset since, System.DateTimeOffset until, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.GitHub.GitHubCommentPage!>!>
+Aw.Connectors.Core.GitHub.IGitHubReader.IssueComments(string! repo, int number, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.GitHub.GitHubCommentPage!>!>
+Aw.Connectors.Core.GitHub.IGitHubReader.PullRequest(string! repo, int number, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.GitHub.GitHubPullDetailRead!>!>
+static Aw.Connectors.Core.GitHub.GitHubComment.operator !=(Aw.Connectors.Core.GitHub.GitHubComment? left, Aw.Connectors.Core.GitHub.GitHubComment? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubComment.operator ==(Aw.Connectors.Core.GitHub.GitHubComment? left, Aw.Connectors.Core.GitHub.GitHubComment? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubCommentPage.operator !=(Aw.Connectors.Core.GitHub.GitHubCommentPage? left, Aw.Connectors.Core.GitHub.GitHubCommentPage? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubCommentPage.operator ==(Aw.Connectors.Core.GitHub.GitHubCommentPage? left, Aw.Connectors.Core.GitHub.GitHubCommentPage? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubPullDetail.operator !=(Aw.Connectors.Core.GitHub.GitHubPullDetail? left, Aw.Connectors.Core.GitHub.GitHubPullDetail? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubPullDetail.operator ==(Aw.Connectors.Core.GitHub.GitHubPullDetail? left, Aw.Connectors.Core.GitHub.GitHubPullDetail? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubPullDetailRead.operator !=(Aw.Connectors.Core.GitHub.GitHubPullDetailRead? left, Aw.Connectors.Core.GitHub.GitHubPullDetailRead? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubPullDetailRead.operator ==(Aw.Connectors.Core.GitHub.GitHubPullDetailRead? left, Aw.Connectors.Core.GitHub.GitHubPullDetailRead? right) -> bool

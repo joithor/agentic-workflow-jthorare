@@ -1,6 +1,86 @@
 #nullable enable
 Aw.Connectors.Core.ConnectorsCoreServiceCollectionExtensions
 Aw.Connectors.Core.ConnectorsErrors
+Aw.Connectors.Core.GitHub.GitHubCursor
+Aw.Connectors.Core.GitHub.GitHubCursor.<Clone>$() -> Aw.Connectors.Core.GitHub.GitHubCursor!
+Aw.Connectors.Core.GitHub.GitHubCursor.Admits(Aw.Connectors.Core.GitHub.GitHubIssue! issue) -> bool
+Aw.Connectors.Core.GitHub.GitHubCursor.Advance(System.Collections.Generic.IReadOnlyCollection<Aw.Connectors.Core.GitHub.GitHubIssue!>! read) -> Aw.Connectors.Core.GitHub.GitHubCursor!
+Aw.Connectors.Core.GitHub.GitHubCursor.Deconstruct(out System.DateTimeOffset UpdatedAt, out System.Collections.Generic.IReadOnlyList<long>! SeenIds) -> void
+Aw.Connectors.Core.GitHub.GitHubCursor.Equals(Aw.Connectors.Core.GitHub.GitHubCursor? other) -> bool
+Aw.Connectors.Core.GitHub.GitHubCursor.GitHubCursor(System.DateTimeOffset UpdatedAt, System.Collections.Generic.IReadOnlyList<long>! SeenIds) -> void
+Aw.Connectors.Core.GitHub.GitHubCursor.SeenIds.get -> System.Collections.Generic.IReadOnlyList<long>!
+Aw.Connectors.Core.GitHub.GitHubCursor.SeenIds.init -> void
+Aw.Connectors.Core.GitHub.GitHubCursor.UpdatedAt.get -> System.DateTimeOffset
+Aw.Connectors.Core.GitHub.GitHubCursor.UpdatedAt.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue
+Aw.Connectors.Core.GitHub.GitHubIssue.<Clone>$() -> Aw.Connectors.Core.GitHub.GitHubIssue!
+Aw.Connectors.Core.GitHub.GitHubIssue.Author.get -> string?
+Aw.Connectors.Core.GitHub.GitHubIssue.Author.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.Body.get -> string!
+Aw.Connectors.Core.GitHub.GitHubIssue.Body.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.ClosedAt.get -> System.DateTimeOffset?
+Aw.Connectors.Core.GitHub.GitHubIssue.ClosedAt.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.Comments.get -> int
+Aw.Connectors.Core.GitHub.GitHubIssue.Comments.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.CreatedAt.get -> System.DateTimeOffset
+Aw.Connectors.Core.GitHub.GitHubIssue.CreatedAt.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.Deconstruct(out long Id, out int Number, out bool IsPullRequest, out string! Title, out string! Body, out string! State, out string? Author, out string! Url, out System.DateTimeOffset CreatedAt, out System.DateTimeOffset UpdatedAt, out System.DateTimeOffset? ClosedAt, out System.Collections.Generic.IReadOnlyList<string!>! Labels, out int Comments) -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.Equals(Aw.Connectors.Core.GitHub.GitHubIssue? other) -> bool
+Aw.Connectors.Core.GitHub.GitHubIssue.GitHubIssue(long Id, int Number, bool IsPullRequest, string! Title, string! Body, string! State, string? Author, string! Url, System.DateTimeOffset CreatedAt, System.DateTimeOffset UpdatedAt, System.DateTimeOffset? ClosedAt, System.Collections.Generic.IReadOnlyList<string!>! Labels, int Comments) -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.Id.get -> long
+Aw.Connectors.Core.GitHub.GitHubIssue.Id.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.IsPullRequest.get -> bool
+Aw.Connectors.Core.GitHub.GitHubIssue.IsPullRequest.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.Labels.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Aw.Connectors.Core.GitHub.GitHubIssue.Labels.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.Number.get -> int
+Aw.Connectors.Core.GitHub.GitHubIssue.Number.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.State.get -> string!
+Aw.Connectors.Core.GitHub.GitHubIssue.State.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.Title.get -> string!
+Aw.Connectors.Core.GitHub.GitHubIssue.Title.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.UpdatedAt.get -> System.DateTimeOffset
+Aw.Connectors.Core.GitHub.GitHubIssue.UpdatedAt.init -> void
+Aw.Connectors.Core.GitHub.GitHubIssue.Url.get -> string!
+Aw.Connectors.Core.GitHub.GitHubIssue.Url.init -> void
+Aw.Connectors.Core.GitHub.GitHubPullPage
+Aw.Connectors.Core.GitHub.GitHubPullPage.<Clone>$() -> Aw.Connectors.Core.GitHub.GitHubPullPage!
+Aw.Connectors.Core.GitHub.GitHubPullPage.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Connectors.Core.GitHub.GitHubIssue!>! Items, out Aw.Connectors.Core.GitHub.GitHubCursor! Next, out System.DateTimeOffset? RateLimitedUntil) -> void
+Aw.Connectors.Core.GitHub.GitHubPullPage.Equals(Aw.Connectors.Core.GitHub.GitHubPullPage? other) -> bool
+Aw.Connectors.Core.GitHub.GitHubPullPage.GitHubPullPage(System.Collections.Generic.IReadOnlyList<Aw.Connectors.Core.GitHub.GitHubIssue!>! Items, Aw.Connectors.Core.GitHub.GitHubCursor! Next, System.DateTimeOffset? RateLimitedUntil) -> void
+Aw.Connectors.Core.GitHub.GitHubPullPage.Items.get -> System.Collections.Generic.IReadOnlyList<Aw.Connectors.Core.GitHub.GitHubIssue!>!
+Aw.Connectors.Core.GitHub.GitHubPullPage.Items.init -> void
+Aw.Connectors.Core.GitHub.GitHubPullPage.Next.get -> Aw.Connectors.Core.GitHub.GitHubCursor!
+Aw.Connectors.Core.GitHub.GitHubPullPage.Next.init -> void
+Aw.Connectors.Core.GitHub.GitHubPullPage.RateLimitedUntil.get -> System.DateTimeOffset?
+Aw.Connectors.Core.GitHub.GitHubPullPage.RateLimitedUntil.init -> void
+Aw.Connectors.Core.GitHub.IGitHubReader
+Aw.Connectors.Core.GitHub.IGitHubReader.Issues(string! repo, Aw.Connectors.Core.GitHub.GitHubCursor! after, int limit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Connectors.Core.GitHub.GitHubPullPage!>!>
+Aw.Connectors.Core.TextCleaner
+override Aw.Connectors.Core.GitHub.GitHubCursor.Equals(object? obj) -> bool
+override Aw.Connectors.Core.GitHub.GitHubCursor.GetHashCode() -> int
+override Aw.Connectors.Core.GitHub.GitHubCursor.ToString() -> string!
+override Aw.Connectors.Core.GitHub.GitHubIssue.Equals(object? obj) -> bool
+override Aw.Connectors.Core.GitHub.GitHubIssue.GetHashCode() -> int
+override Aw.Connectors.Core.GitHub.GitHubIssue.ToString() -> string!
+override Aw.Connectors.Core.GitHub.GitHubPullPage.Equals(object? obj) -> bool
+override Aw.Connectors.Core.GitHub.GitHubPullPage.GetHashCode() -> int
+override Aw.Connectors.Core.GitHub.GitHubPullPage.ToString() -> string!
 static Aw.Connectors.Core.ConnectorsCoreServiceCollectionExtensions.AddConnectorsCore(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static Aw.Connectors.Core.ConnectorsErrors.All.get -> System.Collections.Generic.IReadOnlyList<Aw.Kernel.ErrorDefinition!>!
+static Aw.Connectors.Core.GitHub.GitHubCursor.From(System.DateTimeOffset since) -> Aw.Connectors.Core.GitHub.GitHubCursor!
+static Aw.Connectors.Core.GitHub.GitHubCursor.operator !=(Aw.Connectors.Core.GitHub.GitHubCursor? left, Aw.Connectors.Core.GitHub.GitHubCursor? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubCursor.operator ==(Aw.Connectors.Core.GitHub.GitHubCursor? left, Aw.Connectors.Core.GitHub.GitHubCursor? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubIssue.operator !=(Aw.Connectors.Core.GitHub.GitHubIssue? left, Aw.Connectors.Core.GitHub.GitHubIssue? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubIssue.operator ==(Aw.Connectors.Core.GitHub.GitHubIssue? left, Aw.Connectors.Core.GitHub.GitHubIssue? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubPullPage.operator !=(Aw.Connectors.Core.GitHub.GitHubPullPage? left, Aw.Connectors.Core.GitHub.GitHubPullPage? right) -> bool
+static Aw.Connectors.Core.GitHub.GitHubPullPage.operator ==(Aw.Connectors.Core.GitHub.GitHubPullPage? left, Aw.Connectors.Core.GitHub.GitHubPullPage? right) -> bool
+static Aw.Connectors.Core.TextCleaner.Clean(string? text) -> string!
+static readonly Aw.Connectors.Core.ConnectorsErrors.AccessDenied -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Connectors.Core.ConnectorsErrors.BadReply -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Connectors.Core.ConnectorsErrors.HostRefused -> Aw.Kernel.ErrorDefinition!
 static readonly Aw.Connectors.Core.ConnectorsErrors.Invalid -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Connectors.Core.ConnectorsErrors.NotFound -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Connectors.Core.ConnectorsErrors.RedirectRefused -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Connectors.Core.ConnectorsErrors.Unauthorized -> Aw.Kernel.ErrorDefinition!
+static readonly Aw.Connectors.Core.ConnectorsErrors.Unreachable -> Aw.Kernel.ErrorDefinition!

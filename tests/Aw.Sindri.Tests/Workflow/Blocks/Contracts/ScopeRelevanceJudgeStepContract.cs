@@ -7,6 +7,7 @@ using Aw.Sindri.Testing;
 using Aw.Sindri.Testing.Judge;
 using Aw.Sindri.Testing.Workflow;
 using Aw.Sindri.Tests.Scoping.Steps;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Aw.Sindri.Tests.Workflow.Blocks.Contracts;
 
@@ -25,5 +26,5 @@ public sealed class ScopeRelevanceJudgeStepContract : BlockContract
     protected override IServiceProvider Compose() => ShippedComposition.Compose();
 
     protected override async Task InvokeAsync(CancellationToken cancellationToken) =>
-        _ = await new RelevanceJudgeStep(new FakeJudgeChoice(), new PassThroughScrubber()).Run(ScopingStepContexts.Of("step.scope.relevance-judge", []), cancellationToken);
+        _ = await new RelevanceJudgeStep(new FakeJudgeChoice(), new PassThroughScrubber(), TimeProvider.System, NullLogger<RelevanceJudgeStep>.Instance).Run(ScopingStepContexts.Of("step.scope.relevance-judge", []), cancellationToken);
 }

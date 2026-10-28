@@ -22,7 +22,7 @@ internal sealed class GapJudgeStep(IJudgeChoice judge, ITextScrubber scrubber) :
     private const string Uncertain = "uncertain";
     private const string Unavailable = "did not finish";
     private const double DefaultThreshold = 0.6;
-    private const int DefaultParallel = 4;
+    private const int DefaultParallel = 8;
     private const int MostParallel = 16;
     private const int TextCap = 200_000;
 

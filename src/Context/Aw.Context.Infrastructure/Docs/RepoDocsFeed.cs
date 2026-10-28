@@ -1,4 +1,3 @@
-#pragma warning disable MA0182 // the sync driver (U8) builds it per repo set once it lands; only tests construct it until then
 using System.Security.Cryptography;
 using System.Text;
 using Aw.Context.Core.Docs;

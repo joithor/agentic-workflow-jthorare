@@ -6,6 +6,7 @@ using Aw.Sindri.Core;
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Ledger;
 using Aw.Sindri.Core.Onyx;
+using Aw.Sindri.Core.Secrets;
 using Aw.Sindri.Features.OnyxUp;
 using Aw.Sindri.Testing;
 using Aw.Sindri.Tests.ApiGoldens;

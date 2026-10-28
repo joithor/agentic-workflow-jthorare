@@ -65,7 +65,7 @@ public sealed class SlackRecordFeedsTests
     [Fact, Trait("Lane", "unit")]
     public void The_host_builds_without_a_slack_reader_registered()
     {
-        using var provider = new ServiceCollection().AddSingleton<TimeProvider>(TimeProvider.System).AddSlackConnectorFactory().BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
+        using var provider = new ServiceCollection().AddSingleton(TimeProvider.System).AddSlackConnectorFactory().BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 
         Assert.NotNull(provider.GetRequiredService<ISlackConnectorFactory>());
     }

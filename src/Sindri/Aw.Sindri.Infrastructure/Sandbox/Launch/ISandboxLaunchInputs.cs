@@ -48,9 +48,4 @@ internal interface ISandboxLaunchInputs
     /// <param name="launch">The launch.</param>
     /// <returns>The counter, or null to count nothing.</returns>
     public DenialCounter? DenialCounterFor(LaunchId launch);
-
-    /// <summary>Where the launch's agent wrote what the denial collector reads: its transcript and the fail-open log.</summary>
-    /// <param name="launch">The launch.</param>
-    /// <returns>The transcript's path and kind (null when none exists) and the fail-open log's path (null when none).</returns>
-    public (string? Transcript, TranscriptKind Kind, string? FailOpenLog) DenialFiles(LaunchId launch);
 }

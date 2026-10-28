@@ -93,7 +93,7 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
     {
         if (_plans.TryRemove(launch, out var plan) && egress.Get(launch)?.Denials is { } counter)
         {
-            var (transcript, kind, failOpen) = inputs.DenialFiles(launch);
+            var (transcript, kind, failOpen) = DenialFileLocator.For(plan);
             await DenialCollector.Collect(new DenialSources(plan, SessionHomePaths.For(inputs.Host().SindriHome, launch), transcript, kind, failOpen), counter, cancellationToken).ConfigureAwait(false);   // before the egress stops and before session.ended
         }
 

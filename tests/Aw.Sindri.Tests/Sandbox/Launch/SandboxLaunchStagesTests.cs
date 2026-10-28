@@ -110,6 +110,16 @@ public sealed class SandboxLaunchStagesTests : IDisposable
         Expect.True(!File.Exists(StepPolicyFile.PathFor(Home, plan.Launch)));
     }
 
+    [Fact]
+    public void Extra_arguments_go_right_after_the_program_and_before_the_prompt()
+    {
+        var files = new PolicyFiles(["-c", "approval_policy=\"never\""]);
+
+        var argv = files.Apply(["codex", "exec", "--", "do the thing"]);
+
+        Expect.True(argv.SequenceEqual(["codex", "-c", "approval_policy=\"never\"", "exec", "--", "do the thing"], StringComparer.Ordinal));
+    }
+
     private static LaunchRequest Asked(StepPolicy policy) =>
         A.LaunchRequest().InDirectory("/work/web").Unattended(new StepArgs(Model: null, Policy: policy, Ref: new StepRef("build", "agent"))).Build();
 
@@ -138,8 +148,6 @@ public sealed class SandboxLaunchStagesTests : IDisposable
         public PolicyForm PolicyFormOf(AgentId agent) => Form;
 
         public DenialCounter? DenialCounterFor(LaunchId launch) => null;
-
-        public (string? Transcript, TranscriptKind Kind, string? FailOpenLog) DenialFiles(LaunchId launch) => (null, TranscriptKind.Claude, null);
 
         public SandboxHostFacts Host() => SandboxRequests.Host;
 

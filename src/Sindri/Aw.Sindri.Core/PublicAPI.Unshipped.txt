@@ -19634,6 +19634,7 @@ Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Deconstruct(out int PlanVersion, out Aw.
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Environment.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.PlanEnvVar!>!
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Environment.init -> void
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Equals(Aw.Sindri.Core.Sandbox.Plan.SandboxPlan? other) -> bool
+Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.ForExec(Aw.Sindri.Core.Workflow.Engine.LaunchId execLaunch, string! execArea, string! execNetDir) -> Aw.Kernel.Result<Aw.Sindri.Core.Sandbox.Plan.SandboxPlan!>!
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Git.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Plan.GitSetting!>!
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Git.init -> void
 Aw.Sindri.Core.Sandbox.Plan.SandboxPlan.Github.get -> Aw.Sindri.Core.Sandbox.GithubCredentials

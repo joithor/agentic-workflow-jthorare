@@ -71,12 +71,12 @@ public sealed class SandboxLaunchStagesTests
 
     private sealed class NoProfile : IApprovedProfile
     {
-        public ValueTask<Result<LoadedProfile?>> Latest(CancellationToken cancellationToken) => ValueTask.FromResult(Results.Success<LoadedProfile?>(null));
+        public ValueTask<Result<LoadedProfile?>> Latest(CancellationToken cancellationToken) => ValueTask.FromResult(Results.Success<LoadedProfile?>(value: null));
     }
 
     private sealed class EmptyLearn : ILearnHistory
     {
-        public ValueTask<LearnHistory> Read(string repo, CancellationToken cancellationToken) => ValueTask.FromResult(new LearnHistory(null, 0, null));
+        public ValueTask<LearnHistory> Read(string repo, CancellationToken cancellationToken) => ValueTask.FromResult(new LearnHistory(FirstLearnRun: null, LearnRuns: 0, EndedAt: null));
     }
 
     private sealed class StubInputs : ISandboxLaunchInputs

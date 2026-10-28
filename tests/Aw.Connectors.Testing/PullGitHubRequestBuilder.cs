@@ -9,6 +9,7 @@ public sealed class PullGitHubRequestBuilder
     private string _repo = "acme/widgets";
     private GitHubCursor _after = GitHubCursor.From(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero));
     private int _limit = 100;
+    private int _commentCap = GitHubSettings.DefaultCommentCap;
 
     /// <summary>Sets the repo.</summary>
     /// <param name="repo">'owner/name'.</param>
@@ -37,7 +38,16 @@ public sealed class PullGitHubRequestBuilder
         return this;
     }
 
+    /// <summary>Sets the most comments read for one record.</summary>
+    /// <param name="cap">The cap, 0 to read none.</param>
+    /// <returns>This builder.</returns>
+    public PullGitHubRequestBuilder WithCommentCap(int cap)
+    {
+        _commentCap = cap;
+        return this;
+    }
+
     /// <summary>Builds the request.</summary>
     /// <returns>The request.</returns>
-    public PullGitHubRequest Build() => new(_repo, _after, _limit);
+    public PullGitHubRequest Build() => new(_repo, _after, _limit) { CommentCap = _commentCap };
 }

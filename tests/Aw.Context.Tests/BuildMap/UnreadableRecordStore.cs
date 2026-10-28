@@ -24,6 +24,8 @@ internal sealed class UnreadableRecordStore(IRecordStore inner) : IRecordStore
 
     public ValueTask<Result<int>> DeleteVectors(VectorSpace space, IReadOnlyList<string> keys, CancellationToken cancellationToken) => inner.DeleteVectors(space, keys, cancellationToken);
 
+    public ValueTask<Result<IReadOnlyList<ChunkToEmbed>>> ChunksToEmbed(string model, int limit, CancellationToken cancellationToken) => inner.ChunksToEmbed(model, limit, cancellationToken);
+
     public ValueTask<Result<StoreStamps>> Stamps(CancellationToken cancellationToken) =>
         ValueTask.FromResult<Result<StoreStamps>>(ContextErrors.StoreUnavailable.With("the record store can't be opened"));
 

@@ -15,7 +15,8 @@ namespace Aw.Sindri.Infrastructure.Workflows;
 /// <param name="catalog">The blocks' descriptors.</param>
 /// <param name="outputs">The output folder.</param>
 /// <param name="facts">Where the outputs are stored.</param>
-internal sealed class AgentRecovering(BlockCatalog catalog, IStepOutputs outputs, IFactStore facts)
+/// <param name="checks">The checks 'complete' applies to a report's outputs: recovery never accepts an output they refuse (issue 1468).</param>
+internal sealed class AgentRecovering(BlockCatalog catalog, IStepOutputs outputs, IFactStore facts, IReportOutputChecks checks)
 {
     /// <summary>Decides the run from its output folder.</summary>
     /// <param name="run">The run.</param>
@@ -48,8 +49,7 @@ internal sealed class AgentRecovering(BlockCatalog catalog, IStepOutputs outputs
     // Stores each file as the report's output and digests the report; a file that can't be read parks the run, a store that can't take one retries the activity.
     private async Task<AgentRecovered> Stored(AgentRecoverRun run, string outcome, IReadOnlyDictionary<FactKey, string> files, string folder, CancellationToken cancellationToken)
     {
-        var stored = new Dictionary<FactKey, FactValue>();
-        var report = new StringBuilder().Append(CultureInfo.InvariantCulture, $"recovered run {run.Run}\noutcome {outcome}\n");
+        var contents = new Dictionary<FactKey, ReadOnlyMemory<byte>>();
         foreach (var (fact, name) in files.OrderBy(static f => f.Key.Value, StringComparer.Ordinal))
         {
             var content = await outputs.Read(run.Root, name, cancellationToken).ConfigureAwait(false);
@@ -58,14 +58,27 @@ internal sealed class AgentRecovering(BlockCatalog catalog, IStepOutputs outputs
                 return AgentRecovered.Nothing with { Reason = $"the agent finished but its result was not recorded: {folder} ({content.Error.Message})" };
             }
 
-            var put = await facts.Put(content.Value, cancellationToken).ConfigureAwait(false);
+            contents[fact] = content.Value;
+        }
+
+        var wrong = checks.Violations(contents, run.Payloads is { } payloads ? payloads.ToHashSet() : [], scopingQuestions: string.Equals(run.Block, "step.interview.questions", StringComparison.Ordinal));
+        if (wrong.Count > 0)
+        {
+            return AgentRecovered.Nothing with { Reason = $"the agent finished but {string.Join("; ", wrong)}: {folder}" };   // the same checks 'complete' applies: the output was never acceptable
+        }
+
+        var stored = new Dictionary<FactKey, FactValue>();
+        var report = new StringBuilder().Append(CultureInfo.InvariantCulture, $"recovered run {run.Run}\noutcome {outcome}\n");
+        foreach (var (fact, content) in contents)
+        {
+            var put = await facts.Put(content, cancellationToken).ConfigureAwait(false);
             if (put.IsError)
             {
                 throw new InvalidOperationException($"{put.Error.Code}: {put.Error.Message}");   // the activity retries: the store could not take it this time
             }
 
             stored[fact] = put.Value;
-            _ = report.Append(CultureInfo.InvariantCulture, $"output {fact.Value} {Convert.ToHexStringLower(SHA256.HashData(content.Value.Span))}\n");
+            _ = report.Append(CultureInfo.InvariantCulture, $"output {fact.Value} {Convert.ToHexStringLower(SHA256.HashData(content.Span))}\n");
         }
 
         return new AgentRecovered(outcome, stored, Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(report.ToString()))), Reason: null);

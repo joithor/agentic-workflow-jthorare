@@ -165,6 +165,29 @@ public abstract class RecordStoreContract<TStore>
         ContractCheck.That(_owner, ContractCheck.Ok(_owner, await store.Vectors(VectorSpace.Chunk, rows[0].Seq, 10, CancellationToken.None)).Count == 0, "reading after the last Seq answers nothing");
     }
 
+    /// <summary>The work list holds the chunks without a current vector of the model, newest record first, and skips removed records.</summary>
+    /// <returns>A task.</returns>
+    [Fact]
+    public async Task The_work_list_is_the_chunks_without_a_current_vector_newest_record_first()
+    {
+        var store = Create();
+        var older = RecordSamples.Record("linear:issue/1") with { UpdatedAt = RecordSamples.Now.AddDays(-2) };
+        var newer = RecordSamples.Record("linear:issue/2") with { UpdatedAt = RecordSamples.Now };
+        var gone = RecordSamples.Record("linear:issue/3");
+        _ = ContractCheck.Ok(_owner, await store.Commit(RecordSamples.Batch(RecordSamples.Linear, 1, RecordSamples.Write(older, "old a", "old b"), RecordSamples.Write(newer, "new a"), RecordSamples.Write(gone, "gone a")), CancellationToken.None));
+        _ = ContractCheck.Ok(_owner, await store.Commit(RecordSamples.Batch(RecordSamples.Linear, 2) with { Removed = [gone.Key] }, CancellationToken.None));
+
+        var all = ContractCheck.Ok(_owner, await store.ChunksToEmbed("fake-model@1", 100, CancellationToken.None));
+        ContractCheck.That(_owner, all.Select(c => c.Key).SequenceEqual([new ChunkKey(newer.Key, 0).ToString(), new ChunkKey(older.Key, 0).ToString(), new ChunkKey(older.Key, 1).ToString()], StringComparer.Ordinal), "newest record first, its chunks in order, the removed record left out");
+        ContractCheck.That(_owner, all[0].Text == "new a" && all[0].TextHash == RecordSamples.Hash("new a"), "a row carries the text and its hash");
+
+        Equal(await store.PutVectors([RecordSamples.Vector(new ChunkKey(newer.Key, 0), "new a", 1, 0), RecordSamples.Vector(new ChunkKey(older.Key, 0), "old a", 0, 1)], CancellationToken.None), 2, "two vectors are stored");
+        var left = ContractCheck.Ok(_owner, await store.ChunksToEmbed("fake-model@1", 100, CancellationToken.None));
+        ContractCheck.That(_owner, left.Select(c => c.Key).SequenceEqual([new ChunkKey(older.Key, 1).ToString()], StringComparer.Ordinal), "an embedded chunk leaves the list");
+        ContractCheck.That(_owner, ContractCheck.Ok(_owner, await store.ChunksToEmbed("other-model@1", 100, CancellationToken.None)).Count == 3, "another model starts from scratch");
+        ContractCheck.That(_owner, ContractCheck.Ok(_owner, await store.ChunksToEmbed("fake-model@1", 1, CancellationToken.None)).Count == 1, "the limit is honoured");
+    }
+
     /// <summary>A node vector needs no chunk, and a delete by key removes it and moves the epoch.</summary>
     /// <returns>A task.</returns>
     [Fact]

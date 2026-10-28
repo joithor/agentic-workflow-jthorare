@@ -117,6 +117,7 @@ internal sealed partial class Launcher(LauncherParts parts) : ILauncher, ILaunch
 
     private async ValueTask<LaunchResult> Start(LaunchRequest request, CancellationToken cancellationToken)
     {
+        request = InWorktree(request);
         if (Refusal(request) is { } refused)
         {
             return Fail(refused);
@@ -153,6 +154,10 @@ internal sealed partial class Launcher(LauncherParts parts) : ILauncher, ILaunch
             throw;
         }
     }
+
+    // why: a sandboxed session the owner opens never writes in the main checkout (sandbox spec 3.9).
+    private LaunchRequest InWorktree(LaunchRequest request) =>
+        request.Attended && parts.Sandbox is not null && request.Worktree is null ? request with { Worktree = AttendedOpen.Worktree(request.RepoPath, request.Launch) } : request;
 
     /// <summary>The launch's session when it is already running and this launch's files exist (a relaunch after a restart): answered as started, with nothing rewritten and nothing stopped.</summary>
     private async ValueTask<StartedLaunch?> Running(LaunchRequest request, AgentEntry entry, ISessionHost host, CancellationToken cancellationToken)

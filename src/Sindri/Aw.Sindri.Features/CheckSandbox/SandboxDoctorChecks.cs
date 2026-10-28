@@ -8,7 +8,7 @@ namespace Aw.Sindri.Features.CheckSandbox;
 
 /// <summary>
 /// Doctor's sandbox rows (sandbox spec §8): 'sandbox ready: …' when nothing blocks a Step, else one row per blocker with the same sentence the Check again card says and its
-/// copyable command as the fix. A -017 blocker is the 'sandbox:login' row. A gray sentence (macOS: not yet supported) is information, never a fault. Beside them: the limits, hooks and agents'-own-sandboxes rows.
+/// copyable command as the fix. A -017 blocker is the 'sandbox:login' row. A gray sentence (macOS: not yet supported) is information, never a fault. Beside them: the limits, hooks, agents'-own-sandboxes and (on a ready box) sessions-you-open rows.
 /// </summary>
 /// <param name="checks">The checks Check again runs.</param>
 /// <param name="sandbox">The mechanism, for the ready line's version.</param>
@@ -28,7 +28,8 @@ internal sealed class SandboxDoctorChecks(ISandboxChecks checks, ISandbox sandbo
         var report = await checks.Run(cancellationToken).ConfigureAwait(false);
         var profile = await approved.Latest(cancellationToken).ConfigureAwait(false);
         var settings = profile.IsSuccess ? profile.Value?.Profile.Sandbox : null;
-        return [.. Probe(report, started), Limits(settings), Hooks(), Inner(settings)];
+        // why: sessions the human opens are sandboxed only when the sandbox works, so the row follows the ready line (a blocked or unsupported box says nothing about them).
+        return [.. Probe(report, started), Limits(settings), Hooks(), Inner(settings), .. Attended(report)];
     }
 
     private IEnumerable<DoctorCheck> Probe(SandboxCheckReport report, long started)
@@ -62,6 +63,10 @@ internal sealed class SandboxDoctorChecks(ISandboxChecks checks, ISandbox sandbo
     /// <summary>The agents' own sandboxes are off unless the profile turns them on ('auto' stays off until the self-check keeps them); either way it is not a fault.</summary>
     private static DoctorCheck Inner(SandboxSettings? settings) =>
         new("sandbox:inner", CheckState.Ok, (settings?.Inner ?? SandboxDefaults.Inner) == InnerSandbox.On ? "on" : "off (not needed; Sindri's covers it)", Fix: null);
+
+    /// <summary>A session the human opens is sandboxed too and has no time limit while they are attached (spec §8); information, never a fault.</summary>
+    private static IEnumerable<DoctorCheck> Attended(SandboxCheckReport report) =>
+        report.Ready ? [new DoctorCheck("sandbox:attended", CheckState.Ok, "sandboxed too, no time limit while you're attached", Fix: null)] : [];
 
     private static string Gib(long bytes) => string.Create(CultureInfo.InvariantCulture, $"{bytes / (1024.0 * 1024 * 1024):0.#} GiB");
 

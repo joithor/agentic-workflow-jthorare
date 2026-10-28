@@ -39,6 +39,28 @@ public sealed class AgentRecoveringTests
         Assert.Null(recovered.Reason);
     }
 
+    /// <summary>Issue 1468: recovery is a second way into a Step's outputs, so it applies the check 'complete' applies to a payload fact: an output that is not a JSON object or array is not accepted.</summary>
+    [Fact]
+    public async Task A_payload_output_that_is_not_json_is_not_recovered_and_names_the_fact()
+    {
+        _outputs.Add(Dir, "output", "not json");
+
+        var recovered = await _recovering.Recover(Run() with { Payloads = [FactKey.From("fact:output")] }, Token);
+
+        Assert.Null(recovered.Outcome);
+        Assert.Contains("fact:output", recovered.Reason, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_payload_output_that_is_a_json_object_is_still_recovered()
+    {
+        _outputs.Add(Dir, "output", """{"found":true}""");
+
+        var recovered = await _recovering.Recover(Run() with { Payloads = [FactKey.From("fact:output")] }, Token);
+
+        Assert.Equal("done", recovered.Outcome);
+    }
+
     [Fact]
     public async Task An_empty_or_absent_folder_recovers_nothing_so_the_Step_fails_with_the_session_s_own_end()
     {

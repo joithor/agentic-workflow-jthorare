@@ -42,6 +42,10 @@ internal sealed class SandboxParkedInstances(IWorkflowInstances instances, IInst
         return found;
     }
 
+    /// <summary>
+    /// A no-runtime park carries no typed sandbox code on the view, so its question text is the link: TransitionDecision.ParkFor (Core/Workflow/Engine/Rules/TransitionDecision.Launching.cs)
+    /// writes the refusal's code into it ("... can't start: SND-LAUNCH-014 (reason): ..."). SandboxParkedInstancesTests builds parks through that code to pin it.
+    /// </summary>
     private static bool OnSandbox(OpenQuestion question) =>
         question.Reason == ParkReason.Launch || (question.Reason == ParkReason.NoRuntime && question.Question.Contains(LaunchCode, StringComparison.Ordinal));
 }

@@ -104,8 +104,10 @@ public static class ContextFeaturesServiceCollectionExtensions
         services.TryAddSingleton<IMergeHistory>(sp => sp.GetRequiredService<UnconfiguredBacktest>());
         services.TryAddSingleton<IAsOfDocs>(sp => sp.GetRequiredService<UnconfiguredBacktest>());
         services.TryAddSingleton<IEvalStore>(sp => sp.GetRequiredService<UnconfiguredBacktest>());
-        return services.AddMapHeads().AddIndexSync().AddContextSlices();
+        return services.AddMapHeads().AddIndexSync().AddRecordSearch().AddContextSlices();
     }
+
+    private static IServiceCollection AddRecordSearch(this IServiceCollection services) => services.AddScoped<RecordSearch>();
 
     private static IServiceCollection AddIndexSync(this IServiceCollection services) => services.AddScoped<IIndexSync, IndexSync>();
 

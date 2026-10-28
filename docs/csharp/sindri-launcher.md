@@ -92,6 +92,10 @@ id and `<path>` the 0600 settings file the launcher renders from the Step's poli
 | `policy` | `cursor-config` | **reserved**: nothing until the Cursor CLI's config argument is verified; a Step that requests it parks with `SND-LAUNCH-013` | none |
 | `policy` | `none` | nothing | cursor |
 
+**Cursor can't run agent Steps yet** (issue #1428): its built-in entry keeps `model`, `policy` and `mcp` at `none`, so every unattended Step on it parks with `SND-LAUNCH-013`; `profile validate` and `sindri doctor` (`agent:target`) say so when `workflow.agent.target` names it. Not verified, and nothing here guesses it: the Cursor CLI's `--model` flag, the config file and keys `agent -p` reads for permissions (user-level or project-level), any sandbox flag, and a per-launch MCP argument (the installer only knows `~/.cursor/mcp.json` and `--approve-mcps`). A form is added only after someone runs the CLI on a box that has it.
+
+What Cursor's public docs pin (not yet confirmed against a CLI on a box): [permissions](https://cursor.com/docs/cli/reference/permissions) are `permissions.allow` / `permissions.deny` in `~/.cursor/cli-config.json` or `<project>/.cursor/cli.json`, with rule types `Shell`, `Read`, `Write`, `WebFetch` and `Mcp`, and deny wins; the [parameters](https://cursor.com/docs/cli/reference/parameters) include `--model`, `-p`, `--force`, `--sandbox enabled|disabled`, `--mode plan`, `--trust` and `--workspace`. Three questions still block a policy form: how the project file and the global file merge, whether headless `-p` without `--force` refuses a command the rules don't allow, and whether `--sandbox` confines writes.
+
 A Step that requests a model or a policy on an entry whose matching form is `none`, or a reserved form (`cursor-flag`,
 `cursor-config`), parks with `SND-LAUNCH-013` and never
 launches unrestricted (the API implements the check).

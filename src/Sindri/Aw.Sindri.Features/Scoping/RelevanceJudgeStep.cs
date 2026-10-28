@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,7 +11,7 @@ using Aw.Sindri.Core.Workflow.Ids;
 namespace Aw.Sindri.Features.Scoping;
 
 /// <summary>
-/// 'step.scope.relevance-judge' on the block runtime (spec 4.2): one judge call per entry of 'fact:lenses', 'parallel' at a time, over <see cref="RelevanceJudgeProjection"/> only, so the judge never sees the agent's labels.
+/// 'step.scope.relevance-judge' on the block runtime (spec 4.2): one judge call per entry of 'fact:lenses', 'parallel' at a time, each request built as its call goes out (the brief is scrubbed and capped once per run, a lens's anchors once per lens), over <see cref="RelevanceJudgeProjection"/> only, so the judge never sees the agent's labels.
 /// An escalated answer, a choice that is not one of the three, or one failed call is class 'uncertain' with its reason code; the Step fails only when every call failed, or when the very first call says the judge did not finish
 /// (it is not available, so asking the rest would only repeat that). The first call runs alone for that reason. The providers are the runner's resolved list.
 /// </summary>
@@ -50,8 +51,8 @@ internal sealed class RelevanceJudgeStep(IJudgeChoice judge, ITextScrubber scrub
         var lenses = StepFacts.Read(context, "fact:lenses");
         var briefText = ScopeJson.Str(StepFacts.Read(context, "fact:brief"), "text") ?? string.Empty;
         var entries = RelevanceEntries.Of(lenses);
-        var requests = entries.Select(e => RelevanceJudgeProjection.Request(e, briefText, [.. ScopeJson.Strings(ScopeJson.Obj(lenses, e.Lens), "anchors")], new RelevanceJudgeProjection.JudgeSettings(settings.Threshold, settings.Providers), scrubber)).ToList();
-        var (answers, failure) = await Ask(requests, settings.Parallel, cancellationToken).ConfigureAwait(false);
+        var prepared = new Prepared(RelevanceJudgeProjection.Prepare(briefText, scrubber), lenses, new RelevanceJudgeProjection.JudgeSettings(settings.Threshold, settings.Providers), new ConcurrentDictionary<string, string>(StringComparer.Ordinal));
+        var (answers, failure) = await Ask(entries, e => Request(e, prepared), settings.Parallel, cancellationToken).ConfigureAwait(false);
         if (failure is not null)
         {
             return BlockStepResult.Failed($"{Name}: {failure}");
@@ -68,6 +69,18 @@ internal sealed class RelevanceJudgeStep(IJudgeChoice judge, ITextScrubber scrub
             ["judge"] = new JsonObject { ["providers"] = ScopeJson.ToArray(settings.Providers), ["threshold"] = settings.Threshold },
             ["rulings"] = rulings,
         }));
+    }
+
+    // The brief is prepared once for the run and a lens's anchors once per lens; only the entry's own JSON is scrubbed per request.
+    private sealed record Prepared(string Brief, JsonNode? Lenses, RelevanceJudgeProjection.JudgeSettings Settings, ConcurrentDictionary<string, string> AnchorsByLens);
+
+    private ChooseRequest Request(RelevanceEntry entry, Prepared prepared)
+    {
+        var anchors = prepared.AnchorsByLens.GetOrAdd(
+            entry.Lens,
+            static (lens, state) => RelevanceJudgeProjection.PrepareAnchors([.. ScopeJson.Strings(ScopeJson.Obj(state.Lenses, lens), "anchors")], state.Scrubber),
+            (prepared.Lenses, Scrubber: scrubber));
+        return RelevanceJudgeProjection.Request(entry, prepared.Brief, anchors, prepared.Settings, scrubber);
     }
 
     private sealed record Arguments(double Threshold, IReadOnlyList<string> Providers, int Parallel);
@@ -90,25 +103,25 @@ internal sealed class RelevanceJudgeStep(IJudgeChoice judge, ITextScrubber scrub
         return JudgeProviders.Default;
     }
 
-    // The first call runs alone: a judge that did not finish on it is not available, so the rest would only repeat that. A Step whose every call failed fails too.
-    private async ValueTask<(ChooseAnswer[] Answers, string? Failure)> Ask(List<ChooseRequest> requests, int parallel, CancellationToken cancellationToken)
+    // Each request is built as its call goes out, so the first call does not wait for the rest. The first call runs alone: a judge that did not finish on it is not available, so the rest would only repeat that. A Step whose every call failed fails too.
+    private async ValueTask<(ChooseAnswer[] Answers, string? Failure)> Ask(IReadOnlyList<RelevanceEntry> entries, Func<RelevanceEntry, ChooseRequest> build, int parallel, CancellationToken cancellationToken)
     {
-        var answers = new ChooseAnswer[requests.Count];
-        if (requests.Count == 0)
+        var answers = new ChooseAnswer[entries.Count];
+        if (entries.Count == 0)
         {
             return (answers, null);
         }
 
-        answers[0] = await judge.Choose(requests[0], cancellationToken).ConfigureAwait(false);
+        answers[0] = await judge.Choose(build(entries[0]), cancellationToken).ConfigureAwait(false);
         if (answers[0].Status == ChooseStatus.Failed && answers[0].Reason.Contains("did not finish", StringComparison.OrdinalIgnoreCase))
         {
             return (answers, answers[0].Reason);
         }
 
         await Parallel.ForEachAsync(
-            Enumerable.Range(1, requests.Count - 1),
+            Enumerable.Range(1, entries.Count - 1),
             new ParallelOptions { MaxDegreeOfParallelism = parallel, CancellationToken = cancellationToken },
-            async (index, token) => answers[index] = await judge.Choose(requests[index], token).ConfigureAwait(false)).ConfigureAwait(false);
+            async (index, token) => answers[index] = await judge.Choose(build(entries[index]), token).ConfigureAwait(false)).ConfigureAwait(false);
         return (answers, answers.All(static a => a.Status == ChooseStatus.Failed) ? $"every judge call failed ({answers[0].Reason})" : null);
     }
 

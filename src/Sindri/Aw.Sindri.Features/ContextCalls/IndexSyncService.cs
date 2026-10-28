@@ -1,6 +1,6 @@
 using System.Globalization;
+using Aw.Context.Core.Facade;
 using Aw.Context.Core.Results;
-using Aw.Context.Core.Sync;
 using Aw.Kernel;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Ids;
@@ -11,12 +11,12 @@ namespace Aw.Sindri.Features.ContextCalls;
 
 /// <summary>
 /// The 'index-sync' background service (owned-index spec §5.5, §5.8): every 5 minutes while serve runs it asks Context to run one tick of each record feed, through
-/// <see cref="IIndexSync"/> only. A source that is down is a row with its code in the run's summary, never a failed run; a missing or unapproved profile is a quiet run.
-/// Where each source stands (phase, last tick, last code, the milestones usable and complete) is <see cref="IIndexSync.Progress"/>, which the CLI and the app read.
+/// <see cref="IContextEngine"/> only. A source that is down is a row with its code in the run's summary, never a failed run; a missing or unapproved profile is a quiet run.
+/// Where each source stands (phase, last tick, last code, the milestones usable and complete) is the facade's Progress, which the CLI and the app read.
 /// </summary>
 /// <param name="scopes">The profile's scope and the caller.</param>
-/// <param name="index">Context's record-feed port.</param>
-internal sealed class IndexSyncService(ContextScopes scopes, IIndexSync index) : IScheduledService
+/// <param name="engine">Context's facade: its record-feed members are Tick and Progress.</param>
+internal sealed class IndexSyncService(ContextScopes scopes, IContextEngine engine) : IScheduledService
 {
     internal static ServiceName ServiceId { get; } = ServiceName.From("index-sync");
 
@@ -37,7 +37,7 @@ internal sealed class IndexSyncService(ContextScopes scopes, IIndexSync index) :
             return scope.IsError && scope.Error.Code != SindriErrors.ProfileNotApproved.Code ? scope.Error : ScheduledResult.Quiet;
         }
 
-        var report = await index.Tick(scope.Value, cancellationToken).ConfigureAwait(false);
+        var report = await engine.Tick(scope.Value, cancellationToken).ConfigureAwait(false);
         return report.IsError ? report.Error : Summarize(report.Value.Sources);
     }
 

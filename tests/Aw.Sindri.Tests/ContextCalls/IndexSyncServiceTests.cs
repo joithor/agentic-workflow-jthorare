@@ -8,10 +8,11 @@ using Aw.Context.Core.Sync;
 using Aw.Kernel;
 using Aw.Sindri.Core.Scheduling;
 using Aw.Sindri.Features.ContextCalls;
+using Aw.Sindri.Tests.Workflow.Blocks.Input;
 
 namespace Aw.Sindri.Tests.ContextCalls;
 
-/// <summary>The 'index-sync' service (owned-index spec §5.5) over a fake <see cref="IIndexSync"/>, and the milestones the progress rows carry (§5.8).</summary>
+/// <summary>The 'index-sync' service (owned-index spec §5.5) over a fake <see cref="IIndexSync"/> behind the engine facade, and the milestones the progress rows carry (§5.8).</summary>
 public sealed class IndexSyncServiceTests
 {
     private const string OnyxSection = """{"sources":{"onyx":{"url":"http://127.0.0.1:3189","token":"on_live-key-0123","version":"v4.9.0"}}}""";
@@ -29,7 +30,7 @@ public sealed class IndexSyncServiceTests
         _ = await _h.Profiles.Save(loaded, Ct);
         var grant = await _h.HoldLease();
         using var caller = _h.Callers.EnterService("index-sync");
-        return await new IndexSyncService(new ContextScopes(_h.Profiles, _h.Callers), _index).Run(new ScheduledRun(grant, _now), Ct);
+        return await new IndexSyncService(new ContextScopes(_h.Profiles, _h.Callers), EngineProxy.Of(_index)).Run(new ScheduledRun(grant, _now), Ct);
     }
 
     private static SourceSync Row(string source, int fetched, string? code = null) =>

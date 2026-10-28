@@ -1,6 +1,8 @@
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Workflow.Blocks;
+using Aw.Sindri.Core.Workflow.Engine.Runtime;
 using Aw.Sindri.Core.Workflow.Ids;
+using Aw.Sindri.Features.CompleteStep;
 using Aw.Sindri.Infrastructure.Workflows;
 using Aw.Sindri.Testing.Workflow;
 
@@ -17,7 +19,7 @@ public sealed class AgentRecoveringTests
 
     public AgentRecoveringTests()
     {
-        _recovering = new AgentRecovering(new BlockCatalog([TestBlocks.Step("step.produce")], []), _outputs, _facts, Aw.Sindri.Core.Workflow.Engine.Runtime.PayloadReportChecks.Instance);
+        _recovering = new AgentRecovering(new BlockCatalog([TestBlocks.Step("step.produce")], []), _outputs, _facts, PayloadReportChecks.Instance);
     }
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
@@ -79,13 +81,13 @@ public sealed class AgentRecoveringTests
     {
         var outputs = new Dictionary<FactKey, ReadOnlyMemory<byte>> { [FactKey.From("fact:scopeMap")] = System.Text.Encoding.UTF8.GetBytes("""{"bogus":true}""") };
 
-        var wrong = new Aw.Sindri.Features.CompleteStep.ReportOutputChecker().Violations(outputs, new HashSet<FactKey> { FactKey.From("fact:scopeMap") }, scopingQuestions: false);
+        var wrong = new ReportOutputChecker().Violations(outputs, new HashSet<FactKey> { FactKey.From("fact:scopeMap") }, scopingQuestions: false);
 
         Assert.NotEmpty(wrong);
         Assert.Contains("fact:scopeMap", wrong[0], StringComparison.Ordinal);
     }
 
-    private sealed class RefusingChecks : Aw.Sindri.Core.Workflow.Engine.Runtime.IReportOutputChecks
+    private sealed class RefusingChecks : IReportOutputChecks
     {
         public IReadOnlyList<string> Violations(IReadOnlyDictionary<FactKey, ReadOnlyMemory<byte>> outputs, IReadOnlySet<FactKey> payloads, bool scopingQuestions) => ["fact:output breaks its schema"];
     }

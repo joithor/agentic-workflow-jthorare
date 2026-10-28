@@ -8,7 +8,7 @@ namespace Aw.Sindri.Features.CheckSandbox;
 
 /// <summary>
 /// Doctor's sandbox rows (sandbox spec §8): 'sandbox ready: …' when nothing blocks a Step, else one row per blocker with the same sentence the Check again card says and its
-/// copyable command as the fix. A -017 blocker is the 'sandbox:login' row. A gray sentence (macOS: not yet supported) is information, never a fault.
+/// copyable command as the fix. A -017 blocker is the 'sandbox:login' row. A gray sentence (macOS: not yet supported) is information, never a fault. Beside them: the limits, hooks and agents'-own-sandboxes rows.
 /// </summary>
 /// <param name="checks">The checks Check again runs.</param>
 /// <param name="sandbox">The mechanism, for the ready line's version.</param>

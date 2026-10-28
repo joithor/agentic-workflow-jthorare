@@ -45,6 +45,10 @@ internal sealed class AgentRecovering(BlockCatalog catalog, IStepOutputs outputs
         return await Stored(run, outcome.Value, decision.Files, folder, cancellationToken).ConfigureAwait(false);
     }
 
+    // The check 'complete' applies to a payload fact (issue 1468): recovery is a second way in, so it never accepts what that check refuses.
+    private static string? Refused(AgentRecoverRun run, FactKey fact, ReadOnlyMemory<byte> content) =>
+        run.Payloads is { } payloads && payloads.Contains(fact) && PayloadFacts.Violation(fact, content.Span) is { } violation ? violation : null;
+
     // Stores each file as the report's output and digests the report; a file that can't be read parks the run, a store that can't take one retries the activity.
     private async Task<AgentRecovered> Stored(AgentRecoverRun run, string outcome, IReadOnlyDictionary<FactKey, string> files, string folder, CancellationToken cancellationToken)
     {
@@ -56,6 +60,11 @@ internal sealed class AgentRecovering(BlockCatalog catalog, IStepOutputs outputs
             if (content.IsError)
             {
                 return AgentRecovered.Nothing with { Reason = $"the agent finished but its result was not recorded: {folder} ({content.Error.Message})" };
+            }
+
+            if (Refused(run, fact, content.Value) is { } refused)
+            {
+                return AgentRecovered.Nothing with { Reason = $"the agent finished but {refused}: {folder}" };
             }
 
             var put = await facts.Put(content.Value, cancellationToken).ConfigureAwait(false);

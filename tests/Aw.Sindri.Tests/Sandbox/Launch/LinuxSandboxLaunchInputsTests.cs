@@ -7,6 +7,7 @@ using Aw.Sindri.Infrastructure.Launch;
 using Aw.Sindri.Infrastructure.Sandbox.Launch;
 using Aw.Sindri.Tests.Sandbox.Bubblewrap;
 using Aw.Sindri.Testing;
+using Aw.Sindri.Tests.Sandbox.Egress;
 using Aw.Sindri.Testing.Launch;
 
 namespace Aw.Sindri.Tests.Sandbox.Launch;

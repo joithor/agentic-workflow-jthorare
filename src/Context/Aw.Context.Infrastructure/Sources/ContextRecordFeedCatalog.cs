@@ -8,8 +8,8 @@ using Aw.Context.Infrastructure.Linear;
 
 namespace Aw.Context.Infrastructure.Sources;
 
-/// <summary>The feeds of the sources inside Context, in a stable order: repo docs over the repos in scope, then Linear when the profile names a 'context.sources.linear' token. No repo in scope gives none, as <see cref="ContextSourceCatalog"/> does.</summary>
-internal sealed class ContextRecordFeedCatalog(IRecordStore store, GitCli git, LinearSources linear) : IRecordFeedCatalog
+/// <summary>The feeds of the sources inside Context, in a stable order: repo docs over the repos in scope, then Linear when the profile names a 'context.sources.linear' token, then the external feeds the Host adds (GitHub). No repo in scope gives none, as <see cref="ContextSourceCatalog"/> does.</summary>
+internal sealed class ContextRecordFeedCatalog(IRecordStore store, GitCli git, LinearSources linear, IEnumerable<IExternalRecordFeeds>? external = null) : IRecordFeedCatalog
 {
     public IReadOnlyList<RecordFeed> For(ContextSettings settings, IReadOnlyList<ContextRepo> repos, Scrubbers scrubbers)
     {
@@ -27,6 +27,7 @@ internal sealed class ContextRecordFeedCatalog(IRecordStore store, GitCli git, L
             feeds.Add(linear.CreateFeed(linearSettings));
         }
 
+        feeds.AddRange((external ?? []).SelectMany(e => e.For(settings, repos, scrubbers)));
         return feeds;
     }
 }

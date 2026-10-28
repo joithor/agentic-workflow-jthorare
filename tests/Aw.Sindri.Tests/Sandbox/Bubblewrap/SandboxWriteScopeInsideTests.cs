@@ -86,18 +86,44 @@ public sealed class SandboxWriteScopeInsideTests
     }
 
     [Fact]
-    public async Task The_dotnet_toolchain_answers_through_path()
+    public async Task Dotnet_build_works_inside()
     {
         using var box = NewBox();
         Assert.SkipUnless(box.HasDotnet, "no .NET SDK on this box");
 
-        // why: no shim is asserted. The heavy shims are written into the run area and put first on PATH by the launch; once they are wired, PATH resolves the shim first and it
-        // runs the same SDK through heavy, so this passes with the real dotnet resolved from PATH either way. A restore needs the network and the repo's build props, so the proof is that the SDK and MSBuild start.
-        var ran = await RunInside(box, $"cd {Quote(box.Worktree)} && dotnet --version && dotnet msbuild -version -nologo");
+        // why: a project with no packages restores offline (the SDK's own packs), and its own Directory.Build.* and nuget.config stop the repo's from applying. Once the shims are
+        // in the run area, PATH resolves dotnet to the heavy shim first, so this is the build a Step really runs.
+        var probe = Path.Combine(box.Worktree, "probe");
+        _ = Directory.CreateDirectory(probe);
+        await File.WriteAllTextAsync(Path.Combine(probe, "Directory.Build.props"), "<Project />", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(probe, "Directory.Build.targets"), "<Project />", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(probe, "nuget.config"), "<configuration><packageSources><clear /></packageSources></configuration>", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(probe, "probe.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(probe, "Program.cs"), "System.Console.WriteLine(\"probe-ok\");", TestContext.Current.CancellationToken);
 
-        Assert.True(ran.Exit == 0, "dotnet inside the sandbox failed: " + ran.Output);
-        Assert.Matches(@"^\d+\.\d+\.\d+", ran.Output.TrimStart());
+        var shimmed = LinkHeavy(box);
+        var ran = await RunInside(box, $"command -v dotnet && cd {Quote(probe)} && dotnet build -nologo -v q && dotnet bin/Debug/net10.0/probe.dll");
+
+        Assert.True(ran.Exit == 0, "dotnet build inside the sandbox failed: " + ran.Output);
+        Assert.Contains("probe-ok", ran.Output, StringComparison.Ordinal);
+        Assert.True(!shimmed || ran.Output.Contains("/shims/dotnet", StringComparison.Ordinal), "dotnet did not resolve to the heavy shim: " + ran.Output);
         Assert.Empty(ProcessListing.Under(box.Root));
+    }
+
+    // The box's state dir is a scratch one: copy the owner's heavy wrapper into it, as the real state dir has it, so the shim path runs. False when this box has no heavy.
+    private static bool LinkHeavy(SandboxBox box)
+    {
+        var real = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".agentic-workflow", "bin-r1b");
+        if (!File.Exists(Path.Combine(real, "heavy")))
+        {
+            return false;
+        }
+
+        var copy = Path.Combine(box.State, "bin-r1b", "heavy");   // a copy, not a link: the box sees only what the plan binds
+        _ = Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+        File.Copy(Path.Combine(real, "heavy"), copy, overwrite: true);
+        File.SetUnixFileMode(copy, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        return true;
     }
 
     // Plans the box's write-scope request, starts the launch's egress forwarders and runs 'sh -c script' wrapped, on a private tmux server. Output and exit code come back through files.
@@ -116,7 +142,9 @@ public sealed class SandboxWriteScopeInsideTests
         var output = Path.Combine(box.Root, "inside.out");
         var code = Path.Combine(box.Root, "inside.code");
         var line = string.Join(' ', wrapped.Value.Select(Quote)) + $" > {Quote(output)} 2>&1; echo $? > {Quote(code)}";
-        Assert.NotNull(tmux.Run("new-session", "-d", "-s", "write-scope-inside", "-c", box.Root, "sh", "-c", line));
+        var run = Path.Combine(box.Root, "inside.sh");
+        await File.WriteAllTextAsync(run, line, ct);   // why: a write-scope argv is longer than tmux's message limit (about 16 KB), so tmux runs it from a file
+        Assert.NotNull(tmux.Run("new-session", "-d", "-s", "write-scope-inside", "-c", box.Root, "sh", run));
         for (var waited = 0; waited < 1200 && !File.Exists(code); waited++)
         {
             await Task.Delay(100, ct);

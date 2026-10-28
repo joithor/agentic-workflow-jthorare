@@ -65,12 +65,12 @@ internal static class RunAreaPreparer
     }
 
     // why: the shims exec absolute paths, resolved here from the PATH the plan gives the box (its host part is bound, so a path found now is visible inside); heavy is the
-    // `bin-r1b` entry the planner puts second. No heavy means no shim at all (an exec of a missing wrapper would break every build), and a tool not on the host gets none:
+    // `bin-r1b` entry the planner puts second, and only that one. No heavy means no shim at all (an exec of a missing wrapper would break every build), and a tool not on the host gets none:
     // the box then has no such tool, as before.
     private static void WriteShims(SandboxPlan plan, string shimsDirectory)
     {
         var entries = (plan.Environment.FirstOrDefault(e => string.Equals(e.Name, "PATH", StringComparison.Ordinal))?.Value ?? string.Empty).Split(':', StringSplitOptions.RemoveEmptyEntries);
-        var heavy = entries.Where(e => e.EndsWith("/bin-r1b", StringComparison.Ordinal)).Select(e => e + "/heavy").FirstOrDefault(IsExecutable);
+        var heavy = HeavyOf(entries);
         if (heavy is null)
         {
             return;
@@ -93,6 +93,10 @@ internal static class RunAreaPreparer
 
         SandboxShims.Write(shimsDirectory, real, heavy);
     }
+
+    // The planner's own bin-r1b entry, which the plan binds; a host PATH may carry another bin-r1b the box can't see.
+    private static string? HeavyOf(string[] entries) =>
+        entries.Length > 1 && entries[1].EndsWith("/bin-r1b", StringComparison.Ordinal) && IsExecutable(entries[1] + "/heavy") ? entries[1] + "/heavy" : null;
 
     private static bool IsExecutable(string path) =>
         File.Exists(path) && (OperatingSystem.IsWindows() || File.GetUnixFileMode(path).HasFlag(UnixFileMode.UserExecute));

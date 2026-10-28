@@ -1,7 +1,6 @@
 using Aw.Kernel.Json;
 using Aw.Kernel.Testing;
 using Aw.Sindri.Core.Control;
-using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Host;
 using Aw.Sindri.Infrastructure.Sandbox.Launch;
@@ -13,6 +12,10 @@ namespace Aw.Sindri.Tests.Sandbox.Launch;
 public sealed class SessionHomeTests : IDisposable
 {
     private static readonly ControlEndpoint _endpoint = new(new Uri("http://127.0.0.1:7480"), Pid: 4242, Epoch: 7);
+
+    private static readonly LaunchId One = LaunchId.From("LCH-" + new string('0', 31) + "1");
+    private static readonly LaunchId Live = LaunchId.From("LCH-" + new string('0', 31) + "2");
+    private static readonly LaunchId Dead = LaunchId.From("LCH-" + new string('0', 31) + "3");
 
     private readonly string _root = Path.Combine(AppContext.BaseDirectory, "sandbox-fixtures", "home-" + RealTime.NewGuid().ToString("N")[..8]);
     private readonly string _real;
@@ -31,9 +34,9 @@ public sealed class SessionHomeTests : IDisposable
     [Fact]
     public void The_home_sits_beside_the_real_home_and_is_0700_with_a_0600_secret_and_an_empty_gh_config()
     {
-        var home = SessionHome.Create(_real, new LaunchId("lch-1"), "s3cret", _endpoint);
+        var home = SessionHome.Create(_real, One, "s3cret", _endpoint);
 
-        Assert.Equal(_real + "-sessions/lch-1", home);
+        Assert.Equal(_real + "-sessions/" + One.Value, home);
         Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute, File.GetUnixFileMode(home));
         Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(SessionHome.SecretFile(home)));
         Assert.Equal("s3cret", File.ReadAllText(SessionHome.SecretFile(home)));
@@ -43,7 +46,7 @@ public sealed class SessionHomeTests : IDisposable
     [Fact]
     public void Launches_and_approved_are_links_to_the_real_folders()
     {
-        var home = SessionHome.Create(_real, new LaunchId("lch-1"), "s", _endpoint);
+        var home = SessionHome.Create(_real, One, "s", _endpoint);
 
         Assert.Equal(_real + "/launches", new DirectoryInfo(home + "/launches").LinkTarget);
         Assert.Equal(_real + "/approved", new DirectoryInfo(home + "/approved").LinkTarget);
@@ -53,7 +56,7 @@ public sealed class SessionHomeTests : IDisposable
     [Fact]
     public void Under_the_sandbox_control_json_is_a_file_with_the_endpoint_record_the_host_reads_back()
     {
-        var home = SessionHome.Create(_real, new LaunchId("lch-1"), "s", _endpoint);
+        var home = SessionHome.Create(_real, One, "s", _endpoint);
 
         Assert.Null(new FileInfo(home + "/control.json").LinkTarget);
         var read = AwJson.Deserialize<ControlEndpoint>(File.ReadAllBytes(home + "/control.json"), AwJson.CreateOptions(SindriJsonContext.Default));
@@ -63,7 +66,7 @@ public sealed class SessionHomeTests : IDisposable
     [Fact]
     public void Outside_the_sandbox_control_json_links_to_the_real_file()
     {
-        var home = SessionHome.Create(_real, new LaunchId("lch-1"), "s", control: null);
+        var home = SessionHome.Create(_real, One, "s", control: null);
 
         Assert.Equal(_real + "/control.json", new FileInfo(home + "/control.json").LinkTarget);
     }
@@ -71,7 +74,7 @@ public sealed class SessionHomeTests : IDisposable
     [Fact]
     public void Writing_control_json_again_replaces_it_for_a_restarted_serve()
     {
-        var home = SessionHome.Create(_real, new LaunchId("lch-1"), "s", _endpoint);
+        var home = SessionHome.Create(_real, One, "s", _endpoint);
 
         SessionHome.WriteControl(home, _endpoint with { Epoch = 8 });
 
@@ -82,7 +85,7 @@ public sealed class SessionHomeTests : IDisposable
     [Fact]
     public void Removing_the_home_leaves_what_the_links_point_at()
     {
-        var home = SessionHome.Create(_real, new LaunchId("lch-1"), "s", _endpoint);
+        var home = SessionHome.Create(_real, One, "s", _endpoint);
 
         SessionHome.Remove(home);
 
@@ -95,12 +98,12 @@ public sealed class SessionHomeTests : IDisposable
     [Fact]
     public void The_crash_sweep_removes_the_homes_of_dead_launches_and_keeps_live_ones()
     {
-        var live = SessionHome.Create(_real, new LaunchId("lch-live"), "s", _endpoint);
-        var dead = SessionHome.Create(_real, new LaunchId("lch-dead"), "s", _endpoint);
+        var live = SessionHome.Create(_real, Live, "s", _endpoint);
+        var dead = SessionHome.Create(_real, Dead, "s", _endpoint);
 
-        var removed = SessionHome.Sweep(_real, id => id == "lch-live");
+        var removed = SessionHome.Sweep(_real, id => id == Live.Value);
 
-        Assert.Equal(["lch-dead"], removed);
+        Assert.Equal([Dead.Value], removed);
         Assert.True(Directory.Exists(live));
         Assert.False(Directory.Exists(dead));
         Assert.True(File.Exists(_real + "/launches/marker"));
@@ -112,10 +115,10 @@ public sealed class SessionHomeTests : IDisposable
     [Fact]
     public void Making_a_home_again_for_the_same_launch_starts_clean()
     {
-        var home = SessionHome.Create(_real, new LaunchId("lch-1"), "old", _endpoint);
+        var home = SessionHome.Create(_real, One, "old", _endpoint);
         File.WriteAllText(home + "/gh-config/leftover", "x");
 
-        _ = SessionHome.Create(_real, new LaunchId("lch-1"), "new", _endpoint);
+        _ = SessionHome.Create(_real, One, "new", _endpoint);
 
         Assert.Equal("new", File.ReadAllText(SessionHome.SecretFile(home)));
         Assert.False(File.Exists(home + "/gh-config/leftover"));

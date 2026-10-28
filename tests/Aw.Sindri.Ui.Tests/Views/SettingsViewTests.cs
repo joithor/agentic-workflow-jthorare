@@ -81,6 +81,26 @@ public sealed class SettingsViewTests
     private static void Capture(Window window, string name) => FrameFile.Save(window, name);
 
     [Fact]
+    public Task The_model_choice_line_shows_its_state_the_sentence_and_a_copy_button() => OnUi(() =>
+    {
+        var clipboard = new FakeClipboard();
+        var line = new ModelChoiceViewModel(clipboard, TimeProvider.System);
+        line.Show(new Aw.Sindri.Ui.Api.ProfileView("a", "a", ChangedSinceApproval: false, Problem: null, "/home/thor/profile.yaml", NeedsApproval: false, ModelPick: "on"));
+        using var settings = new SettingsViewModel(_preferences, _os, SettingsTheme.For(Resources), setup: null, modelChoice: line);
+        var window = new Window { Width = 900, Height = 600, Content = new SettingsView { DataContext = settings } };
+        _windows.Add(window);
+        window.Show();
+        Settle(window);
+
+        Assert.Equal("Model choice: on", Find<TextBlock>(window, "ModelChoiceLine").Text);
+        Assert.StartsWith("Jev reads each step's brief", Find<TextBlock>(window, "ModelChoiceSentence").Text, StringComparison.Ordinal);
+        var copy = Find<Button>(window, "ModelChoiceCopy");
+        Assert.Equal("Copy: Model choice", AutomationProperties.GetName(copy));
+        Assert.True(copy.IsEffectivelyVisible);
+        return Task.CompletedTask;
+    });
+
+    [Fact]
     public Task The_switch_turns_every_motion_duration_to_zero_and_back() => OnUi(async () =>
     {
         var (window, settings) = await Show();

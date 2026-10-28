@@ -20943,3 +20943,5 @@ static Aw.Sindri.Core.Sandbox.Denials.DenialsRenderer.Fix(Aw.Sindri.Core.Events.
 Aw.Sindri.Core.Sandbox.Denials.IDenialFiles
 Aw.Sindri.Core.Sandbox.Denials.IDenialFiles.List(Aw.Sindri.Core.Workflow.Engine.LaunchId? launch, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Aw.Sindri.Core.Sandbox.Denials.DenialFile!>!>
 const Aw.Sindri.Core.Sandbox.SandboxEnvironment.Plan = "AW_SANDBOX_PLAN" -> string!
+const Aw.Sindri.Core.Profile.WorkflowAgentSettings.Notice = "Model choice is on: each agent step's brief and input files (up to 100,000 characters, secrets and denied paths removed), and for the concept scan its map summary, are sent to Jev to pick a model." -> string!
+Aw.Sindri.Core.Profile.WorkflowAgentSettings.PickIsOn.get -> bool

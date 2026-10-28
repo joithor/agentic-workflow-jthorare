@@ -60,7 +60,7 @@ public sealed class JevInputCapTests
     public async Task The_cap_comes_from_the_judge_config()
     {
         var handler = FakeHttpHandler.Answering(HttpStatusCode.OK, Answer);
-        var providers = Parse("""{"questions":{},"providers":{"jevInputCapChars":20000}}""").Value.Providers;
+        var providers = Parse("""{"questions":{},"providers":{"inputCapChars":20000}}""").Value.Providers;
         var jev = Lineup(handler, providers);
         var input = new JsonObject { ["brief"] = new string('b', 60_000), ["entry"] = "the entry fact" };
 
@@ -91,7 +91,7 @@ public sealed class JevInputCapTests
     public void A_cap_outside_1000_to_256000_makes_the_config_invalid(int cap) =>
         Assert.Equal(
             JudgeErrors.ConfigMalformed.Code,
-            Parse(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{{\"questions\":{{}},\"providers\":{{\"jevInputCapChars\":{cap}}}}}")).Error.Code);
+            Parse(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{{\"questions\":{{}},\"providers\":{{\"inputCapChars\":{cap}}}}}")).Error.Code);
 
     private static JsonNode StateSent(FakeHttpHandler handler) =>
         JsonNode.Parse(Assert.Single(handler.Requests).Body)!["state"]!;   // why: the provider always sends a JSON body with a state

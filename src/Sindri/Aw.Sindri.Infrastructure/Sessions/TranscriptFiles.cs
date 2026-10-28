@@ -31,7 +31,7 @@ internal sealed class TranscriptFiles(string home) : ITranscripts
         return Expand(pattern).Take(MaxMatches).Select(Stat).OfType<DateTimeOffset>().OrderDescending().Cast<DateTimeOffset?>().FirstOrDefault();
     }
 
-    private static IEnumerable<string> Expand(string pattern)
+    internal static IEnumerable<string> Expand(string pattern)
     {
         IEnumerable<string> level = ["/"];
         foreach (var segment in pattern.Split('/', StringSplitOptions.RemoveEmptyEntries))

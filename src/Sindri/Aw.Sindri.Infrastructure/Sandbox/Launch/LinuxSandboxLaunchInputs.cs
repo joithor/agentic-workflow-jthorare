@@ -55,6 +55,23 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
     public PolicyForm PolicyFormOf(AgentId agent) => Catalog.Resolve(agent)?.PolicyForm ?? PolicyForm.None;
 
     /// <inheritdoc/>
+    public string? TranscriptGlob(AgentId agent) => Catalog.Resolve(agent)?.Transcripts;
+
+    /// <inheritdoc/>
+    public string? ReportedSession(LaunchId launch)
+    {
+        try
+        {
+            var path = Path.Combine(Launcher.LaunchesDirectory, LaunchFiles.SessionIdName(launch));
+            return File.Exists(path) ? File.ReadLines(path).FirstOrDefault()?.Trim() is { Length: > 0 } id ? id : null : null;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc/>
     public DenialCounter? DenialCounterFor(LaunchId launch) =>
         Counters is { } parts
             ? new DenialCounter(launch, Path.Combine(Launcher.LaunchDirectory, "denials", launch.Value + ".json"), parts.Json, parts.Scrubber, parts.Clock) { Sink = parts.Sink }

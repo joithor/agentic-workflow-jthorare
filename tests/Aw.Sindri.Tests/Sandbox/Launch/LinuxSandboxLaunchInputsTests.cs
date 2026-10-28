@@ -27,10 +27,8 @@ public sealed class LinuxSandboxLaunchInputsTests : IDisposable
         new(new LauncherOptions(_temp.Path) { SindriHome = "/real/home" }, new AgentCatalog([AgentEntries.ClaudeCode]), _processes, () => SandboxRequests.Host, () => control);
 
     [Fact]
-    public void Host_is_what_the_constructor_s_reader_returns()
-    {
+    public void Host_is_what_the_constructor_s_reader_returns() =>
         Expect.True(ReferenceEquals(SandboxRequests.Host, Make().Host()));
-    }
 
     [Fact]
     public void The_sindri_port_is_the_control_plane_s_and_the_proxy_port_is_fixed()

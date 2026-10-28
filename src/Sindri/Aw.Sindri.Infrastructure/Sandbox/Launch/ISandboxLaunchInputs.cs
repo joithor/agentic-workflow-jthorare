@@ -48,4 +48,14 @@ internal interface ISandboxLaunchInputs
     /// <param name="launch">The launch.</param>
     /// <returns>The counter, or null to count nothing.</returns>
     public DenialCounter? DenialCounterFor(LaunchId launch);
+
+    /// <summary>The catalog entry's transcript glob (with '{sessionId}').</summary>
+    /// <param name="agent">The agent.</param>
+    /// <returns>The glob, or null when the entry has none.</returns>
+    public string? TranscriptGlob(AgentId agent);
+
+    /// <summary>The session id the launch's agent reported (the file 'session-id-report' writes under the real Sindri home's launches folder).</summary>
+    /// <param name="launch">The launch.</param>
+    /// <returns>The id, or null when none was reported.</returns>
+    public string? ReportedSession(LaunchId launch);
 }

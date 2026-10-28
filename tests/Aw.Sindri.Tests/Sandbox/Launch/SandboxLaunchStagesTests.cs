@@ -160,5 +160,9 @@ public sealed class SandboxLaunchStagesTests : IDisposable
         public int SindriPort() => 7480;
 
         public int ProxyPort() => 3128;
+
+        public string? TranscriptGlob(AgentId agent) => null;
+
+        public string? ReportedSession(LaunchId launch) => null;
     }
 }

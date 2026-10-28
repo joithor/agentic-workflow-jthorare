@@ -22,27 +22,44 @@ public sealed class DenialFileLocatorTests : IDisposable
         return plan with { Environment = [.. plan.Environment, .. extra] };
     }
 
+    private const string Glob = "~/.claude/projects/*/{sessionId}.jsonl";
+
     [Fact]
-    public void A_claude_launch_reads_the_newest_jsonl_under_its_config_projects()
+    public void The_launch_s_own_transcript_is_picked_even_when_another_one_is_newer()
     {
         var dir = Path.Combine(_temp.Path, "projects", "x");
         _ = Directory.CreateDirectory(dir);
-        File.WriteAllText(Path.Combine(dir, "old.jsonl"), "{}");
-        File.SetLastWriteTimeUtc(Path.Combine(dir, "old.jsonl"), new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-        File.WriteAllText(Path.Combine(dir, "new.jsonl"), "{}");
+        File.WriteAllText(Path.Combine(dir, "mine.jsonl"), "{}");
+        File.SetLastWriteTimeUtc(Path.Combine(dir, "mine.jsonl"), new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        File.WriteAllText(Path.Combine(dir, "other.jsonl"), "{}");   // another launch's, written later
 
-        var (transcript, kind, _) = DenialFileLocator.For(PlanWith(new PlanEnvVar("CLAUDE_CONFIG_DIR", _temp.Path, "login")));
+        var (transcript, kind, _) = DenialFileLocator.For(PlanWith(new PlanEnvVar("CLAUDE_CONFIG_DIR", _temp.Path, "login")), Glob, "mine");
 
         Expect.Equal(TranscriptKind.Claude, kind);
-        Expect.Equal(Path.Combine(dir, "new.jsonl"), transcript);
+        Expect.Equal(Path.Combine(dir, "mine.jsonl"), transcript);
     }
 
     [Fact]
-    public void A_codex_launch_reads_under_its_sessions()
+    public void No_session_or_no_match_skips_the_transcript_and_still_gives_the_fail_open_log()
     {
-        var (transcript, kind, _) = DenialFileLocator.For(PlanWith(new PlanEnvVar("CODEX_HOME", _temp.Path, "login")));
+        var plan = PlanWith(new PlanEnvVar("CLAUDE_CONFIG_DIR", _temp.Path, "login"));
+
+        Expect.True(DenialFileLocator.For(plan, Glob, session: null).Transcript is null);
+        Expect.True(DenialFileLocator.For(plan, Glob, "missing").Transcript is null);
+        Expect.True(DenialFileLocator.For(plan, glob: null, "mine").Transcript is null);
+        Expect.True(DenialFileLocator.For(plan, Glob, session: null).FailOpenLog is { } log && log.EndsWith("failopen.log", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void A_codex_launch_reads_under_its_codex_home()
+    {
+        var dir = Path.Combine(_temp.Path, "sessions", "2026");
+        _ = Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "rollout-abc.jsonl"), "{}");
+
+        var (transcript, kind, _) = DenialFileLocator.For(PlanWith(new PlanEnvVar("CODEX_HOME", _temp.Path, "login")), "~/.codex/sessions/*/rollout-{sessionId}.jsonl", "abc");
 
         Expect.Equal(TranscriptKind.Codex, kind);
-        Expect.True(transcript is null);   // no sessions folder yet
+        Expect.Equal(Path.Combine(dir, "rollout-abc.jsonl"), transcript);
     }
 }

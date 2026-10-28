@@ -1,6 +1,6 @@
 using Aw.Sindri.Ui.Platform;
 
-namespace Aw.Sindri.Ui.ViewModels.Instance;
+namespace Aw.Sindri.Ui.ViewModels.NeedsYou;
 
 /// <summary>One required output of a desk task, as the sheet asks for it (UI spec: outputs are file picks, at most 1 MiB, contents sent): a path box and a Browse button.</summary>
 internal sealed class DeskOutputViewModel : ObservableObject

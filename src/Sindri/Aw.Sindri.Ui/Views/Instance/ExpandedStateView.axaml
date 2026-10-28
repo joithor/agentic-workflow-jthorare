@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:inst="using:Aw.Sindri.Ui.ViewModels.Instance"
+             xmlns:ny="using:Aw.Sindri.Ui.ViewModels.NeedsYou"
              xmlns:comps="using:Aw.Sindri.Ui.ViewModels.Components"
              xmlns:comp="using:Aw.Sindri.Ui.Views.Components"
              x:Class="Aw.Sindri.Ui.Views.Instance.ExpandedStateView"
@@ -83,7 +84,7 @@
       <!-- A desk task's required outputs (UI spec: file picks, at most 1 MiB, contents sent): a path box and Browse each; Complete waits for them. -->
       <ItemsControl x:Name="ExpandedOutputs" ItemsSource="{Binding Outputs}" IsVisible="{Binding HasOutputs}">
         <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="inst:DeskOutputViewModel">
+          <DataTemplate x:DataType="ny:DeskOutputViewModel">
             <StackPanel Margin="0,0,0,6" Spacing="4">
               <TextBlock Name="DeskOutputCaption" Classes="caption" Text="{Binding Caption}" TextWrapping="Wrap" AutomationProperties.AccessibilityView="Raw" />
               <Grid ColumnDefinitions="*,Auto">

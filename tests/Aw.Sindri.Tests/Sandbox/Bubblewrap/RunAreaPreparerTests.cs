@@ -162,8 +162,7 @@ public sealed class RunAreaPreparerTests
         foreach (var tool in tools.Append("heavy"))
         {
             var path = tool == "heavy" ? area.Root + "/state/bin-r1b/heavy" : area.Root + "/tools/" + tool;
-            File.WriteAllText(path, "#!/bin/sh\n");
-            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            _ = ExecutableScript.Write(path, string.Empty);
         }
 
         var hostPath = $"{area.Root}/area/shims:{area.Root}/state/bin-r1b:{area.Root}/tools";

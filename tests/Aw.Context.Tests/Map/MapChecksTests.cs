@@ -81,8 +81,8 @@ public sealed class MapChecksTests
         var table = NodeKey.From("thing:orders");
         graph = graph with
         {
-            Nodes = [.. graph.Nodes, new GraphNode(table, "orders", Aw.Context.Core.Results.Provenance.Deterministic)],
-            Edges = [.. graph.Edges, new GraphEdge(NodeKey.From("code:pkg0/f0.ts"), table, EdgeType.Reads, Aw.Context.Core.Results.Provenance.Deterministic)],
+            Nodes = [.. graph.Nodes, new GraphNode(table, "orders", Context.Core.Results.Provenance.Deterministic)],
+            Edges = [.. graph.Edges, new GraphEdge(NodeKey.From("code:pkg0/f0.ts"), table, EdgeType.Reads, Context.Core.Results.Provenance.Deterministic)],
         };
 
         var report = MapChecks.Measure(graph);
@@ -107,7 +107,7 @@ public sealed class MapChecksTests
     public void Only_deterministic_edges_count_and_a_group_feature_with_no_files_is_not_a_leaf()
     {
         var graph = StructureGraphs.Isolated(total: 20, isolated: 0);
-        graph = graph with { Edges = [.. graph.Edges.Select(e => e.Type == EdgeType.DependsOn && e.From.Kind == NodeKind.Feature ? e with { Provenance = Aw.Context.Core.Results.Provenance.Model } : e)] };
+        graph = graph with { Edges = [.. graph.Edges.Select(e => e.Type == EdgeType.DependsOn && e.From.Kind == NodeKind.Feature ? e with { Provenance = Context.Core.Results.Provenance.Model } : e)] };
 
         var report = MapChecks.Measure(graph);
 

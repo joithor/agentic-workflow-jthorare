@@ -144,8 +144,8 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
             sandbox.Discard(plan);
         }
 
-        await stages.Release(launch, cancellationToken).ConfigureAwait(false);   // why: first, so a token renewal can't write into the session home after it is removed
+        SessionHome.Remove(SessionHomePaths.For(options.SindriHome, launch));   // a token renewal racing this writes nothing: TokenFile.Replace(create: false) never makes a folder
 
-        SessionHome.Remove(SessionHomePaths.For(options.SindriHome, launch));
+        await stages.Release(launch, cancellationToken).ConfigureAwait(false);
     }
 }

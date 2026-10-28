@@ -153,6 +153,15 @@ public sealed class SandboxLaunchStagesTests : IDisposable
     }
 
     [Fact]
+    public void A_renewal_write_into_a_removed_session_home_makes_no_folder()
+    {
+        var gone = Path.Combine(_temp.Path, "removed-session-home");
+
+        Expect.True(!TokenFile.Replace(gone, "ghs_late", create: false));
+        Expect.True(!Directory.Exists(gone));
+    }
+
+    [Fact]
     public async Task A_failed_renewal_keeps_the_old_token_warns_and_tries_again_in_5_minutes()
     {
         var warnings = new List<string>();

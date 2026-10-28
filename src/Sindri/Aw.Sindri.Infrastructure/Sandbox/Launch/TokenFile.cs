@@ -21,13 +21,16 @@ internal static class TokenFile
         }
 
         var directory = SessionHomePaths.GhTokenDirectory(sessionHome);
-        if (!create && !Directory.Exists(directory))
+        if (create)
+        {
+            _ = Directory.CreateDirectory(directory, OwnerDirectory);
+            File.SetUnixFileMode(directory, OwnerDirectory);
+        }
+        else if (!Directory.Exists(directory))
         {
             return false;
         }
 
-        _ = Directory.CreateDirectory(directory, OwnerDirectory);
-        File.SetUnixFileMode(directory, OwnerDirectory);
         var temp = $"{directory}/.token.{Guid.NewGuid():N}";
         try
         {
@@ -40,9 +43,16 @@ internal static class TokenFile
             File.Move(temp, SessionHomePaths.GhTokenFile(sessionHome), overwrite: true);
             return true;
         }
+        catch (IOException) when (!create && !Directory.Exists(directory))
+        {
+            return false;   // removed between the check and the write: the launch closed
+        }
         finally
         {
-            File.Delete(temp);   // gone after the move; left only when the write or the move failed
+            if (File.Exists(temp))
+            {
+                File.Delete(temp);   // left only when the write or the move failed; the folder itself may be gone
+            }
         }
     }
 }

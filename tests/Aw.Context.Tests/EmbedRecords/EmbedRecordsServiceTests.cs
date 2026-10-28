@@ -1,5 +1,6 @@
 using Aw.Context.Core;
 using Aw.Context.Core.Records;
+using Aw.Context.Core.Vectors;
 using Aw.Context.Features.EmbedRecords;
 using Aw.Context.Testing.Records;
 using Aw.Context.Testing.Vectors;

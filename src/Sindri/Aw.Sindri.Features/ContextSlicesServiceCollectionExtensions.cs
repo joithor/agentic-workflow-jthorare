@@ -27,6 +27,11 @@ namespace Aw.Sindri.Features;
 /// <summary>Registers the context engine's slices, split from <see cref="SindriFeaturesServiceCollectionExtensions"/> to keep each file under the line cap.</summary>
 internal static class ContextSlicesServiceCollectionExtensions
 {
+    /// <summary>The 'index-embed' service (owned-index spec §5.6) and its one-minute built-in schedule.</summary>
+    private static IServiceCollection AddIndexEmbedService(this IServiceCollection services) => services
+        .AddScoped<IScheduledService, IndexEmbedService>()
+        .AddSingleton(IndexEmbedService.BuiltIn);
+
     /// <summary>The context engine's slices (stages S-3 and S-4): the review, promote and proposals commands and the reads of the map, lenses, subgraph and filemap.</summary>
     internal static IServiceCollection AddContextSlices(this IServiceCollection services)
     {
@@ -44,7 +49,7 @@ internal static class ContextSlicesServiceCollectionExtensions
             .AddSingleton(ContextMapRefreshService.BuiltIn)
             .AddScoped<IScheduledService, ContextConceptScanService>()
             .AddSingleton(ContextConceptScanService.BuiltIn)
-            .AddScoped<SyncGaps>()
+            .AddScoped<SyncGaps>().AddIndexEmbedService()
             .AddScoped<ContextInputScopes>()
             .AddScoped<ContextInputFacts>()
             .AddScoped<IScopingTextShape, ContextTextShape>()

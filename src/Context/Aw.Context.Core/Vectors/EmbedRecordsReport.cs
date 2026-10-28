@@ -1,4 +1,4 @@
-namespace Aw.Context.Features.EmbedRecords;
+namespace Aw.Context.Core.Vectors;
 
 /// <summary>What one embed run did.</summary>
 /// <param name="Embedded">How many chunks the model embedded.</param>

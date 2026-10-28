@@ -33,6 +33,11 @@ internal sealed partial class JevProvider(HttpClient http, ISecretSource secrets
 
     private const string QuestionId = "decision";
 
+    // The least state a call is sent, and what the request's own JSON (model, keys, quotes) takes out of the cap.
+    private const int MinStateChars = 1_000;
+
+    private const int EnvelopeChars = 500;
+
     private static readonly Uri _endpoint = new("https://api.typesafe.ai/v1/systemone");
 
     /// <inheritdoc />
@@ -63,7 +68,7 @@ internal sealed partial class JevProvider(HttpClient http, ISecretSource secrets
             }
 
             var cap = question.InputCapChars ?? ProvidersConfig.DefaultInputCapChars;
-            using var request = Request(question, CappedState(input, cap), CappedInstructions(question.Prompt, cap), key);
+            using var request = Request(question, input, cap, key);
             using var response = await http.SendAsync(request, deadline.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
@@ -99,6 +104,16 @@ internal sealed partial class JevProvider(HttpClient http, ISecretSource secrets
     // The prompt carries the input's text too (ask-check's transcript tail, a rule-check hunk): redacted, then capped.
     private string CappedInstructions(string prompt, int cap) =>
         InputCap.Truncate(redactor.Redact(JsonValue.Create(prompt))?.GetValue<string>() ?? "", cap);
+
+    // State and instructions together fit the cap: the instructions take at most half of it, the state the rest less the
+    // criteria and the JSON around them. Choose's instructions leave its facts out (they are in the state once).
+    private HttpRequestMessage Request(QuestionRef question, JsonNode? input, int cap, string key)
+    {
+        var instructions = CappedInstructions(question.PromptWithoutInput ?? question.Prompt, cap / 2);
+        var criteriaChars = question.Outputs.Sum(option => option.Length + (question.Criteria?.GetValueOrDefault(option) ?? option).Length + 8);
+        var stateCap = Math.Max(MinStateChars, cap - instructions.Length - criteriaChars - EnvelopeChars);
+        return Request(question, CappedState(input, stateCap), instructions, key);
+    }
 
     private static HttpRequestMessage Request(QuestionRef question, JsonNode? input, string instructions, string key)
     {

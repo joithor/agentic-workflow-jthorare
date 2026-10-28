@@ -112,12 +112,12 @@ public sealed class JevProviderTests
         var handler = FakeHttpHandler.Answering(HttpStatusCode.OK, Answer);
         using var provider = new JevProvider(new HttpClient(handler), Secrets(), new FakeInputRedactor());
         var question = Questions.Text with { Prompt = new string('p', 60_000), InputCapChars = 150_000 };
-        var input = new JsonObject { ["text"] = new string('t', 100_000) };
+        var input = new JsonObject { ["text"] = new string('t', 80_000) };   // 80k + the 60k prompt fit the 150k cap together
 
         _ = await provider.Decide(question, input, Questions.Budget, TestContext.Current.CancellationToken);
 
         var json = JsonNode.Parse(Assert.Single(handler.Requests).Body)!;   // why: the provider always sends a JSON body
-        Assert.Equal(100_000, json["state"]!["text"]!.GetValue<string>().Length);
+        Assert.Equal(80_000, json["state"]!["text"]!.GetValue<string>().Length);
         Assert.Equal(60_000, json["questions"]!["decision"]!["instructions"]!.GetValue<string>().Length);
     }
 

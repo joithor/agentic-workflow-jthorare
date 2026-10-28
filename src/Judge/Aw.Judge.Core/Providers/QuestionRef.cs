@@ -29,6 +29,12 @@ public sealed record QuestionRef
     /// <summary>The model to run instead of the provider's own small default (an agent CLI's model name); null keeps the default.</summary>
     public string? Model { get; init; }
 
+    /// <summary>
+    /// The prompt without the input's text, for a provider that is sent the input separately (Jev's state); null when the prompt is
+    /// all there is. Choose sets it: its facts ride in the state once, the agent CLIs get them in <see cref="Prompt"/>.
+    /// </summary>
+    public string? PromptWithoutInput { get; init; }
+
     /// <summary>The cap on the state and the instructions Jev is sent, in characters; null keeps config.json's providers.inputCapChars, else 160,000 (ProvidersConfig.DefaultInputCapChars).</summary>
     public int? InputCapChars { get; init; }
 }

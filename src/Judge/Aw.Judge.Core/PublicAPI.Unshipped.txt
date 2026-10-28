@@ -1811,6 +1811,8 @@ const Aw.Judge.Core.Labels.LabelQuestions.Skip = "skip" -> string!
 static Aw.Judge.Core.Labels.LabelQuestions.Fits(string! question, string! inputJson, System.Text.Json.JsonSerializerOptions! json) -> bool
 static Aw.Judge.Core.Labels.LabelQuestions.Outputs(string! question) -> System.Collections.Generic.IReadOnlyList<string!>?
 Aw.Judge.Core.Evaluation.QuestionEvaluator.EvaluateModelPick(string! rawInput, Aw.Judge.Core.Evaluation.EvaluationContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Judge.Core.Evaluation.EvaluationOutcome!>
+Aw.Judge.Core.Providers.QuestionRef.PromptWithoutInput.get -> string?
+Aw.Judge.Core.Providers.QuestionRef.PromptWithoutInput.init -> void
 Aw.Judge.Core.Providers.QuestionRef.InputCapChars.get -> int?
 Aw.Judge.Core.Providers.QuestionRef.InputCapChars.init -> void
 Aw.Judge.Core.Questions.CappedFileSet
@@ -1934,6 +1936,8 @@ Aw.Judge.Core.Questions.ModelPickWithheld.Equals(Aw.Judge.Core.Questions.ModelPi
 Aw.Judge.Core.Questions.ModelPickWithheld.ModelPickWithheld(int Secret, int Denied) -> void
 Aw.Judge.Core.Questions.ModelPickWithheld.Secret.get -> int
 Aw.Judge.Core.Questions.ModelPickWithheld.Secret.init -> void
+Aw.Judge.Core.Questions.QuestionDefinition<TInput>.PromptWithoutInput.get -> System.Func<TInput!, string!>?
+Aw.Judge.Core.Questions.QuestionDefinition<TInput>.PromptWithoutInput.init -> void
 Aw.Judge.Core.Questions.QuestionDefinition<TInput>.InputCapChars.get -> int?
 Aw.Judge.Core.Questions.QuestionDefinition<TInput>.InputCapChars.init -> void
 Aw.Judge.Core.Questions.QuestionDefinition<TInput>.Sanitize.get -> System.Func<TInput!, System.Func<System.Text.Json.Nodes.JsonNode?, System.Text.Json.Nodes.JsonNode?>!, TInput!>?

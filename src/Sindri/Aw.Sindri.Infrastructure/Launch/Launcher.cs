@@ -3,6 +3,7 @@ using Aw.Kernel;
 using Aw.Kernel.Json;
 using Aw.Sindri.Core;
 using Aw.Sindri.Core.Launch;
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Workflow.Engine;
 using HostKind = Aw.Sindri.Core.Launch.HostKind;
 
@@ -222,7 +223,7 @@ internal sealed partial class Launcher(LauncherParts parts) : ILauncher, ILaunch
         var source = (entry.Source, entry.ArgvHash ?? string.Empty);
         if (host.Kind == HostKind.None)
         {
-            return await RunOnViewer(request, host, (name, prepared.WorkDir, wrapped), (source, prepared.Session), cancellationToken).ConfigureAwait(false);
+            return await RunOnViewer(request, host, (name, prepared.WorkDir, wrapped), (source, prepared.Session, prepared.Sandbox), cancellationToken).ConfigureAwait(false);
         }
 
         var session = new HostSession(name, prepared.WorkDir, wrapped, prepared.Env) { RepoPath = request.RepoPath, Seed = prepared.Seed, Title = $"sindri {request.Item.Value}", Agent = request.Agent };
@@ -254,10 +255,10 @@ internal sealed partial class Launcher(LauncherParts parts) : ILauncher, ILaunch
             throw;
         }
 
-        return new StartedLaunch(started.Value, viewer, host.AttachArgv(started.Value), source.Source, source.Item2) { ChosenSession = prepared.Session };
+        return new StartedLaunch(started.Value, viewer, host.AttachArgv(started.Value), source.Source, source.Item2) { ChosenSession = prepared.Session, Sandbox = prepared.Sandbox };
     }
 
-    private async ValueTask<LaunchResult> RunOnViewer(LaunchRequest request, ISessionHost host, (string Name, string WorkDir, List<string> Argv) session, ((CatalogSource Source, string Hash) Entry, string? Chosen) started, CancellationToken cancellationToken)
+    private async ValueTask<LaunchResult> RunOnViewer(LaunchRequest request, ISessionHost host, (string Name, string WorkDir, List<string> Argv) session, ((CatalogSource Source, string Hash) Entry, string? Chosen, SandboxSummary? Sandbox) started, CancellationToken cancellationToken)
     {
         var none = new HostRef(host.Kind, session.Name);
         var outcome = request.Attended
@@ -265,7 +266,7 @@ internal sealed partial class Launcher(LauncherParts parts) : ILauncher, ILaunch
             : await Background(cancellationToken).ConfigureAwait(false);
         if (outcome.Kind != ViewerOutcomeKind.Failed)
         {
-            return new StartedLaunch(none, outcome, session.Argv, started.Entry.Source, started.Entry.Hash) { ChosenSession = started.Chosen };
+            return new StartedLaunch(none, outcome, session.Argv, started.Entry.Source, started.Entry.Hash) { ChosenSession = started.Chosen, Sandbox = started.Sandbox };
         }
 
         _ = await host.Stop(none, CancellationToken.None).ConfigureAwait(false);   // a viewer that started a thread before failing

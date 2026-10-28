@@ -4,6 +4,7 @@ using Aw.Sindri.Core;
 using Aw.Sindri.Core.Ids;
 using Aw.Sindri.Core.Launch;
 using Aw.Sindri.Core.Launch.Argv;
+using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Workflow.Engine;
 
 namespace Aw.Sindri.Infrastructure.Launch;
@@ -39,16 +40,29 @@ internal sealed partial class Launcher
             }
 
             WriteCaptureRule(request.Launch, entry);
-            var secret = LaunchSecrets.Mint();
-            var hashFile = LaunchSecrets.PathFor(parts.Options.SecretsDirectory, request.Launch);
-            var prior = File.Exists(hashFile) ? await File.ReadAllBytesAsync(hashFile, cancellationToken).ConfigureAwait(false) : null;   // a live session of this launch may own it
-            LaunchSecrets.Write(parts.Options.SecretsDirectory, request.Launch, secret);
-            return new Prepared(workDir, composed.Value.Argv, Environment(request, workDir), composed.Value.Session?.Value) { PriorHash = prior, Seed = composed.Value.Seed };
+            var prior = await MintSecret(request.Launch, cancellationToken).ConfigureAwait(false);
+            var confined = await Confine(request, composed.Value.Argv, Environment(request, workDir), cancellationToken).ConfigureAwait(false);
+            if (confined.IsError)
+            {
+                return confined.Error;   // a refusal carries its SND-LAUNCH-014..017 or -020 code; Start cleans up (and releases) after it
+            }
+
+            return new Prepared(workDir, confined.Value.Argv, confined.Value.Env, composed.Value.Session?.Value) { PriorHash = prior, Seed = composed.Value.Seed, Sandbox = confined.Value.Summary };
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
             return KernelErrors.Unavailable.With($"the launch's files could not be written: {e.Message}");
         }
+    }
+
+    /// <summary>Mints the launch's secret and writes its hash; returns the hash file as it was before (a live session of this launch may own it), or null when there was none.</summary>
+    private async ValueTask<byte[]?> MintSecret(LaunchId launch, CancellationToken cancellationToken)
+    {
+        var secret = LaunchSecrets.Mint();
+        var hashFile = LaunchSecrets.PathFor(parts.Options.SecretsDirectory, launch);
+        var prior = File.Exists(hashFile) ? await File.ReadAllBytesAsync(hashFile, cancellationToken).ConfigureAwait(false) : null;
+        LaunchSecrets.Write(parts.Options.SecretsDirectory, launch, secret);
+        return prior;
     }
 
     /// <summary>A Step's worktree gets the pre-push guard and, for claude-code, its trust mark before anything else is written; an error when either is refused.</summary>
@@ -235,6 +249,7 @@ internal sealed partial class Launcher
         LaunchFileStore.DeleteIn(parts.Options.PolicyDirectory, StepPolicyFile.PathFor(parts.Options.PolicyDirectory, launch));
         LaunchFileStore.DeleteIn(parts.Options.LaunchDirectory, McpLaunchConfig.PathFor(parts.Options.LaunchDirectory, launch));
         _ = await parts.Scratch.Remove(ScratchPath(launch), CancellationToken.None).ConfigureAwait(false);   // the evaluator's checkout; none for any other launch
+        await ReleaseSandbox(launch).ConfigureAwait(false);
     }
 
     private string ScratchPath(LaunchId launch) => Path.Combine(parts.Options.ScratchDirectory, "eval-" + launch.Value);
@@ -246,6 +261,9 @@ internal sealed partial class Launcher
 
         /// <summary>The first message, for a host that runs the agent itself (T3) rather than the argv.</summary>
         public string? Seed { get; init; }
+
+        /// <summary>The sandbox summary of a confined Step launch (<c lang="text">launch.started</c>'s sandbox field), or null when it ran unconfined.</summary>
+        public SandboxSummary? Sandbox { get; init; }
     }
 
     /// <summary>The start clashed with a session of this launch's name: it is the launch's own and stays untouched. The hash the live wrap checks is put back (and the session answered as started), or, with no hash to put back, the minted pair is removed and the launch fails.</summary>

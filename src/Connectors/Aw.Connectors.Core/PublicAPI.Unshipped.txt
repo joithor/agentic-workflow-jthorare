@@ -1,0 +1,6 @@
+#nullable enable
+Aw.Connectors.Core.ConnectorsCoreServiceCollectionExtensions
+Aw.Connectors.Core.ConnectorsErrors
+static Aw.Connectors.Core.ConnectorsCoreServiceCollectionExtensions.AddConnectorsCore(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Aw.Connectors.Core.ConnectorsErrors.All.get -> System.Collections.Generic.IReadOnlyList<Aw.Kernel.ErrorDefinition!>!
+static readonly Aw.Connectors.Core.ConnectorsErrors.Invalid -> Aw.Kernel.ErrorDefinition!

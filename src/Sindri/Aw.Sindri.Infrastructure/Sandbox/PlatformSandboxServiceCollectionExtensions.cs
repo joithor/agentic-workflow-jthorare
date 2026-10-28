@@ -40,6 +40,10 @@ public static class PlatformSandboxServiceCollectionExtensions
             .AddSindriBubblewrapSandbox(environment)
             .AddSingleton<ISliceScopes>(new CgroupSliceScopes(SliceDirectory(uid)))
             .AddSingleton<ISessionCap>(sp => new FileSessionCap(LockFile(sp.GetRequiredService<SindriSettings>().Home), sp.GetRequiredService<ISliceScopes>()))
+            .AddSingleton<SystemEgressNetwork>()
+            .AddSingleton<EgressService>(sp => new EgressService(
+                sp.GetRequiredService<SystemEgressNetwork>(), sp.GetRequiredService<SystemEgressNetwork>(), environment, EgressLogDirectory(sp.GetRequiredService<SindriSettings>().Home)))
+            .AddSingleton<LaunchSandboxRegistry>()
             .AddSingleton<ISandboxLaunchStages, PendingSandboxLaunchStages>()   // TODO(flow): replace with the flow builder's ISandboxLaunchStages implementation (the one line that remains)
             .AddSingleton<ISandboxLaunch>(sp => new SandboxLaunch(
                 sp.GetRequiredService<ISandbox>(), sp.GetRequiredService<ISessionCap>(), sp.GetRequiredService<ISandboxLaunchStages>(), LaunchOptions(sp, environment)));
@@ -99,6 +103,11 @@ public static class PlatformSandboxServiceCollectionExtensions
         var id = uid.ToString(System.Globalization.CultureInfo.InvariantCulture);
         return $"/sys/fs/cgroup/user.slice/user-{id}.slice/user@{id}.service/{SliceCgroupPath}";
     }
+
+    /// <summary>Gets where the egress proxies write egress.log (one directory for the service; the log is a count per host, port and verdict).</summary>
+    /// <param name="sindriHome">$AW_SINDRI_HOME.</param>
+    /// <returns>'&lt;home&gt;/sandbox/egress'.</returns>
+    internal static string EgressLogDirectory(string sindriHome) => Path.Combine(sindriHome, "sandbox", "egress");
 
     /// <summary>Gets the lock file the session cap takes, under Sindri's real home.</summary>
     /// <param name="sindriHome">$AW_SINDRI_HOME.</param>

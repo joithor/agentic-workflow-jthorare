@@ -29,6 +29,8 @@ public sealed class PlatformSandboxRegistrationTests
         _ = Assert.IsType<BubblewrapSandbox>(provider.GetRequiredService<ISandbox>());
         _ = Assert.IsType<FileSessionCap>(provider.GetRequiredService<ISessionCap>());
         _ = Assert.IsType<CgroupSliceScopes>(provider.GetRequiredService<ISliceScopes>());
+        Assert.Same(provider.GetRequiredService<LaunchSandboxRegistry>(), provider.GetRequiredService<LaunchSandboxRegistry>());
+        Assert.EndsWith("/sandbox/egress", PlatformSandboxServiceCollectionExtensions.EgressLogDirectory("/h"), StringComparison.Ordinal);
     }
 
     [Fact]

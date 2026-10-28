@@ -133,4 +133,3 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
         await stages.Release(launch, cancellationToken).ConfigureAwait(false);
     }
 }
-#pragma warning restore MA0182

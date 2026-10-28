@@ -107,7 +107,7 @@ public static partial class InstanceViews
     {
         ArgumentNullException.ThrowIfNull(view);
         ArgumentNullException.ThrowIfNull(context);
-        var status = DetailParts.WithSession(Status(view, context.AsOf), context.Session);
+        var status = DetailParts.WithWaiting(DetailParts.WithSession(Status(view, context.AsOf), context.Session), context.Waiting);
         return new InstanceDetail(
             view.Address,
             view.Id,

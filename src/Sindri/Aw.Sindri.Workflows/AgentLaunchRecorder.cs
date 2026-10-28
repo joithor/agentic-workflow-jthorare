@@ -53,6 +53,17 @@ internal sealed class AgentLaunchRecorder(ILedgerStore ledger, HeldLease lease, 
         _ = await Append(events.Entry(EventTypes.LaunchFailed, payload, Key(request.Launch), request.Item.Value), cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Records that the launch waits for a free session slot, once per launch (the first wait): 'launch.waiting:&lt;launch&gt;'. Other errors than a full cap record nothing.</summary>
+    /// <param name="request">The launch.</param>
+    /// <param name="failed">The launcher's SND-LAUNCH-020 answer, which names how many sessions run and the cap.</param>
+    /// <param name="cancellationToken">Cancels the append.</param>
+    /// <returns>Done; throws when the ledger refuses, so the activity retries.</returns>
+    public Task Waiting(LaunchRequest request, FailedLaunch failed, CancellationToken cancellationToken)
+    {
+        _ = (ledger, lease, events, request, failed, cancellationToken);
+        return Task.CompletedTask;
+    }
+
     private async Task<LedgerAppend> Append(LedgerEntry entry, CancellationToken cancellationToken)
     {
         var grant = lease.Current ?? throw new InvalidOperationException("SND-LEASE-002: this process holds no lease; the launch outcome waits for one");

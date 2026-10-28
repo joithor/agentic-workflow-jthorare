@@ -62,9 +62,18 @@
                        Text="{Binding TextScaleText}" AutomationProperties.Name="{Binding TextScaleText}" />
           </Grid>
           <Slider x:Name="TextScaleSlider" Minimum="{Binding MinTextScale}" Maximum="{Binding MaxTextScale}"
-                  Value="{Binding TextScale, Mode=TwoWay}" TickFrequency="0.1" IsSnapToTickEnabled="True"
+                  Value="{Binding TextScale, Mode=TwoWay}" TickFrequency="0.1" TickPlacement="BottomRight" IsSnapToTickEnabled="True"
                   SmallChange="0.1" LargeChange="0.1"
                   AutomationProperties.Name="{Binding TextSizeLabel}" />
+          <!-- 90%, 100% and 130% under their marks: on the 0.9–1.3 track 1.0 sits a quarter of the way along. -->
+          <Grid ColumnDefinitions="*,*,*,*" Margin="0,-4,0,0">
+            <TextBlock x:Name="TextScaleMinText" Classes="caption" Foreground="{DynamicResource Brush.InkSubtle}" HorizontalAlignment="Left"
+                       Text="{Binding MinTextScaleText}" AutomationProperties.AccessibilityView="Raw" />
+            <TextBlock x:Name="TextScaleNormalText" Grid.ColumnSpan="2" Classes="caption" Foreground="{DynamicResource Brush.InkSubtle}" HorizontalAlignment="Center"
+                       Text="{Binding NormalTextScaleText}" AutomationProperties.AccessibilityView="Raw" />
+            <TextBlock x:Name="TextScaleMaxText" Grid.Column="3" Classes="caption" Foreground="{DynamicResource Brush.InkSubtle}" HorizontalAlignment="Right"
+                       Text="{Binding MaxTextScaleText}" AutomationProperties.AccessibilityView="Raw" />
+          </Grid>
         </StackPanel>
       </StackPanel>
     </Border>

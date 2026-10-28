@@ -9035,3 +9035,39 @@ static Aw.Context.Core.Concepts.PinRollupResult.operator !=(Aw.Context.Core.Conc
 static Aw.Context.Core.Concepts.PinRollupResult.operator ==(Aw.Context.Core.Concepts.PinRollupResult? left, Aw.Context.Core.Concepts.PinRollupResult? right) -> bool
 Aw.Context.Core.Sync.RecordBatches
 static Aw.Context.Core.Sync.RecordBatches.From(Aw.Context.Core.Sources.SourceId source, Aw.Context.Core.Sync.RecordPage! page, Aw.Context.Core.Records.SyncPhase phase, Aw.Context.Core.Trust.Scrubbers! scrubbers, System.DateTimeOffset at) -> Aw.Context.Core.Records.RecordBatch!
+Aw.Context.Core.Records.ChunkToEmbed
+Aw.Context.Core.Records.ChunkToEmbed.<Clone>$() -> Aw.Context.Core.Records.ChunkToEmbed!
+Aw.Context.Core.Records.ChunkToEmbed.ChunkToEmbed(string! Key, string! Text, string! TextHash) -> void
+Aw.Context.Core.Records.ChunkToEmbed.Deconstruct(out string! Key, out string! Text, out string! TextHash) -> void
+Aw.Context.Core.Records.ChunkToEmbed.Equals(Aw.Context.Core.Records.ChunkToEmbed? other) -> bool
+Aw.Context.Core.Records.ChunkToEmbed.Key.get -> string!
+Aw.Context.Core.Records.ChunkToEmbed.Key.init -> void
+Aw.Context.Core.Records.ChunkToEmbed.Text.get -> string!
+Aw.Context.Core.Records.ChunkToEmbed.Text.init -> void
+Aw.Context.Core.Records.ChunkToEmbed.TextHash.get -> string!
+Aw.Context.Core.Records.ChunkToEmbed.TextHash.init -> void
+Aw.Context.Core.Records.IRecordStore.ChunksToEmbed(string! model, int limit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<System.Collections.Generic.IReadOnlyList<Aw.Context.Core.Records.ChunkToEmbed!>!>!>
+Aw.Context.Core.Vectors.ChunkEmbeddings
+Aw.Context.Core.Vectors.ChunkEmbeddings.<Clone>$() -> Aw.Context.Core.Vectors.ChunkEmbeddings!
+Aw.Context.Core.Vectors.ChunkEmbeddings.ChunkEmbeddings(string! Model, System.Collections.Generic.IReadOnlyList<System.ReadOnlyMemory<float>>! Vectors) -> void
+Aw.Context.Core.Vectors.ChunkEmbeddings.Deconstruct(out string! Model, out System.Collections.Generic.IReadOnlyList<System.ReadOnlyMemory<float>>! Vectors) -> void
+Aw.Context.Core.Vectors.ChunkEmbeddings.Equals(Aw.Context.Core.Vectors.ChunkEmbeddings? other) -> bool
+Aw.Context.Core.Vectors.ChunkEmbeddings.Model.get -> string!
+Aw.Context.Core.Vectors.ChunkEmbeddings.Model.init -> void
+Aw.Context.Core.Vectors.ChunkEmbeddings.Vectors.get -> System.Collections.Generic.IReadOnlyList<System.ReadOnlyMemory<float>>!
+Aw.Context.Core.Vectors.ChunkEmbeddings.Vectors.init -> void
+Aw.Context.Core.Vectors.IChunkEmbedder
+Aw.Context.Core.Vectors.IChunkEmbedder.Embed(System.Collections.Generic.IReadOnlyList<string!>! texts, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Vectors.ChunkEmbeddings!>!>
+Aw.Context.Core.Vectors.IChunkEmbedder.Model.get -> string!
+Aw.Context.Core.Vectors.IVectorMatrixCache
+Aw.Context.Core.Vectors.IVectorMatrixCache.Current(string! model, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Context.Core.Vectors.VectorMatrix!>!>
+override Aw.Context.Core.Records.ChunkToEmbed.Equals(object? obj) -> bool
+override Aw.Context.Core.Records.ChunkToEmbed.GetHashCode() -> int
+override Aw.Context.Core.Records.ChunkToEmbed.ToString() -> string!
+override Aw.Context.Core.Vectors.ChunkEmbeddings.Equals(object? obj) -> bool
+override Aw.Context.Core.Vectors.ChunkEmbeddings.GetHashCode() -> int
+override Aw.Context.Core.Vectors.ChunkEmbeddings.ToString() -> string!
+static Aw.Context.Core.Records.ChunkToEmbed.operator !=(Aw.Context.Core.Records.ChunkToEmbed? left, Aw.Context.Core.Records.ChunkToEmbed? right) -> bool
+static Aw.Context.Core.Records.ChunkToEmbed.operator ==(Aw.Context.Core.Records.ChunkToEmbed? left, Aw.Context.Core.Records.ChunkToEmbed? right) -> bool
+static Aw.Context.Core.Vectors.ChunkEmbeddings.operator !=(Aw.Context.Core.Vectors.ChunkEmbeddings? left, Aw.Context.Core.Vectors.ChunkEmbeddings? right) -> bool
+static Aw.Context.Core.Vectors.ChunkEmbeddings.operator ==(Aw.Context.Core.Vectors.ChunkEmbeddings? left, Aw.Context.Core.Vectors.ChunkEmbeddings? right) -> bool

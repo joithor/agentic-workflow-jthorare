@@ -58,6 +58,25 @@ internal sealed partial class SqliteRecordStore
         }
     }
 
+    public async ValueTask<Result<IReadOnlyList<ChunkToEmbed>>> ChunksToEmbed(string model, int limit, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(model);
+        ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(limit, 10_000);
+        var read = await BeginRead(cancellationToken).ConfigureAwait(false);
+        if (read.IsError || read.Value is not { } session)
+        {
+            return read.IsError ? read.Error : Results.Success<IReadOnlyList<ChunkToEmbed>>([]);
+        }
+
+        await using (session.ConfigureAwait(false))
+        {
+            var statement = new SqlStatement(RecordSql.ChunksToEmbed, c => c.Bind("@model", model).Bind("@limit", limit));
+            var rows = await SqliteQueries.List(session, statement, RecordMappers.ToEmbed, cancellationToken).ConfigureAwait(false);
+            return rows.IsError ? ContextDatabase.Translate(rows.Error) : rows;
+        }
+    }
+
     public async ValueTask<Result<int>> DeleteVectors(VectorSpace space, IReadOnlyList<string> keys, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(keys);

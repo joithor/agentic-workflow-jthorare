@@ -6,6 +6,7 @@ using Aw.Sindri.Core.Workflow.Blocks;
 using Aw.Sindri.Features.Scoping;
 using Aw.Sindri.Testing.Scoping;
 using Aw.Sindri.Tests.Scoping.Steps;
+using Microsoft.Extensions.Logging.Abstractions;
 using static Aw.Sindri.Tests.Scoping.Relevance.RelevanceFixtures;
 
 namespace Aw.Sindri.Tests.Scoping.Relevance;
@@ -31,7 +32,7 @@ public sealed class RelevanceJudgeBriefTests
     }
 
     private static Task<BlockStepResult> Run(CountingScrubber scrubber, RecordingJudge judge) =>
-        new RelevanceJudgeStep(judge, scrubber).Run(ScopingStepContexts.Of("step.scope.relevance-judge", Facts()), TestContext.Current.CancellationToken).AsTask();
+        new RelevanceJudgeStep(judge, scrubber, TimeProvider.System, NullLogger<RelevanceJudgeStep>.Instance).Run(ScopingStepContexts.Of("step.scope.relevance-judge", Facts()), TestContext.Current.CancellationToken).AsTask();
 
     [Fact]
     public async Task The_brief_is_scrubbed_once_whatever_the_entry_count()

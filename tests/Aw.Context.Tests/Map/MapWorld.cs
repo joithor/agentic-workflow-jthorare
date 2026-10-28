@@ -1,3 +1,4 @@
+using Aw.Context.Tests.Sync;
 using Aw.Context.Core.Code;
 using Aw.Context.Core.ConceptScan;
 using Aw.Context.Core.Docs;
@@ -91,7 +92,7 @@ internal sealed class MapWorld : IDisposable
             .AddSingleton<IDefaultBranch>(DefaultBranch)
             .AddSingleton(codeSearch ?? new FakeCodeSearch(Repos[0], Head, BuildFiles))
             .AddSingleton(symbols ?? new NoCodeSymbolSource())
-            .AddSingleton<IIntentStore>(Intents)
+            .AddSingleton<IIntentStore>(Intents).AddRecordFakes()
             .AddSingleton(history ?? new FakeFileHistory(Repos[0], new HistoryWorld(Head, [])))
             .AddSingleton<IModelPort>(Model)
             .AddSingleton<IClusterSource>(Clusters)

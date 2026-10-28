@@ -592,6 +592,13 @@ check "every edge of the concepts map joins two of its nodes (a decision row imp
 check "the concepts map has one decision, on a Self scheduling feature, keyed as context keys it (the Why band, #1281)" "$(jq -r '[.edges[] | select(.type == "decides") | .from + ">" + .to] | join(",")' "$M")" "$DKEY>feature:swaps"
 check "the decision belongs to Self scheduling, so the concept opens it (ConceptScope)" "$(jq -r --arg d "$DKEY" '[.edges[] | select(.from == $d and .type == "belongs-to") | .to] | join(",")' "$M")" "concept:scheduling"
 
+# model-picks (issue #1206 M-8): the usage and the refusals that need no control plane.
+contains "the usage lists model-picks" "$(bash "$FIXTURE" --help 2>&1)" "sindri-ui-fixture.sh model-picks picked|escalated|unpriced|picking"
+AW_SINDRI_HOME="$S" bash "$FIXTURE" model-picks picked >/dev/null 2>&1; check "model-picks needs an item and an instance (exit 2)" "$?" "2"
+AW_SINDRI_HOME="$S" bash "$FIXTURE" model-picks nope ITM-0f ITM-0f/step/1 >/dev/null 2>&1; check "model-picks refuses an unknown state (exit 2)" "$?" "2"
+AW_SINDRI_HOME="$S" bash "$FIXTURE" model-picks picked not-an-item ITM-0f/step/1 >/dev/null 2>&1; check "model-picks refuses a bad item id (exit 2)" "$?" "2"
+AW_SINDRI_HOME="$WORK/elsewhere" bash "$FIXTURE" model-picks picked ITM-0f ITM-0f/step/1 >/dev/null 2>&1; check "model-picks refuses an unguarded home" "$?" "2"
+
 # agent-run's wait is wall-clock seconds, not loop passes (issue #1123): a ledger call that takes 2 s and never shows
 # launch.started must still end the wait after FIXTURE_AGENT_WAIT=3 s. The sessions copy is faked (no uid needed): agent-run
 # only checks that its proc folder exists and edits its launcher.json.

@@ -32,7 +32,7 @@ internal sealed class ProviderCatalog(Func<string, string?> environment, IExecut
         }
 
         var named = chain.Classes.Values.SelectMany(names => names).ToHashSet();
-        return new ProviderLineup([.. providers.Where(p => named.Contains(p.Name)).Select(p => new FailOpenModelProvider(p)), rules], chain);
+        return new ProviderLineup([.. providers.Where(p => named.Contains(p.Name)).Select(p => new FailOpenModelProvider(WithConfiguredCap(p, config))), rules], chain);
     }
 
     /// <inheritdoc />
@@ -62,6 +62,9 @@ internal sealed class ProviderCatalog(Func<string, string?> environment, IExecut
             ? JudgeErrors.ProviderUnavailable.With($"{ProviderNames.Name(ProviderName.ClaudeCli)} is not available")
             : Results.Success<IModelProvider>(new FailOpenModelProvider(adjudicator));
     }
+
+    private static IModelProvider WithConfiguredCap(IModelProvider provider, ProvidersConfig? config) =>
+        provider.Name == ProviderName.Jev && config?.JevInputCapChars is { } cap ? new JevInputCapProvider(provider, cap) : provider;
 
     // config.json's names are checked on read (JudgeConfigParser), so an unknown one can't reach here; skip it if it does.
     private static List<AgentCliName>? Configured(IReadOnlyList<string>? names) =>

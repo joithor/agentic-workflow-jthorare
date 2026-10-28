@@ -334,7 +334,6 @@ const Aw.Judge.Core.Evaluation.EvaluationReasons.OutOfEnum = "out-of-enum" -> st
 const Aw.Judge.Core.Evaluation.EvaluationReasons.PreRule = "pre-rule" -> string!
 const Aw.Judge.Core.Evaluation.EvaluationReasons.QuestionDisabled = "question-disabled" -> string!
 const Aw.Judge.Core.Evaluation.InputCap.MaxChars = 16000 -> int
-const Aw.Judge.Core.Evaluation.InputCap.StringLimit = 1000 -> int
 const Aw.Judge.Core.Providers.ProviderUnavailable.Timeout = "timeout" -> string!
 override Aw.Judge.Core.Briefs.Brief.Equals(object? obj) -> bool
 override Aw.Judge.Core.Briefs.Brief.GetHashCode() -> int
@@ -492,10 +491,15 @@ Aw.Judge.Core.Config.ProvidersConfig
 Aw.Judge.Core.Config.ProvidersConfig.<Clone>$() -> Aw.Judge.Core.Config.ProvidersConfig!
 Aw.Judge.Core.Config.ProvidersConfig.AgentClis.get -> System.Collections.Generic.IReadOnlyList<string!>?
 Aw.Judge.Core.Config.ProvidersConfig.AgentClis.init -> void
-Aw.Judge.Core.Config.ProvidersConfig.Deconstruct(out System.Collections.Generic.IReadOnlyList<string!>? AgentClis, out bool? Jev) -> void
+Aw.Judge.Core.Config.ProvidersConfig.Deconstruct(out System.Collections.Generic.IReadOnlyList<string!>? AgentClis, out bool? Jev, out int? JevInputCapChars) -> void
 Aw.Judge.Core.Config.ProvidersConfig.Equals(Aw.Judge.Core.Config.ProvidersConfig? other) -> bool
 Aw.Judge.Core.Config.ProvidersConfig.Jev.get -> bool?
 Aw.Judge.Core.Config.ProvidersConfig.Jev.init -> void
+Aw.Judge.Core.Config.ProvidersConfig.JevInputCapChars.get -> int?
+Aw.Judge.Core.Config.ProvidersConfig.JevInputCapChars.init -> void
+const Aw.Judge.Core.Config.ProvidersConfig.DefaultJevInputCapChars = 160000 -> int
+const Aw.Judge.Core.Config.ProvidersConfig.MinJevInputCapChars = 1000 -> int
+const Aw.Judge.Core.Config.ProvidersConfig.MaxJevInputCapChars = 256000 -> int
 Aw.Judge.Core.Config.QuestionConfig
 Aw.Judge.Core.Config.QuestionConfig.<Clone>$() -> Aw.Judge.Core.Config.QuestionConfig!
 Aw.Judge.Core.Config.QuestionConfig.Enabled.get -> bool
@@ -600,7 +604,7 @@ Aw.Judge.Core.Config.ConfigReading.Warning.get -> string?
 Aw.Judge.Core.Config.ConfigReading.Warning.init -> void
 Aw.Judge.Core.Config.JudgeConfig.JudgeConfig(System.Collections.Generic.IReadOnlyDictionary<string!, Aw.Judge.Core.Config.QuestionConfig!>! Questions, Aw.Judge.Core.Config.ProvidersConfig? Providers = null, Aw.Judge.Core.Config.PromptSortConfig? PromptSort = null) -> void
 Aw.Judge.Core.Config.PromptSortConfig.PromptSortConfig(bool? Enabled = null, double? BudgetMs = null, double? CooldownPrompts = null, System.Collections.Generic.IReadOnlyDictionary<string!, bool>? Scaffolds = null) -> void
-Aw.Judge.Core.Config.ProvidersConfig.ProvidersConfig(System.Collections.Generic.IReadOnlyList<string!>? AgentClis = null, bool? Jev = null) -> void
+Aw.Judge.Core.Config.ProvidersConfig.ProvidersConfig(System.Collections.Generic.IReadOnlyList<string!>? AgentClis = null, bool? Jev = null, int? JevInputCapChars = null) -> void
 const Aw.Judge.Core.Config.JudgeConfig.WakeGate = "wake-gate" -> string!
 const Aw.Judge.Core.Config.JudgeConfigParser.MaxBudgetMs = 1050 -> double
 const Aw.Judge.Core.Config.JudgeConfigParser.MinBudgetMs = 200 -> double

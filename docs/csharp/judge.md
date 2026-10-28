@@ -195,7 +195,7 @@ are null until set.
 
 `JudgeConfig` (`config.json`, written indented): `questions` (required: name → `{enabled, threshold?, providers?}`,
 `threshold` 0–1, absent for the question's own, `providers` from `rules`, `jev`, `claude-cli`, `codex-cli`, `cursor-cli`), `providers?`
-(`agentClis?`: agent CLI names in priority order, `jev?`: false drops Jev), `promptSort?` (`enabled?`, `budgetMs?`
+(`agentClis?`: agent CLI names in priority order, `jev?`: false drops Jev, `jevInputCapChars?`: the cap on what Jev is sent, 1000–256000, default 160000), `promptSort?` (`enabled?`, `budgetMs?`
 200–1050, `cooldownPrompts?` a whole number ≥ 0, `scaffolds?`: `brief`, `bugfix`, `ui-evidence`, `plan-first` → on).
 Unknown keys are ignored; a wrong type, a missing required field, an unknown name or a value out of range makes the
 whole file invalid (AW-JUDGE-007): readers use the defaults (wake-gate enabled at 0.7) and log one warning, and
@@ -331,15 +331,16 @@ undeclared fields dropped.
 
 ### Jev
 
-`POST https://api.typesafe.ai/v1/systemone` with `{state: <input, redacted and capped like the stored input>, model: "jev-1.13.0", questions: {decision:
+`POST https://api.typesafe.ai/v1/systemone` with `{state: <input, redacted and capped at Jev's cap>, model: "jev-1.13.0", questions: {decision:
 {type: "choice", instructions: <prompt, redacted and capped>, criteria: {<output>: <criterion or the output>}}}}` and
 `Authorization: Bearer <key>`; text classes only. The key comes from `ISecretSource` (`TYPESAFE_API_KEY`, else the
 keychain), read inside the question's budget: a keychain that sits on its unlock prompt ends as `timeout`, not as
 latency added in front of the call. Jev is the one provider that sends the input to a third party on the judge's own key, so `JevProvider`
-redacts (then caps at `InputCap.MaxChars`, or at the question's own `InputCapChars`: `model-pick` sends a whole pack) both the state and the prompt, which embeds input fields word for word
+redacts (then caps at the question's own `InputCapChars` (`model-pick` sends a whole pack), else at `providers.jevInputCapChars`, else at 160,000 characters) both the state and the prompt, which embeds input fields word for word
 (ask-check's transcript tail, a rule-check hunk, a brief's proof command). claude and codex get the prompt as built,
 on standard input: they run on the user's own model logins, the same place the agent's session already sends that
 text. cursor-agent gets it redacted, because its prompt is an argument (The agent CLIs above).
+The 160,000 default is Jev's 64k-token window at about 3 characters a token for JSON and code, less ~10k tokens for the instructions, the criteria and the answer. The cap is applied the same way to the stored input (`InputCap.MaxChars`, 16,000) and to Jev's: a value that fits goes whole; over the cap the longest strings are cut first, all to one length L with a `[truncated N chars]` marker, L being the largest length at which the whole JSON fits (a short field is never touched while a long one is); if even L = 0 doesn't fit, the value becomes `{"truncated": "<prefix>"}`. The batched call (`JevBatchClassifier`) still caps at 16,000.
 The answer's `choice`, `confidence` (1.0 when absent, except for `choose`, where a missing or out-of-range one is errored `unparseable-answer`) and `probabilities` become the decision.
 
 ### Rules

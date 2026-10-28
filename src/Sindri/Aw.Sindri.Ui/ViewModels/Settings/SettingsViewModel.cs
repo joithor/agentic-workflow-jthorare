@@ -44,6 +44,9 @@ internal sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <summary>The model-choice line, below the checklist; null when this host has none.</summary>
     public ModelChoiceViewModel? ModelChoice { get; }
 
+    /// <summary>True when the page has the model-choice line.</summary>
+    public bool HasModelChoice => ModelChoice is not null;
+
     /// <summary>True when the page has the setup checklist.</summary>
     public bool HasSetup => Setup is not null;
 

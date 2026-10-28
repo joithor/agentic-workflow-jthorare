@@ -20742,6 +20742,9 @@ Aw.Sindri.Core.Sandbox.ISessionCap.Start<T>(int cap, System.Func<System.Threadin
 Aw.Sindri.Core.Locks.IHeavyLockSweep
 Aw.Sindri.Core.Locks.IHeavyLockSweep.Sweep(string! locksDir) -> int
 Aw.Sindri.Core.Launches.LaunchSessionEvents.LimitHit(Aw.Sindri.Core.Workflow.Engine.LaunchId launch, Aw.Sindri.Core.Events.LimitHitKind kind, long peak, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Aw.Kernel.Result<Aw.Kernel.Unit>!>
+Aw.Sindri.Core.Launch.AgentTargetWarning
+const Aw.Sindri.Core.Launch.AgentTargetWarning.Name = "agent:target" -> string!
+static Aw.Sindri.Core.Launch.AgentTargetWarning.For(Aw.Sindri.Core.Launch.AgentId? target, Aw.Sindri.Core.Launch.IAgentCatalog! catalog) -> string?
 Aw.Sindri.Core.Workflow.Recipes.RecipeState.Agent.get -> Aw.Sindri.Core.Workflow.Recipes.StateAgent?
 Aw.Sindri.Core.Workflow.Recipes.RecipeState.Agent.init -> void
 Aw.Sindri.Core.Workflow.Recipes.StateAgent

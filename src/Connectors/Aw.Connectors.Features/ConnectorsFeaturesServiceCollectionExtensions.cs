@@ -1,3 +1,4 @@
+using Aw.Connectors.Core.GitHub;
 using Aw.Connectors.Features.PullGitHub;
 using Aw.Kernel.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,12 +14,12 @@ public static class ConnectorsFeaturesServiceCollectionExtensions
     public static IServiceCollection AddConnectorsFeatures(this IServiceCollection services)
     {
         _ = services
-            .AddScoped<PullGitHubService>()
             .AddScoped<IValidator<PullGitHubRequest>, PullGitHubValidator>()
             .AddScoped<IService<PullGitHubRequest, PullGitHubResponse>>(static sp =>
                 new ValidatingService<PullGitHubRequest, PullGitHubResponse>(
-                    sp.GetRequiredService<PullGitHubService>(),
+                    new PullGitHubService(sp.GetRequiredService<IGitHubReader>()),   // a factory registration: the reader is the caller's to add, so a host that builds readers per token registers none
                     sp.GetRequiredService<IValidator<PullGitHubRequest>>()));
+        _ = services.AddSingleton<Aw.Connectors.Core.GitHub.IGitHubConnectorFactory>(static sp => new PullGitHub.GitHubConnectorFactory(sp.GetService<TimeProvider>() ?? TimeProvider.System));
         return services;
     }
 }

@@ -29,6 +29,9 @@ public static class ConnectorsErrors
     /// <summary>AW-CONNECTORS-008.</summary>
     public static readonly ErrorDefinition NotFound = new("AW-CONNECTORS-008", ErrorKind.NotFound, "The repo does not exist, or the token cannot see it");
 
+    /// <summary>AW-CONNECTORS-009: the source's rate limit stopped the run before anything was read; the message carries the time it lifts.</summary>
+    public static readonly ErrorDefinition RateLimited = new("AW-CONNECTORS-009", ErrorKind.Unavailable, "The source's rate limit stopped the run");
+
     /// <summary>Every Connectors error, for ErrorCatalogue.Validate.</summary>
-    public static IReadOnlyList<ErrorDefinition> All { get; } = [Invalid, Unauthorized, HostRefused, RedirectRefused, Unreachable, BadReply, AccessDenied, NotFound];
+    public static IReadOnlyList<ErrorDefinition> All { get; } = [Invalid, Unauthorized, HostRefused, RedirectRefused, Unreachable, BadReply, AccessDenied, NotFound, RateLimited];
 }

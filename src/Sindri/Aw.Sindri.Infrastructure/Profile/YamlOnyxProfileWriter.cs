@@ -88,7 +88,7 @@ internal sealed class YamlOnyxProfileWriter(SindriSettings settings) : IOnyxProf
     }
 
     // The first line under `parent` (before the next line at its own indent or less) that is `key` one level in.
-    private static int Child(List<string> lines, int parent, string key)
+    internal static int Child(List<string> lines, int parent, string key)
     {
         var parentIndent = Indent(lines[parent]);
         for (var i = parent + 1; i < lines.Count; i++)
@@ -130,9 +130,9 @@ internal sealed class YamlOnyxProfileWriter(SindriSettings settings) : IOnyxProf
         return end;
     }
 
-    private static int Indent(string line) => line.Length - line.TrimStart(' ').Length;
+    internal static int Indent(string line) => line.Length - line.TrimStart(' ').Length;
 
-    private static string Quote(string value) => "\"" + value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
+    internal static string Quote(string value) => "\"" + value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
 
     private static bool Holds(string yaml, string url, string token, string version)
     {
@@ -146,7 +146,7 @@ internal sealed class YamlOnyxProfileWriter(SindriSettings settings) : IOnyxProf
         return onyx is { } entry && Text(entry, "url") == url && Text(entry, "token") == token && Text(entry, "version") == version;
     }
 
-    private static JsonElement? Descend(JsonElement from, params string[] path)
+    internal static JsonElement? Descend(JsonElement from, params string[] path)
     {
         var at = from;
         foreach (var key in path)
@@ -162,7 +162,7 @@ internal sealed class YamlOnyxProfileWriter(SindriSettings settings) : IOnyxProf
 
     private static string? Text(JsonElement map, string key) => map.TryGetProperty(key, out var value) ? value.GetString() : null;
 
-    private static void Write(string path, string text)
+    internal static void Write(string path, string text)
     {
         if (Path.GetDirectoryName(path) is { Length: > 0 } directory)
         {

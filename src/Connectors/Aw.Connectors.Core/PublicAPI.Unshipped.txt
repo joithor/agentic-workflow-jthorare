@@ -271,3 +271,6 @@ static Aw.Connectors.Core.GitHub.GitHubPullDetail.operator !=(Aw.Connectors.Core
 static Aw.Connectors.Core.GitHub.GitHubPullDetail.operator ==(Aw.Connectors.Core.GitHub.GitHubPullDetail? left, Aw.Connectors.Core.GitHub.GitHubPullDetail? right) -> bool
 static Aw.Connectors.Core.GitHub.GitHubPullDetailRead.operator !=(Aw.Connectors.Core.GitHub.GitHubPullDetailRead? left, Aw.Connectors.Core.GitHub.GitHubPullDetailRead? right) -> bool
 static Aw.Connectors.Core.GitHub.GitHubPullDetailRead.operator ==(Aw.Connectors.Core.GitHub.GitHubPullDetailRead? left, Aw.Connectors.Core.GitHub.GitHubPullDetailRead? right) -> bool
+static readonly Aw.Connectors.Core.ConnectorsErrors.RateLimited -> Aw.Kernel.ErrorDefinition!
+Aw.Connectors.Core.GitHub.IGitHubConnectorFactory
+Aw.Connectors.Core.GitHub.IGitHubConnectorFactory.Create(Aw.Connectors.Core.GitHub.GitHubSettings! settings, Aw.Connectors.Core.GitHub.IGitHubReader! reader, System.TimeSpan window) -> Aw.Connectors.Core.IConnector!

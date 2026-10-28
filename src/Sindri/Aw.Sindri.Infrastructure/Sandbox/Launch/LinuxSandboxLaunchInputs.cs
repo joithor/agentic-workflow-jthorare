@@ -5,16 +5,8 @@ using Aw.Sindri.Core.Sandbox;
 using Aw.Sindri.Core.Sandbox.Plan;
 using Aw.Sindri.Core.Workflow.Engine;
 using Aw.Sindri.Infrastructure.Launch;
-using Aw.Kernel;
 
 namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
-
-/// <summary>What a launch's <see cref="DenialCounter"/> is made from.</summary>
-/// <param name="Sink">Where its 'sandbox.denied' events go.</param>
-/// <param name="Json">The package's JSON options.</param>
-/// <param name="Scrubber">Takes secrets out of a target.</param>
-/// <param name="Clock">The time.</param>
-internal sealed record DenialCounterParts(Aw.Sindri.Core.Sandbox.Denials.ISandboxDenials Sink, System.Text.Json.JsonSerializerOptions Json, Aw.Sindri.Core.Text.ITextScrubber Scrubber, TimeProvider Clock);
 
 /// <summary>The box facts of a Linux launch's sandbox step: paths from the launcher's own options, memory and cores from the machine port, the control plane's port, the catalog's policy form.</summary>
 /// <param name="Launcher">The launcher's files.</param>
@@ -24,6 +16,7 @@ internal sealed record DenialCounterParts(Aw.Sindri.Core.Sandbox.Denials.ISandbo
 /// <param name="Environment">The process environment (HOME, AW_STATE_DIR, PATH ...), read at each launch.</param>
 /// <param name="Control">The running control plane's endpoint record, or null when unknown.</param>
 /// <param name="Counters">What a launch's denial counter is made from, or null to count no denials.</param>
+#pragma warning disable MA0182 // registered by the product Host in SB-5a's switch step
 internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentCatalog Catalog, ISandboxMachine Machine, ISandboxProcesses Processes, Func<IReadOnlyDictionary<string, string>> Environment, Func<ControlEndpoint?> Control, DenialCounterParts? Counters = null) : ISandboxLaunchInputs
 {
     /// <summary>The proxy port inside every sandbox (its network namespace is private, so one fixed port can't clash).</summary>
@@ -52,7 +45,11 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
     public string RunAreaFor(LaunchId launch) => Path.Combine(Launcher.LaunchDirectory, "areas", launch.Value);
 
     /// <inheritdoc/>
-    public string NetDirFor(LaunchId launch) => NetDir(System.IO.Directory.Exists($"/run/user/{Uid()}") ? $"/run/user/{Uid()}" : "/tmp", launch);
+    public string NetDirFor(LaunchId launch)
+    {
+        var runtime = string.Create(CultureInfo.InvariantCulture, $"/run/user/{Uid()}");
+        return NetDir(System.IO.Directory.Exists(runtime) ? runtime : "/tmp", launch);
+    }
 
     /// <inheritdoc/>
     public int SindriPort() => Control()?.Url.Port ?? 0;
@@ -124,3 +121,4 @@ internal sealed class LinuxSandboxLaunchInputs(LauncherOptions Launcher, IAgentC
         }
     }
 }
+#pragma warning restore MA0182

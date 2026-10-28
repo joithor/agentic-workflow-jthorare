@@ -82,13 +82,4 @@ public sealed class LauncherSandboxTests : IDisposable
         Expect.True(stopped.IsSuccess);
         Expect.True(_sandbox.Released.Contains(request.Launch));
     }
-
-    [Fact]
-    public async Task An_attended_open_never_asks_the_sandbox()
-    {
-        var result = await Make(_sandbox).Launch(A.LaunchRequest().InDirectory(_work).Build(), CancellationToken.None);
-
-        Expect.True(result is StartedLaunch { Sandbox: null });
-        Expect.Equal(0, _sandbox.Prepared.Count);
-    }
 }

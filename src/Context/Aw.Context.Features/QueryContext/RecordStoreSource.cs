@@ -14,9 +14,9 @@ namespace Aw.Context.Features.QueryContext;
 /// </summary>
 internal sealed class RecordStoreSource(ILexicalLeg leg, IRecordStore store, AudienceScope scope, TimeProvider clock) : IContextSource
 {
-    private static readonly SourceDescriptor _descriptor = new(Id, SourceKind.Doc, SourceFreshness.Snapshot, SupportsAsOf: false);
-
     public static SourceId Id { get; } = SourceId.From("records");
+
+    private static readonly SourceDescriptor _descriptor = new(Id, SourceKind.Doc, SourceFreshness.Snapshot, SupportsAsOf: false);
 
     public SourceDescriptor Describe() => _descriptor;
 

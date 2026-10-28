@@ -88,7 +88,8 @@ internal sealed partial class SqliteRecordStore
         .Bind("@cursor", batch.Position.Cursor?.Value)
         .Bind("@at", batch.At)
         .Bind("@phase", batch.Position.Phase is { } phase ? RecordWire.Of(phase) : null)
-        .Bind("@backfill", batch.Position.BackfillCursor?.Value);
+        .Bind("@backfill", batch.Position.BackfillCursor?.Value)
+        .BindAt("@before", batch.Position.BackfillBefore);
 
     private static async ValueTask<Result<(CommitReport Report, bool RemovedText)>> WritePage(SqliteUnitOfWork session, RecordBatch batch, CancellationToken cancellationToken)
     {

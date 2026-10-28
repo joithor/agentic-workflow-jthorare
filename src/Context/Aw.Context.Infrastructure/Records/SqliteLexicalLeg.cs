@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Aw.Context.Core;
 using Aw.Context.Core.Audience;
 using Aw.Context.Core.Records;
 using Aw.Context.Core.Search;
@@ -11,7 +10,7 @@ namespace Aw.Context.Infrastructure.Records;
 
 /// <summary>
 /// The lexical leg over 'chunk_fts' (spec §6.1): every term a quoted phrase joined with OR, ranked by bm25, with the audience mask inside the statement, then the best
-/// chunk of each record. A store with no chunk at all answers degraded (empty or not yet synced) instead of failing; a scope that lets nothing through answers like no match.
+/// chunk of each record. A store with no chunk at all (never synced) answers like no match, with no degraded line, because that is the normal state of a fresh box; a scope that lets nothing through answers like no match.
 /// </summary>
 internal sealed class SqliteLexicalLeg(ContextDatabase database) : ILexicalLeg
 {
@@ -71,8 +70,7 @@ internal sealed class SqliteLexicalLeg(ContextDatabase database) : ILexicalLeg
         return rows.IsError ? ContextDatabase.Translate(rows.Error) : new LexicalAnswer(BestPerRecord(rows.Value), Degraded: null);
     }
 
-    private static Result<LexicalAnswer> Empty() =>
-        new LexicalAnswer([], new LexicalDegraded(ContextErrors.SourceUnavailable.Code, "the record store is empty or not synced yet; fix: sindri index sync"));
+    private static Result<LexicalAnswer> Empty() => _none;
 
     /// <summary>Rows arrive best first, so the first chunk seen of a record is its best.</summary>
     private static List<RecordHit> BestPerRecord(IReadOnlyList<LexicalRow> rows)

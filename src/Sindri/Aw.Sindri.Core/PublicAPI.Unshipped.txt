@@ -10492,12 +10492,15 @@ Aw.Sindri.Core.Workflow.Blocks.BlockDurationJsonConverter
 Aw.Sindri.Core.Workflow.Blocks.BlockDurationJsonConverter.BlockDurationJsonConverter() -> void
 override Aw.Sindri.Core.Workflow.Blocks.BlockDurationJsonConverter.Read(ref System.Text.Json.Utf8JsonReader reader, System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> System.TimeSpan
 override Aw.Sindri.Core.Workflow.Blocks.BlockDurationJsonConverter.Write(System.Text.Json.Utf8JsonWriter! writer, System.TimeSpan value, System.Text.Json.JsonSerializerOptions! options) -> void
+Aw.Sindri.Core.Profile.JudgeParallel
 Aw.Sindri.Core.Profile.JudgeProviders
 Aw.Sindri.Core.Profile.JudgeSettings
 Aw.Sindri.Core.Profile.JudgeSettings.<Clone>$() -> Aw.Sindri.Core.Profile.JudgeSettings!
-Aw.Sindri.Core.Profile.JudgeSettings.Deconstruct(out System.Collections.Generic.IReadOnlyList<string!>? Providers) -> void
+Aw.Sindri.Core.Profile.JudgeSettings.Deconstruct(out System.Collections.Generic.IReadOnlyList<string!>? Providers, out int? Parallel) -> void
 Aw.Sindri.Core.Profile.JudgeSettings.Equals(Aw.Sindri.Core.Profile.JudgeSettings? other) -> bool
-Aw.Sindri.Core.Profile.JudgeSettings.JudgeSettings(System.Collections.Generic.IReadOnlyList<string!>? Providers = null) -> void
+Aw.Sindri.Core.Profile.JudgeSettings.JudgeSettings(System.Collections.Generic.IReadOnlyList<string!>? Providers = null, int? Parallel = null) -> void
+Aw.Sindri.Core.Profile.JudgeSettings.Parallel.get -> int?
+Aw.Sindri.Core.Profile.JudgeSettings.Parallel.init -> void
 Aw.Sindri.Core.Profile.JudgeSettings.Providers.get -> System.Collections.Generic.IReadOnlyList<string!>?
 Aw.Sindri.Core.Profile.JudgeSettings.Providers.init -> void
 Aw.Sindri.Core.Profile.RepoEntry.Deconstruct(out string! Name, out string! Path, out Aw.Sindri.Core.Profile.IndexSettings? Index, out Aw.Sindri.Core.Profile.RepoWorkflowSettings? Workflow) -> void
@@ -10513,6 +10516,9 @@ Aw.Sindri.Core.Profile.RepoWorkflowSettings.Judge.init -> void
 Aw.Sindri.Core.Profile.RepoWorkflowSettings.RepoWorkflowSettings(Aw.Sindri.Core.Profile.JudgeSettings? Judge = null) -> void
 Aw.Sindri.Core.Profile.WorkflowSettings.Judge.get -> Aw.Sindri.Core.Profile.JudgeSettings?
 Aw.Sindri.Core.Profile.WorkflowSettings.Judge.init -> void
+const Aw.Sindri.Core.Profile.JudgeParallel.Max = 16 -> int
+const Aw.Sindri.Core.Profile.JudgeParallel.Min = 1 -> int
+static Aw.Sindri.Core.Profile.JudgeParallel.Effective(Aw.Sindri.Core.Profile.SindriProfile! profile, string? repo) -> int?
 const Aw.Sindri.Core.Profile.JudgeProviders.Jev = "jev" -> string!
 const Aw.Sindri.Core.Profile.JudgeProviders.Rules = "rules" -> string!
 override Aw.Sindri.Core.Profile.JudgeSettings.Equals(object? obj) -> bool

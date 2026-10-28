@@ -41,7 +41,7 @@ public sealed class DenialCollectorTests : IDisposable
     {
         var counter = Counter();
 
-        await DenialCollector.Collect(new DenialSources(Plan(), Home, Fixture("claude-tail.jsonl"), TranscriptKind.Claude, null), counter, TestContext.Current.CancellationToken);
+        await DenialCollector.Collect(new DenialSources(Plan(), Home, Fixture("claude-tail.jsonl"), TranscriptKind.Claude, FailOpenLogPath: null), counter, TestContext.Current.CancellationToken);
 
         Assert.Equal(1, counter.Count(DenialKind.Policy, "Bash: git push", DenialRules.InnerPolicy));
         Assert.Equal(1, counter.Count(DenialKind.Path, Home + "/.ssh/probe", DenialRules.DenyList));
@@ -53,7 +53,7 @@ public sealed class DenialCollectorTests : IDisposable
     {
         var counter = Counter();
 
-        await DenialCollector.Collect(new DenialSources(Plan(), Home, null, TranscriptKind.Claude, Fixture("failopen.log")), counter, TestContext.Current.CancellationToken);
+        await DenialCollector.Collect(new DenialSources(Plan(), Home, TranscriptPath: null, TranscriptKind.Claude, Fixture("failopen.log")), counter, TestContext.Current.CancellationToken);
 
         Assert.Equal(1, counter.Count(DenialKind.Policy, "send-gate", DenialRules.HookFailOpen));
         Assert.Equal(1, counter.Count(DenialKind.Policy, "scope-gate", DenialRules.HookFailOpen));
@@ -68,8 +68,8 @@ public sealed class DenialCollectorTests : IDisposable
         await DenialCollector.Collect(new DenialSources(Plan(), Home, Fixture("claude-tail.jsonl"), TranscriptKind.Claude, Fixture("failopen.log")), counter, TestContext.Current.CancellationToken);
 
         Assert.True(File.Exists(Path.Combine(_dir, "denials.json")));
-        Assert.Contains(_sink.Sent, d => d is { Target: "Bash: git push", Count: 1 });
-        Assert.Contains(_sink.Sent, d => d is { Target: "send-gate", Count: 1 });
+        Assert.Contains(_sink.Sent, d => string.Equals(d.Target, "Bash: git push", StringComparison.Ordinal) && d.Count == 1);
+        Assert.Contains(_sink.Sent, d => string.Equals(d.Target, "send-gate", StringComparison.Ordinal) && d.Count == 1);
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class DenialCollectorTests : IDisposable
     {
         var counter = Counter();
 
-        await DenialCollector.Collect(new DenialSources(Plan(), Home, Fixture("codex-tail.jsonl"), TranscriptKind.Codex, null), counter, TestContext.Current.CancellationToken);
+        await DenialCollector.Collect(new DenialSources(Plan(), Home, Fixture("codex-tail.jsonl"), TranscriptKind.Codex, FailOpenLogPath: null), counter, TestContext.Current.CancellationToken);
 
         var denied = counter.Snapshot().Entries.Where(e => e.Kind == DenialKind.Path).ToList();
         Assert.All(denied, e => Assert.StartsWith(Home, e.Target, StringComparison.Ordinal));
@@ -100,7 +100,7 @@ public sealed class DenialCollectorTests : IDisposable
         var counter = Counter();
         _sink.Refuse = true;
 
-        await DenialCollector.Collect(new DenialSources(Plan(), Home, Fixture("claude-tail.jsonl"), TranscriptKind.Claude, null), counter, TestContext.Current.CancellationToken);
+        await DenialCollector.Collect(new DenialSources(Plan(), Home, Fixture("claude-tail.jsonl"), TranscriptKind.Claude, FailOpenLogPath: null), counter, TestContext.Current.CancellationToken);
 
         Assert.True(File.Exists(Path.Combine(_dir, "denials.json")));
         Assert.Empty(_sink.Sent);

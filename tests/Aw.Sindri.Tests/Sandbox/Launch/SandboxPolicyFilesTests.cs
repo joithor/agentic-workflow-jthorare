@@ -21,10 +21,10 @@ public sealed class SandboxPolicyFilesTests
             new InnerRule(InnerRuleEffect.Ask, "Bash", string.Empty),
         ]);
 
-    private static readonly StepPolicy _readOnly = new(["Read", "Grep"], StepPermissionMode.ReadOnly, null);
+    private static readonly StepPolicy _readOnly = new(["Read", "Grep"], StepPermissionMode.ReadOnly, WritablePath: null);
 
     private static JsonElement Render(StepPolicy policy, InnerPolicy inner, bool innerSandbox = false) =>
-        JsonDocument.Parse(StepPolicyFile.Render(policy, new SandboxPolicyOverlay(inner, innerSandbox))).RootElement.Clone();
+        JsonDocument.Parse(StepPolicyFile.Render(policy, new SandboxPolicyOverlay(inner, InnerSandboxOn: innerSandbox))).RootElement.Clone();
 
     private static string[] Strings(JsonElement array) => [.. array.EnumerateArray().Select(static e => e.GetString()!)];
 
@@ -59,7 +59,7 @@ public sealed class SandboxPolicyFilesTests
     [Fact]
     public void An_ask_rule_is_not_rendered_for_an_unattended_step()
     {
-        var text = System.Text.Encoding.UTF8.GetString(StepPolicyFile.Render(_readOnly, new SandboxPolicyOverlay(_refuse, false)));
+        var text = System.Text.Encoding.UTF8.GetString(StepPolicyFile.Render(_readOnly, new SandboxPolicyOverlay(_refuse, InnerSandboxOn: false)));
 
         Assert.DoesNotContain("\"ask\"", text, StringComparison.Ordinal);
     }
@@ -78,7 +78,7 @@ public sealed class SandboxPolicyFilesTests
     [Fact]
     public void A_plan_mode_step_stays_in_plan_mode()
     {
-        var settings = Render(new StepPolicy(["Read"], StepPermissionMode.Plan, null), _refuse);
+        var settings = Render(new StepPolicy(["Read"], StepPermissionMode.Plan, WritablePath: null), _refuse);
 
         Assert.Equal("plan", settings.GetProperty("permissions").GetProperty("defaultMode").GetString());
     }
@@ -104,10 +104,8 @@ public sealed class SandboxPolicyFilesTests
     }
 
     [Fact]
-    public void Codex_never_asks_and_a_read_only_step_stays_read_only()
-    {
+    public void Codex_never_asks_and_a_read_only_step_stays_read_only() =>
         Assert.Equal(["-c", "approval_policy=\"never\""], SandboxPolicyFiles.CodexOverrides(_readOnly));
-    }
 
     [Fact]
     public void Codex_with_a_writable_path_also_loses_its_network()

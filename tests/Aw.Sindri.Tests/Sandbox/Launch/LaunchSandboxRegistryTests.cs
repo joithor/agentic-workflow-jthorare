@@ -117,7 +117,7 @@ public sealed class LaunchSandboxRegistryTests : IDisposable
 
         await Task.WhenAll(ids.Select(async (id, i) =>
         {
-            _ = await registry.Start(id, Net("c" + i), denials: null);
+            _ = await registry.Start(id, Net("c" + i.ToString(System.Globalization.CultureInfo.InvariantCulture)), denials: null);
             await Task.Yield();
             _ = await registry.Release(id);
         }));

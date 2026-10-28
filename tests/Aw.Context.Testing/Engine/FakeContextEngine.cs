@@ -13,10 +13,12 @@ using Aw.Context.Core.History;
 using Aw.Context.Core.Lenses;
 using Aw.Context.Core.Map;
 using Aw.Context.Core.Proposals;
+using Aw.Context.Core.Records;
 using Aw.Context.Core.Results;
 using Aw.Context.Core.Review;
 using Aw.Context.Core.ScopeGraph;
 using Aw.Context.Core.Search;
+using Aw.Context.Core.Sources;
 using Aw.Context.Core.Subgraph;
 using Aw.Context.Core.Sync;
 using Aw.Context.Core.WholeMap;
@@ -80,6 +82,14 @@ public sealed class FakeContextEngine : IContextEngine
     /// <summary>The fake keeps no record store.</summary>
     public ValueTask<Result<IReadOnlyList<SourceProgress>>> Progress(ContextScope scope, CancellationToken cancellationToken) =>
         ValueTask.FromResult<Result<IReadOnlyList<SourceProgress>>>(Down());
+
+    /// <summary>The fake keeps no record store.</summary>
+    public ValueTask<Result<SourceCounts>> Counts(SourceId source, CancellationToken cancellationToken) =>
+        ValueTask.FromResult<Result<SourceCounts>>(Down());
+
+    /// <summary>The fake keeps no record store.</summary>
+    public ValueTask<Result<int>> Purge(SourceId source, CancellationToken cancellationToken) =>
+        ValueTask.FromResult<Result<int>>(Down());
 
     public ValueTask<Result<MapFilePreview>> PreviewMap(string path, ContextScope scope, CancellationToken cancellationToken) => NoMap<MapFilePreview>();
 

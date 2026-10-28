@@ -72,6 +72,12 @@ public interface IRecordStore
     /// <returns>The counters.</returns>
     public ValueTask<Result<StoreStamps>> Stamps(CancellationToken cancellationToken);
 
+    /// <summary>Counts what one source holds, so a purge can say what it is about to delete.</summary>
+    /// <param name="source">The source.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>Its records, chunks and chunk vectors; all zero for a source the store never saw.</returns>
+    public ValueTask<Result<SourceCounts>> Count(SourceId source, CancellationToken cancellationToken);
+
     /// <summary>Deletes everything one source gave: its records, links, chunks and vectors, and its position (the human's 'index purge').</summary>
     /// <param name="source">The source.</param>
     /// <param name="cancellationToken">Cancels the purge.</param>

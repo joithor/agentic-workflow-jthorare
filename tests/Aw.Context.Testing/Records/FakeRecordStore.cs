@@ -153,6 +153,9 @@ public sealed class FakeRecordStore : IRecordStore
     }
 
     /// <inheritdoc />
+    public ValueTask<Result<SourceCounts>> Count(SourceId source, CancellationToken cancellationToken) => throw new NotSupportedException("red");
+
+    /// <inheritdoc />
     public ValueTask<Result<int>> Purge(SourceId source, CancellationToken cancellationToken)
     {
         lock (_gate)

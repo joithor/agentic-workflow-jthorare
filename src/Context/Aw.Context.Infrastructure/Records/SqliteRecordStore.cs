@@ -107,6 +107,8 @@ internal sealed partial class SqliteRecordStore(ContextDatabase database) : IRec
         }
     }
 
+    public ValueTask<Result<SourceCounts>> Count(SourceId source, CancellationToken cancellationToken) => throw new NotSupportedException("red");
+
     public async ValueTask<Result<int>> Purge(SourceId source, CancellationToken cancellationToken)
     {
         var begun = await BeginWrite(cancellationToken).ConfigureAwait(false);

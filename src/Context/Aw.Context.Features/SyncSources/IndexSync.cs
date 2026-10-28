@@ -1,6 +1,7 @@
 using Aw.Context.Core.Engine;
 using Aw.Context.Core.Records;
 using Aw.Context.Core.Results;
+using Aw.Context.Core.Sources;
 using Aw.Context.Core.Sync;
 using Aw.Context.Core.Trust;
 using Aw.Kernel;
@@ -62,6 +63,10 @@ internal sealed class IndexSync(RecordFeedSync feeds, IRecordStore store, IScrub
 
         return rows;
     }
+
+    public ValueTask<Result<SourceCounts>> Counts(SourceId source, CancellationToken cancellationToken) => throw new NotSupportedException("red");
+
+    public ValueTask<Result<int>> Purge(SourceId source, CancellationToken cancellationToken) => throw new NotSupportedException("red");
 
     private Result<(ContextSettings Settings, Scrubbers Scrubbers, IReadOnlyList<RecordFeed> Feeds)> Resolve(ContextScope scope)
     {

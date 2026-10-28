@@ -196,6 +196,24 @@ public abstract class RecordStoreContract<TStore>
         ContractCheck.That(_owner, ContractCheck.Ok(_owner, await store.List(new RecordFilter(Kind: RecordKind.Doc), after: null, 10, CancellationToken.None)).Count == 0, "a kind filter narrows");
     }
 
+    /// <summary>A count is one source's records, chunks and chunk vectors, and nothing of another source.</summary>
+    /// <returns>A task.</returns>
+    [Fact]
+    public async Task A_count_reports_one_sources_records_chunks_and_vectors()
+    {
+        var store = Create();
+        var first = RecordSamples.Record("linear:issue/1");
+        var second = RecordSamples.Record("linear:issue/2");
+        var other = RecordSamples.Record("github:pr/o/r/1", source: RecordSamples.Github);
+        _ = ContractCheck.Ok(_owner, await store.Commit(RecordSamples.Batch(RecordSamples.Linear, 1, RecordSamples.Write(first, "one", "two"), RecordSamples.Write(second, "three")), CancellationToken.None));
+        _ = ContractCheck.Ok(_owner, await store.Commit(RecordSamples.Batch(RecordSamples.Github, 1, RecordSamples.Write(other, "other")), CancellationToken.None));
+        _ = ContractCheck.Ok(_owner, await store.PutVectors([RecordSamples.Vector(new ChunkKey(first.Key, 0), "one", 1, 0), RecordSamples.Vector(new ChunkKey(other.Key, 0), "other", 0, 1)], CancellationToken.None));
+
+        ContractCheck.That(_owner, ContractCheck.Ok(_owner, await store.Count(RecordSamples.Linear, CancellationToken.None)) == new SourceCounts(2, 3, 1), "linear holds 2 records, 3 chunks and 1 vector");
+        ContractCheck.That(_owner, ContractCheck.Ok(_owner, await store.Count(RecordSamples.Github, CancellationToken.None)) == new SourceCounts(1, 1, 1), "github's rows are its own");
+        ContractCheck.That(_owner, ContractCheck.Ok(_owner, await store.Count(SourceId.From("slack"), CancellationToken.None)) == new SourceCounts(0, 0, 0), "a source the store never saw holds nothing");
+    }
+
     /// <summary>A purge removes one source's records, chunks, vectors and position and no other's.</summary>
     /// <returns>A task.</returns>
     [Fact]

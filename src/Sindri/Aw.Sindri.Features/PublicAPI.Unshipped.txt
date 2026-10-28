@@ -5228,3 +5228,80 @@ static Aw.Sindri.Features.ListDenials.ListDenialsRequest.operator !=(Aw.Sindri.F
 static Aw.Sindri.Features.ListDenials.ListDenialsRequest.operator ==(Aw.Sindri.Features.ListDenials.ListDenialsRequest? left, Aw.Sindri.Features.ListDenials.ListDenialsRequest? right) -> bool
 static Aw.Sindri.Features.ListDenials.ListDenialsResponse.operator !=(Aw.Sindri.Features.ListDenials.ListDenialsResponse? left, Aw.Sindri.Features.ListDenials.ListDenialsResponse? right) -> bool
 static Aw.Sindri.Features.ListDenials.ListDenialsResponse.operator ==(Aw.Sindri.Features.ListDenials.ListDenialsResponse? left, Aw.Sindri.Features.ListDenials.ListDenialsResponse? right) -> bool
+Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest
+Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest.<Clone>$() -> Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest!
+Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest.Equals(Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest? other) -> bool
+Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest.GetIndexStatusRequest() -> void
+Aw.Sindri.Features.ContextCalls.IndexPurgeView
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.<Clone>$() -> Aw.Sindri.Features.ContextCalls.IndexPurgeView!
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Chunks.get -> int
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Chunks.init -> void
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Deconstruct(out string! Source, out int Records, out int Chunks, out int Vectors, out bool Purged) -> void
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Equals(Aw.Sindri.Features.ContextCalls.IndexPurgeView? other) -> bool
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.IndexPurgeView(string! Source, int Records, int Chunks, int Vectors, bool Purged) -> void
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Purged.get -> bool
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Purged.init -> void
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Records.get -> int
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Records.init -> void
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Source.get -> string!
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Source.init -> void
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Vectors.get -> int
+Aw.Sindri.Features.ContextCalls.IndexPurgeView.Vectors.init -> void
+Aw.Sindri.Features.ContextCalls.IndexSourceRow
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.<Clone>$() -> Aw.Sindri.Features.ContextCalls.IndexSourceRow!
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.Complete.get -> bool
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.Complete.init -> void
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.Deconstruct(out string! Source, out string? Phase, out bool Usable, out bool Complete, out System.DateTimeOffset? LastSync, out string? LastCode) -> void
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.Equals(Aw.Sindri.Features.ContextCalls.IndexSourceRow? other) -> bool
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.IndexSourceRow(string! Source, string? Phase, bool Usable, bool Complete, System.DateTimeOffset? LastSync, string? LastCode) -> void
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.LastCode.get -> string?
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.LastCode.init -> void
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.LastSync.get -> System.DateTimeOffset?
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.LastSync.init -> void
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.Phase.get -> string?
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.Phase.init -> void
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.Source.get -> string!
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.Source.init -> void
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.Usable.get -> bool
+Aw.Sindri.Features.ContextCalls.IndexSourceRow.Usable.init -> void
+Aw.Sindri.Features.ContextCalls.IndexStatusView
+Aw.Sindri.Features.ContextCalls.IndexStatusView.<Clone>$() -> Aw.Sindri.Features.ContextCalls.IndexStatusView!
+Aw.Sindri.Features.ContextCalls.IndexStatusView.Deconstruct(out System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.ContextCalls.IndexSourceRow!>! Sources) -> void
+Aw.Sindri.Features.ContextCalls.IndexStatusView.Equals(Aw.Sindri.Features.ContextCalls.IndexStatusView? other) -> bool
+Aw.Sindri.Features.ContextCalls.IndexStatusView.IndexStatusView(System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.ContextCalls.IndexSourceRow!>! Sources) -> void
+Aw.Sindri.Features.ContextCalls.IndexStatusView.Sources.get -> System.Collections.Generic.IReadOnlyList<Aw.Sindri.Features.ContextCalls.IndexSourceRow!>!
+Aw.Sindri.Features.ContextCalls.IndexStatusView.Sources.init -> void
+Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest
+Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.<Clone>$() -> Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest!
+Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.Confirm.get -> bool
+Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.Confirm.init -> void
+Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.Deconstruct(out string! Source, out bool Confirm) -> void
+Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.Equals(Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest? other) -> bool
+Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.PurgeIndexSourceRequest(string! Source, bool Confirm = false) -> void
+Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.Source.get -> string!
+Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.Source.init -> void
+override Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest.GetHashCode() -> int
+override Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest.ToString() -> string!
+override Aw.Sindri.Features.ContextCalls.IndexPurgeView.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ContextCalls.IndexPurgeView.GetHashCode() -> int
+override Aw.Sindri.Features.ContextCalls.IndexPurgeView.ToString() -> string!
+override Aw.Sindri.Features.ContextCalls.IndexSourceRow.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ContextCalls.IndexSourceRow.GetHashCode() -> int
+override Aw.Sindri.Features.ContextCalls.IndexSourceRow.ToString() -> string!
+override Aw.Sindri.Features.ContextCalls.IndexStatusView.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ContextCalls.IndexStatusView.GetHashCode() -> int
+override Aw.Sindri.Features.ContextCalls.IndexStatusView.ToString() -> string!
+override Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.Equals(object? obj) -> bool
+override Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.GetHashCode() -> int
+override Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.ToString() -> string!
+static Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest.operator !=(Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest? left, Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest? right) -> bool
+static Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest.operator ==(Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest? left, Aw.Sindri.Features.ContextCalls.GetIndexStatusRequest? right) -> bool
+static Aw.Sindri.Features.ContextCalls.IndexPurgeView.operator !=(Aw.Sindri.Features.ContextCalls.IndexPurgeView? left, Aw.Sindri.Features.ContextCalls.IndexPurgeView? right) -> bool
+static Aw.Sindri.Features.ContextCalls.IndexPurgeView.operator ==(Aw.Sindri.Features.ContextCalls.IndexPurgeView? left, Aw.Sindri.Features.ContextCalls.IndexPurgeView? right) -> bool
+static Aw.Sindri.Features.ContextCalls.IndexSourceRow.operator !=(Aw.Sindri.Features.ContextCalls.IndexSourceRow? left, Aw.Sindri.Features.ContextCalls.IndexSourceRow? right) -> bool
+static Aw.Sindri.Features.ContextCalls.IndexSourceRow.operator ==(Aw.Sindri.Features.ContextCalls.IndexSourceRow? left, Aw.Sindri.Features.ContextCalls.IndexSourceRow? right) -> bool
+static Aw.Sindri.Features.ContextCalls.IndexStatusView.operator !=(Aw.Sindri.Features.ContextCalls.IndexStatusView? left, Aw.Sindri.Features.ContextCalls.IndexStatusView? right) -> bool
+static Aw.Sindri.Features.ContextCalls.IndexStatusView.operator ==(Aw.Sindri.Features.ContextCalls.IndexStatusView? left, Aw.Sindri.Features.ContextCalls.IndexStatusView? right) -> bool
+static Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.operator !=(Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest? left, Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest? right) -> bool
+static Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest.operator ==(Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest? left, Aw.Sindri.Features.ContextCalls.PurgeIndexSourceRequest? right) -> bool

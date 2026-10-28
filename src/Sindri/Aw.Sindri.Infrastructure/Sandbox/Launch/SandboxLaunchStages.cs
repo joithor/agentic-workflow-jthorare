@@ -68,16 +68,13 @@ internal sealed class SandboxLaunchStages(IApprovedProfile profile, ILearnHistor
             return Done([]);
         }
 
-        switch (inputs.PolicyFormOf(request.Target))
+        var form = inputs.PolicyFormOf(request.Target);
+        if (form == PolicyForm.ClaudeSettingsFile)
         {
-            case PolicyForm.ClaudeSettingsFile:
-                _ = StepPolicyFile.Write(inputs.PolicyDirectory(), plan.Launch, policy, SandboxPolicyOverlay.From(plan));   // the launcher wrote it without the plan: the same path, now with the plan's rules
-                return Done([]);
-            case PolicyForm.CodexOverrides:
-                return Done(SandboxPolicyFiles.CodexOverrides(policy));
-            default:
-                return Done([]);
+            _ = StepPolicyFile.Write(inputs.PolicyDirectory(), plan.Launch, policy, SandboxPolicyOverlay.From(plan));   // the launcher wrote it without the plan: the same path, now with the plan's rules
         }
+
+        return Done(form == PolicyForm.CodexOverrides ? SandboxPolicyFiles.CodexOverrides(policy) : []);
     }
 
     /// <inheritdoc/>

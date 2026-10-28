@@ -108,7 +108,7 @@ internal sealed class WorkflowsHarness : IDisposable
         const int Attempts = 3;
 
         // why: a workflow task that runs past 2 s without yielding is flagged as a deadlock (TMPRL1101), and on a CI runner with thousands of tests in parallel a normal task can; TemporalWorkerOptions.DebugMode defaults to true when TEMPORAL_DEBUG is "true" or "1" and turns that detection off. Tests only: the product's worker never sees this variable set.
-        System.Environment.SetEnvironmentVariable("TEMPORAL_DEBUG", "1");
+        Environment.SetEnvironmentVariable("TEMPORAL_DEBUG", "1");
         for (var attempt = 1; ; attempt++)
         {
             try

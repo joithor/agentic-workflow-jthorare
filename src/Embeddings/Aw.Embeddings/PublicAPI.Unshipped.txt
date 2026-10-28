@@ -1,0 +1,4 @@
+#nullable enable
+Aw.Embeddings.EmbeddingsErrors
+static Aw.Embeddings.EmbeddingsErrors.All.get -> System.Collections.Generic.IReadOnlyList<Aw.Kernel.ErrorDefinition!>!
+static readonly Aw.Embeddings.EmbeddingsErrors.Invalid -> Aw.Kernel.ErrorDefinition!

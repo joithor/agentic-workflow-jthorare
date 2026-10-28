@@ -140,7 +140,7 @@ Rows marked "probe" are confirmed by the spike (SB-S1 item 9) before SB-2 merges
 | Integration tests that start Temporal | fail: `$AW_STATE_DIR/cache/bin/` is denied | run host-side as the gate |
 | `dotnet format --verify-no-changes` | works (probe) | |
 | `scripts/dotnet-verify-packages.sh`, `binaries-lock.sh fetch` | fail: signature and release hosts are not in a group | run host-side |
-| `npm ci`, `npm test` in a TS package | fail until the repo declares a host-side prepare (SB-11) | run the package's tests host-side |
+| `npm ci`, `npm test` in a TS package | `npm ci` fails (scripts off, network `packages` only); a repo that declares `sandbox.repos.<repo>.prepare.dirs` has `node_modules` installed on the host before the launch (SB-11, spec §3.8) | declare the directory, or run the package's tests host-side |
 | `bash scripts/ci/bash-tests.sh`, `scripts/tests/*.test.sh` | mostly work; tests that mint tokens, run Docker or need `$HOME` state fail | run the suite host-side |
 | `node scripts/check-deps.mjs`, `scripts/sync-rules.sh --check` | work | |
 | `scripts/sindri-prove.sh`, anything starting Sindri | fail: no state dir | not a Step's job |
@@ -375,7 +375,8 @@ A Step with `sandbox.credentials.github: agent-app` (never an attended session) 
 | SB-2, SB-3a, SB-3b, SB-4a, SB-4b | bubblewrap and the `owner-copy` source; wall and memory; cap and heavy; static egress; denials |
 | SB-5a, SB-5b | the launcher integration (ReadOnly first), then WriteScope and sessions you open yourself |
 | SB-6 | the UI copy |
-| SB-7, SB-8, SB-9, SB-10, SB-11 | the GitHub App token; `separate-login`; macOS; the first unattended run; the per-repo prepare |
+| SB-7, SB-8, SB-9, SB-10 | the GitHub App token; `separate-login`; macOS; the first unattended run |
+| SB-11 | the per-repo prepare: the launcher hook, `BaseCommit` on the launch, the cache per lockfile hash (built; the onboarding offer is separate) |
 
 ## Environment
 

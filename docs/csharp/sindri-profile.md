@@ -333,6 +333,14 @@ In the spec's terms tightening needs no re-approval and loosening (a longer limi
 
 `sandbox.repos.<repo>.prepare.dirs[]`: `dir` (a path relative to the repo, no `..`), `tool` (`npm ci`, the only prepare tool) and `allowScripts` (the packages whose install scripts may run; none by default).
 
+```yaml
+sandbox:
+  repos:
+    agentic-workflow:
+      prepare:
+        dirs: [{dir: scripts, tool: npm ci}]   # this repo's only lockfile is scripts/package-lock.json
+```
+
 `sandbox.credentials`: `github` is `none` (default) or `agent-app` (SB-7).
 
 `sandbox.login`: `source` is `owner-copy` (default) or `separate-login`; `targets` is a map of agent id to source (a per-agent override). A

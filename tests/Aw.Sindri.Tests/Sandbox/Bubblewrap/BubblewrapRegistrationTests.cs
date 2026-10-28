@@ -9,7 +9,7 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace Aw.Sindri.Tests.Sandbox.Bubblewrap;
 
-/// <summary>The registration SB-5a will call: it must resolve with what the Host already has (the settings and a clock). Nothing in the product calls it yet.</summary>
+/// <summary>The registration the SB-5a switch calls: it must resolve with what the Host already has (the settings and a clock).</summary>
 [Lane(TestLane.Unit)]
 public sealed class BubblewrapRegistrationTests
 {

@@ -15,7 +15,6 @@ namespace Aw.Sindri.Infrastructure.Sandbox.Launch;
 /// The launcher's sandbox step (sandbox spec §12 SB-5a) for one unattended launch: probe, then, under the session cap, request, plan, session home, egress, self-check and wrap,
 /// inside a systemd scope. A failure after the plan discards what the wrap left and releases the launch's parts; <see cref="Release"/> does the same at the end of a session.
 /// </summary>
-#pragma warning disable MA0182 // registered by the product Host in SB-5a's switch step
 internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxLaunchStages stages, SandboxLaunchOptions options) : ISandboxLaunch
 {
     private static readonly TimeSpan _fallbackLongMax = TimeSpan.FromHours(2);   // workflow.steps.longMax's default when no profile is approved
@@ -138,4 +137,3 @@ internal sealed class SandboxLaunch(ISandbox sandbox, ISessionCap cap, ISandboxL
         await stages.Release(launch, cancellationToken).ConfigureAwait(false);
     }
 }
-#pragma warning restore MA0182

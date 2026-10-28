@@ -18,10 +18,10 @@ internal sealed partial class QueryPipeline
 
     /// <summary>
     /// The catalog's sources and, for a live query with terms, the record store's lexical and dense legs as two more sources (spec §6.1), under the audiences the approved
-    /// profile gives the repos in scope. A policy that can't answer drops the leg and says so, as a degraded source.
+    /// profile gives the repos in scope (a human also reads the profile's Slack channels). A policy that can't answer drops the leg and says so, as a degraded source.
     /// </summary>
     private async Task<(List<IContextSource> Sources, List<DegradedSource> Degraded)> WithRecordStore(List<IContextSource> catalogSources, (ContextSettings Settings, IReadOnlyList<ContextRepo> Repos) profile,
-        (DateTimeOffset? AsOf, IReadOnlyList<string> Terms) ask, CancellationToken ct)
+        (DateTimeOffset? AsOf, IReadOnlyList<string> Terms) ask, ContextCaller caller, CancellationToken ct)
     {
         var degraded = new List<DegradedSource>();
         if (ask.AsOf is not null || ask.Terms.Count == 0)
@@ -41,6 +41,11 @@ internal sealed partial class QueryPipeline
             }
 
             allowed.UnionWith(scope.Value.Allowed);
+        }
+
+        if (caller.Kind != ContextCallerKind.Session)
+        {
+            allowed.UnionWith(ProfileAudiencePolicy.HumanExtras(profile.Settings));   // a human is not scoped to the session rule (spec §4.4)
         }
 
         var audience = new AudienceScope(allowed);

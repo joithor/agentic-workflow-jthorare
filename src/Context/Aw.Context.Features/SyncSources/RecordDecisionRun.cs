@@ -15,8 +15,9 @@ namespace Aw.Context.Features.SyncSources;
 /// Decision extraction for the records one feed holds in the owned record store (owned-index spec §4.2, §5.7 D11): a tracker record that quotes a decision becomes a decision node
 /// citing it, like an Onyx record does (#1373). It runs right after the feed's <see cref="RecordSyncRun"/> tick, under the same lock, never inside ingest: each stored record
 /// (not removed, not blocked) that is not done yet is written as an intent row with the same key (so the overlay can cite it), linked by <see cref="RulesLinker"/> against the
-/// map from its stored, already scrubbed chunks, and read by <see cref="DecisionPass"/>. Done means what <see cref="IntentSyncRun"/> means: this version is stored, linked under the
-/// current map version and not waiting for extraction, so a replay asks the model about nothing. The intent source cursor is left alone (the page's cursor is null).
+/// map from its stored, already scrubbed chunks, and read by <see cref="DecisionPass"/>. Done means this version of the record is stored in the intent layer and not waiting for
+/// extraction, whatever the map version: one model call per record version, so a replay and a map rebuild ask the model about nothing for unchanged records. Their intent links stay as last
+/// computed (the map build links owned records to code and features itself, RecordPass) and are refreshed when the record changes. The intent source cursor is left alone (the page's cursor is null).
 /// </summary>
 internal sealed class RecordDecisionRun(SourceId source, VisibleMap map, (ContextSettings Settings, Scrubbers Scrubbers) context, (IRecordStore Records, IIntentStore Intents, IModelPort Model, TimeProvider Clock) ports)
 {
@@ -58,25 +59,18 @@ internal sealed class RecordDecisionRun(SourceId source, VisibleMap map, (Contex
     private string? Outcome(string? tick, string? walk) =>
         walk == ContextErrors.SyncCapped.Code ? Decisions.Failure ?? walk : walk ?? Decisions.Failure ?? tick ?? (Decisions.HeldBack ? ContextErrors.LabelingUnavailable.Code : null);
 
-    /// <summary>The versions already linked under this map version and not waiting for extraction: those records are skipped.</summary>
+    /// <summary>The versions the intent layer already holds and that are not waiting for extraction: those records are skipped. The map version does not matter.</summary>
     private async ValueTask<Result<Dictionary<string, string>>> Done(IntentLayer layer, CancellationToken cancellationToken)
     {
-        var current = await ports.Intents.LinkedUnder(source, map.Snapshot.Version.Number, cancellationToken).ConfigureAwait(false);
-        if (current.IsError)
-        {
-            return current.Error;
-        }
-
         var queued = context.Settings.Labeling.Enabled ? await ports.Intents.Queued(source, cancellationToken).ConfigureAwait(false) : Results.Success<IReadOnlyList<RecordKey>>([]);
         if (queued.IsError)
         {
             return queued.Error;
         }
 
-        var linkedNow = current.Value.Select(k => k.Value).ToHashSet(StringComparer.Ordinal);
         var waiting = queued.Value.Select(k => k.Value).ToHashSet(StringComparer.Ordinal);
         return Results.Success(new Dictionary<string, string>(
-            layer.Records.Where(r => r.Source == source && linkedNow.Contains(r.Key.Value) && !waiting.Contains(r.Key.Value)).Select(r => KeyValuePair.Create(r.Key.Value, r.Version)), StringComparer.Ordinal));
+            layer.Records.Where(r => r.Source == source && !waiting.Contains(r.Key.Value)).Select(r => KeyValuePair.Create(r.Key.Value, r.Version)), StringComparer.Ordinal));
     }
 
     private async ValueTask<string?> Walk(Dictionary<string, string> done, Dictionary<string, IntentRecord> known, CancellationToken cancellationToken)

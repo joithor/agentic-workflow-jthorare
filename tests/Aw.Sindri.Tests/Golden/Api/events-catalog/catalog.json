@@ -193,6 +193,14 @@
       ]
     },
     {
+      "type": "launch.waiting",
+      "keyShape": "launch.waiting:<launchId>",
+      "invalidates": [
+        "launch",
+        "item"
+      ]
+    },
+    {
       "type": "mcp.registered",
       "keyShape": "mcp.registered:<commandId>",
       "invalidates": [

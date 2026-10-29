@@ -149,6 +149,9 @@ public static class EventTypes
     /// <summary>A launch failed before any session started (API P10a).</summary>
     public const string LaunchFailed = "launch.failed";
 
+    /// <summary>An engine launch found the session cap full and waits for a free slot (sandbox spec §6); 'launch.outcome' ends the wait.</summary>
+    public const string LaunchWaiting = "launch.waiting";
+
     /// <summary>The model an engine launch was given, and how it was chosen (model-pick spec §6).</summary>
     public const string ModelPicked = "model.picked";
 

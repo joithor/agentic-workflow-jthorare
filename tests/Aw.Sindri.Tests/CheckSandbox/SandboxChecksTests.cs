@@ -62,6 +62,18 @@ public sealed class SandboxChecksTests
     }
 
     [Fact]
+    public async Task The_resume_list_keeps_what_the_parks_know_about_each_instance()
+    {
+        var older = new ParkedOnSandbox(Instance(1), _noon.AddHours(-3), "ITM-1", "Older step");
+        var newer = new ParkedOnSandbox(Instance(2), _noon.AddHours(-1), "ITM-2", "Newer step");
+
+        var report = await Checks(new PassThroughSandbox(), parked: [newer, older], free: 1).Run(Token);
+
+        Assert.Equal([Instance(1)], report.ReadyToResume);
+        Assert.Equal([older], report.Resume);
+    }
+
+    [Fact]
     public async Task No_fixture_skips_the_self_check_instead_of_failing_it()
     {
         var report = await Checks(new PassThroughSandbox(), fixture: null).Run(Token);

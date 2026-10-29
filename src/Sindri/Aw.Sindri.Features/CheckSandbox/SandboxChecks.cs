@@ -34,9 +34,13 @@ internal sealed class SandboxChecks(ISandbox sandbox, ISandboxFormCheck forms, I
             blockers.Add(writeFailed);   // the git canary only runs for a writable work tree, so the ReadOnly fixture never reaches it
         }
 
-        return blockers.Count > 0
-            ? new SandboxCheckReport(blockers, [])
-            : new SandboxCheckReport(blockers, await resume.Next(cancellationToken).ConfigureAwait(false));
+        if (blockers.Count > 0)
+        {
+            return new SandboxCheckReport(blockers, []);
+        }
+
+        var next = await resume.NextParked(cancellationToken).ConfigureAwait(false);
+        return new SandboxCheckReport(blockers, [.. next.Select(static p => p.Instance)]) { Resume = next };
     }
 
     /// <summary>Plans a fixture and proves the plan inside the sandbox; the first failure is the blocker. No fixture on this box skips it.</summary>

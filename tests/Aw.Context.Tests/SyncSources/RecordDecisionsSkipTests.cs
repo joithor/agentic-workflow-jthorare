@@ -54,14 +54,14 @@ public sealed class RecordDecisionsSkipTests
 
     private static ModelPurpose Extraction => ModelPurpose.DecisionExtraction;
 
-    private static async Task<(MapWorld World, List<RecordItem> Items, DateTimeOffset Now)> Rig()
+    private static async Task<MapWorld> Rig()
     {
         var now = DateTimeOffset.Parse("2026-08-01T12:00:00Z", System.Globalization.CultureInfo.InvariantCulture);   // MapWorld's clock
-        List<RecordItem> items = [Issue(now) with { Text = $"Pane resize: we agreed {Quote}, anything narrower is clamped." }];
-        var world = new MapWorld(feeds: new FakeRecordFeedCatalog(new FakeRecordFeed(RecordSamples.Github, items)));
+        var item = Issue(now) with { Text = $"Pane resize: we agreed {Quote}, anything narrower is clamped." };
+        var world = new MapWorld(feeds: new FakeRecordFeedCatalog(new FakeRecordFeed(RecordSamples.Github, [item])));
         _ = await world.ImportFixture();
         world.Model.Answer = $$"""{"decisions":[{"quote":"{{Quote}}","wording":"Panes are at least 20 columns wide","decides":["{{Resize}}"]}]}""";
-        return (world, items, now);
+        return world;
     }
 
     private static async Task Sync(MapWorld world)
@@ -70,11 +70,21 @@ public sealed class RecordDecisionsSkipTests
         Assert.True(report.IsSuccess, report.IsError ? report.Error.Message : null);
     }
 
+    /// <summary>Writes the stored issue again with a new source version and text, as the feed would on its next pull.</summary>
+    private static async Task StoreNewVersion(MapWorld world)
+    {
+        var stored = (await world.Records.List(new RecordFilter(Source: RecordSamples.Github), after: null, 10, Ct)).Value.Single();
+        var text = $"Pane resize: we agreed {Quote}, and the maximum is 80 columns.";
+        var position = (await world.Records.Position(RecordSamples.Github, Ct)).Value;
+        var changed = stored with { Version = SourceVersion.From("v2"), TextHash = RecordSamples.Hash(text) };
+        var committed = await world.Records.Commit(new RecordBatch(RecordSamples.Github, [RecordSamples.Write(changed, text)], [], position, world.Clock.GetUtcNow()), Ct);
+        Assert.True(committed.IsSuccess, committed.IsError ? committed.Error.Message : null);
+    }
+
     [Fact]
     public async Task An_unchanged_record_is_not_sent_to_the_model_on_the_next_sync()
     {
-        var (world, _, _) = await Rig();
-        using var _w = world;
+        using var world = await Rig();
 
         await Sync(world);
         await Sync(world);
@@ -85,8 +95,7 @@ public sealed class RecordDecisionsSkipTests
     [Fact]
     public async Task A_map_rebuild_does_not_send_unchanged_records_to_the_model_again()
     {
-        var (world, _, _) = await Rig();
-        using var _w = world;
+        using var world = await Rig();
         await Sync(world);
         var before = (await world.Map.MapStatus(anchor: null, MapWorld.Human, Ct)).Value.Version.Number;
 
@@ -101,11 +110,10 @@ public sealed class RecordDecisionsSkipTests
     [Fact]
     public async Task A_changed_record_is_sent_to_the_model_again()
     {
-        var (world, items, now) = await Rig();
-        using var _w = world;
+        using var world = await Rig();
         await Sync(world);
 
-        items[0] = items[0] with { Version = SourceVersion.From("v2"), UpdatedAt = now.AddHours(1) };
+        await StoreNewVersion(world);
         await Sync(world);
 
         Assert.Equal(2, world.Model.Requests.Count(r => r.Purpose == Extraction));

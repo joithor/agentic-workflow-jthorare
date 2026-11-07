@@ -1,0 +1,14 @@
+flowchart TB
+  A["Agent in Claude Code or Codex"] --> M["/sindri/mcp: workflow, connection, memory, toolkit tools"]
+  U["Sindri app: optional window"] --> API["Control plane on 127.0.0.1"]
+  M --> API
+  API --> G["Graph store: workflows and revisions"]
+  API --> T["GraphWorkflow on local Temporal"]
+  API --> C["Connections: keychain pointers, refresh"]
+  API --> ME["Memory stores: facts and embeddings"]
+  API --> TK["Toolkits: C# processes over MCP stdio"]
+  T --> R["run_agent: session in a worktree, sandboxed, in tmux"]
+  T --> L["Ledger: every node start, finish, failure"]
+  R --> C
+  RS["Resources: SQLite, disk, sandbox size"] --> R
+  RS --> TK

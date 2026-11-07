@@ -1,0 +1,7 @@
+flowchart LR
+  EXT["Outside system: inbox API"] -- "list offers" --> SP["Sindri polls the inbox connection"]
+  SP -- "claim: 409 if lost" --> EXT
+  SP --> IT["Sindri item with the offer's payload"]
+  IT --> WF["Workflow with an inbox trigger"]
+  WF -- "submit outputs" --> EXT
+  LOC["Apps on this machine"] -- "POST 127.0.0.1/sindri/handoff" --> IT

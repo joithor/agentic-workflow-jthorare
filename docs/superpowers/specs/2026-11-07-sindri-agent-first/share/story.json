@@ -1,0 +1,556 @@
+{
+ "title": "Sindri, agent-first",
+ "eyebrow": "TDD · Sindri · #2258",
+ "headline": "Say it in one sentence to an agent,",
+ "headline_em": "and the workflow exists and runs.",
+ "lede": "Sindri drops recipes, the factory pipeline and approvals. In their place: workflows as graphs of generic blocks, built over MCP, plus connections, memory, toolkits and resources an agent can set up without anyone opening the app.",
+ "notes": "Four parts: why, how a workflow is built and run, the platform pieces around it, and the build plan. The ask at the end is to confirm the phase order.",
+ "chips": [
+  {
+   "text": "Owner: joithor"
+  },
+  {
+   "text": "Builders: Sindri agent team"
+  },
+  {
+   "text": "Issue #2258",
+   "href": "https://github.com/jthorare/agentic-workflow/issues/2258"
+  }
+ ],
+ "stats": [
+  {
+   "value": "89",
+   "label": "agent-session refusals (`SND-AUTH-002`) removed, in 59 files"
+  },
+  {
+   "value": "4",
+   "label": "generic blocks for the first useful workflow"
+  },
+  {
+   "value": "0",
+   "label": "lines of new C# to add a trigger → agent → PR workflow",
+   "goal": true
+  },
+  {
+   "value": "18",
+   "label": "PRs in 8 milestones"
+  }
+ ],
+ "chapters": [
+  {
+   "id": "why",
+   "title": "Why Sindri changes",
+   "nav": "Why",
+   "sections": [
+    {
+     "type": "problem",
+     "title": "Small automations are impossible to build today",
+     "lede": "The everyday work that keeps a team moving is trigger → agent → condition → notify. Sindri can't express it without new code.",
+     "pains": [
+      {
+       "title": "Blocks know their station",
+       "text": "`step.scope.*`, `step.lens.round` and the line dispatcher only make sense inside the one pipeline, so nothing is reusable."
+      },
+      {
+       "title": "Every change waits for a human",
+       "text": "Profile edits, recipes and pins sit until `sindri profile approve <hash>` is typed in a human terminal."
+      },
+      {
+       "title": "Agents are locked out",
+       "text": "Agent sessions are refused at 89 call sites, so an agent can't build or run what it was asked to."
+      },
+      {
+       "title": "The pipeline never worked",
+       "text": "Intake → scoping → design → build → prove → ship was too ambitious to be reliable."
+      }
+     ]
+    },
+    {
+     "type": "whys",
+     "title": "Five whys, from \"I can't automate this\" to the root",
+     "rows": [
+      {
+       "text": "A nightly drift check that opens a PR can't be built in Sindri."
+      },
+      {
+       "text": "No block means \"start an agent in repo X with this prompt\".",
+       "evidence": "Agent runs exist only inside line Steps (`docs/csharp/sindri-workflow.md` Agent runtime P8)"
+      },
+      {
+       "text": "Blocks were designed for stations, not for reuse.",
+       "evidence": "Block catalogs are per station: scoping, design, plan, build, prove"
+      },
+      {
+       "text": "Every new recipe needs approval and often new C#.",
+       "evidence": "`recipe approve`, `profile approve`, `SND-AUTH-002` × 89"
+      },
+      {
+       "text": "**The engine models one pipeline, not a set of generic steps an agent can wire together.**"
+      }
+     ]
+    },
+    {
+     "type": "fix",
+     "title": "Generic blocks, agent-first building, no approvals",
+     "thesis": "Make a workflow ==a graph of generic blocks== that ==an agent builds over MCP==, and trust the editor.",
+     "pieces": [
+      {
+       "label": "1 · Trust",
+       "title": "No approvals, every verb",
+       "text": "Edits apply on save after validation; agent sessions can do anything a human terminal can, with attribution.",
+       "where": "Profile, auth, ledger"
+      },
+      {
+       "label": "2 · Engine",
+       "title": "Graph workflows on Temporal",
+       "text": "One `GraphWorkflow` interprets every spec; `run_agent` launches a sandboxed session.",
+       "where": "New Graph slice, launcher"
+      },
+      {
+       "label": "3 · Platform",
+       "title": "Connections, memory, toolkits, resources",
+       "text": "Sign in once, remember across runs, add C# tools, declare a database or disk.",
+       "where": "New slices + MCP tools"
+      }
+     ],
+     "not_building": [
+      "A hosted relay or public webhooks",
+      "Multi-user sharing",
+      "A port of the factory pipeline"
+     ],
+     "building": [
+      "Polling triggers with catch-up on wake",
+      "A generic pull inbox for outside systems",
+      "A canvas in the app, last"
+     ]
+    },
+    {
+     "type": "decisions",
+     "title": "What the owner decided",
+     "items": [
+      {
+       "q": "Approvals",
+       "a": "Dropped",
+       "text": "For the profile and for workflows."
+      },
+      {
+       "q": "Agent sessions",
+       "a": "Every verb",
+       "text": "No gate between agents and running workflows."
+      },
+      {
+       "q": "Recipes and the pipeline",
+       "a": "Removed"
+      },
+      {
+       "q": "How workflows are built",
+       "a": "Agent-first over MCP",
+       "text": "The app is optional."
+      },
+      {
+       "q": "Inbound events",
+       "a": "Catch-up polling only",
+       "text": "No webhooks, no tunnel."
+      },
+      {
+       "q": "Outside handoff",
+       "a": "Pull from an inbox"
+      },
+      {
+       "q": "Toolkits",
+       "a": "Yes, in C#"
+      },
+      {
+       "q": "Resources",
+       "a": "Per workflow, block or toolkit"
+      },
+      {
+       "q": "Memory",
+       "a": "Named stores, shared"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "workflows",
+   "title": "Building and running a workflow",
+   "nav": "Workflows",
+   "sections": [
+    {
+     "type": "diagram",
+     "title": "Everything goes through the control plane, and agents reach it over MCP",
+     "src": "diagrams/architecture.svg",
+     "alt": "Agent through /sindri/mcp and the optional app into the control plane, which holds the graph store, GraphWorkflow on Temporal, connections, memory, toolkits and resources; run_agent sessions use connections; the ledger records every node."
+    },
+    {
+     "type": "diagram",
+     "title": "An agent goes from a sentence to an active workflow in one loop",
+     "src": "diagrams/build-flow.svg",
+     "alt": "Docs and blocks, create, validate, test run, read the run, fix with apply_ops and validate again, then activate."
+    },
+    {
+     "type": "walkthrough",
+     "title": "The first workflow, built by an agent",
+     "steps": [
+      {
+       "who": "Owner",
+       "title": "Says one sentence",
+       "note": "\"Every weekday at 7, check whether repo B's client matches repo A's API contracts and open a PR if it drifted.\"",
+       "html": "<div style=\"font:13px/1.5 ui-monospace,Menlo,monospace;padding:14px 16px;border:1px solid rgba(127,127,127,.35);border-radius:10px;max-width:360px\">&gt; every weekday at 7, check whether repo B's client matches repo A's API contracts and open a PR if it drifted</div>"
+      },
+      {
+       "who": "Agent",
+       "title": "Reads the blocks and drafts four nodes",
+       "note": "`workflow_blocks`, then `workflow_create` with schedule → run_agent → condition → notify.",
+       "html": "<div style=\"font:13px/1.5 ui-monospace,Menlo,monospace;padding:14px 16px;border:1px solid rgba(127,127,127,.35);border-radius:10px;max-width:360px\">schedule 0 7 * * 1-5<br>→ run_agent repo B (A read-only)<br>→ condition {{agent.drifted}}<br>→ notify owner</div>"
+      },
+      {
+       "who": "Agent",
+       "title": "Validates and test-runs it",
+       "note": "`workflow_validate` returns no findings; `workflow_run` runs it now; `workflow_run_get` shows each node's output.",
+       "html": "<div style=\"font:13px/1.5 ui-monospace,Menlo,monospace;padding:14px 16px;border:1px solid rgba(127,127,127,.35);border-radius:10px;max-width:360px\">run wf_01@1:manual-1 · succeeded<br>agent → {drifted: false, checkedCommit: a41f0c2}</div>"
+      },
+      {
+       "who": "Owner + agent",
+       "title": "Fix one thing together",
+       "note": "The owner wants the commit remembered; the agent adds `memory_write` with `workflow_apply_ops` against revision 1.",
+       "html": "<div style=\"font:13px/1.5 ui-monospace,Menlo,monospace;padding:14px 16px;border:1px solid rgba(127,127,127,.35);border-radius:10px;max-width:360px\">apply_ops base=1<br>+ memory_write drift-check<br>→ revision 2</div>"
+      },
+      {
+       "who": "Agent",
+       "title": "Activates it",
+       "note": "`workflow_activate` pins revision 2. The next weekday at 7 it runs on its own; a drift opens a PR and notifies the owner.",
+       "html": "<div style=\"font:13px/1.5 ui-monospace,Menlo,monospace;padding:14px 16px;border:1px solid rgba(127,127,127,.35);border-radius:10px;max-width:360px\">active: revision 2<br>next run: Mon 07:00</div>"
+      }
+     ]
+    },
+    {
+     "type": "diagram",
+     "title": "A trigger becomes exactly one run, and long waits are Temporal waits",
+     "src": "diagrams/run-path.svg",
+     "alt": "Trigger, run id, duplicate check, concurrency, GraphWorkflow walking nodes, one activity per node, waits for agent reports or answers, ledger mirror."
+    },
+    {
+     "type": "lifecycle",
+     "title": "A run's status only moves forward",
+     "states": [
+      {
+       "name": "queued",
+       "desc": "waiting its turn",
+       "tone": "mute"
+      },
+      {
+       "name": "running",
+       "desc": "walking nodes",
+       "tone": "warn"
+      },
+      {
+       "name": "waiting",
+       "desc": "agent report or an answer",
+       "tone": "warn"
+      },
+      {
+       "name": "succeeded",
+       "tone": "good"
+      },
+      {
+       "name": "failed",
+       "tone": "bad"
+      },
+      {
+       "name": "cancelled",
+       "tone": "bad"
+      }
+     ],
+     "start": "queued",
+     "actions": [
+      {
+       "actor": "engine",
+       "label": "Start",
+       "from": [
+        "queued"
+       ],
+       "to": "running"
+      },
+      {
+       "actor": "node",
+       "label": "run_agent or ask_owner",
+       "from": [
+        "running"
+       ],
+       "to": "waiting"
+      },
+      {
+       "actor": "session",
+       "label": "Report or answer",
+       "from": [
+        "waiting"
+       ],
+       "to": "running"
+      },
+      {
+       "actor": "engine",
+       "label": "Last node done",
+       "from": [
+        "running"
+       ],
+       "to": "succeeded"
+      },
+      {
+       "actor": "engine",
+       "label": "Node failed (stop)",
+       "from": [
+        "running",
+        "waiting"
+       ],
+       "to": "failed"
+      },
+      {
+       "actor": "anyone",
+       "label": "Cancel",
+       "from": [
+        "queued",
+        "running",
+        "waiting"
+       ],
+       "to": "cancelled"
+      }
+     ],
+     "rule": "run id = <workflow>@<revision>:<occurrence>; a second start with the same id is refused"
+    },
+    {
+     "type": "model",
+     "title": "A workflow is a slug plus immutable revisions",
+     "tables": [
+      {
+       "name": "workflow",
+       "status": "new",
+       "cols": [
+        {
+         "name": "id",
+         "key": true
+        },
+        {
+         "name": "slug"
+        },
+        {
+         "name": "active_revision"
+        },
+        {
+         "name": "created_by"
+        }
+       ]
+      },
+      {
+       "name": "workflow_revision",
+       "status": "new",
+       "cols": [
+        {
+         "name": "workflow_id",
+         "key": true
+        },
+        {
+         "name": "revision",
+         "key": true
+        },
+        {
+         "name": "spec",
+         "type": "JSON"
+        },
+        {
+         "name": "spec_hash"
+        }
+       ]
+      }
+     ],
+     "rules": [
+      {
+       "title": "Revisions are immutable",
+       "text": "A save writes a new revision; activation pins one; a run records which one it used."
+      }
+     ]
+    },
+    {
+     "type": "model",
+     "title": "A run and its node runs record exactly what happened",
+     "tables": [
+      {
+       "name": "workflow_run",
+       "status": "new",
+       "cols": [
+        {
+         "name": "id",
+         "key": true
+        },
+        {
+         "name": "trigger"
+        },
+        {
+         "name": "status"
+        },
+        {
+         "name": "outputs"
+        }
+       ]
+      },
+      {
+       "name": "workflow_node_run",
+       "status": "new",
+       "cols": [
+        {
+         "name": "run_id",
+         "key": true
+        },
+        {
+         "name": "node_id",
+         "key": true
+        },
+        {
+         "name": "item_index"
+        },
+        {
+         "name": "output"
+        }
+       ]
+      }
+     ],
+     "rules": [
+      {
+       "title": "Every write is attributed",
+       "text": "`created_by` and ledger events carry `owner` or `session:<id>`."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "platform",
+   "title": "Connections, handoff, memory, toolkits",
+   "nav": "Platform",
+   "sections": [
+    {
+     "type": "diagram",
+     "title": "Sign in once; workflows use a connection by name, never the token",
+     "src": "diagrams/connections.svg",
+     "alt": "connection_add by kind: browser consent with PKCE and loopback for oauth or mcp, pasted key or CLI login for rest or cli; secrets in the OS keychain; refreshed before expiry; a failed refresh raises needs-sign-in; nodes name a connection and the sandbox gets the token, CLI, MCP entry and host group."
+    },
+    {
+     "type": "diagram",
+     "title": "Nothing is lost while the laptop sleeps",
+     "src": "diagrams/catch-up.svg",
+     "alt": "Poll service every 2 minutes and a catch-up on start or wake both read cursors per connection and event kind; events carry delivery ids; matched triggers start runs once; a missed schedule runs once."
+    },
+    {
+     "type": "diagram",
+     "title": "Outside systems hand work over through a pull inbox",
+     "src": "diagrams/inbox.svg",
+     "alt": "Sindri polls an outside inbox API, claims an offer, makes an item, runs a workflow with an inbox trigger and submits its outputs; local apps can POST to the handoff endpoint."
+    },
+    {
+     "type": "text",
+     "title": "Memory, toolkits and resources are declared, not provisioned by hand",
+     "table": {
+      "head": [
+       "Piece",
+       "What it is",
+       "Agent tools"
+      ],
+      "rows": [
+       [
+        "Memory store",
+        "Named facts with tags and embeddings (the pinned local model), deduplicated, recalled by meaning",
+        "memory_create, search, write, forget"
+       ],
+       [
+        "Toolkit",
+        "A C# project on `Aw.Sindri.Toolkit` whose typed tools appear as `<toolkit>.<tool>` on `/sindri/mcp`",
+        "toolkit_create, build, start, stop, calls"
+       ],
+       [
+        "Resources",
+        "`database`, `disk`, `sandbox`, `connection` declared on a workflow, node or toolkit; a SQLite file, a sized folder, sandbox limits; kept until purged",
+        "resources_list, resources_purge"
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "plan",
+   "title": "The build plan",
+   "nav": "Plan",
+   "sections": [
+    {
+     "type": "diagram",
+     "title": "Two clearing milestones, then the critical path to PR8",
+     "src": "diagrams/pr-order.svg",
+     "alt": "PR dependency graph: PR1-2 and PR3-4 in parallel into PR5, PR6, PR7, PR8; then PR9-17, PR10-12, PR13, PR14-16 in parallel into PR18."
+    },
+    {
+     "type": "slices",
+     "title": "Eight milestones, each proven before the next",
+     "items": [
+      {
+       "title": "M1 · Trust (PR1-2)",
+       "text": "Profile edits apply on save; every verb open to sessions with attribution.",
+       "tags": [
+        "parallel with M2"
+       ]
+      },
+      {
+       "title": "M2 · Clear the ground (PR3-4)",
+       "text": "Delete recipes, the line, their pages, schemas and docs; keep items, ledger, launcher, sandbox."
+      },
+      {
+       "title": "M3 · Graph engine (PR5-7)",
+       "text": "Spec, validator, GraphWorkflow, run store, core blocks and run_agent."
+      },
+      {
+       "title": "M4 · Agent-first building (PR8-9)",
+       "text": "MCP build tools and docs; the first workflow ships at PR8."
+      },
+      {
+       "title": "M5 · Connections (PR10-12)",
+       "text": "Four kinds, sign-in, refresh, polling with catch-up, the handoff inbox."
+      },
+      {
+       "title": "M6-M8 (PR13-18)",
+       "text": "Memory; resources and C# toolkits; the canvas and list pages."
+      }
+     ],
+     "done": [
+      "Part 2's acceptance test: an agent builds the drift workflow from one sentence and it opens a PR on schedule",
+      "Every phase's done-means in the issue"
+     ],
+     "questions": [
+      "Which OAuth providers refuse a plain-http loopback redirect (checked in PR10)",
+      "How many items a `for_each` can take before it needs child workflows (measured in PR9)"
+     ]
+    }
+   ]
+  }
+ ],
+ "asks": [
+  {
+   "q": "Confirm the phase order",
+   "text": "M1 and M2 in parallel, then M3 and M4 as the critical path, then M5 to M8 in parallel.",
+   "notes": "Recommended: yes. PR8 is the first point the owner gets a working workflow."
+  },
+  {
+   "q": "Check the author's calls",
+   "text": "The ten calls in the issue's last section: host groups from connections, launcher rewired, conditions language, loop guards, poll events, OAuth tests, prompt routing, ask_owner, platforms."
+  }
+ ],
+ "links": [
+  {
+   "text": "Issue #2258",
+   "href": "https://github.com/jthorare/agentic-workflow/issues/2258"
+  },
+  {
+   "text": "Engineering page (tdd.html)",
+   "href": "tdd.html"
+  }
+ ]
+}

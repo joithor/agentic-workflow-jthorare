@@ -1,0 +1,12 @@
+flowchart TB
+  TG["Trigger: schedule, poll, inbox, manual, workflow_call"] --> ID["Run id = workflow@revision:occurrence"]
+  ID --> DUP{"Seen before?"}
+  DUP -- yes --> SK["Refused: no second run"]
+  DUP -- no --> CC["Concurrency: one-per-workflow, queue, unlimited"]
+  CC --> GW["GraphWorkflow walks nodes in order"]
+  GW --> NA["One activity per node, input and output stored"]
+  NA --> AG{"run_agent or ask_owner?"}
+  AG -- yes --> WT["Temporal wait: session report or answer"]
+  WT --> NA
+  AG -- no --> NX["Next node or settle"]
+  NA --> LG["Ledger mirror"]

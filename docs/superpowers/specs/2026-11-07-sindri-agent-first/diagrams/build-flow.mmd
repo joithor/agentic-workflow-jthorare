@@ -1,0 +1,11 @@
+flowchart TB
+  S["Owner: one sentence to an agent"] --> D["workflow_docs and workflow_blocks"]
+  D --> CR["workflow_create: draft revision 1"]
+  CR --> V["workflow_validate: every finding, node and field"]
+  V --> TR["workflow_run: test run now"]
+  TR --> GR["workflow_run_get: each node's input and output"]
+  GR --> OK{"Right?"}
+  OK -- no --> OPS["workflow_apply_ops against baseRevision"]
+  OPS --> V
+  OK -- yes --> AC["workflow_activate: pin the revision"]
+  AC --> LIVE["Trigger fires on its own"]

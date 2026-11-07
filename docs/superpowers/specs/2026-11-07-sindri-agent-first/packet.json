@@ -1,0 +1,67 @@
+{
+  "slug": "sindri-agent-first",
+  "title": "Sindri, agent-first: workflows, connections, toolkits and memory",
+  "personas": {
+    "product-design": {
+      "page": "product-design.html"
+    },
+    "engineering": {
+      "page": "tdd.html"
+    }
+  },
+  "status": "status.md",
+  "share": "tdd-share.html",
+  "deck": "deck.html",
+  "story": "share/story.json",
+  "diagrams": {
+    "architecture": {
+      "mmd": "diagrams/architecture.mmd",
+      "svg": "diagrams/architecture.svg"
+    },
+    "build-flow": {
+      "mmd": "diagrams/build-flow.mmd",
+      "svg": "diagrams/build-flow.svg"
+    },
+    "catch-up": {
+      "mmd": "diagrams/catch-up.mmd",
+      "svg": "diagrams/catch-up.svg"
+    },
+    "connections": {
+      "mmd": "diagrams/connections.mmd",
+      "svg": "diagrams/connections.svg"
+    },
+    "inbox": {
+      "mmd": "diagrams/inbox.mmd",
+      "svg": "diagrams/inbox.svg"
+    },
+    "pr-order": {
+      "mmd": "diagrams/pr-order.mmd",
+      "svg": "diagrams/pr-order.svg"
+    },
+    "run-path": {
+      "mmd": "diagrams/run-path.mmd",
+      "svg": "diagrams/run-path.svg"
+    }
+  },
+  "sections": [],
+  "prs": [
+    "prs/pr-01.md",
+    "prs/pr-02.md",
+    "prs/pr-03.md",
+    "prs/pr-04.md",
+    "prs/pr-05.md",
+    "prs/pr-06.md",
+    "prs/pr-07.md",
+    "prs/pr-08.md",
+    "prs/pr-09.md",
+    "prs/pr-10.md",
+    "prs/pr-11.md",
+    "prs/pr-12.md",
+    "prs/pr-13.md",
+    "prs/pr-14.md",
+    "prs/pr-15.md",
+    "prs/pr-16.md",
+    "prs/pr-17.md",
+    "prs/pr-18.md"
+  ]
+}

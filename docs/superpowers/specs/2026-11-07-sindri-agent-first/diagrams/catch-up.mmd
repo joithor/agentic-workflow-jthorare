@@ -1,0 +1,8 @@
+flowchart TB
+  P["Poll service: every 2 min per connection"] --> CU["Cursor per connection and event kind"]
+  W["Control plane start or system wake"] --> SC["Catch-up: read every cursor forward to now"]
+  SC --> CU
+  CU --> EV["Events with delivery ids"]
+  EV --> MT["Match poll triggers"]
+  MT --> RID["Run id uses the delivery id: overlap runs once"]
+  W --> MS["Missed schedule: run once for the latest tick"]

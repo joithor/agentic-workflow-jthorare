@@ -1,0 +1,7 @@
+{"architecture":[["Agent in","blue"],["/sindri/mcp","blue"],["GraphWorkflow","blue"],["run_agent","violet"],["Ledger","green"],["Sindri app","grey"]],
+ "build-flow":[["Owner","blue"],["workflow_activate","green"],["Trigger fires","green"],["apply_ops","violet"]],
+ "run-path":[["Refused","red"],["GraphWorkflow","blue"],["Temporal wait","violet"],["Ledger","green"]],
+ "connections":[["Browser consent","blue"],["keychain","green"],["needs-sign-in","red"],["Sandbox gets","violet"]],
+ "catch-up":[["wake","blue"],["Catch-up","blue"],["runs once","green"],["run once","green"]],
+ "inbox":[["Outside system","grey"],["Sindri item","blue"],["Workflow","green"]],
+ "pr-order":[["PR1 ","violet"],["PR2 ","violet"],["PR3 ","red"],["PR4 ","red"],["PR8 ","green"],["PR5 ","blue"],["PR6 ","blue"],["PR7 ","blue"]]}

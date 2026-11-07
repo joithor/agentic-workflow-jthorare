@@ -1,0 +1,20 @@
+flowchart TB
+  P1["PR1 Profile edits apply on save"] --> P2["PR2 Every verb for sessions"]
+  P3["PR3 Remove recipes and the line"] --> P4["PR4 Remove pages, schemas, docs"]
+  P2 --> P5["PR5 Graph spec and validator"]
+  P4 --> P5
+  P5 --> P6["PR6 GraphWorkflow, runs, core blocks"]
+  P6 --> P7["PR7 run_agent"]
+  P7 --> P8["PR8 MCP build tools: first workflow ships"]
+  P8 --> P9["PR9 Remaining blocks"]
+  P8 --> P10["PR10 Connections"]
+  P10 --> P11["PR11 Poll triggers and catch-up"]
+  P11 --> P12["PR12 Handoff inbox"]
+  P8 --> P13["PR13 Memory"]
+  P8 --> P14["PR14 Resources"]
+  P14 --> P15["PR15 Toolkit SDK and scaffold"]
+  P15 --> P16["PR16 Toolkit runtime"]
+  P9 --> P17["PR17 Canvas and runs page"]
+  P16 --> P18["PR18 List pages"]
+  P13 --> P18
+  P12 --> P18

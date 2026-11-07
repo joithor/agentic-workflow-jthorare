@@ -1,0 +1,79 @@
+<title>Sindri Agent-First Design</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<style>
+/* Layout: one narrow column; a document index with four doors and the PR map as the only dense block */
+:root{
+  --bg:#f6f7f5; --surface:#ffffff; --fg:#1d2420; --muted:#5d6a63; --line:#d9dfdb; --accent:#2f6b55;
+  --display:"Fraunces",Georgia,serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#121614;--surface:#1a201d;--fg:#e4ebe7;--muted:#9aa8a1;--line:#2c3531;--accent:#7cc4a6;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121614;--surface:#1a201d;--fg:#e4ebe7;--muted:#9aa8a1;--line:#2c3531;--accent:#7cc4a6;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+main{max-width:860px;margin:0 auto;display:grid;gap:36px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(28px,5vw,40px);line-height:1.15;margin:6px 0 10px;text-wrap:balance}
+h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0 0 12px}
+p{margin:0;max-width:65ch}
+.lede{color:var(--muted)}
+.doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}
+.door{display:grid;gap:4px;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;text-decoration:none;min-width:0}
+.door:hover,.door:focus-visible{border-color:var(--accent);outline:none}
+.door b{font-size:16px}.door span{color:var(--muted);font-size:14px}
+.door .who{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:500}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--accent)}
+tr:last-child td{border-bottom:0}
+code{font-family:var(--mono);font-size:.92em}
+a{color:var(--accent)}
+</style>
+<main>
+  <header>
+    <div class="eyebrow">agentic-workflow · issue #2258 · system design packet</div>
+    <h1>Sindri, agent-first: workflows, connections, toolkits and memory</h1>
+    <p class="lede">Recipes, the factory pipeline and approvals are replaced by graph workflows that an agent builds over MCP, plus connections you sign into once, shared memory, C# toolkits and locally provisioned resources. 18 PRs in 8 milestones.</p>
+  </header>
+
+  <section>
+    <h2>Open the packet</h2>
+    <div class="doors">
+      <a class="door" href="tdd-share.html"><span class="who">Read first</span><b>Shareable TDD</b><span>The whole design as a story: why, how a workflow is built and run, the platform, the plan.</span></a>
+      <a class="door" href="deck.html"><span class="who">Present</span><b>Review deck</b><span>The same story in 33 slides. Arrow keys to move, N for notes.</span></a>
+      <a class="door" href="tdd.html"><span class="who">Build</span><b>Engineering page</b><span>Full design, EARS requirements, schema rows, diagrams and 18 PR cards with deep dives.</span></a>
+      <a class="door" href="product-design.html"><span class="who">Use</span><b>Product page</b><span>What the owner sees: building in an agent session, the Workflows and Connections pages.</span></a>
+    </div>
+  </section>
+
+  <section>
+    <h2>PR map</h2>
+    <div class="tw"><table>
+      <thead><tr><th>PR</th><th>Milestone</th><th>Lands</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1</td><td>M1 · Trust</td><td>Profile edits apply on save; <code>profile approve</code> removed</td></tr>
+        <tr><td class="n">2</td><td>M1 · Trust</td><td>Every verb open to agent sessions, with attribution</td></tr>
+        <tr><td class="n">3</td><td>M2 · Clear the ground</td><td>3a move launch types out of the engine; 3b delete recipes and the line</td></tr>
+        <tr><td class="n">4</td><td>M2 · Clear the ground</td><td>Remove pipeline pages, schemas, docs; reads switch to item links</td></tr>
+        <tr><td class="n">5</td><td>M3 · Graph engine</td><td>Graph spec, revisions, validator, conditions, cron reader</td></tr>
+        <tr><td class="n">6</td><td>M3 · Graph engine</td><td><code>GraphWorkflow</code>, run store, core blocks, missed-schedule-once</td></tr>
+        <tr><td class="n">7</td><td>M3 · Graph engine</td><td><code>run_agent</code> on the existing launcher and sandbox</td></tr>
+        <tr><td class="n">8</td><td>M4 · Agent-first building</td><td>MCP build tools and docs; the first workflow ships</td></tr>
+        <tr><td class="n">9</td><td>M4 · Agent-first building</td><td>Remaining blocks with loop guards</td></tr>
+        <tr><td class="n">10</td><td>M5 · Connections</td><td>Four connection kinds, sign-in, refresh</td></tr>
+        <tr><td class="n">11</td><td>M5 · Connections</td><td>Poll triggers, cursors, catch-up on start and wake</td></tr>
+        <tr><td class="n">12</td><td>M5 · Connections</td><td>Handoff inbox contract and local endpoint</td></tr>
+        <tr><td class="n">13</td><td>M6 · Memory</td><td>Memory stores, embeddings, blocks, tools</td></tr>
+        <tr><td class="n">14</td><td>M7 · Toolkits and resources</td><td>Database, disk and sandbox resources</td></tr>
+        <tr><td class="n">15</td><td>M7 · Toolkits and resources</td><td>C# toolkit SDK and <code>/new-toolkit</code></td></tr>
+        <tr><td class="n">16</td><td>M7 · Toolkits and resources</td><td>16a process sandbox; 16b toolkit runtime and <code>call_tool</code></td></tr>
+        <tr><td class="n">17</td><td>M8 · The app</td><td>Workflows canvas and runs page</td></tr>
+        <tr><td class="n">18</td><td>M8 · The app</td><td>Connections, memory, toolkits and resources pages</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <p class="lede">Issue: <a href="https://github.com/jthorare/agentic-workflow/issues/2258">jthorare/agentic-workflow#2258</a></p>
+</main>

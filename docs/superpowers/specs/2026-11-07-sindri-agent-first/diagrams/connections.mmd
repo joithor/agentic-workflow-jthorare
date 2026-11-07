@@ -1,0 +1,10 @@
+flowchart TB
+  ADD["connection_add: agent or owner"] --> K{"Kind"}
+  K -- oauth or mcp --> BR["Browser consent, PKCE, loopback redirect"]
+  K -- rest or cli --> KEY["Paste key or run the CLI login"]
+  BR --> KC["OS keychain: sindri-connection / name"]
+  KEY --> KC
+  KC --> RF["Scheduler refreshes before expiry"]
+  RF --> NS["Refresh fails: needs-sign-in row, nodes fail with the reason"]
+  KC --> USE["Node names linear:work"]
+  USE --> ENV["Sandbox gets: token env, CLI on PATH, MCP entry, host group"]

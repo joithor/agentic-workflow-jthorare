@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sindri agent-first, product</title>
+<style>
+/* generated from design-tokens.json by tokens_to_css.py */
+/* Base layout for /system-design pages. Colors, fonts and radius come from the :root block tokens_to_css.py puts above this;
+   the fallbacks here are neutral and only apply to tokens the project does not define. Light theme. */
+:root {
+  --bg: #fafafa; --surface: #ffffff; --ink: #1c1c1e; --muted: #6b6b70; --line: #dcdce0;
+  --accent: #3b5bdb; --secondary: #7048e8; --good: #2b8a3e; --warn: #b7791f; --bad: #c92a2a;
+  --f-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --f-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --radius: 8px;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--f-body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 40px max(16px, env(safe-area-inset-left, 0px)) 72px; display: grid; gap: 48px; }
+h1, h2, h3 { margin: 0; color: var(--ink); text-wrap: balance; }
+h1 { font-size: 2rem; line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; }
+h2 { font-size: 1.375rem; line-height: 1.25; font-weight: 600; }
+h3 { font-size: 1.0625rem; line-height: 1.3; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+b, strong { font-weight: 600; }
+.eyebrow { font: 500 0.75rem/1.2 var(--f-body); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.muted { color: var(--muted); }
+.mono { font-family: var(--f-mono); font-size: 0.85em; }
+section { display: grid; gap: 16px; min-width: 0; }
+.plate { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; min-width: 0; overflow-wrap: anywhere; }
+.plate table { border-collapse: collapse; width: 100%; overflow-wrap: normal; }
+.plate th, .plate td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.scroll { overflow-x: auto; }
+figure { margin: 0; }
+.shot { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.shot img { width: 100%; display: block; }
+.shot figcaption { padding: 8px 16px; font-size: 0.8125rem; color: var(--muted); border-top: 1px solid var(--line); }
+.shot.diagram img { width: auto; max-width: 100%; max-height: 1400px; margin: 0 auto; }
+.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.q { background: color-mix(in srgb, var(--warn) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--surface)); border-radius: var(--radius); padding: 16px; display: grid; gap: 8px; }
+.q .id { font-size: 0.75rem; color: var(--warn); }
+.q .ex { font-size: 0.8125rem; color: var(--muted); }
+.q ol { margin: 0; padding-left: 1.25rem; }
+.dd { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; display: grid; gap: 2px; }
+.dd .id { font-size: 0.75rem; color: var(--muted); }
+.tag { display: inline-block; font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); }
+.good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+code { font-family: var(--f-mono); font-size: 0.85em; }
+@media (max-width: 640px) { .wrap { gap: 32px; padding-top: 24px; } h1 { font-size: 1.6rem; } .plate { padding: 16px; } }
+
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --ink: #1a1a1c;
+  --muted: #6b6b70;
+  --line: rgb(0 0 0 / 8%);
+  --accent: #f0f0f1;
+  --secondary: #f0f0f1;
+  --good: oklch(69.6% 0.17 162.48);
+  --warn: oklch(76.9% 0.188 70.08);
+  --bad: oklch(0.577 0.245 27.325);
+  --f-body: "Untitled Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --radius: calc(0.625rem * 0.8);
+  --color-background: #fafafa;
+  --color-foreground: #1a1a1c;
+  --color-card: #ffffff;
+  --color-popover: #ffffff;
+  --color-primary: #1a1a1c;
+  --color-primary-foreground: #fafafa;
+  --color-secondary: #f0f0f1;
+  --color-muted: #f0f0f1;
+  --color-muted-foreground: #6b6b70;
+  --color-accent: #f0f0f1;
+  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-border: rgb(0 0 0 / 8%);
+  --color-input: rgb(0 0 0 / 10%);
+  --color-ring: #c8c8cc;
+  --color-sidebar: #f4f4f5;
+  --color-sidebar-accent: #eaeaec;
+  --color-sidebar-border: rgb(0 0 0 / 7%);
+  --color-status-zinc-300 (Not managed, Keep/other): oklch(87.1% 0.006 286.286);
+  --color-status-zinc-400 (Disabled in PostHog, In development): oklch(70.5% 0.015 286.067);
+  --color-status-zinc-500 (Unknown outcome, Done): oklch(55.2% 0.016 285.938);
+  --color-status-sky-500 (Scheduled, Ready for rollout): oklch(68.5% 0.169 237.323);
+  --color-status-emerald-500 (Rolled out): oklch(69.6% 0.17 162.48);
+  --color-status-amber-500 (Changed outside Product Hub, Beta): oklch(76.9% 0.188 70.08);
+  --color-status-rose-500 (Overdue, Schedule failed): oklch(64.5% 0.246 16.439);
+  --color-status-violet-500 (Alpha): oklch(60.6% 0.25 292.717);
+  --color-status-amber-600 (existing amber text: Not evaluated): oklch(66.6% 0.179 58.318);
+  --color-success: oklch(69.6% 0.17 162.48);
+  --color-warning: oklch(76.9% 0.188 70.08);
+  --color-text-muted: #6b6b70;
+}
+
+table{display:block;overflow-x:auto;max-width:100%}
+code{overflow-wrap:anywhere}
+</style>
+<style>
+.mock{border:1px solid rgba(127,127,127,.35);border-radius:12px;padding:16px;margin:12px 0;overflow-x:auto;font-size:.92em}
+.mono{font-family:ui-monospace,Menlo,monospace}
+.row{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(127,127,127,.2);flex-wrap:wrap}
+.pill{border:1px solid rgba(127,127,127,.5);border-radius:999px;padding:1px 8px;font-size:.85em}
+.ok{color:#16803c}.warn{color:#b45309}.bad{color:#b91c1c}
+.grow{flex:1;min-width:160px}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header>
+  <span class="eyebrow">agentic-workflow · Sindri · #2258 · product + design</span>
+  <h1>You describe it; an agent builds it; Sindri runs it</h1>
+  <p>What the owner sees and does once this ships. Building happens in your agent's terminal; the app is where you look, never where you have to go.</p>
+</header>
+
+<section>
+  <h2>1. Building happens in your agent session</h2>
+  <div class="mock mono">
+    <div>&gt; every weekday at 7, check whether repo B's client matches repo A's API contracts and open a PR if it drifted</div>
+    <div style="opacity:.7;margin-top:8px">● workflow_blocks · workflow_create "Contract drift check" (4 nodes)</div>
+    <div style="opacity:.7">● workflow_validate → 0 findings</div>
+    <div style="opacity:.7">● workflow_run → wf_01@1:manual-1 succeeded · drifted: false · checked a41f0c2</div>
+    <div style="margin-top:8px">Built and test-ran it: no drift right now. Want it to remember the last commit it checked so it skips work when nothing changed?</div>
+    <div style="margin-top:8px">&gt; yes, then turn it on</div>
+    <div style="opacity:.7;margin-top:8px">● workflow_apply_ops base=1 (+ memory_write) → revision 2 · workflow_activate → next run Mon 07:00</div>
+  </div>
+  <p class="muted">The agent never asks you to open Sindri. If a step needs you (an OAuth consent screen), Sindri opens the browser page and the agent waits.</p>
+</section>
+
+<section>
+  <h2>2. The Workflows page shows what's running</h2>
+  <div class="mock">
+    <div class="row"><b class="grow">Contract drift check</b><span class="pill ok">active · rev 2</span><span>next Mon 07:00</span><span class="muted">changed by session claude-7f2</span></div>
+    <div class="row"><b class="grow">Weekly dependency sweep</b><span class="pill ok">active · rev 5</span><span>next Sun 22:00</span><span class="muted">changed by you</span></div>
+    <div class="row"><b class="grow">Label → triage agent</b><span class="pill warn">waiting</span><span>run 14 waiting on its agent</span><span class="muted">Attach</span></div>
+    <div class="row"><b class="grow">Release notes draft</b><span class="pill">paused</span><span>—</span><span class="muted">changed by session codex-31a</span></div>
+  </div>
+  <p>Open a workflow to see its graph and its runs; open a run to see every node's input and output, and Attach to a live agent session to watch or take over.</p>
+</section>
+
+<section>
+  <h2>3. Connections: sign in once</h2>
+  <div class="mock">
+    <div class="row"><b class="grow">github:me</b><span>oauth</span><span class="pill ok">connected</span></div>
+    <div class="row"><b class="grow">linear:work</b><span>oauth</span><span class="pill ok">connected</span></div>
+    <div class="row"><b class="grow">slack:work</b><span>oauth</span><span class="pill bad">needs sign-in</span><span class="muted">Sign in again</span></div>
+    <div class="row"><b class="grow">notes</b><span>mcp</span><span class="pill ok">connected</span></div>
+    <div class="row"><b class="grow">team-cli</b><span>cli</span><span class="pill ok">ready</span></div>
+  </div>
+  <p>A connection that needs signing in again also shows as a Needs-you row, and the workflows that use it fail with that reason instead of silently doing nothing.</p>
+</section>
+
+<section>
+  <h2>4. How the functions work, with one example</h2>
+  <p><b>Missed schedules run once.</b> The drift check is due at 07:00 Monday to Friday. The laptop is closed from Thursday 19:00 to Monday 08:30. On wake, Sindri sees two missed ticks (Friday 07:00 and Monday 07:00; the weekend has none) and runs the workflow <b>once</b>, for Monday 07:00, then resumes at Tuesday 07:00.</p>
+  <p><b>Polling catches up.</b> A Linear label was added Saturday 11:02. On wake, the catch-up reads the Linear cursor forward from Thursday 18:58 and finds it; the run starts within a minute with the label event's delivery id, so if the regular poll sees it too, nothing runs twice.</p>
+</section>
+
+<section>
+  <h2>Surfaces to design</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Surface</th><th>Today</th><th>After</th></tr></thead>
+    <tbody>
+      <tr><td>Workflows page</td><td>Recipe instances along the line</td><td>Workflow list, graph, runs, Attach</td></tr>
+      <tr><td>Workflow types page</td><td>Recipe catalog and stats</td><td>Removed</td></tr>
+      <tr><td>Connections</td><td>Index tokens under Setup</td><td>A Connections page with sign-in and state</td></tr>
+      <tr><td>Memory, toolkits, resources</td><td>None</td><td>List pages with the same actions as the MCP tools</td></tr>
+      <tr><td>Setup, Context</td><td>"Waiting for your approval" states</td><td>No approval states</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Decisions</h2>
+  <div class="dd"><span class="id">D1</span>Drop the approval concept entirely, for the profile and for workflows.</div>
+  <div class="dd"><span class="id">D2</span>Agents get every verb; no gate between agents and running workflows. "The agents are good enough to test it out with me first."</div>
+  <div class="dd"><span class="id">D3</span>Remove recipes entirely; drop the factory pipeline.</div>
+  <div class="dd"><span class="id">D4</span>Agent-first via MCP; the app must be an option, never required.</div>
+  <div class="dd"><span class="id">D6</span>Catch-up only: no webhooks; scan for what was missed while the machine was off.</div>
+  <div class="dd"><span class="id">D9</span>Toolkits as a concept, all in C#.</div>
+</section>
+</main>
+</body>
+</html>
